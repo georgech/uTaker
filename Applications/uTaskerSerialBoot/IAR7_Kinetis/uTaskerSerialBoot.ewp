@@ -727,7 +727,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\K_1M_256.icf</state>
+          <state>$PROJ_DIR$\settings\KL_256_32.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

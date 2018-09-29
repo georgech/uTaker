@@ -68,6 +68,7 @@
     31.01.2018 If HSRUN mode is detected after a reset the RUN mode can be returned to avoid flash programming issues {134}
     07.03.2018 Add 25AA160 SPI EEPROM support                            {135}
     08.07.2018 Add optional power loss interrupt support (SUPPORT_LOW_VOLTAGE_DETECTION) {136}
+    29.09.2018 Allow memcpy() type DMA to be pre-empted by higher priority DMA channels {137}
 
 */
 
@@ -952,13 +953,16 @@ INITHW void fnInitHW(void)                                               // perf
         _SET_DMA_CHANNEL_PRIORITY(14, DMA_CHANNEL_14_PRIORITY);
         _SET_DMA_CHANNEL_PRIORITY(15, DMA_CHANNEL_15_PRIORITY);
         _SET_DMA_CHANNEL_CHARACTERISTIC(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_ECP | DMA_DCHPRI_DPA)); // can be pre-empted by higher priority channel - it is expected that this channel will normally have priority 0
+            #if defined DMA_MEMCPY_CHANNEL_ALT
+        _SET_DMA_CHANNEL_CHARACTERISTIC(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_ECP | DMA_DCHPRI_DPA)); // can be pre-empted by higher priority channel - it is expected that this channel will normally have priority 1
+            #endif
         #else                                                            // leave default channel priority (equal to the corresponding channel number)
-        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_DPA | 0)); // lowest DMA priority and can be pre-empted by higher priority channel
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL, (DMA_DCHPRI_DPA | DMA_DCHPRI_ECP | 0)); // {137} lowest DMA priority and can be pre-empted by higher priority channel
             #if DMA_MEMCPY_CHANNEL != 0
         _SET_DMA_CHANNEL_PRIORITY(0, (DMA_MEMCPY_CHANNEL));              // no two priorities may ever be the same when the controller is used - switch priorities to avoid
             #endif
             #if defined DMA_MEMCPY_CHANNEL_ALT                           // {127}
-        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_DPA | 1)); // second lowest DMA priority and can be pre-empted by higher priority channel
+        _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_DPA | DMA_DCHPRI_ECP | 1)); // {137} second lowest DMA priority and can be pre-empted by higher priority channel
                 #if DMA_MEMCPY_CHANNEL_ALT != 1
         _SET_DMA_CHANNEL_PRIORITY(1, (DMA_MEMCPY_CHANNEL_ALT));          // no two priorities may ever be the same when the controller is used - switch priorities to avoid
                 #endif

@@ -2982,6 +2982,8 @@ extern QUEUE_TRANSFER fnGetDMACount(QUEUE_HANDLE channel, QUEUE_TRANSFER max_cou
 }
 #endif
 
+#define SUPPORTED_BAUD_RATES  (SERIAL_BAUD_250K)
+
 typedef struct stUART_BAUD_CONFIG
 {
     int iBaudRateRef;
@@ -2992,6 +2994,123 @@ typedef struct stUART_BAUD_CONFIG
     int iValid;
 } UART_BAUD_CONFIG;
 
+#if (UARTS_AVAILABLE > 2) || (defined KINETIS_KEA8 || defined KINETIS_K02 || defined K_STYLE_UART2) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
+static const unsigned short bus_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+    (BUS_CLOCK / 16 / 300),                                              // set 300 divide
+    (BUS_CLOCK / 16 / 600),                                              // set 600 divide
+    (BUS_CLOCK / 16 / 1200),                                             // set 1200 divide
+    (BUS_CLOCK / 16 / 2400),                                             // set 2400 divide
+    (BUS_CLOCK / 16 / 4800),                                             // set 4800 divide
+    (BUS_CLOCK / 16 / 9600),                                             // set 9600 divide
+    (BUS_CLOCK / 16 / 14400),                                            // set 14400 divide
+    (BUS_CLOCK / 16 / 19200),                                            // set 19200 divide
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (BUS_CLOCK / 16 / 31250),                                            // set 31250 divide
+        #endif
+    (BUS_CLOCK / 16 / 38400),                                            // set 38400 divide
+    (BUS_CLOCK / 16 / 57600),                                            // set 57600 divide
+    (BUS_CLOCK / 16 / 115200),                                           // set 115200 divide
+    (BUS_CLOCK / 16 / 230400),                                           // set 230400 divide
+    (BUS_CLOCK / 16 / 250000),                                           // set 250000 divide
+    #else
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 300)) + (float)0.5) * (float)2) / 2), // set 300 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 600)) + (float)0.5) * (float)2) / 2), // set 600 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 1200)) + (float)0.5) * (float)2) / 2), // set 1200 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 2400)) + (float)0.5) * (float)2) / 2), // set 2400 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 4800)) + (float)0.5) * (float)2) / 2), // set 4800 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 9600)) + (float)0.5) * (float)2) / 2), // set 9600 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 11400)) + (float)0.5) * (float)2) / 2), // set 14400 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 19200)) + (float)0.5) * (float)2) / 2), // set 19200 divide (rounded)
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 31250)) + (float)0.5) * (float)2) / 2), // set 31250 divide (rounded)
+        #endif
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 38400)) + (float)0.5) * (float)2) / 2), // set 38400 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 57600)) + (float)0.5) * (float)2) / 2), // set 57600 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 115200)) + (float)0.5) * (float)2) / 2), // set 115200 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 230400)) + (float)0.5) * (float)2) / 2), // set 230400 divide (rounded)
+    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 250000)) + (float)0.5) * (float)2) / 2), // set 250000 divide (rounded)
+    #endif
+};
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+static const unsigned char bus_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)300) - (int)(BUS_CLOCK / 16 / 300)) * 32)) + (float)0.5), // set 300 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)600) - (int)(BUS_CLOCK / 16 / 600)) * 32)) + (float)0.5), // set 600 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)1200) - (int)(BUS_CLOCK / 16 / 1200)) * 32)) + (float)0.5), // set 1200 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)2400) - (int)(BUS_CLOCK / 16 / 2400)) * 32)) + (float)0.5), // set 2400 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)4800) - (int)(BUS_CLOCK / 16 / 4800)) * 32)) + (float)0.5), // set 4800 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)9600) - (int)(BUS_CLOCK / 16 / 9600)) * 32)) + (float)0.5), // set 9600 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)14400) - (int)(BUS_CLOCK / 16 / 14400)) * 32)) + (float)0.5), // set 14400 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)19200) - (int)(BUS_CLOCK / 16 / 19200)) * 32)) + (float)0.5), // set 19200 fraction
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)31250) - (int)(BUS_CLOCK / 16 / 31250)) * 32)) + (float)0.5), // set 31250 fraction
+        #endif
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)38400) - (int)(BUS_CLOCK / 16 / 38400)) * 32)) + (float)0.5), // set 38400 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)57600) - (int)(BUS_CLOCK / 16 / 57600)) * 32)) + (float)0.5), // set 57600 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)115200) - (int)(BUS_CLOCK / 16 / 115200)) * 32)) + (float)0.5), // set 115200 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)230400) - (int)(BUS_CLOCK / 16 / 230400)) * 32)) + (float)0.5), // set 230400 fraction
+    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)250000) - (int)(BUS_CLOCK / 16 / 250000)) * 32)) + (float)0.5), // set 250000 fraction
+};
+    #endif
+
+static const unsigned short system_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+    (SYSTEM_CLOCK / 16 / 300),                                           // set 300 divide
+    (SYSTEM_CLOCK / 16 / 600),                                           // set 600 divide
+    (SYSTEM_CLOCK / 16 / 1200),                                          // set 1200 divide
+    (SYSTEM_CLOCK / 16 / 2400),                                          // set 2400 divide
+    (SYSTEM_CLOCK / 16 / 4800),                                          // set 4800 divide
+    (SYSTEM_CLOCK / 16 / 9600),                                          // set 9600 divide
+    (SYSTEM_CLOCK / 16 / 14400),                                         // set 14400 divide
+    (SYSTEM_CLOCK / 16 / 19200),                                         // set 19200 divide
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (SYSTEM_CLOCK / 16 / 31250),                                         // set 31250 divide
+        #endif
+    (SYSTEM_CLOCK / 16 / 38400),                                         // set 38400 divide
+    (SYSTEM_CLOCK / 16 / 57600),                                         // set 57600 divide
+    (SYSTEM_CLOCK / 16 / 115200),                                        // set 115200 divide
+    (SYSTEM_CLOCK / 16 / 230400),                                        // set 230400 divide
+    (SYSTEM_CLOCK / 16 / 250000),                                        // set 250000 divide
+    #else
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 300)) + (float)0.5) * (float)2) / 2), // set 300 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 600)) + (float)0.5) * (float)2) / 2), // set 600 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 1200)) + (float)0.5) * (float)2) / 2), // set 1200 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 2400)) + (float)0.5) * (float)2) / 2), // set 2400 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 4800)) + (float)0.5) * (float)2) / 2), // set 4800 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 9600)) + (float)0.5) * (float)2) / 2), // set 9600 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 11400)) + (float)0.5) * (float)2) / 2), // set 14400 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 19200)) + (float)0.5) * (float)2) / 2), // set 19200 divide (rounded)
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 31250)) + (float)0.5) * (float)2) / 2), // set 31250 divide (rounded)
+        #endif
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 38400)) + (float)0.5) * (float)2) / 2), // set 38400 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 57600)) + (float)0.5) * (float)2) / 2), // set 57600 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 115200)) + (float)0.5) * (float)2) / 2), // set 115200 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 230400)) + (float)0.5) * (float)2) / 2), // set 230400 divide (rounded)
+    (unsigned short)((((float)((float)SYSTEM_CLOCK / (float)(16 * 250000)) + (float)0.5) * (float)2) / 2), // set 250000 divide (rounded)
+    #endif
+};
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+static const unsigned char system_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)300) - (int)(SYSTEM_CLOCK / 16 / 300)) * 32)) + (float)0.5), // set 300 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)600) - (int)(SYSTEM_CLOCK / 16 / 600)) * 32)) + (float)0.5), // set 600 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)1200) - (int)(SYSTEM_CLOCK / 16 / 1200)) * 32)) + (float)0.5), // set 1200 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)2400) - (int)(SYSTEM_CLOCK / 16 / 2400)) * 32)) + (float)0.5), // set 2400 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)4800) - (int)(SYSTEM_CLOCK / 16 / 4800)) * 32)) + (float)0.5), // set 4800 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)9600) - (int)(SYSTEM_CLOCK / 16 / 9600)) * 32)) + (float)0.5), // set 9600 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)14400) - (int)(SYSTEM_CLOCK / 16 / 14400)) * 32)) + (float)0.5), // set 14400 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)19200) - (int)(SYSTEM_CLOCK / 16 / 19200)) * 32)) + (float)0.5), // set 19200 fraction
+        #if defined SUPPORT_MIDI_BAUD_RATE
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)31250) - (int)(SYSTEM_CLOCK / 16 / 31250)) * 32)) + (float)0.5), // set 31250 fraction
+        #endif
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)38400) - (int)(SYSTEM_CLOCK / 16 / 38400)) * 32)) + (float)0.5), // set 38400 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)57600) - (int)(SYSTEM_CLOCK / 16 / 57600)) * 32)) + (float)0.5), // set 57600 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)115200) - (int)(SYSTEM_CLOCK / 16 / 115200)) * 32)) + (float)0.5), // set 115200 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)230400) - (int)(SYSTEM_CLOCK / 16 / 230400)) * 32)) + (float)0.5), // set 230400 fraction
+    (unsigned char)(((float)((((float)SYSTEM_CLOCK / (float)16 / (float)250000) - (int)(SYSTEM_CLOCK / 16 / 250000)) * 32)) + (float)0.5), // set 250000 fraction
+};
+    #endif
+#endif
 
 #if LPUARTS_AVAILABLE > 0
 // Determine the LPUART clock frequency being
@@ -3022,67 +3141,6 @@ typedef struct stUART_BAUD_CONFIG
     #endif
 #endif
 
-
-#define SUPPORTED_BAUD_RATES  (SERIAL_BAUD_250K)
-#if (UARTS_AVAILABLE > 2) || (defined KINETIS_KEA8 || defined KINETIS_K02 || defined K_STYLE_UART2) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
-static const unsigned short bus_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
-#if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
-    (BUS_CLOCK / 16 / 300),                                  // set 300 divide
-    (BUS_CLOCK / 16 / 600),                                  // set 600 divide
-    (BUS_CLOCK / 16 / 1200),                                 // set 1200 divide
-    (BUS_CLOCK / 16 / 2400),                                 // set 2400 divide
-    (BUS_CLOCK / 16 / 4800),                                 // set 4800 divide
-    (BUS_CLOCK / 16 / 9600),                                 // set 9600 divide
-    (BUS_CLOCK / 16 / 14400),                                // set 14400 divide
-    (BUS_CLOCK / 16 / 19200),                                // set 19200 divide
-    #if defined SUPPORT_MIDI_BAUD_RATE
-    (BUS_CLOCK / 16 / 31250),                                // set 31250 divide
-    #endif
-    (BUS_CLOCK / 16 / 38400),                                // set 38400 divide
-    (BUS_CLOCK / 16 / 57600),                                // set 57600 divide
-    (BUS_CLOCK / 16 / 115200),                               // set 115200 divide
-    (BUS_CLOCK / 16 / 230400),                               // set 230400 divide
-    (BUS_CLOCK / 16 / 250000),                               // set 250000 divide
-#else
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 300)) + (float)0.5) * (float)2) / 2), // set 300 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 600)) + (float)0.5) * (float)2) / 2), // set 600 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 1200)) + (float)0.5) * (float)2) / 2), // set 1200 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 2400)) + (float)0.5) * (float)2) / 2), // set 2400 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 4800)) + (float)0.5) * (float)2) / 2), // set 4800 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 9600)) + (float)0.5) * (float)2) / 2), // set 9600 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 11400)) + (float)0.5) * (float)2) / 2), // set 14400 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 19200)) + (float)0.5) * (float)2) / 2), // set 19200 divide (rounded)
-    #if defined SUPPORT_MIDI_BAUD_RATE
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 31250)) + (float)0.5) * (float)2) / 2), // set 31250 divide (rounded)
-    #endif
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 38400)) + (float)0.5) * (float)2) / 2), // set 38400 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 57600)) + (float)0.5) * (float)2) / 2), // set 57600 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 115200)) + (float)0.5) * (float)2) / 2), // set 115200 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 230400)) + (float)0.5) * (float)2) / 2), // set 230400 divide (rounded)
-    (unsigned short)((((float)((float)BUS_CLOCK / (float)(16 * 250000)) + (float)0.5) * (float)2) / 2), // set 250000 divide (rounded)
-#endif
-};
-#if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
-static const unsigned char bus_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)300) - (int)(BUS_CLOCK / 16 / 300)) * 32)) + (float)0.5), // set 300 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)600) - (int)(BUS_CLOCK / 16 / 600)) * 32)) + (float)0.5), // set 600 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)1200) - (int)(BUS_CLOCK / 16 / 1200)) * 32)) + (float)0.5), // set 1200 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)2400) - (int)(BUS_CLOCK / 16 / 2400)) * 32)) + (float)0.5), // set 2400 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)4800) - (int)(BUS_CLOCK / 16 / 4800)) * 32)) + (float)0.5), // set 4800 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)9600) - (int)(BUS_CLOCK / 16 / 9600)) * 32)) + (float)0.5), // set 9600 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)14400) - (int)(BUS_CLOCK / 16 / 14400)) * 32)) + (float)0.5), // set 14400 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)19200) - (int)(BUS_CLOCK / 16 / 19200)) * 32)) + (float)0.5), // set 19200 fraction
-    #if defined SUPPORT_MIDI_BAUD_RATE
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)31250) - (int)(BUS_CLOCK / 16 / 31250)) * 32)) + (float)0.5), // set 31250 fraction
-    #endif
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)38400) - (int)(BUS_CLOCK / 16 / 38400)) * 32)) + (float)0.5), // set 38400 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)57600) - (int)(BUS_CLOCK / 16 / 57600)) * 32)) + (float)0.5), // set 57600 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)115200) - (int)(BUS_CLOCK / 16 / 115200)) * 32)) + (float)0.5), // set 115200 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)230400) - (int)(BUS_CLOCK / 16 / 230400)) * 32)) + (float)0.5), // set 230400 fraction
-    (unsigned char)(((float)((((float)BUS_CLOCK / (float)16 / (float)250000) - (int)(BUS_CLOCK / 16 / 250000)) * 32)) + (float)0.5), // set 250000 fraction
-};
-#endif
-#endif
 
 #if defined LPUART_IRC48M
 static const unsigned short IRC48M_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
@@ -3143,7 +3201,6 @@ static const unsigned char IRC48M_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
 };
 #endif
 #endif
-
 
 
 #if !defined KINETIS_WITH_PCC
@@ -3212,6 +3269,11 @@ static void fnConfigUART_clock(int Channel, UART_BAUD_CONFIG *ptrBaudConfig)
     if (Channel < 2)
         #endif
     {
+        ptrBaudConfig->usDivider = system_clock_divider[ptrBaudConfig->iBaudRateRef]; // set the optimal divider value for the required baud rate
+        #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+        ptrBaudConfig->ucFraction = system_clock_fraction[ptrBaudConfig->iBaudRateRef]; // set the fraction value for the required baud rate
+        #endif
+        ptrBaudConfig->iValid = 1;
     }
     else {
         ptrBaudConfig->usDivider = bus_clock_divider[ptrBaudConfig->iBaudRateRef]; // set the optimal divider value for the required baud rate
@@ -3354,17 +3416,13 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         case 0:
             POWER_UP_ATOMIC(4, UART0);                                   // power up UART 0
-            #if defined SIM_SOPT2_UART0SRC_MCG                           // devices that can define the UART0 clock source (otherwise fixed core clock)
             fnConfigUART_clock(0, &baud_config);                         // configure the clock source to be used
-            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
         case 1:
             POWER_UP_ATOMIC(4, UART1);                                   // power up UART 1
-            #if defined SIM_SOPT2_UART1SRC_MCG                           // devices that can define the UART1 clock source (otherwise fixed core clock)
             fnConfigUART_clock(1, &baud_config);                         // configure the clock source to be used
-            #endif
             break;
         #endif
         #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2) // KL43/KL27
@@ -3376,25 +3434,19 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if UARTS_AVAILABLE > 3
         case 3:
             POWER_UP_ATOMIC(4, UART3);                                   // power up UART 3
-            #if defined SIM_SOPT2_UART3SRC_MCG                           // devices that can define the UART3 clock source (otherwise fixed bus clock)
             fnConfigUART_clock(3, &baud_config);                         // configure the clock source to be used
-            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 4
         case 4:
             POWER_UP_ATOMIC(1, UART4);                                   // power up UART 4
-            #if defined SIM_SOPT2_UART4SRC_MCG                           // devices that can define the UART4 clock source (otherwise fixed bus clock)
             fnConfigUART_clock(4, &baud_config);                         // configure the clock source to be used
-            #endif
             break;
         #endif
         #if UARTS_AVAILABLE > 5
         case 5:
             POWER_UP_ATOMIC(1, UART5);                                   // power up UART 5
-            #if defined SIM_SOPT2_UART4SRC_MCG                           // devices that can define the UART5 clock source (otherwise fixed bus clock)
             fnConfigUART_clock(5, &baud_config);                         // configure the clock source to be used
-            #endif
             break;
         #endif
         default:
@@ -3748,9 +3800,15 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #endif
     #else
         #if !defined KINETIS_KL && !defined KINETIS_KE
-    uart_reg->UART_C4 = ucFraction;
+    if (baud_config.iValid == 0) {
+        baud_config.ucFraction = ucFraction;
+    }
+    uart_reg->UART_C4 = baud_config.ucFraction;
         #endif
-    fnConfigUART(Channel, pars, uart_reg, usDivider);                    // configure the UART
+    if (baud_config.iValid == 0) {
+        baud_config.usDivider = usDivider;
+    }
+    fnConfigUART(Channel, pars, uart_reg, baud_config.usDivider);        // configure the UART
     #endif
 
     #if defined USER_DEFINED_UART_RX_HANDLER

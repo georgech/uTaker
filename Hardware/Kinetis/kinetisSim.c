@@ -9672,7 +9672,7 @@ extern int fnSimTimers(void)
             ulPDB_count += PDB0_CNT;                                     // new count value
             if ((iPDB_interrupt_triggered == 0) && (ulPDB_count >= (PDB0_IDLY & 0xffff))) { // interrupt trigger reached
                 iPDB_interrupt_triggered = 1;
-                if ((PDB0_SC & PDB_SC_PDBIE) != 0) {                     // ifperiod interrupt is enabled
+                if ((PDB0_SC & PDB_SC_PDBIE) != 0) {                     // if period interrupt is enabled
                     PDB0_SC |= PDB_SC_PDBIF;                             // set the interrupt flag
                     if (fnGenInt(irq_PDB0_ID) != 0) {
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
