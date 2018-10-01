@@ -660,7 +660,7 @@ extern int uDatacopy(int iDisk, int iDataRef, unsigned char *ptrSectorData, cons
 
 #define UTFAT_SEEK_SET             0                                     // set the file position relative to the start of the file
 #define UTFAT_SEEK_CUR             1                                     // set the file position relative to the current position
-#define UTFAT_SEEK_END             2                                     // set the file position relative to the end fo the file
+#define UTFAT_SEEK_END             2                                     // set the file position relative to the end of the file
 
 #endif
 
