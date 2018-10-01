@@ -1195,6 +1195,7 @@ typedef struct stRESET_VECTOR
 #endif
 
 #define RESET_TO_SERIAL_LOADER      0x89a2                               // pattern set to BOOT_MAIL_BOX to request the serial loader to start
+#define RESET_TO_APPLICATION        0x755d                               // pattern set to BOOT_MAIL_BOX to request the serial loader to jump to the application
 
 #define RTC_VALID_PATTERN           0xca35                               // pattern set the RTC_VALID_LOCATION when the RTC values are valid
 
@@ -16812,6 +16813,7 @@ typedef struct stUSB_HW
             #define RCM_SRS1_SW     0x00000400                           // reset caused by software reset command
             #define RCM_SRS1_MDM_AP 0x00000800                           // reset caused by host debugger setting reset request bit
             #define RCM_SRS1_SACKERR 0x00002000                          // reset caused by stop acknowledge error
+            #define SOFTWARE_RESET_DETECTED()   (RCM_SRS == RCM_SRS1_SW)
         #define RCM_RPC          *(unsigned long *)(RCM_BASE_ADD + 0x0c) // reset pin control register
         #define RCM_MR           *(volatile unsigned long *)(RCM_BASE_ADD + 0x10) // mode register (write '1' to clear)
             #define RCM_MR_BOOTROM_BOOT_FROM_FLASH               0x00    // the last reset was a boot from flash
@@ -16841,6 +16843,7 @@ typedef struct stUSB_HW
             #define RCM_SRS1_EZPT   0x10                                 // reset caused by EZPORT reset command
             #define RCM_SRS1_SACKERR 0x20                                // reset caused by peripheral failure to acknowledge attempt to enter stop mode
             #define RCM_SRS1_TAMPER 0x80                                 // reset caused by tamper detect
+            #define SOFTWARE_RESET_DETECTED()   (RCM_SRS1 == RCM_SRS1_SW)
         #define RCM_RPFC         *(unsigned char *)(RCM_BASE_ADD + 0x04) // system pin filter control register
         #define RCM_RPFW         *(unsigned char *)(RCM_BASE_ADD + 0x05) // reset pin filter width register
         #if defined ROM_BOOTLOADER
@@ -16862,6 +16865,7 @@ typedef struct stUSB_HW
       #define MC_SRSH_JTAG       0x01
       #define MC_SRSH_LOCKUP     0x02
       #define MC_SRSH_SW         0x04
+      #define SOFTWARE_RESET_DETECTED()   (MC_SRSH == MC_SRSH_SW)
     #define MC_SRSL              *(volatile unsigned char *)(MC_BASE_ADD + 0x1) // System Reset Status Register Low
       #define MC_SRSL_WAKEUP     0x01
       #define MC_SRSL_LVD        0x02

@@ -115,6 +115,7 @@
     16.03.2018 Accept control-? (0x7f) as back space (used by putty by default) {90}
     17.03.2018 Add FlexIO menu                                           {91}
     04.05.2018 Change interface to fnSetNewSerialMode()                  {92}
+    30.09.2018 Allow "sect" display with small output buffer (<= 256 bytes) {93}
 
 */
 
@@ -617,6 +618,9 @@ typedef struct stCLONER_SKIP_REGION
     static void fnGetEz(unsigned char *ptrBuffer, unsigned long ulReadAddress, int iLength);
 #endif
 #if defined USE_MAINTENANCE
+    #if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+    static int fnDisplaySectorContent(unsigned char ucType);
+    #endif
     #if defined TEST_CLIENT_SERVER
         static int fnTestTCPServer(int iAction);
             #define TCP_TEST_SERVER_START    0
@@ -1044,12 +1048,12 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     {"re-fformat",        "[-16/12] [label] full reformat disk!!!!!", DO_DISK,       DO_REFORMAT_FULL },// {26}
         #endif
     #endif
-        #if !defined LOW_MEMORY
+    #if !defined LOW_MEMORY
     {"sect",              "[hex no.] display sector",              DO_DISK,          DO_DISPLAY_SECTOR},
-            #if defined UTFAT_MULTIPLE_BLOCK_READ
+        #if defined UTFAT_MULTIPLE_BLOCK_READ
     { "msect",            "[hex no.] display multi sector",        DO_DISK,          DO_DISPLAY_MULTI_SECTOR },
-            #endif
         #endif
+    #endif
     #if defined UTFAT_WRITE
         #if defined NAND_FLASH_FAT
     {"secti",             "[hex number] display sector info",      DO_DISK,          DO_DISPLAY_SECTOR_INFO},
@@ -1334,6 +1338,10 @@ static unsigned char   ucDebugCnt = 0;
     static UTDIRECTORY *ptr_utDirectory[DISK_COUNT] = {0};               // pointer to a directory object
     static int iFATstalled = 0;                                          // stall flags when listing large directories and printing content
 #endif
+#if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+    static unsigned char ucSectorType = 0;
+    static unsigned long ulLastSectorNumber = 0;
+#endif
 #if defined I2C_INTERFACE && (defined TEST_I2C_INTERFACE || defined I2C_MASTER_LOADER)
     extern QUEUE_HANDLE I2CPortID;
 #endif
@@ -1509,8 +1517,11 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
 #endif
         case INTERRUPT_EVENT:
             if (TX_FREE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
+                if (iMenuLocation != 0) {
+                    fnDisplayHelp(iMenuLocation);
+                }
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
-                if (iFATstalled != 0) {
+                else if (iFATstalled != 0) {
                     if (STALL_DIR_LISTING == iFATstalled) {
                         fnDoDisk(DO_DIR, 0);                             // continue listing a directory content
                     }
@@ -1529,15 +1540,17 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
                     }
                 }
 #endif
-                if (iMenuLocation != 0) {
-                    fnDisplayHelp(iMenuLocation);
-                }
 #if defined USE_FTP_CLIENT                                               // {37}
                 else if (iFTP_data_state & FTP_DATA_STATE_CRITICAL) {
     #if defined CONTROL_WINDOW_SIZE
                     fnReportTCPWindow(uFtpClientDataSocket, TX_BUFFER_SIZE); // report that the output buffer has space for more data
     #endif
                     iFTP_data_state &= ~FTP_DATA_STATE_CRITICAL;         // single-shot reporting
+                }
+#endif
+#if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+                else if (ucSectorType != 0) {                            // {93} if a sect display had stalled
+                    fnDisplaySectorContent(ucSectorType);
                 }
 #endif
             }
@@ -5488,6 +5501,76 @@ static void fnDisplayDiskSize(unsigned long ulSectors, unsigned short usBytesPer
 }
 
 
+#if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+// Display the sector content - allowing stalling when there is not adequate output buffer space
+//
+static int fnDisplaySectorContent(unsigned char ucType)                  // {93}
+{
+    static unsigned char ucLine = 0;
+    unsigned char ucRow = 0;
+    #if defined NAND_FLASH_FAT
+    unsigned long ulBuffer[528/sizeof(unsigned long)];                   // temporary long word aligned buffer
+    #else
+    unsigned long ulBuffer[512/sizeof(unsigned long)];                   // temporary long word aligned buffer for efficiency
+    #endif
+    #if defined UTFAT_MULTIPLE_BLOCK_READ
+    if (DO_DISPLAY_MULTI_SECTOR == ucType) {
+        fnPrepareBlockRead(ucPresentDisk, 20);                           // prepare for a block read of 20 sectors
+    }
+    for (ucLine = 0; ucLine < 20; ucLine++) {                            // read 20 consecutive sectors (block read)
+        TOGGLE_TEST_OUTPUT();                                            // output to measure the read time
+        if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber++) != 0) { // read the sector content to a buffer
+            fnDebugMsg(" FAILED!!\r\n");
+            return 0;
+        }
+        TOGGLE_TEST_OUTPUT();
+        if (DO_DISPLAY_SECTOR == ucType) {
+            break;
+        }
+    }
+    #else
+    if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber) != 0) { // read the sector content to a temporary buffer
+        fnDebugMsg(" FAILED!!\r\n");
+        ucSectorType = 0;
+        ucLine = 0;
+        return 0;
+    }
+    #endif
+    for ( ; ucLine < 8; ucLine++) {                                      // display the read data a line at a time
+        if (fnWrite(DebugHandle, 0, (180)) == 0) {                       // check whether there is enough space in the output buffer to add a complete line
+            fnDriver(DebugHandle, MODIFY_WAKEUP, (MODIFY_TX | OWN_TASK));// we want to be woken when the queue is free again
+            ucSectorType = ucType;
+            return 1;                                                    // stall
+        }
+        for (ucRow = 0; ucRow < 16; ucRow++) {                           // display 16 long words per line
+    #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
+            fnDebugHex(BIG_LONG_WORD(ulBuffer[(ucLine * 16) + ucRow]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
+    #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
+            fnDebugHex(LITTLE_LONG_WORD(ulBuffer[(ucLine * 16) + ucRow]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
+    #else
+            fnDebugHex(ulBuffer[(ucLine * 16) + ucRow], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
+    #endif
+        }
+        fnDebugMsg("\r\n");                                              // end of line
+    }
+    #if defined NAND_FLASH_FAT
+    if (DO_DISPLAY_PAGE == ucType) {
+        for (ucRow = 0; j < ucRow; j++) {
+            fnDebugHex(ulBuffer[(8 * 16) + ucRow], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
+        }
+        fnDebugMsg("\r\n");
+        ptrDiskInfo->usDiskFlags &= ~DISK_TEST_MODE;                     // remove test mode
+    }
+    #endif
+    ucSectorType = 0;
+    ucLine = 0;
+    return 0;
+}
+#endif
+
+
+
+
 // Handle SD-card disk commands
 //
 static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
@@ -5836,10 +5919,8 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     #endif
     case DO_DISPLAY_SECTOR:
         {
-            int i, j;
             unsigned long ulSectorNumber = fnHexStrHex(ptrInput);        // the sector number
     #if defined NAND_FLASH_FAT
-            unsigned long ulBuffer[528/sizeof(unsigned long)];
             UTDISK *ptrDiskInfo = (UTDISK *)fnGetDiskInfo(ucPresentDisk);
             if (DO_DISPLAY_PAGE == ucType) {
                 fnDebugMsg("Reading page ");
@@ -5849,7 +5930,6 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 fnDebugMsg("Reading sector ");
             }
     #else
-            unsigned long ulBuffer[512/sizeof(unsigned long)];           // long word aligned buffer for efficiency
             fnDebugMsg("Reading sector ");
     #endif
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
@@ -5858,49 +5938,9 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
     #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
             fnDebugMsg(" (little-endian view)");
     #endif
-    #if defined UTFAT_MULTIPLE_BLOCK_READ
-            if (DO_DISPLAY_MULTI_SECTOR == ucType) {
-                fnPrepareBlockRead(ucPresentDisk, 20);                   // prepare for a block read of 20 sectors
-            }
-            for (i = 0; i < 20; i++) {                                   // read 20 consecutive sectors (block read)
-                TOGGLE_TEST_OUTPUT();
-                if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber++) != 0) { // the the sector content to a buffer
-                    fnDebugMsg(" FAILED!!\r\n");
-                    return 0;
-                }
-                TOGGLE_TEST_OUTPUT();
-                if (DO_DISPLAY_SECTOR == ucType) {
-                    break;
-                }
-            }
-    #else
-            if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != 0) { // the the sector content to a buffer
-                fnDebugMsg(" FAILED!!\r\n");
-                break;
-            }
-    #endif
             fnDebugMsg("\r\n");
-            for (i = 0; i < 8; i++) {                                    // display the read data
-                for (j = 0; j < 16; j++) {
-    #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
-                    fnDebugHex(BIG_LONG_WORD(ulBuffer[(i * 16) + j]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
-                    fnDebugHex(LITTLE_LONG_WORD(ulBuffer[(i * 16) + j]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #else
-                    fnDebugHex(ulBuffer[(i * 16) + j], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #endif
-                }
-                fnDebugMsg("\r\n");
-            }
-    #if defined NAND_FLASH_FAT
-            if (DO_DISPLAY_PAGE == ucType) {
-                for (j = 0; j < 4; j++) {
-                    fnDebugHex(ulBuffer[(8 * 16) + j], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-                }
-                fnDebugMsg("\r\n");
-                ptrDiskInfo->usDiskFlags &= ~DISK_TEST_MODE;             // remove test mode
-            }
-    #endif
+            ulLastSectorNumber = ulSectorNumber;
+            return (fnDisplaySectorContent(ucType));                     // {93}
         }
         break;
 #endif

@@ -21,6 +21,7 @@
     23.12.2015 Add automatic ADC DMA buffer repetition                   {3}
     04.01.2016 Allow free-run ADC with DMA                               {4}
     06.03.2017 Allow alternative DMA trigger sources                     {5}
+    01.10.2018 Allow ADC polling (with optional wait/busy behavior)      {6}
 
 */
 
@@ -681,14 +682,19 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         #endif
                 }
     #endif
-                if (((ptrADC_settings->int_adc_mode & ADC_CHECK_CONVERSION) != 0) || ((ptrADC->ADC_SC1A & ADC_SC1A_AIEN) == 0)) { // check the conversion state or a read interrupt and read without interrupt operation
+                if (((ptrADC_settings->int_adc_mode & ADC_CHECK_CONVERSION) != 0) || ((ptrADC->ADC_SC1A & ADC_SC1A_AIEN) == 0)) { // {6} check the conversion state or a read interrupt, or read without interrupt operation
                     while ((ptrADC->ADC_SC1A & ADC_SC1A_COCO) == 0) {    // wait for conversion to complete
     #if defined _WINDOWS
-                        ptrADC->ADC_SC1A |= ADC_SC1A_COCO;               // set conversion complete flag
+                        if ((ptrADC->ADC_SC1A & ADC_SC1A_ADCH_OFF) != ADC_SC1A_ADCH_OFF) { // if the converter hasn't been disabled
+                            ptrADC->ADC_SC1A |= ADC_SC1A_COCO;           // set conversion complete flag
+                        }
     #endif
                         if ((ptrADC_settings->int_adc_mode & ADC_CHECK_CONVERSION) != 0) { // if we are not to wait
                             ptrADC_settings->int_adc_result->ucADC_status[0] = ADC_RESULT_NOT_READY; // result is presently not ready
                             return;
+                        }
+                        if ((ptrADC->ADC_SC1A & ADC_SC1A_ADCH_OFF) == ADC_SC1A_ADCH_OFF) { // {6} if the converter sub-system has been disabled we return the read value without waiting for conversion completion (this happens after single-shot interrupts disable the converter but the last result is in the result register)
+                            break;
                         }
                     }
                 }
