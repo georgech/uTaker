@@ -1022,6 +1022,9 @@
         #endif
         #if defined USB_MSD_DEVICE_LOADER || defined USB_MSD_HOST_LOADER
             #define SUPPORT_FLUSH                                        // allow flush command to be used (important for mass storage class)
+            #if defined _DEV2
+                #define USB_MSD_PARAMETER_FILE                           // allow programming a parameter file in addition to an application image
+            #endif
         #endif
       //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
             #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)

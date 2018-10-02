@@ -114,10 +114,15 @@
     #define ENABLE_READBACK                                              // allow USB to transfer present application to PC
     #if defined TEENSY_LC || defined FRDM_KL27Z
         #if defined _DEV2
-            #define UTASKER_APP_START (0x8000)                           // 14k application starts at this address
+            #undef ROOT_FILE_ENTRIES
+            #define ROOT_FILE_ENTRIES (FLASH_GRANULARITY/32)
+            #define UTASKER_APP_START (16 * 1024)                        // 16k application starts at this address
             #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (48 * 1024) - (ROOT_FILE_ENTRIES * 32)) // end of application space - after maximum application size
+            #define UTASKER_PARAMETER_FILE_START (SIZE_OF_FLASH - FLASH_GRANULARITY) // final sector in flash
+            #define UTASKER_PARAMETER_FILE_SIZE  (FLASH_GRANULARITY)     // 1k in size (maximum)
+            #define PARAMETER_DELETE_PASSWORD  "Enable parameter file erase by dragging this file to the disk"
         #elif defined SPECIAL_VERSION
-            #define UTASKER_APP_START (0x4000)                        // 14k application starts at this address
+            #define UTASKER_APP_START (0x4000)                           // 14k application starts at this address
             #define UTASKER_APP_END   (unsigned char *)(UTASKER_APP_START + (48 * 1024) - (ROOT_FILE_ENTRIES * 32)) // end of application space - after maximum application size
         #else
             #define UTASKER_APP_START (24 * 1024)                        // application starts at this address
@@ -196,7 +201,11 @@
     #endif
     // Before software can be read from the disk a password file must have been copied {7}
     //
-  //#define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
+    #if defined _DEV2                                                    // protect the application from read-back
+        #define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
+    #else
+      //#define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
+    #endif
 
     // SD card loading - file to be loaded, magic number and secret key for authenticating the file's content {8}
     //
@@ -325,7 +334,11 @@
 #if defined MEMORY_SWAP
     #define _UTASKER_APP_START_       (FLASH_START_ADDRESS)
 #elif defined USB_INTERFACE && (defined USB_MSD_DEVICE_LOADER || defined SPECIAL_VERSION_SDCARD)
-    #define _UTASKER_APP_START_       (UTASKER_APP_START + (ROOT_FILE_ENTRIES * 32)) // when USB is used the start of application space is used for FAT entries
+    #if defined _DEV2
+        #define _UTASKER_APP_START_   (UTASKER_APP_START + (ROOT_FILE_ENTRIES * 32)) // when USB is used the start of application space is used for FAT entries
+    #else
+        #define _UTASKER_APP_START_   (UTASKER_APP_START + (ROOT_FILE_ENTRIES * 32)) // when USB is used the start of application space is used for FAT entries
+    #endif
 #else
     #define _UTASKER_APP_START_       (UTASKER_APP_START)
 #endif

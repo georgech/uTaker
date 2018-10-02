@@ -50,6 +50,7 @@
     14.01.2018 Block USB-MSD further command handling until complete write data has been received {35}
     31.01.2018 Reset intermediate buffer length counter when checking valid records {36}
     31.01.2018 Remove validity check of file length when hex or srec loading is possible {37}
+    01.10.2018 Add optional parameter file support
 
 */
 
@@ -73,6 +74,9 @@
 
 //#define DEBUG_CODE                                                     // acivate some debug ouput to monitor operation
 //#define RESET_ON_SUSPEND                                               // reset when the USB cable is pulled
+#if defined _DEV2
+    #define RESET_ON_STOP                                                // reset when the drive is stopped
+#endif
 //#define RESET_ON_EJECT                                                 // reset when the drive is ejected
 
 #if !defined DISK_COUNT
@@ -364,6 +368,11 @@
     #define FORMAT_TYPE_RAW_BINARY_PROTECTED 2
     #define FORMAT_TYPE_RAW_STRING           3
 #endif
+
+#define PARAMETER_FILE_EMPTY                 0
+#define PARAMETER_FILE_EXISTS                1
+#define PARAMETER_FILE_EXISTS_DELETE_ALLOWED 2
+#define PARAMETER_FILE_BLOCKED               3
 
 
 // HID loader defines
@@ -1226,6 +1235,9 @@ static QUEUE_HANDLE USB_control = NO_ID_ALLOCATED;                       // USB 
     #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND    // {15}
         static unsigned char ucAcceptUploads[EMULATED_FAT_LUMS] = {0};
     #endif
+    #if defined USB_MSD_PARAMETER_FILE
+        static int iParameterState[EMULATED_FAT_LUMS] = {0};
+    #endif
     #if defined MAC_OS_X_WORKAROUND
         static unsigned long ulFatSector[EMULATED_FAT_LUMS][BYTES_PER_SECTOR/sizeof(unsigned long)] = {{0}}; // we maintain a backup of a single fat sector for monitoring hidden OS cluster content
         #if !defined AUTO_DELETE_ON_ANY_FIRMWARE
@@ -1255,6 +1267,7 @@ static void fnConfigureUSB(void);                                        // rout
     static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber);
     static unsigned long fnGetFileSize(const LFN_ENTRY_STRUCTURE_FAT32 *ptrLFN_entry);
     static int mass_storage_callback(unsigned char *ptrData, unsigned short length, int iType);
+    static void fnWriteFileObject(int iDisk);
     #if defined DEBUG_MAC
         static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long ulLogicalBlockAdr);
     #endif
@@ -1267,6 +1280,9 @@ static void fnConfigureUSB(void);                                        // rout
     #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION        // {33}
         static int fnCheckFileObject(DIR_ENTRY_STRUCTURE_FAT32 *ptrDir, int iSize);
         static void fnSetObjectDetails(DIR_ENTRY_STRUCTURE_FAT32 *ptrEntry, FILE_OBJECT_INFO *ptrFileObjectInfo);
+    #endif
+    #if defined USB_MSD_PARAMETER_FILE
+        static int fnCheckParameterArea(unsigned char ucLun, unsigned char *ptrParameterArea, int iSizeArea);
     #endif
 #endif
 #if defined USE_USB_CDC                                                  // {31}
@@ -1298,9 +1314,6 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     unsigned char ucInputMessage[LARGE_MESSAGE];                         // reserve space for receiving messages
 
     if (USB_control == NO_ID_ALLOCATED) {                                // initialisation
-    #if defined FRDM_KL27Z && defined _DEV2
-        fnInitialiseDEV2();
-    #endif
     #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS && !defined _DEV2 // if dynamic strings are supported, prepare a specific serial number ready for enumeration
         fnSetSerialNumberString("S/N-0123");                             // construct a serial number string for USB use (this can be modified to suit)
     #endif
@@ -1316,7 +1329,11 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         ptr_fileobject_location[DISK_C] = (const unsigned char *)(SIZE_OF_FLASH - (2 * FLASH_GRANULARITY));
         ptr_disk_end[DISK_C] = (const unsigned char *)(FLASH_START_ADDRESS + (SIZE_OF_FLASH/2) + (UTASKER_APP_END - UTASKER_APP_START));
         #else
-        ptr_disk_location[DISK_C] = (const unsigned char *)UTASKER_APP_START;
+            #if defined USB_MSD_PARAMETER_FILE
+        ptr_disk_location[DISK_C] = (const unsigned char *)_UTASKER_APP_START_;
+            #else
+        ptr_disk_location[DISK_C] = (const unsigned char *)_UTASKER_APP_START_;
+            #endif
         ptr_fileobject_location[DISK_C] = (const unsigned char *)UTASKER_APP_START;
         ptr_disk_end[DISK_C] = (const unsigned char *)UTASKER_APP_END;
         #endif
@@ -1347,6 +1364,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                 iSoftwareState[ucActiveLUN] = SW_AVAILABLE;              // existing software needs to be deleted before new code can be loaded
             }
         #endif
+        #if defined USB_MSD_PARAMETER_FILE
+            iParameterState[ucActiveLUN] = fnCheckParameterArea(ucActiveLUN, (unsigned char *)UTASKER_PARAMETER_FILE_START, UTASKER_PARAMETER_FILE_SIZE);
+        #endif
         #if defined FAT_EMULATION
             fnPrepareEmulatedFAT(ucActiveLUN);                           // prepare the files that we want to show on the USB-MSD disk
             ptrDiskInfo[ucActiveLUN] = fnGetDiskInfo(ucActiveLUN);       // get a pointer to the disk information for local use
@@ -1375,6 +1395,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             ptrDiskInfo[ucActiveLUN] = _fnGetDiskInfo(ucActiveLUN);      // get a pointer to each disk information for local use
         #endif
         } while (++ucActiveLUN < EMULATED_FAT_LUMS);
+        #if defined FRDM_KL27Z && defined _DEV2
+        fnInitialiseDEV2();
+        #endif
 
         fnConfigureUSB();                                                // configure the USB interface for device mode operation
         #if defined _WINDOWS && defined UTFAT12 && defined ENABLE_READBACK && !defined FAT_EMULATION // development test to verify the FAT12 cluster construction
@@ -1514,8 +1537,12 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
                 break;
     #endif
-    #if defined HID_LOADER
+    #if defined HID_LOADER || defined RESET_ON_STOP
             case TIMEOUT_RESET_NOW:
+        #if defined _DEV2
+                *BOOT_MAIL_BOX = RESET_TO_APPLICATION;                   // when the serial loader forces the boot loader this can be used to inform that a jump to the application is required
+                fnJumpToValidApplication(1);
+        #endif
                 fnResetBoard();                                          // reset to start the new application
                 break;
     #endif
@@ -1542,68 +1569,10 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
                 {
                     int iDisk = (ucInputMessage[MSG_TIMER_EVENT] - TIMEOUT_USB_LOADING_COMPLETE_C);
-        #if defined FAT_EMULATION
-                    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntry = ptrDiskInfo[iDisk]->rootBuffer; // pointer to a copy of the root directory
-        #else
-                    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntry = (DIR_ENTRY_STRUCTURE_FAT32 *)&root_file[iDisk];  // pointer to a copy of the root directory
-        #endif
-        #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND
-                    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntryBackup = 0;
-                    MAX_FILE_LENGTH FileObjectSize = 0;
-        #endif
         #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer from end of the file
         #endif
-        #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND// {21} jump possible hidden files (added by Windows 8.1 or MAC OS X) and deleted entries
-                    while ((int)1 != (int)0) {
-                        if ((ptrVolumeEntry->DIR_Name[0] == DIR_NAME_FREE) || ((ptrVolumeEntry->DIR_Attr != DIR_ATTR_LONG_NAME) && (ptrVolumeEntry->DIR_Attr & (DIR_ATTR_HIDDEN | DIR_ATTR_VOLUME_ID)))) { // volume ID, deleted or hidden system file/directory {25} and hidden type is ignored
-                            ptrVolumeEntryBackup = 0;                    // invalid as upload file so reset
-                        }
-                        else {
-                            if (ptrVolumeEntryBackup == 0) {
-                                ptrVolumeEntryBackup = ptrVolumeEntry;   // remember the location of the start of the file object
-                                FileObjectSize = sizeof(DIR_ENTRY_STRUCTURE_FAT32); // reset the object size
-                            }
-                            else {
-                                FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32); // count the file object's length
-                            }
-                            if ((ptrVolumeEntry->DIR_Attr & ~(DIR_ATTR_READ_ONLY)) == DIR_ATTR_ARCHIVE) { // file name found - this is assumed to be the one that was uploaded (always first)
-                                ptrVolumeEntry->DIR_Attr &= ~(DIR_ATTR_READ_ONLY); // remove any read-only attribute before saving
-                                ptrVolumeEntry->DIR_FstClusLO[0] = (RESERVED_SECTION_COUNT + 1); // ensure that the cluster location is the first (since it may have been located elsewhere after inserting a hidden system directory)
-                                ptrVolumeEntry = ptrVolumeEntryBackup;   // set to the beginning of this file object
-                                break;
-                            }
-                        }
-                        ptrVolumeEntry++;                                // move to next entry
-                    }
-                    if (FileObjectSize > ((ROOT_FILE_ENTRIES - 1) * sizeof(DIR_ENTRY_STRUCTURE_FAT32))) { // {24} if the software name is too long for the file object we use its short file name name instead
-                        while (FileObjectSize > sizeof(DIR_ENTRY_STRUCTURE_FAT32)) {
-                            ptrVolumeEntry++;                            // move to the final directory struct entry which will be the short file name
-                            FileObjectSize -= (sizeof(DIR_ENTRY_STRUCTURE_FAT32));
-                        }
-                    }
-            #if defined FAT_EMULATION
-                    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)ptrDiskInfo[iDisk]->rootBuffer, sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // {30} save volume object
-            #else
-                    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)&root_file[iDisk], sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // {30} save volume object
-            #endif
-                    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk] + sizeof(DIR_ENTRY_STRUCTURE_FAT32)), (unsigned char *)ptrVolumeEntry, FileObjectSize); // write the file object next
-                    FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32); // {30}
-                    while (FileObjectSize < (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32))) {
-                        DIR_ENTRY_STRUCTURE_FAT32 emptyObject;           // ensure remainder of the file object area is blank
-                        uMemset(&emptyObject, 0, sizeof(emptyObject));
-                        fnWriteBytesFlash((unsigned char *)(ptr_disk_location[iDisk] + FileObjectSize), (unsigned char *)&emptyObject, sizeof(emptyObject));
-                        FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32);
-                    }
-        #else
-                    while (ptrVolumeEntry->DIR_Name[0] == DIR_NAME_FREE) { // jump any deleted entries (from delete before programming)
-                        ptrVolumeEntry++;
-                    }
-                    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)ptrVolumeEntry, (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)));
-        #endif
-        #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
-                    fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer from end of the file
-        #endif
+                    fnWriteFileObject(iDisk);                            // update the file object that is saved before the firmware
                     iSoftwareState[iDisk] = SW_AVAILABLE;                // software upload completed
         #if !defined RESET_ON_EJECT && !defined MEMORY_SWAP
                     fnResetBoard();                                      // reset to start the new application
@@ -1724,7 +1693,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     {
                         MODE_PARAMETER_6 SelectDataWP;
                         uMemcpy(&SelectDataWP, &SelectData, sizeof(SelectData));
-                        if (_ptrDiskInfo->usDiskFlags & WRITE_PROTECTED_SD_CARD) {
+                        if ((_ptrDiskInfo->usDiskFlags & WRITE_PROTECTED_SD_CARD) != 0) {
                             SelectDataWP.ucWP_DPOFUA = PAR6_WRITE_PROTECTED; // the medium is write protected
                         }
                         fnWrite(USBPortID_MSD, (unsigned char *)&SelectDataWP, sizeof(SelectData)); // respond to the request and then return 
@@ -1803,26 +1772,28 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
             }
             else {                                                       // OUT types
                 switch (ptrCBW->CBWCB[CBW_OperationCode]) {
-    #if defined MEMORY_SWAP
+        #if defined MEMORY_SWAP || defined RESET_ON_STOP
                 case UFI_START_STOP:
                     {
                         CBW_START_STOP_UNIT *ptrStartStopUnit = (CBW_START_STOP_UNIT *)ptrCBW->CBWCB;
                         if ((ptrStartStopUnit->ucPowerCondition & START_STOP_UNIT_POWER_CONDITION) == START_STOP_UNIT_POWER_CONDITION_START_VALID) { // process the start and LOEJ bits
-                            if ((ptrStartStopUnit->ucPowerCondition & START_STOP_UNIT_POWER_CONDITION_START_BIT) != 0) {
-                                // power up
+                            if ((ptrStartStopUnit->ucPowerCondition & START_STOP_UNIT_POWER_CONDITION_START_BIT) != 0) { // power on
                             }
-                            else {
-                                // power down
-                                //
+                            else {                                       // power off
+            #if defined MEMORY_SWAP
                                 fnHandleSwap(0);
-                            }
-                            if ((ptrStartStopUnit->ucPowerCondition & START_STOP_UNIT_POWER_CONDITION_LOEJ) != 0) {
-                                // eject
+            #endif
+                                if ((ptrStartStopUnit->ucPowerCondition & START_STOP_UNIT_POWER_CONDITION_LOEJ) != 0) { // eject
+            #if defined RESET_ON_STOP
+                                    uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), (TIMEOUT_RESET_NOW));
+            #endif
+                                }
                             }
                         }
                     }
                     break;
-    #endif
+        #endif
+
                 case UFI_TEST_UNIT_READY:
                     {
                         if ((_ptrDiskInfo->usDiskFlags & (DISK_MOUNTED | DISK_UNFORMATTED)) == 0) { // if the partition is not ready
@@ -1831,7 +1802,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #if defined RESET_ON_EJECT
                         else {
                             if (iSoftwareState[DISK_C] != SW_PROGRAMMING) { // ignore while programming
-                                uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * SEC), (TIMEOUT_USB_LOADING_COMPLETE_C)); // retrigger the MSD connection timer (the Test Unit Ready is sent event 1s from the host) - if it is missing for > 3s the unit will reset
+                                uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * SEC), (TIMEOUT_USB_LOADING_COMPLETE_C)); // retrigger the MSD connection timer (the Test Unit Ready is sent every 1s from the host) - if it is missing for > 3s the unit will reset
                             }
                         }
         #endif
@@ -2757,6 +2728,141 @@ static int _fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
     return UTFAT_SUCCESS;
 }
 
+static void fnWriteFileObject(int iDisk)
+{
+    DIR_ENTRY_STRUCTURE_FAT32 emptyObject;
+    #if defined USB_MSD_PARAMETER_FILE
+    int iFilesObjects = 0;
+    MAX_FILE_LENGTH TotalFileObjectSizes = 0;
+    MAX_FILE_LENGTH TotalObjectEntries = 0;
+    #endif
+    #if defined FAT_EMULATION
+    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntry = ptrDiskInfo[iDisk]->rootBuffer; // pointer to a copy of the root directory
+    #else
+    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntry = (DIR_ENTRY_STRUCTURE_FAT32 *)&root_file[iDisk];  // pointer to a copy of the root directory
+    #endif
+    #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND
+    DIR_ENTRY_STRUCTURE_FAT32 *ptrVolumeEntryBackup = 0;
+    MAX_FILE_LENGTH FileObjectSize = 0;
+    #endif
+    #if defined USB_MSD_PARAMETER_FILE
+    fnEraseFlashSector((unsigned char *)ptr_fileobject_location[iDisk], (ptr_disk_location[iDisk] - ptr_fileobject_location[iDisk])); // delete file object space
+    #endif
+    #if defined FAT_EMULATION
+    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)ptrDiskInfo[iDisk]->rootBuffer, sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // {30} save volume object
+    #else
+    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)&root_file[iDisk], sizeof(DIR_ENTRY_STRUCTURE_FAT32)); // {30} save volume object
+    #endif
+    #if defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND    // {21} jump possible hidden files (added by Windows 8.1 or MAC OS X) and deleted entries
+    FOREVER_LOOP() {
+        if ((ptrVolumeEntry->DIR_Name[0] == DIR_NAME_FREE) || ((ptrVolumeEntry->DIR_Attr != DIR_ATTR_LONG_NAME) && (ptrVolumeEntry->DIR_Attr & (DIR_ATTR_HIDDEN | DIR_ATTR_VOLUME_ID)))) { // volume ID, deleted or hidden system file/directory {25} and hidden type is ignored
+            ptrVolumeEntryBackup = 0;                                    // invalid as upload file so reset
+        }
+        else {
+            if (ptrVolumeEntryBackup == 0) {
+                ptrVolumeEntryBackup = ptrVolumeEntry;                   // remember the location of the start of the file object
+                FileObjectSize = sizeof(DIR_ENTRY_STRUCTURE_FAT32);      // reset the object size
+            }
+            else {
+                FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32);     // count the file object's length
+            }
+            if ((ptrVolumeEntry->DIR_Attr & ~(DIR_ATTR_READ_ONLY)) == DIR_ATTR_ARCHIVE) { // file name found - this is assumed to be the one that was uploaded (always first)
+                ptrVolumeEntry->DIR_Attr &= ~(DIR_ATTR_READ_ONLY);       // remove any read-only attribute before saving
+                ptrVolumeEntry->DIR_FstClusLO[0] = (RESERVED_SECTION_COUNT + 1); // ensure that the cluster location is the first (since it may have been located elsewhere after inserting a hidden system directory)
+                ptrVolumeEntry = ptrVolumeEntryBackup;                   // set to the beginning of this file object
+                if (FileObjectSize > ((ROOT_FILE_ENTRIES - 1) * sizeof(DIR_ENTRY_STRUCTURE_FAT32))) { // {24} if the software name is too long for the file object we use its short file name name instead
+                    while (FileObjectSize > sizeof(DIR_ENTRY_STRUCTURE_FAT32)) {
+                        ptrVolumeEntry++;                                // move to the final directory struct entry which will be the short file name
+                        FileObjectSize -= (sizeof(DIR_ENTRY_STRUCTURE_FAT32));
+                    }
+                }
+        #if defined USB_MSD_PARAMETER_FILE
+                iFilesObjects++;
+                TotalObjectEntries++;
+                fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk] + (TotalObjectEntries * sizeof(DIR_ENTRY_STRUCTURE_FAT32))), (unsigned char *)ptrVolumeEntry, FileObjectSize); // write the file object next
+                TotalFileObjectSizes += FileObjectSize;
+                if ((iParameterState[iDisk] == PARAMETER_FILE_EMPTY) || (iFilesObjects > 1)) {
+                    FileObjectSize = TotalFileObjectSizes;
+                    break;
+                }
+                ptrVolumeEntryBackup = 0;
+                TotalObjectEntries += ((FileObjectSize / sizeof(DIR_ENTRY_STRUCTURE_FAT32)) - 1);
+                ptrVolumeEntry += ((FileObjectSize / sizeof(DIR_ENTRY_STRUCTURE_FAT32)) - 1);
+                FileObjectSize = 0;
+        #else
+                fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk] + sizeof(DIR_ENTRY_STRUCTURE_FAT32)), (unsigned char *)ptrVolumeEntry, FileObjectSize); // write the file object next
+                break;                                                   // single file object added
+        #endif
+            }
+        }
+        ptrVolumeEntry++;                                                // move to next entry
+        if (ptrVolumeEntry >= &root_file[iDisk][BYTES_PER_SECTOR / sizeof(DIR_ENTRY_STRUCTURE_FAT32)]) { // first  root has been searched (second contains a copy)
+        #if defined USB_MSD_PARAMETER_FILE
+            FileObjectSize = TotalFileObjectSizes;
+        #endif
+            break;
+        }
+    }
+    FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32);                 // {30}
+    uMemset(&emptyObject, 0, sizeof(emptyObject));                       // ensure remainder of the file object area is blank
+    while (FileObjectSize < (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32))) {
+        #if defined USB_MSD_PARAMETER_FILE
+        fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk] + FileObjectSize), (unsigned char *)&emptyObject, sizeof(emptyObject));
+        #else
+        fnWriteBytesFlash((unsigned char *)(ptr_disk_location[iDisk] + FileObjectSize), (unsigned char *)&emptyObject, sizeof(emptyObject));
+        #endif
+        FileObjectSize += sizeof(DIR_ENTRY_STRUCTURE_FAT32);
+    }
+    #else
+    while (ptrVolumeEntry->DIR_Name[0] == DIR_NAME_FREE) {               // jump any deleted entries (from delete before programming)
+        ptrVolumeEntry++;
+    }
+    fnWriteBytesFlash((unsigned char *)(ptr_fileobject_location[iDisk]), (unsigned char *)ptrVolumeEntry, (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)));
+    #endif
+    #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+    fnWriteBytesFlash(0, 0, 0);                                          // close any outstanding FLASH buffer from end of the file
+    #endif
+}
+
+#if defined USB_MSD_PARAMETER_FILE
+static int fnCheckParameterArea(unsigned char ucLun, unsigned char *ptrParameterArea, int iSizeArea)
+{
+    unsigned char *ptrCheck = fnGetFlashAdd(ptrParameterArea);
+    int iCheckSize = iSizeArea;
+    while (iCheckSize != 0) {
+        if (*ptrCheck++ != 0xff) {
+            break;
+        }
+        iCheckSize--;
+    }
+    if (iCheckSize == 0) {                                               // parameter area is blank
+        if (iSoftwareState[ucLun] == SW_EMPTY) {
+            return PARAMETER_FILE_EMPTY;                                 // loading a parameter file is allowed as first step
+        }
+        else {
+            fnWriteBytesFlash(ptrParameterArea, fnGetFlashAdd((unsigned char *)ptr_disk_location[ucLun]), iSizeArea); // copy the parameters (initially loaded in application space) to their final location
+            fnEraseFlashSector((unsigned char *)ptr_disk_location[ucLun], iSizeArea);
+            iSoftwareState[ucLun] = SW_EMPTY;
+            return PARAMETER_FILE_EXISTS;
+        }
+    }
+    else {
+        unsigned char *ptrCheck = fnGetFlashAdd((unsigned char *)ptr_disk_location[ucLun]);
+        int iCheckSize = iSizeArea;
+        while (iCheckSize != 0) {
+            if (*ptrCheck++ != 0xff) {
+                break;
+            }
+            iCheckSize--;
+        }
+        if (iCheckSize == 0) {                                           // firwmare area is blank
+            iSoftwareState[ucLun] = SW_EMPTY;
+        }
+        return PARAMETER_FILE_EXISTS;                                    // parameter 
+    }
+}
+#endif
+
 #if defined CHECK_VALID_FILE_OBJECT && !defined FAT_EMULATION            // {33}
 
 static int fnIsEntryValid(DIR_ENTRY_STRUCTURE_FAT32 *ptrDir)
@@ -2809,7 +2915,7 @@ static int fnCheckFileObject(DIR_ENTRY_STRUCTURE_FAT32 *ptrDir, int iSize)
                     fnSetObjectDetails(ptrDir, &dummyFile);
                     ptrDir->DIR_FstClusLO[0] = (RESERVED_SECTION_COUNT + 1);
                     ptrDir->DIR_Attr = DIR_ATTR_ARCHIVE;                 // add an unknown file so that it can be deleted
-                    uMemcpy(ptrDir->DIR_Name, "Unknown bin", 11);        // we display a file so that it can be deleted before copying new code
+                    uMemcpy(ptrDir->DIR_Name, "UNKNOWN BIN", 11);        // we display a file so that it can be deleted before copying new code
                     break;
                 }
                 ptrDirCheck++;
@@ -2867,7 +2973,6 @@ static void fnGetFileDate(const LFN_ENTRY_STRUCTURE_FAT32 *ptrLFN_entry, unsigne
     *ptr_usCreationTime = ((ptrDirectoryEntry->DIR_CrtTime[1] << 8) | ptrDirectoryEntry->DIR_CrtTime[0]);
 }
 #endif
-
 
 
 static void fnDeleteApplication(unsigned char ucDisk)
@@ -3034,15 +3139,15 @@ static int fnIsFirmware(unsigned char *ptrBuffer)
     unsigned long ulAddress = fnGetContentAddress(ptrBuffer);
     if ((ulAddress > RAM_START_ADDRESS) && (ulAddress <= (RAM_START_ADDRESS + SIZE_OF_RAM))) { // check whether the stack pointer would be in the internal SRAM
         ulAddress = fnGetContentAddress(ptrBuffer + 4);
-    #if defined MEMORY_SWAP
+        #if defined MEMORY_SWAP
         if ((ulAddress > FLASH_START_ADDRESS) && (ulAddress <= (FLASH_START_ADDRESS + (SIZE_OF_FLASH/2)))) {
             return 0;                                                    // probably firmware content
         }
-    #else
+        #else
         if ((ulAddress > _UTASKER_APP_START_) && (ulAddress <= (FLASH_START_ADDRESS + SIZE_OF_FLASH))) { // check that the program counter would be in internal flash
             return 0;                                                    // probably firmware content
         }
-    #endif
+        #endif
     }
     return -1;                                                           // not firmware content
 }
@@ -3116,7 +3221,7 @@ static int fnCorrolateData(unsigned char ucDisk, unsigned char *ptrBuffer, unsig
     if (fnIsWindows(ptrBuffer) == 0) {                                   // try to identify windows content pattern
         return WINDOWS_HIDDEN_DATA_CONTENT;                              // probably hidden windows data
     }
-    if (fnIsMAC(ptrBuffer) == 0) {                                       // try to identfy MAC content pattern
+    if (fnIsMAC(ptrBuffer) == 0) {                                       // try to identify MAC content pattern
         return MAC_HIDDEN_DATA_CONTENT;                                  // probably hidden MAC data
     }
     #endif
@@ -3132,6 +3237,23 @@ static int fnCorrolateData(unsigned char ucDisk, unsigned char *ptrBuffer, unsig
     }
     #endif
     return UNKNOWN_CONTENT;                                              // this content is probably firmware data so it can be accepted if required
+}
+#endif
+
+#if defined USB_MSD_PARAMETER_FILE
+static void fnDeleteFile(unsigned char ucDisk, int iFileNumber)
+{
+    if ((iFileNumber == 0) && (iParameterState[ucDisk] >= PARAMETER_FILE_EXISTS)) {
+        if (iSoftwareState[ucDisk] != SW_EMPTY) {
+            return;                                                      // only allow parameter data delete when the firmware has first been deleted!
+        }
+        fnEraseFlashSector((unsigned char *)UTASKER_PARAMETER_FILE_START, UTASKER_PARAMETER_FILE_SIZE);
+        iParameterState[ucDisk] = PARAMETER_FILE_EMPTY;
+    }
+    else {
+        fnDeleteApplication(ucDisk);                                     // deleted file found so we delete the original firmware
+    }
+    fnWriteFileObject(ucDisk);                                           // update the file object that is saved before the firmware
 }
 #endif
 
@@ -3161,7 +3283,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #else
             unsigned char *ptrProgAdd = (unsigned char *)(ptr_disk_location[ucDisk] + ((ulSectorNumber - ptr_utDisk->ulLogicalBaseAddress) - ROOT_DIR_SECTORS) * BYTES_PER_SECTOR);
     #endif
-    #if !defined MEMORY_SWAP
+    #if !defined MEMORY_SWAP && !defined USB_MSD_PARAMETER_FILE
             ptrProgAdd += (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32));
     #endif
     #if defined MAC_OS_X_WORKAROUND
@@ -3197,7 +3319,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             }
     #endif
             if (iSynchronise[ucDisk] == 0) {                             // on first write to cluster area
-    #if defined MEMORY_SWAP
+    #if defined MEMORY_SWAP || defined USB_MSD_PARAMETER_FILE
                 ulOffset[ucDisk] = (unsigned long)(ptrProgAdd - (ptr_disk_location[ucDisk])); // check whether the data is starting at an offset or not
     #else
                 ulOffset[ucDisk] = (unsigned long)(ptrProgAdd - (ptr_disk_location[ucDisk] + (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)))); // check whether the data is starting at an offset or not
@@ -3215,7 +3337,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             }
             else {
     #endif
-    #if defined MEMORY_SWAP
+    #if defined MEMORY_SWAP || defined USB_MSD_PARAMETER_FILE
                 if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk])))
     #else
                 if ((ptrProgAdd < ptr_disk_end[ucDisk]) && (ptrProgAdd >= (ptr_disk_location[ucDisk] + (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)))))
@@ -3296,7 +3418,15 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             uMemcpy((((unsigned char *)&root_file[ucDisk]) + BYTES_PER_SECTOR), ptrBuffer, BYTES_PER_SECTOR); // update the second root sector
         }
     #endif
-        if (iSoftwareState[ucDisk] >= SW_AVAILABLE) {                    // check whether a delete has just been performed since software is already present
+    #if defined USB_MSD_PARAMETER_FILE
+        if ((iSoftwareState[ucDisk] >= SW_AVAILABLE) || (iParameterState[ucDisk] >= PARAMETER_FILE_EXISTS))
+    #else
+        if (iSoftwareState[ucDisk] >= SW_AVAILABLE)                      // check whether a delete has just been performed since software is already present
+    #endif
+        {
+    #if defined USB_MSD_PARAMETER_FILE
+            int iFileNumber = 0;
+    #endif
     #if defined FAT_EMULATION
             DIR_ENTRY_STRUCTURE_FAT32 *file_object = ptrDiskInfo[ucDisk]->rootBuffer;
     #else
@@ -3309,29 +3439,45 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #if defined DEBUG_CODE || defined DEBUG_MAC
                     fnDebugMsg("Deleting (1)\r\n");
     #endif
+    #if defined USB_MSD_PARAMETER_FILE
+                    fnDeleteFile(ucDisk, iFileNumber);
+    #else
                     fnDeleteApplication(ucDisk);                         // deleted (visible) file found so we delete the original firmware
+    #endif
     #if defined MAC_OS_X_WORKAROUND
                     ulNewWriteBlock[ucDisk] = 0;
     #endif
                     return UTFAT_SUCCESS;                                // the original software has been deleted and now a new one can be accepted
                 }
                 if (file_object->DIR_Attr == DIR_ATTR_ARCHIVE) {         // {22} we only check the first (visible) file entry
+    #if defined USB_MSD_PARAMETER_FILE
+                    if (fnGetFileSize((const LFN_ENTRY_STRUCTURE_FAT32 *)file_object) == 0) { // some times the file length is set to zero but the file name is not deleted - this works around this by checking the file size as well
+                        fnDeleteFile(ucDisk, iFileNumber);
+                        break;
+                    }
+                    if (++iFileNumber > 1) {
+                        break;
+                    }
+    #else
                     break;
+    #endif
                 }
                 file_object++;
                 i++;
             }
-    #if defined FAT_EMULATION
+    #if !defined USB_MSD_PARAMETER_FILE
+        #if defined FAT_EMULATION
             if (fnGetFileSize((const LFN_ENTRY_STRUCTURE_FAT32 *)ptrDiskInfo[ucDisk]->rootBuffer) == 0)
-    #else
+        #else
             if (fnGetFileSize((const LFN_ENTRY_STRUCTURE_FAT32 *)&root_file[ucDisk]) == 0)
-    #endif
+        #endif
             {                                                            // some times the file length is set to zero but the file name is not deleted - this works around this by checking the file size as well
-    #if defined DEBUG_CODE || defined DEBUG_MAC
+        #if defined DEBUG_CODE || defined DEBUG_MAC
                 fnDebugMsg("Deleting (2)\r\n");
-    #endif
+        #endif
                 fnDeleteApplication(ucDisk);
             }
+        #endif
         }
         else {
     #if defined DEBUG_CODE

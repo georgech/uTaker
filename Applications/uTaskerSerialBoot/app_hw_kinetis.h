@@ -3070,7 +3070,7 @@
         #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(A, (ERROR_LED), (ERROR_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, ERROR_LED)
         #define INIT_WATCHDOG_DISABLE()
-        #define FORCE_BOOT()           1                                 // boot loader always entered
+        #define FORCE_BOOT()           ((SOFTWARE_RESET_DETECTED() == 0) || (*BOOT_MAIL_BOX != RESET_TO_SERIAL_LOADER)) // stay in the boot loader unless there was a software reset requesting a jump to the application
         #define WATCHDOG_DISABLE()     0                                 // watchdog always enabled
     #else
         #define BLINK_LED              (PORTB_BIT19)                     // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
