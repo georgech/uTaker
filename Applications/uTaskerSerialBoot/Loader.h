@@ -201,9 +201,7 @@
     #endif
     // Before software can be read from the disk a password file must have been copied {7}
     //
-    #if defined _DEV2                                                    // protect the application from read-back
-        #define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
-    #else
+    #if !defined _DEV2
       //#define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
     #endif
 

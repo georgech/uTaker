@@ -126,6 +126,9 @@
 
 #include "config.h"
 
+#if defined _DEV2
+    extern void fnDisplayParameters(void);
+#endif
 
 // Each project includes a number of functions that allow different processors of configurations to share the same main file
 //
@@ -306,6 +309,7 @@
     #define DO_SHOW_TRIM           57
     #define DO_CHANGE_TRIM_COARSE  58
     #define DO_CHANGE_TRIM_FINE    59
+    #define DO_DISPLAY_PARS        60
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -927,6 +931,9 @@ static const DEBUG_COMMAND tStatCommand[] = {
 #if defined MONITOR_PERFORMANCE                                               // {25}
     {"tasks",             "Show task use",                         DO_HARDWARE,      DO_DISPLAY_TASK_USE },    
     {"rst_tasks",         "Reset task use measurement",            DO_HARDWARE,      DO_TASK_USE_RESET },
+#endif
+#if defined _DEV2
+    {"pars",              "Display Parameters",                    DO_HARDWARE,      DO_DISPLAY_PARS },
 #endif
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
@@ -3975,6 +3982,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     case DO_TASK_USE_RESET:
         fnDebugMsg("Task monitoring reset\r\n");
         ulMaximumIdle = 0xffffffff;                                      // flag that the monitoring should be reset after this task completes
+        break;
+#endif
+#if defined _DEV2
+    case DO_DISPLAY_PARS:
+        fnDisplayParameters();
         break;
 #endif
 

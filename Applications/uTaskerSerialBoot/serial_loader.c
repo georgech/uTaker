@@ -2118,7 +2118,7 @@ static unsigned char *fnBlankCheck(void)
 #endif
 
 
-#if defined NEEDS_BLANK_CHECK && !defined KBOOT_LOADER
+#if defined NEEDS_BLANK_CHECK && (defined I2C_INTERFACE || ((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC))
 static int fnPerformBlankCheck(void)
 {
     unsigned char *ptrFlash = fnBlankCheck();                            // subroutine for blank check added

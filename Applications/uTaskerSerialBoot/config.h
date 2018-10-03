@@ -990,7 +990,7 @@
           //#define USB_MSD_TIMEOUT                                      // if there is no enumeration within a short time the application will be started
           //#define FAT_EMULATION                                        // use fat emulation
             #if defined FAT_EMULATION
-                #define EMULATED_FAT_LUMS  2
+                #define EMULATED_FAT_LUNS  2
                 #define MAXIMUM_DATA_FILES 1
                 #define ROOT_DIR_SECTORS   2
                 #define EMULATED_FAT_DISK_SIZE (64 * 1024 * 1024)

@@ -1504,7 +1504,7 @@
                 #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (eg. set to 2 for SD card and emulated drive)
-                    #define EMULATED_FAT_LUMS         1                  // the number of logical units on emulated drive
+                    #define EMULATED_FAT_LUNS         1                  // the number of logical units on emulated drive
                     #define EMULATED_FAT_DISK_SIZE   (1024 * 1024)       // 1 MByte disk to be emulated
                     #define MAXIMUM_DATA_FILES        8                  // maximum number of data files that could be used by the disk
                     #define ROOT_DIR_SECTORS          2                  // 2 sectors is adequate for file information (including LFNs) for maximum file count

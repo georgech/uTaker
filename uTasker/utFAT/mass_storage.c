@@ -28,7 +28,7 @@
     22.01.2015 Add option to return a file's creation time and date in its file object {10}
     06.10.2015 Only when LFN is disabled: Corrected _utOpenDirectory() directory location returned when opening to write new files, plus reuse deleted directory space when possible {11}
     30.10.2015 Added emulated FAT support (FAT_EMULATION)                {12} [utFATV2.02]
-    16.11.2015 Ensure that EMULATED_FAT_LUMS is available                {13}
+    16.11.2015 Ensure that EMULATED_FAT_LUNS is available                {13}
     17.01.2016 Add utFileAttribute() - allows changing file attributes (not directories) {14}
     17.01.2016 Reset long file name counter when skipping hidden files   {15} [utFATV2.03]
     24.04.2017 Handle USB_MSD_REMOVED when memory stick is removed       {16}
@@ -204,8 +204,8 @@
 #define ROOT_DIRECTORY_SET               0x04
 #define ROOT_DIRECTORY_SETTING           0x08
 
-#if !defined EMULATED_FAT_LUMS                                           // {13}
-    #define EMULATED_FAT_LUMS            DISK_COUNT
+#if !defined EMULATED_FAT_LUNS                                           // {13}
+    #define EMULATED_FAT_LUNS            DISK_COUNT
 #endif
 
 /* =================================================================== */
@@ -552,11 +552,11 @@ static UTASK_TASK     cluster_task[DISK_COUNT] = {0};
 #endif
 
 #if defined FAT_EMULATION                                                // {12}
-    static DATA_FILE_INFO dataFileList[EMULATED_FAT_LUMS][MAXIMUM_DATA_FILES] = {{{0}}};
+    static DATA_FILE_INFO dataFileList[EMULATED_FAT_LUNS][MAXIMUM_DATA_FILES] = {{{0}}};
     #if defined ROOT_DIR_SECTORS
-        static DIR_ENTRY_STRUCTURE_FAT32 root_file[EMULATED_FAT_LUMS][(ROOT_DIR_SECTORS * (BYTES_PER_SECTOR/sizeof(DIR_ENTRY_STRUCTURE_FAT32)))] = {{{{0}}}}; // copy of present root directory (a number of sectors are maintained, depending on root directory size to hold maximum file objects [LFN can use multiple objects per file])
+        static DIR_ENTRY_STRUCTURE_FAT32 root_file[EMULATED_FAT_LUNS][(ROOT_DIR_SECTORS * (BYTES_PER_SECTOR/sizeof(DIR_ENTRY_STRUCTURE_FAT32)))] = {{{{0}}}}; // copy of present root directory (a number of sectors are maintained, depending on root directory size to hold maximum file objects [LFN can use multiple objects per file])
     #else
-        static unsigned char ucRootSectorCount[EMULATED_FAT_LUMS] = {0};
+        static unsigned char ucRootSectorCount[EMULATED_FAT_LUNS] = {0};
     #endif
 #endif
 
@@ -1667,9 +1667,9 @@ static int fnCheckCSD(unsigned char ucData[18])
 
 #if ((defined FULL_FAT_SUPPORT) && (defined UTFAT_WRITE && defined UTFAT_FORMATTING)) || defined FAT_EMULATION
 #if !defined FULL_FAT_SUPPORT
-    static UTDISK utDisks[EMULATED_FAT_LUMS] = {{0}};
+    static UTDISK utDisks[EMULATED_FAT_LUNS] = {{0}};
 #endif
-static unsigned long ulFAT32size[EMULATED_FAT_LUMS] = {0};
+static unsigned long ulFAT32size[EMULATED_FAT_LUNS] = {0};
 
 static void fnCreateExtendedBootRecord(int iDiskNumber)
 {
