@@ -107,7 +107,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -398,7 +398,7 @@
                     #endif
                         TOGGLE_TEST_OUTPUT();
                     #if defined MEASURE_FFT_TIME
-                        ulTimeStamp = ((DWT_CYCCNT - time_stamp) / (SYSTEM_CLOCK / 1000000)); // calculate the time the calculation took
+                        ulTimeStamp = ((DWT_CYCCNT - ulTimeStamp) / (SYSTEM_CLOCK / 1000000)); // calculate the time the calculation took
                         fnDebugMsg("FFT = ");
                         fnDebugDec(ulTimeStamp, 0);                      // ns
                         fnDebugMsg("ns]\r\n");

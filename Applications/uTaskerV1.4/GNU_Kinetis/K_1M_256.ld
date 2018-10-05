@@ -3,6 +3,9 @@
 /* Use when running in FLASH (1M FLASH / 256k CPU SRAM)                  */
 
 
+/* Enable the following line to allow MCUXpressor to find math functions */
+/* - when using, enable "Do not use default libraries (-nodefaultlibs)   */
+/* GROUP (libcr_c.a libcr_eabihelpers.a)                                 */
 
 MEMORY
 {
