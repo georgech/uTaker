@@ -8313,7 +8313,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
                 PTAPAR |= TA_PWM7_FUNCTION;
                 break;
             }
-            if (ptrPWM_settings->pwm_mode & PWM_POLARITY) {              // polarity
+            if ((ptrPWM_settings->pwm_mode & PWM_POLARITY) != 0) {       // polarity
                 PWMPOL |= ucChannel;
             }
             else {

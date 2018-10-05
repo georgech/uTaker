@@ -27,6 +27,7 @@
     05.05.2018 Add user defined target register option for DMA operation {11}
     08.05.2018 Add channel interrupt support (in addition to period interrupts) {12}
     29.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {13}
+    05.10.2018 Add combined channel pairs to support phases shifted output pairs {14}
 
 */
 
@@ -636,12 +637,40 @@ static __interrupt void _PWM_Interrupt_5(void)
             ptrFlexTimer->FTM_CNTIN = 0;
     #endif
             if ((ulMode & FTM_SC_CPWMS) != 0) {                          // if center-aligned
-                ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency / 2); // set the PWM period - valid for all channels of a single timer
+                ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency/2); // set the PWM period - valid for all channels of a single timer
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = (ptrPWM_settings->pwm_value / 2); // set the duty cycle for the particular channel
+    #if defined _WINDOWS && defined FTM_MODE_FTMEN
+                if ((ulMode & PWM_COMBINED_PHASE_SHIFT) != 0) {          // {14}
+                    _EXCEPTION("Combined channels are not possible in center-aligned mode!");
+                }
+    #endif
             }
-            else {
+            else {                                                       // edge aligned
                 ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency - 1); // set the PWM period - valid for all channels of a single timer
-                ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = ptrPWM_settings->pwm_value; // set the duty cycle for the particular channel            
+    #if defined FTM_MODE_FTMEN
+                if ((ulMode & PWM_COMBINED_PHASE_SHIFT) != 0) {          // {14} only possible in edge aligned mode
+                    if ((ucChannel & 1) == 0) {                          // the first combined channel pair defines the shift from the start position
+                        ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = ptrPWM_settings->pwm_phase_shift; // set the delay before the pulse starts
+                    }
+                    else {                                               // the second in the channel pair defines the end of the pulse
+                        unsigned short usEnd = (ptrPWM_settings->pwm_phase_shift + ptrPWM_settings->pwm_value);
+                        if (usEnd > (ptrPWM_settings->pwm_frequency - 1)) { // limt the end - the phase shift is effectively limited by the pulse width duration
+                            usEnd = (ptrPWM_settings->pwm_frequency - 1);
+                        }
+                        ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = usEnd; // set the point where the pulse ends
+                        if ((ulMode & PWM_POLARITY) != 0) {              // polarity
+                            ptrFlexTimer->FTM_COMBINE |= (FTM_COMBINE_COMP0 << (8 * (ucChannel/2))); // second channel is complimentary of first channel pair
+                        }
+                    }
+                  //ptrFlexTimer->FTM_MODE |= (FTM_MODE_FTMEN);          // allow extended features
+                    ptrFlexTimer->FTM_COMBINE |= (FTM_COMBINE_COMBINE0 << (8 * (ucChannel/2))); // set combined mode
+                }
+                else {
+                    ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = ptrPWM_settings->pwm_value; // set the duty cycle for the particular channel
+                }
+    #else
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = ptrPWM_settings->pwm_value; // set the duty cycle for the particular channel
+    #endif
             }
     #if !defined DEVICE_WITHOUT_DMA                                      // {2}
             if ((ulMode & (PWM_FULL_BUFFER_DMA | PWM_HALF_BUFFER_DMA)) != 0) { // if DMA is being specified

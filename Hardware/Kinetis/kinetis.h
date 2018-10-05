@@ -8388,7 +8388,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define FTM_STATUS_CH6F 0x00000040                                   // a channel 6 event has occurred
         #define FTM_STATUS_CH7F 0x00000080                                   // a channel 7 event has occurred
     #define FTM0_MODE           *(volatile unsigned long *)(FTM_BLOCK_0 + 0x054) // FTM0 features mode selection
-      #define FTM_MODE_FTMEN    0x00000001                                   // FTM enable (can only be written when WPDIS is '1')
+      #define FTM_MODE_FTMEN    0x00000001                                   // FTM enable (can only be written when WPDIS is '1') - allows unrestricted FTM registers (rather than TPM compatible)
       #define FTM_MODE_INIT     0x00000002                                   // initialise the channels output (always read as '0')
       #define FTM_MODE_WPDIS    0x00000004                                   // write protection disable (read-only - opposite polarity to WPEN)
       #define FTM_MODE_PWMSYNC  0x00000008                                   // PWM synchronisation mode
@@ -8402,7 +8402,24 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #define FTM0_OUTINIT        *(unsigned long *)(FTM_BLOCK_0 + 0x05c)      // FTM0 initial state for channels output
     #define FTM0_OUTMASK        *(unsigned long *)(FTM_BLOCK_0 + 0x060)      // FTM0 output mask
     #define FTM0_COMBINE        *(unsigned long *)(FTM_BLOCK_0 + 0x064)      // FTM0 function for linked channels
+      #define FTM_COMBINE_COMBINE0 0x00000001                                // combine channels 0 + 1
+      #define FTM_COMBINE_COMP0    0x00000002                                // complimentary channels 0 + 1
+      #define FTM_COMBINE_DTEN0    0x00000010                                // deadtime enable for channels 0 + 1
+      #define FTM_COMBINE_COMBINE1 0x00000100                                // combine channels 2 + 3
+      #define FTM_COMBINE_COMP1    0x00000200                                // complimentary channels 2 + 3
+      #define FTM_COMBINE_DTEN1    0x00001000                                // deadtime enable for channels 2 + 3
+      #define FTM_COMBINE_COMBINE2 0x00010000                                // combine channels 4 + 5
+      #define FTM_COMBINE_COMP2    0x00020000                                // complimentary channels 4 + 5
+      #define FTM_COMBINE_DTEN2    0x00100000                                // deadtime enable for channels 4 + 5
+      #define FTM_COMBINE_COMBINE3 0x01000000                                // combine channels 6 + 7
+      #define FTM_COMBINE_COMP3    0x02000000                                // complimentary channels 6 + 7
+      #define FTM_COMBINE_DTEN3    0x10000000                                // deadtime enable for channels 6 + 7
     #define FTM0_DEADTIME       *(unsigned long *)(FTM_BLOCK_0 + 0x068)      // FTM0 deadtime insertion control
+      #define FTM_DEADTIME_DTVAL_MASK 0x0000003f                             // deadtime value mask
+      #define FTM_DEADTIME_DTPS_MASK  0x000000c0                             // deadtime prescaler mask
+      #define FTM_DEADTIME_DTPS_1     0x00000000                             // deadtime prescaler 1
+      #define FTM_DEADTIME_DTPS_4     0x00000080                             // deadtime prescaler 4
+      #define FTM_DEADTIME_DTPS_16    0x000000c0                             // deadtime prescaler 16
     #define FTM0_EXTTRIG        *(unsigned long *)(FTM_BLOCK_0 + 0x06c)      // FTM0 external trigger
     #define FTM0_POL            *(unsigned long *)(FTM_BLOCK_0 + 0x070)      // FTM0 channels polarity
       #define FTM_POL_POL0_LOW 0x00000001                                    // active low
@@ -18945,6 +18962,7 @@ typedef struct stPWM_INTERRUPT_SETUP
     unsigned char    pwm_reference;                                      // PWM channel to be used (0..7)
     unsigned short   pwm_value;                                          // PWM percentage value
     unsigned short   pwm_frequency;                                      // base frequency
+    unsigned short   pwm_phase_shift;                                    // phase shift (used with combined channel mode on channels n and n+1 where n = 0, 2, 4 etc.)
     unsigned long    pwm_mode;                                           // PWM mode of operation
     void             (*channel_int_handler)(void);                       // channel interrupt handler to be configured (requires also PWM_CHANNEL_INTERRUPT)
     #if !defined DEVICE_WITHOUT_DMA
@@ -19021,6 +19039,7 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_DMA_SPECIFY_SHORT_WORD  0x00000000
 #define PWM_DMA_SPECIFY_LONG_WORD   0x00040000
 #define PWM_CHANNEL_INTERRUPT       0x00080000                           // chanel match interrupt (instead of, or in addition to period interrupt) - cannot be used together with DMA
+#define PWM_COMBINED_PHASE_SHIFT    0x00100000
 
 #define PWM_MODE_SETTINGS_MASK     (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 

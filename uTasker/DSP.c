@@ -252,7 +252,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         _EXCEPTION("Invalid FFT length!!!");
         return -1;
     }
-    TOGGLE_TEST_OUTPUT();                                                // start measurement of processing time
+  //TOGGLE_TEST_OUTPUT();                                                // start measurement of processing time
     switch (iInputOutputType & FFT_INPUT_MASK) {
     case FFT_INPUT_FLOATS:                                               // input samples are floats
         {
@@ -325,10 +325,10 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         break;
     default:
         _EXCEPTION("Invalid input type!!!");
-        TOGGLE_TEST_OUTPUT();                                            // start measurement of processing time
+      //TOGGLE_TEST_OUTPUT();                                            // start measurement of processing time
         return -1;
     }
-    TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
+  //TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
     if ((iInputOutputType & FFT_CALCULATION_Q15) != 0) {
         #if defined CMSIS_DSP_CFFT_Q15
       //fft_buffer_q15[];                                                // copy the windowed input to the q15 buffer
@@ -341,7 +341,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         arm_cfft_f32(ptrFFT_consts_f32, fft_buffer, 0, 1);               // perform an in-place complex FFT
     #endif
     }
-    TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
+  //TOGGLE_TEST_OUTPUT();                                                // stop/start measurement of processing time
     switch (iInputOutputType & FFT_OUTPUT_MASK) {
     case FFT_OUTPUT_FLOATS:
         if ((iInputOutputType & FFT_MAGNITUDE_RESULT) != 0) {            // if the magnitudes are required
@@ -349,7 +349,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
             iInputSamples /= 2;                                          // half the values are of interest (the second half is a mirrored version of the first half)
             arm_cmplx_mag_f32(fft_buffer, ptrFloatOutputBuffer, (unsigned long)iInputSamples); // calculate the magnitude of each frequency component            
             if (ptrWindowingBuffer != 0) {
-                TOGGLE_TEST_OUTPUT();                                    // start/stop measurement of processing time
+              //TOGGLE_TEST_OUTPUT();                                    // start/stop measurement of processing time
                 while (iInputSamples-- > 0) {
                     *ptrFloatOutputBuffer++ *= window_conversionFactor;  // compensate each frequency amplitude with the windowing coefficient
                 }
@@ -357,7 +357,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         }
         else {                                                           // complex result is to be returned
             uMemcpy(ptrOutputBuffer, fft_buffer, (iInputSamples * sizeof(float))); // it is expected that the output buffer is float of adequate size!
-            TOGGLE_TEST_OUTPUT();                                        // start/stop measurement of processing time
+          //TOGGLE_TEST_OUTPUT();                                        // start/stop measurement of processing time
             return 0;
         }
         break;
@@ -365,7 +365,7 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
         _EXCEPTION("Invalid output type!!!");
         return -1;
     }
-    TOGGLE_TEST_OUTPUT();                                                // stop measurement of processing time
+  //TOGGLE_TEST_OUTPUT();                                                // stop measurement of processing time
     return 0;
 }
 #endif

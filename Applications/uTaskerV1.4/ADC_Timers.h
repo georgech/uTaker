@@ -42,6 +42,7 @@
     03.05.2018 Corrected Kinetis internal temperature equation           {26}
     02.06.2018 Zero optional user UART callback handlers                 {27}
     05.09.2018 Add FFT_SAMPLED_INPUT option                              {28}
+    05.10.2018 Add PHASE_SHIFTED_COMBINED_OUTPUTS option for PWM         {29}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -55,12 +56,15 @@
       //#define TEST_ADC                                                 // enable test of ADC operation
           //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
           //#define TEST_POLL_ADC                                        // {25} poll ADC conversion complete rather than use end of conversion interrupt
-      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
           //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
           //#define FFT_SAMPLED_INPUT                                    // perform half-buffer interrupt and analyse the data with FFT (requires CMSIS_DSP_CFFT and CMSIS_DSP_FFT_4096)
                 #define FFT_FLOATING_POINT                               // perform floating point FFT with result in a floating point array, else q15
+                #if defined USE_CORTEX_CYCLE_COUNTER                     // only possible with Cortex-M4/M7
+                    #define MEASURE_FFT_TIME
+                #endif
       //#define INTERNAL_TEMP                                            // {2} read also internal temperature (Luminary Micro)
 
         #if defined TEST_ADC && (defined _HW_SAM7X || defined _HW_AVR32) // SAM7X and AVR32 specific tests
@@ -103,10 +107,11 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
+                  //#define PHASE_SHIFTED_COMBINED_OUTPUTS               // {29} generate phase shifted outputs
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
@@ -224,8 +229,8 @@
             #define AD_DA_BUFFER_LENGTH    (256)                         // buffer for 31.25ms at 8k bytes/s
         #elif defined FFT_SAMPLED_INPUT
           //#define AD_DA_BUFFER_LENGTH    (4 * 1024)                    // buffer for 5ms at 400k bytes/s
-          //#define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 10.1ms at 400k bytes/s
-            #define AD_DA_BUFFER_LENGTH    (16 * 1024)                   // buffer for 20.23ms at 400k bytes/s
+            #define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 10.1ms at 400k bytes/s
+          //#define AD_DA_BUFFER_LENGTH    (16 * 1024)                   // buffer for 20.23ms at 400k bytes/s
         #else
             #define AD_DA_BUFFER_LENGTH    (8 * 1024)                    // buffer for 1s at 8k bytes/s
         #endif
@@ -369,6 +374,7 @@
             #if defined KINETIS_KE
                     break;
             #else
+                #if (defined VOICE_RECORDER && defined SDCARD_SUPPORT) || defined FFT_SAMPLED_INPUT || defined KWIKSTIK
                     signed short *ptrSample;
                     if ((ADC_TRIGGER_2 == ucInputMessage[MSG_INTERRUPT_EVENT])) {
                         ptrSample = &sADC_buffer[AD_DA_BUFFER_LENGTH/2]; // set sample pointer to second half of the buffer
@@ -376,14 +382,28 @@
                     else {
                         ptrSample = &sADC_buffer[0];                     // set sample pointer to first half of the buffer
                     }
+                #endif
                 #if defined VOICE_RECORDER && defined SDCARD_SUPPORT     // {15}
                     fnSaveWaveToDisk(ptrSample, (unsigned short)(AD_DA_BUFFER_LENGTH)); // if there is a disk ready, save the data to a file
                 #elif defined FFT_SAMPLED_INPUT                          // preform an FFT analysis of the samples in the buffer
-                    #if defined FFT_FLOATING_POINT
-                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_FLOAT | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT/* | FFT_RAM_COEFFICIENTS*/)); // perform complex fast-fourier transform (the result is in the input buffer)
-                    #else
-                    fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH/2), 0, ((AD_DA_BUFFER_LENGTH/2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_Q15 | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    {
+                    #if defined MEASURE_FFT_TIME
+                        unsigned long ulTimeStamp = DWT_CYCCNT;          // time stamp before starting the FFT calculation
                     #endif
+                        TOGGLE_TEST_OUTPUT();
+                    #if defined FFT_FLOATING_POINT
+                        fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH / 2), 0, ((AD_DA_BUFFER_LENGTH / 2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_FLOAT | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT/* | FFT_RAM_COEFFICIENTS*/)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    #else
+                        fnFFT((void *)ptrSample, (void *)fft_magnitude_buffer, (AD_DA_BUFFER_LENGTH / 2), 0, ((AD_DA_BUFFER_LENGTH / 2) * sizeof(signed short)), windowing_buffer, window_conversionFactor, (FFT_INPUT_HALF_WORDS_UNSIGNED | FFT_CALCULATION_Q15 | FFT_OUTPUT_FLOATS | FFT_MAGNITUDE_RESULT)); // perform complex fast-fourier transform (the result is in the input buffer)
+                    #endif
+                        TOGGLE_TEST_OUTPUT();
+                    #if defined MEASURE_FFT_TIME
+                        ulTimeStamp = ((DWT_CYCCNT - time_stamp) / (SYSTEM_CLOCK / 1000000)); // calculate the time the calculation took
+                        fnDebugMsg("FFT = ");
+                        fnDebugDec(ulTimeStamp, 0);                      // ns
+                        fnDebugMsg("ns]\r\n");
+                    #endif
+                    }
                 #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again
                     {
                         int i;
@@ -771,7 +791,9 @@ static void __callback_interrupt adc_level_change_low(ADC_INTERRUPT_RESULT *adc_
 static void __callback_interrupt half_buffer_interrupt(void)
 {
     static int iPingPong = 0;
+    TOGGLE_TEST_OUTPUT();
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1 + iPingPong)); // send alternating event to follow the half-buffer that is ready to be processed
+    TOGGLE_TEST_OUTPUT();
     iPingPong ^= 1;
 }
     #endif
@@ -1736,6 +1758,29 @@ static void fnConfigure_Timer(void)
     #endif
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
+    #if defined PHASE_SHIFTED_COMBINED_OUTPUTS                           // {29}
+    // Set up two complimentary output pairs which are phase shifted from each other
+    //
+    pwm_setup.pwm_mode = (PWM_EDGE_ALIGNED);
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 128);                  // generate 1000Hz on PWM output
+    pwm_setup.pwm_value = _PWM_PERCENT(50, pwm_setup.pwm_frequency);     // 50% PWM (high/low)
+    pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
+    fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+
+    pwm_setup.pwm_mode |= (PWM_POLARITY);                                // complimentary output
+    pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
+    fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+
+    pwm_setup.pwm_mode &= ~(PWM_POLARITY);
+    pwm_setup.pwm_mode |= (PWM_COMBINED_PHASE_SHIFT);                    // the following channel pair are phase shifted (only possible in edge aligned mode)
+    pwm_setup.pwm_phase_shift = _PWM_PERCENT(25, pwm_setup.pwm_frequency); // 45° phase shift
+    pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2
+    fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+
+    pwm_setup.pwm_mode |= (PWM_POLARITY | PWM_SYS_CLK | PWM_PRESCALER_128);// clock PWM timer from the system clock with /16 pre-scaler [clock is enabled here so that all prepared values are synchronised]
+    pwm_setup.pwm_reference = (_TIMER_0 | 3);                            // timer module 0, channel 3
+    fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+    #else
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle
   //pwm_setup.int_handler = PWM_IRQ;                                     // enable to generate an interrupt on each PWM cycle
@@ -1847,7 +1892,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_value = _PWM_TENTH_PERCENT(706, pwm_setup.pwm_frequency); // 70.6% PWM (low/high) on different channel
     #endif
     fnConfigureInterrupt((void *)&pwm_setup);
-    #if defined FRDM_K64F                                                // generate 6 different PWM signals o flex timer 0
+    #if defined FRDM_K64F                                                // generate 6 different PWM signals on flex timer 0
     pwm_setup.pwm_value = _PWM_TENTH_PERCENT(553, pwm_setup.pwm_frequency); // 55.3% PWM (low/high) on different channel
     pwm_setup.pwm_reference = (_TIMER_0 | 1);
     fnConfigureInterrupt((void *)&pwm_setup);
@@ -1891,6 +1936,7 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_mode = (TIMER_PERIODIC);                           // period timer interrupt
     timer_setup.timer_value = TIMER_MS_DELAY(100);                       // 100ms periodic interrupt
     fnConfigureInterrupt((void *)&timer_setup);                          // enter interrupt for timer test
+    #endif
     #endif
 #else
     static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters
