@@ -371,8 +371,10 @@ extern int fnFFT(void *ptrInputBuffer, void *ptrOutputBuffer, int iInputSamples,
 #endif
 
 #if defined _WINDOWS
-    #if !defined CMSIS_DSP_CFFT
+    #if !defined CMSIS_DSP_CFFT && !defined _HW_AVR32
         #include "../../Hardware/CMSIS_DSP/arm_const_structs.h"          // include defines required for the use of ARM CMSIS FFT
+    #else
+        #include <math.h>
     #endif
     #if !defined SINE_INSTANCES
         #define SINE_INSTANCES 1

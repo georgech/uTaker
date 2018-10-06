@@ -1,0 +1,71 @@
+/**********************************************************************
+	Mark Butcher    Bsc (Hons) MPhil MIET
+
+	M.J.Butcher Consulting
+	Birchstrasse 20f,    CH-5406, Rütihof
+	Switzerland
+
+	www.uTasker.com    Skype: M_J_Butcher
+
+	---------------------------------------------------------------------
+	File:        avr32_assembler.s82 - AVR IAR
+	Project:     uTasker Demonstration project
+	---------------------------------------------------------------------
+	Copyright (C) M.J.Butcher Consulting 2004..2018
+	*********************************************************************
+	14.06.2010 subtract 4 from SP to leave space for uninitialised random number seed
+   
+*/
+
+
+        MODULE  ?PROGRAM_START
+
+        /////////////////////////////////////
+        // Forward declaration of segments //
+        /////////////////////////////////////
+
+        RSEG    SSTACK:DATA:NOROOT(2)
+        RSEG    RESET:CODE:NOROOT(2)
+
+        EXTERN  _AVR32_LowLevelInit
+
+        PUBLIC  __program_start
+
+__program_start:                          ; size - offset
+        LDDPC   SP,??SPS
+        SUB     SP, 4
+        LDDPC   R0,??AVR32_LowLevelInit
+        ICALL   R0
+        LDDPC   PC,??cmain
+        NOP
+
+        ALIGN   2
+
+        EXTERN  ?main
+        EXTERN  AVR32_LowLevelInit
+
+??SPS:  DC32    SFE(SSTACK) & ~3
+??AVR32_LowLevelInit DC32 AVR32_LowLevelInit
+??cmain DC32    ?main
+
+        PUBLIC  __set_evba
+        PUBLIC  __set_count
+        PUBLIC  __set_compare
+        PUBLIC  start_application
+
+__set_evba:                      ; write the passed value to EVBA register
+        mtsr    4,r12
+        ret 0
+
+__set_count:                     ; write the passed value to COUNT register
+        mtsr    264,r12
+        ret 0
+
+__set_compare:                   ; write the passed value to COMPARE register
+        mtsr    268,r12
+        ret 0
+
+start_application:
+        mov pc,r12               ; jump to the defined address (where new application is located)
+        END
+

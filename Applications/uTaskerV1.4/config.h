@@ -17,6 +17,7 @@
     11.04.2018 Merge with STM32 project
     01.05.2018 Merge with Luminary project
     06.06.2018 Merge with coldfire project
+    06.10.2018 Merge with AVR32 project
     
 */
 
@@ -226,6 +227,34 @@
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
+#elif defined _HW_AVR32
+  //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
+  //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
+  //#define AVR32_EVK1104
+    #define AVR32_EVK1105                                                // evaluation board from ATMEL with Ethernet and GLCD
+  //#define AVR32_AT32UC3C_EK                                            // evaluation board from ATMEL with UC3C GLCD and CAN
+  //#define AVR32_UC3_C2_XPLAINED                                        // evaluation board from ATMEL with UC3C Ethernet
+    #if defined AVR32_EVK1100
+        #define TARGET_HW       "AVR32 EVK1100"
+    #elif defined AVR32_EVK1101
+        #define TARGET_HW       "AVR32 EVK1101"
+        #define _AT32UC3B
+        #define DEVICE_WITHOUT_ETHERNET                                  // AT32UC3B has no Ethernet interface
+    #elif defined AVR32_AT32UC3C_EK
+        #define TARGET_HW       "AVR32 AT32UC3-EK"
+        #define DEVICE_WITHOUT_ETHERNET                                  // although the AT32UC3C has Ethernet, the board doesn't connect it
+        #define _AT32UC3C
+    #elif defined AVR32_EVK1105
+        #define TARGET_HW       "AVR32 EVK1105"
+    #elif defined AVR32_UC3_C2_XPLAINED
+        #define TARGET_HW       "AVR32 UC3-C2 Xplained"
+        #define _AT32UC3C
+    #endif
+    #if defined _AT32UC3B
+        #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((5 * 1024 + 600) * MEM_FACTOR)
+    #else
+        #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((25 * 1024 + 600) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
+    #endif
 #endif
 
 

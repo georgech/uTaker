@@ -56,7 +56,7 @@
       //#define TEST_ADC                                                 // enable test of ADC operation
           //#define ADC_INTERNAL_TEMPERATURE                             // force internal temperature channel to be used, when available
           //#define TEST_POLL_ADC                                        // {25} poll ADC conversion complete rather than use end of conversion interrupt
-        #define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
+      //#define TEST_AD_DA                                               // {14} enable test of reading ADC and writing (after delay) to DAC
           //#define ADC_TRIGGER_TPM                                      // use TPM module rather than PIT for ADC trigger (valid for KL parts)
           //#define VOICE_RECORDER                                       // {15} needs TEST_AD_DA and mass-storage and saves sampled input to SD card
           //#define HANDLE_PDB_INTERRUPT                                 // when the ADC is triggered by PDB handle also a PDB interrupt
@@ -830,7 +830,7 @@ static void fnStart_ADC_Trigger(void)
     pit_setup.int_handler = 0;                                           // no interrupt used since the PIT triggers ADC/DAC only
     pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
     pit_setup.count_delay = PIT_US_DELAY(125);                           // 8kHz period
-    pit_setup.ucPIT = 0;                                                 // use PIT0 since it is the only one that can trigger DAC conversions
+    pit_setup.ucPIT = 0;                                                 // use PIT0 since it is the only one that can trigger DAC conversions in Kinetis
     pit_setup.mode = (PIT_PERIODIC | PIT_RETRIGGER | PIT_TRIGGER_ADC0_A);// periodically trigger ADC0 channel A (PIT0 trigger was defined in ADC configuration) - uses retrigger in case the PIT was running previously
     fnConfigureInterrupt((void *)&pit_setup);                            // configure PIT0
         #endif

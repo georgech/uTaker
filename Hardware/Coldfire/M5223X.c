@@ -7723,7 +7723,7 @@ static unsigned short usPITPrescaler;
 
 static __interrupt__ void _PIT1_Interrupt(void)
 {
-    if (usPITPrescaler & PIT_EN) {                                       // if used in periodic mode
+    if ((usPITPrescaler & PIT_EN) != 0) {                                // if used in periodic mode
       //PIT_PCSR_1 = (unsigned short)(usPITPrescaler | PIT_DBG | PIT_OVW | PIT_PIF | PIT_RLD | PIT_PIE); // clear interrupt and continue running in periodic mode
         PIT_PCSR_NON_PRE_1 = (PIT_DBG | PIT_OVW | PIT_PIF | PIT_RLD | PIT_PIE | PIT_EN); // {177} clear interrupt and continue running in periodic mode without writing to pre-scaler (and resetting its value)
     }
@@ -7732,7 +7732,7 @@ static __interrupt__ void _PIT1_Interrupt(void)
         POWER_DOWN(POWER_PIT1);                                          // automatically power down when in single shot mode
     }
     iInterruptLevel = 1;
-    pit1_interrupt_handler();                                            // call handling function
+        pit1_interrupt_handler();                                        // call handling function
     iInterruptLevel = 0;
 }
 #endif

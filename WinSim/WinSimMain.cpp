@@ -131,6 +131,7 @@
     19.02.2017 Add FT800 emulation                                       {110}
     28.02.2017 Add UARTs 6 and 7                                         {111}
     28.08.2018 Modify multicolour LED handling to allow multiple ones in any order {112}
+    06.10.2018 Allow display of mixed port widths for processor and external ports {112}
 
     */
 
@@ -849,6 +850,15 @@ static int iPrevBit = -1;
     #define PORT_TEXT_LENGTH 8
     static  RECT rect_LAN_LED = {227, 234, 274, 289};
 #endif
+#if defined _EXT_PORT_32_BIT && PORT_WIDTH < 32                          // {113}
+    #define BLANK_PROCESSOR_PORTS (32 - PORT_WIDTH)
+#elif defined _EXT_PORT_28_BIT && PORT_WIDTH < 28
+    #define BLANK_PROCESSOR_PORTS (28 - PORT_WIDTH)
+#elif defined _EXT_PORT_16_BIT && PORT_WIDTH < 16
+    #define BLANK_PROCESSOR_PORTS (16 - PORT_WIDTH)
+#else
+    #define BLANK_PROCESSOR_PORTS 0
+#endif
 
 #if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
     #define DEVICE_X_POS 9
@@ -962,6 +972,7 @@ static int fnJumpPort(int i)
     return 0;
 }
 #endif
+
 
 static void fnDisplayPorts(HDC hdc)
 {
@@ -1305,7 +1316,7 @@ static void fnDisplayPorts(HDC hdc)
     #elif defined _HW_AVR32 || defined _VYBRID                           // {34}
     signed char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "PORT 0   ";
     #else                                                                // SAM7X
-    signed char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "PORT A   ";
+    signed char cPorts[32 + PORT_NAME_LENGTH] = "PORT A   ";
     #endif
 #endif
     unsigned char ucPortWidth = PORT_WIDTH;
@@ -1318,7 +1329,7 @@ static void fnDisplayPorts(HDC hdc)
     present_ports_rect = present_windows_rect;
     present_windows_rect.top += (PORT_FIRST_LINE + (18 * (IP_NETWORK_COUNT - 1)));
     present_ports_rect.top = present_windows_rect.top;
-    present_windows_rect.left = PORT_DISPLAY_LEFT;       
+    present_windows_rect.left = (PORT_DISPLAY_LEFT - (BLANK_PROCESSOR_PORTS * (Port_tm.tmAveCharWidth / 2)));
     for (i = 0; i < (_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT); i++) {     // {81}
 #if defined _M5222X || defined _M5221X || defined _M521XX || defined _M521X // {32}
         if (fnJumpPort(i)) {
@@ -1356,7 +1367,15 @@ static void fnDisplayPorts(HDC hdc)
         }
 #endif
         ulBit = ulMSB;
-        for (y = 0; y < ucPortWidth; y++) {                              // draw each port state
+        y = 0;
+#if BLANK_PROCESSOR_PORTS > 0
+        if (i < _PORTS_AVAILABLE) {
+            for (y = 0; y < BLANK_PROCESSOR_PORTS; y++) {
+                cPorts[y + PORT_NAME_LENGTH] = ' ';
+            }
+        }
+#endif
+        for (; y < (ucPortWidth + BLANK_PROCESSOR_PORTS); y++) { // draw each port state
             if ((ulPortMask & ulBit) != 0) {
                 cPorts[y + PORT_NAME_LENGTH] = '-';                      // bit with no function
             }
@@ -2103,7 +2122,7 @@ static void fnDisplayPorts(HDC hdc)
             ulPortMask = 0xc0000000;
         }
 #endif
-        DrawText(hdc, (const char*)cPorts, (PORT_WIDTH + PORT_NAME_LENGTH), &present_windows_rect, 0);
+        DrawText(hdc, (const char*)cPorts, (PORT_WIDTH + BLANK_PROCESSOR_PORTS + PORT_NAME_LENGTH), &present_windows_rect, 0);
         present_windows_rect.top += PORT_LINE_SPACE;
 #if defined _M5222X || defined _M5221X || defined _M521XX || defined _M521X // {32}
 _jump_entry:
@@ -2283,7 +2302,7 @@ static int fnToggleInput(int x, int y, int iCheck)
 
     x -= (PORT_TEXT_LENGTH * Port_tm.tmAveCharWidth);
 
-    if (x < START_PORTS_X) {                                             // check whether the mouse was on a port
+    if (x < (START_PORTS_X - (BLANK_PROCESSOR_PORTS * Port_tm.tmAveCharWidth / 2))) {             // check whether the mouse was on a port
         iLastPort = -1;
         return 0;
     }
@@ -2291,8 +2310,8 @@ static int fnToggleInput(int x, int y, int iCheck)
         iLastPort = -1;
         return 0;
     }
-    x -= START_PORTS_X;
-    if (x > (PORT_WIDTH * Port_tm.tmAveCharWidth))  {
+    x -= (START_PORTS_X - (BLANK_PROCESSOR_PORTS * Port_tm.tmAveCharWidth/2));
+    if (x > ((PORT_WIDTH + BLANK_PROCESSOR_PORTS) * Port_tm.tmAveCharWidth))  {
 #if defined DOUBLE_COLUMN_PORTS                                          // {50}
         x -= SECOND_PORT_COLUMN_OFFSET;
         if ((x < 0) || (x > (PORT_WIDTH * Port_tm.tmAveCharWidth))) {
@@ -2324,7 +2343,7 @@ static int fnToggleInput(int x, int y, int iCheck)
 
     iSizeX = Port_tm.tmAveCharWidth;
 
-    while (iPortBit < PORT_WIDTH) {                                      // which input ?
+    while (iPortBit < (PORT_WIDTH + BLANK_PROCESSOR_PORTS)) {            // which input ?
         if (x < iSizeX) {                                                // port row found
 #if defined DOUBLE_COLUMN_PORTS
             iPort = iPortColumn;
@@ -2352,8 +2371,15 @@ static int fnToggleInput(int x, int y, int iCheck)
                         }
                     }
 #endif
+                    if (iPort < _PORTS_AVAILABLE) {
+                        if (iPortBit < BLANK_PROCESSOR_PORTS) {
+                            iLastPort = -1;
+                            return 0;
+                        }
+                        iPortBit -= BLANK_PROCESSOR_PORTS;
+                    }
                     iLastPort = iPort;
-                    iLastBit  = iPortBit;
+                    iLastBit = iPortBit;
                     if (PORT_LOCATION == iCheck) {
                         return 0;
                     }

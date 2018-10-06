@@ -8438,6 +8438,8 @@ extern QUEUE_TRANSFER fnNetworkTx(unsigned char *output_buffer, QUEUE_TRANSFER n
     #include "debug_hal_stm32.h"
 #elif defined _LM3SXXXX
     #include "debug_hal_luminary.h"
+#elif defined _HW_AVR32
+    #include "debug_hal_avr32.h"
 #endif
 //extern int fnPortState(CHAR cPortBit); - check the present state of a particular port
 //extern int fnPortInputConfig(CHAR cPortBit); - check whether the port is configured as an input or as output

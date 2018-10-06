@@ -11,7 +11,7 @@
     File:      app_hw_stm32.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     Application specific hardware configuration
 
