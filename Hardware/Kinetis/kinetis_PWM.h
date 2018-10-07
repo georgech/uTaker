@@ -734,7 +734,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             ulMode |= (ptrFlexTimer->FTM_SC & (FTM_SC_PWMEN0 | FTM_SC_PWMEN1 | FTM_SC_PWMEN2 | FTM_SC_PWMEN3 | FTM_SC_PWMEN4 | FTM_SC_PWMEN5 | FTM_SC_PWMEN6 | FTM_SC_PWMEN7)); // preserve already set PWM outputs
             ulMode |= (FTM_SC_PWMEN0 << ptrPWM_settings->pwm_reference); // enable the PWM channel output
     #endif
-            ptrFlexTimer->FTM_SC = ulMode;                               // note that the mode is shared by all channels in the flex timer
+            ptrFlexTimer->FTM_SC = ulMode;                               // note that the mode is shared by all channels in the flex timer [when the clock is stopped to the flextimer its outputs are also tri-stated, meaning that pull-up/downs on the outputs can be used to determine their idle state]
     #if defined _WINDOWS
             ptrFlexTimer->FTM_SC &= ~(FTM_SC_TOF);                       // this is a write '1' to clear flag so we reset it when simulating
     #endif

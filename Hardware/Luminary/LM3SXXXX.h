@@ -895,11 +895,11 @@
 #if defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS
     #define PORTS_AVAILABLE      __PORTS_AVAILABLE                       // ADC multiplexed with ports
 #else
-    #if PART_DC1 & ADC0_PRESENT1
-        #define PORTS_AVAILABLE  (__PORTS_AVAILABLE + 1)                 // add ADC
-    #else
+  //#if PART_DC1 & ADC0_PRESENT1
+  //    #define PORTS_AVAILABLE  (__PORTS_AVAILABLE + 1)                 // add ADC
+  //#else
         #define PORTS_AVAILABLE  __PORTS_AVAILABLE                       // no ADC
-    #endif
+  //#endif
 #endif
 /*****************************************************************************************************/
 

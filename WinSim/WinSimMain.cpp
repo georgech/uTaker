@@ -131,7 +131,7 @@
     19.02.2017 Add FT800 emulation                                       {110}
     28.02.2017 Add UARTs 6 and 7                                         {111}
     28.08.2018 Modify multicolour LED handling to allow multiple ones in any order {112}
-    06.10.2018 Allow display of mixed port widths for processor and external ports {112}
+    06.10.2018 Allow display of mixed port widths for processor and external ports {113}
 
     */
 
@@ -284,8 +284,10 @@ static int iPrevBit = -1;
     #else
         #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1)                   // add dedicated ADC port
     #endif
+#elif defined _LM3SXXXX
+    #define _PORTS_AVAILABLE (__PORTS_AVAILABLE + 1)                     // add dedicated ADC port
 #else
-    #define _PORTS_AVAILABLE PORTS_AVAILABLE
+    #define _PORTS_AVAILABLE      PORTS_AVAILABLE
 #endif
 
 #if defined _HW_NE64
@@ -1357,14 +1359,15 @@ static void fnDisplayPorts(HDC hdc)
             ulPortMask = 0xff000000;
         }
     #endif
-#elif defined _LM3SXXXX && ((_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT) != _PORTS_AVAILABLE) // {33}{81} ADC is seperate from GPIO
-        if (i == ((_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT) - 1)) {       // {81}
+        /*
+#elif defined _LM3SXXXX && (PORTS_AVAILABLE != __PORTS_AVAILABLE)        // {33}{81} ADC is seperate from GPIO
+        if (i == __PORTS_AVAILABLE) {                                    // {81}
             ulPortMask = (0xff << ADC_CHANNELS);
             cPorts[0] = 'A';
             cPorts[1] = 'D';
             cPorts[2] = 'C';
             memset(&cPorts[3], ' ', (sizeof(cPorts) - 3)); 
-        }
+        }*/
 #endif
         ulBit = ulMSB;
         y = 0;
@@ -1374,8 +1377,11 @@ static void fnDisplayPorts(HDC hdc)
                 cPorts[y + PORT_NAME_LENGTH] = ' ';
             }
         }
+        else {
+            ulBit <<= BLANK_PROCESSOR_PORTS;
+        }
 #endif
-        for (; y < (ucPortWidth + BLANK_PROCESSOR_PORTS); y++) { // draw each port state
+        for (; y < (ucPortWidth + BLANK_PROCESSOR_PORTS); y++) {         // draw each port state
             if ((ulPortMask & ulBit) != 0) {
                 cPorts[y + PORT_NAME_LENGTH] = '-';                      // bit with no function
             }
@@ -1418,6 +1424,20 @@ static void fnDisplayPorts(HDC hdc)
             cPorts[3] = ' ';
             cPorts[5] = ' ';
             for (b = 9; b < (9 + 32); b++) {
+                if (cPorts[b] != '-') {
+                    cPorts[b] = 'A';                                     // mark that the pin has a dedicated analogue function
+                }
+            }
+        }
+#elif defined _LM3SXXXX && (_PORTS_AVAILABLE != __PORTS_AVAILABLE)
+        if (i == __PORTS_AVAILABLE) {                                    // handle dedicated ADC inputs
+            int b;
+            cPorts[0] = 'A';
+            cPorts[1] = 'D';
+            cPorts[2] = 'C';
+            cPorts[3] = ' ';
+            cPorts[5] = ' ';
+            for (b = (BLANK_PROCESSOR_PORTS + PORT_NAME_LENGTH); b < ((BLANK_PROCESSOR_PORTS + PORT_NAME_LENGTH) + 8); b++) {
                 if (cPorts[b] != '-') {
                     cPorts[b] = 'A';                                     // mark that the pin has a dedicated analogue function
                 }
@@ -2268,7 +2288,7 @@ extern void fnSetLastPort(int iInputLastPort, int iInputPortBit)
     if (iInputLastPort == -1) {                                          // mouse moved away from an input so invalidate display
         return;
     }
-    if ((iInputPortBit & ~(PORT_WIDTH - 1)) != 0) {                      // ignore references to bits beyond the processor's pprt width
+    if (iInputPortBit > iPortBitCount) {                                 // ignore references to bits beyond the processor's port width
         return;
     }
     if (iInputPortBit == 0) {
@@ -4181,6 +4201,11 @@ extern void fnInjectInputChange(unsigned long ulPortRef, unsigned long ulPortBit
     char *ptr[2];
     int iBitRef = (PORT_WIDTH - 1);                                      // MSB
     ulPortBit >>= 1;
+#if BLANK_PROCESSOR_PORTS != 0
+    if (ulPortRef >= _PORTS_AVAILABLE) {
+        iBitRef += BLANK_PROCESSOR_PORTS;
+    }
+#endif
     while (ulPortBit != 0) {                                             // convert to the bit location reference
         iBitRef--;
         ulPortBit >>= 1;
@@ -4240,8 +4265,8 @@ extern void fnInjectPortValue(int iPort, unsigned long ulMask, unsigned long ulV
 #endif
     int iPortBit = 0;
 
-    while (ulPortInputs) {
-        if (ulBit & ulMask) {
+    while (ulPortInputs != 0) {
+        if ((ulBit & ulMask) != 0) {
             if ((ulPortStates[iPort] & ulBit) != (ulValue & ulBit)) {    // if this bit is to be changed
                 fnSimPortInputToggle(iPort, iPortBit);
                 fnProcessInputChange();

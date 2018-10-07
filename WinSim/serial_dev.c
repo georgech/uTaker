@@ -1209,7 +1209,7 @@ static PCF8575 simPCF8575[PCF8575_CNT] = {{ADDRESS_PCF8575, 0}};
         if ((simPCF8575[iPortIndex].ucOutput[iByteOffset] & bit) == 0) { // any outputs that are driving low are ignored
             return;
         }
-        if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
+        if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) != 0) {
             simPCF8575[iPortIndex].ucInput[iByteOffset] ^= bit;          // toggle the input state
         }
         else if (iChange == SET_INPUT) {

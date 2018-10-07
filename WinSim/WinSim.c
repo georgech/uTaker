@@ -127,10 +127,10 @@ extern void fnInitHW(void);
     #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define _PORTS_AVAILABLE PORTS_AVAILABLE_8_BIT
     #else
-        #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1)                   // add dedicated ADC port
+        #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1) 
     #endif
 #else
-    #define _PORTS_AVAILABLE PORTS_AVAILABLE
+    #define _PORTS_AVAILABLE      (PORTS_AVAILABLE + 1)                  // add dedicated ADC port
 #endif
 
 extern int iInts = 0;
@@ -1127,7 +1127,7 @@ unsigned char *fnGetNextDoPlace(char *argv[])
 
 unsigned char *fnInsertValue(unsigned char *ucDo, unsigned long ulValue, int iLen)
 {
-    while (iLen--) {
+    while (iLen-- != 0) {
         *ucDo++ = (unsigned char)(ulValue >> iLen*8);
     }
     return ucDo;
@@ -1341,7 +1341,7 @@ static int fnSimulateActions(char *argv[])
             int iPorts = 0;
             ucDo = fnGetNextDoPlace(argv);
             *ucDo++ = DISPLAY_PORT_CHANGE;                               // we inform that we may want to display a port change
-            *ucDo++ = (_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT); //(_PORTS_AVAILABLE * 3 * sizeof(unsigned long));// {51}{62}
+            *ucDo++ = (_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT);         //(_PORTS_AVAILABLE * 3 * sizeof(unsigned long));// {51}{62}
             while (iPorts < (_PORTS_AVAILABLE + _EXTERNAL_PORT_COUNT)) { // {62}
                 ucDo = fnInsertValue(ucDo, fnGetPresentPortState(++iPorts), sizeof(unsigned long));
                 ucDo = fnInsertValue(ucDo, fnGetPresentPortDir(iPorts), sizeof(unsigned long));

@@ -80,7 +80,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     char *ptrBuf = cPortDetails;
     int iLength = 0;
     int iPortLength = PORT_WIDTH;
-    char cBuf[BUF1SIZE+1];
+    char cBuf[BUF1SIZE + 1];
     #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (defined _FURY_CLASS || defined _SANDSTORM_CLASS) // {6}
     if (iPort >= __PORTS_AVAILABLE) {                                    // dedicated ADC port
         iPort = _GPIO_ADC;
@@ -198,7 +198,6 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     case _GPIO_ADC:                                                      // {2}
         STRCPY(cPortDetails, "ADC inputs");
         iADC = iBit;
-        iPort = (PORTS_AVAILABLE - 1);
         break;
     default:
         STRCPY(cPortDetails, "?????");
@@ -221,18 +220,18 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
 #endif
     STRCPY(cBuf, cPinNumber[iPort][iBit]);
     STRCAT(cPortDetails, cBuf);
-    if (!strcmp(cBuf, "NA")) {
+    if (strcmp(cBuf, "NA") == 0) {
         return;
     }
 
-    if (ulPortPeripheral[iPort] & (0x01 << iBit)) {
+    if ((ulPortPeripheral[iPort] & (0x01 << iBit)) && (iPort != _GPIO_ADC)) {
         unsigned char *ptrList = _ptrPerFunctions;
         int _iPort = iPort;
         int _iBit = iBit;
-        while (_iPort--) {
+        while (_iPort-- != 0) {
             ptrList += (PORT_WIDTH);
         }
-        while (_iBit--) {
+        while (_iBit-- != 0) {
             ptrList++;
         }
         cBuf[0] = ' ';
@@ -252,7 +251,9 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     }
     else {
         if (iADC >= 0) {                                                 // {2}
+#if !(defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1))
             STRCAT(cPortDetails, " Inactive");
+#endif
         }
         else {
             if (ulPortFunction[iPort] & (0x01 << iBit)) {

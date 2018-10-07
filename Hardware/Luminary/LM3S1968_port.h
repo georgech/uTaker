@@ -19,7 +19,7 @@
 */
 
 
-static const char *cPinNumber[PORTS_AVAILABLE][PORT_WIDTH] = {
+static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH] = {
     // PORT A (0..7)
     { "26 {PA0/U0Rx}", "27 {PA1/U0Tx}", "28 {PA2/SSI0Clk}", "29 {PA3/SSI0Fss}", "30 {PA4/SSI0Rx}", "31 {PA5/SSI0Tx}", "34 {PA6/I2C1SCL}", "35 {PA7/I2C1SDA}"},
 #if defined _LM3S1958                                                    // {2}
@@ -58,7 +58,7 @@ static const char *cPinNumber[PORTS_AVAILABLE][PORT_WIDTH] = {
     { "1 {AIN0}", "2 {AIN1}", "5 {AIN2}", "6 {AIN3}", "100 {AIN4}", "99 {AIN5}", "96 {AIN6}", "65{AIN7}"}, // {1}
 };
 
-static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][2] = {
+static const char *cPer[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
     {
         //  Q    Periph.
         {  "Q", "U0Rx"     },                                            // PORT A

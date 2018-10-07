@@ -37,6 +37,8 @@
    11.09.2010 When no watchdog interrupt vector command reset            {20}
    28.09.2010 Add external UART transmit interrupt support               {21}
    10.10.2010 Add 16 bit timer mode support                              {22}
+   07.10.2018 Add external ports                                         {23}
+   07.10.2018 Add key input port default override and extended port default states {24}
 
 */  
 
@@ -55,6 +57,11 @@
 
 static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginalInput);
 static void fnUpdatePeripherals(int iPort, unsigned char ucFunctions, LM3XXXXX_PORT_CONTROL *ptrPort);
+
+#if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {23}
+    extern unsigned long fnGetExtPortFunction(int iExtPortReference);
+    extern unsigned long fnGetExtPortState(int iExtPortReference);
+#endif
 
 
 #if defined CHIP_HAS_uDMA && defined SERIAL_SUPPORT_DMA
@@ -124,6 +131,7 @@ static int iFlagRefresh = 0;
 static void fnSetDevice(unsigned long *ulPortInits)
 {
     extern void fnEnterHW_table(void *hw_table);
+    unsigned long initial_input_state;
 #if defined _TEMPEST_CLASS
     DID0 = 0x10040000;                                                   // Tempest Class
 #elif defined _DUST_DEVIL_CLASS
@@ -360,31 +368,72 @@ static void fnSetDevice(unsigned long *ulPortInits)
     CANIF2MSK2 = 0x0000ffff;
 #endif
 #if PART_DC4 & GPIOA_PRESENT4
-    GPIODATA_A   = ucPort_in_A = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTA);         // {24} allow key input defaults override port input defaults
+    GPIODATA_A   = ucPort_in_A = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
-    GPIODATA_B   = ucPort_in_B = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTB);         // allow key input defaults override port input defaults
+    GPIODATA_B   = ucPort_in_B = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
-    #if PART_DC4 & GPIOC_PRESENT4
-    GPIODATA_C   = ucPort_in_C = (unsigned char)*ulPortInits++;
+#if PART_DC4 & GPIOC_PRESENT4
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTC);         // allow key input defaults override port input defaults
+    GPIODATA_C   = ucPort_in_C = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOD_PRESENT4
-    GPIODATA_D   = ucPort_in_D = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTD);         // allow key input defaults override port input defaults
+    GPIODATA_D   = ucPort_in_D = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
-    GPIODATA_E   = ucPort_in_E = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTE);         // allow key input defaults override port input defaults
+    GPIODATA_E   = ucPort_in_E = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
-    GPIODATA_F   = ucPort_in_F = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTF);         // allow key input defaults override port input defaults
+    GPIODATA_F   = ucPort_in_F = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
-    GPIODATA_G   = ucPort_in_G = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTG);         // allow key input defaults override port input defaults
+    GPIODATA_G   = ucPort_in_G = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
-    GPIODATA_H   = ucPort_in_H = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTH);         // allow key input defaults override port input defaults
+    GPIODATA_H   = ucPort_in_H = (unsigned char)initial_input_state;     // set port inputs to default states
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4                                            // {3}
-    GPIODATA_J   = ucPort_in_J = (unsigned char)*ulPortInits++;
+    initial_input_state = fnKeyPadState(*ulPortInits++, _PORTJ);         // allow key input defaults override port input defaults
+    GPIODATA_J   = ucPort_in_J = (unsigned char)initial_input_state;     // set port inputs to default states
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 0) && defined PORT_EXT0_DEFAULT_INPUT // {24}
+    initial_input_state = fnKeyPadState(PORT_EXT0_DEFAULT_INPUT, _PORT_EXT_0);
+    fnSetI2CPort(_PORT_EXT_0, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 1) && defined PORT_EXT1_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT1_DEFAULT_INPUT, _PORT_EXT_1);
+    fnSetI2CPort(_PORT_EXT_1, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 2) && defined PORT_EXT2_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT2_DEFAULT_INPUT, _PORT_EXT_2);
+    fnSetI2CPort(_PORT_EXT_2, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 3) && defined PORT_EXT3_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT3_DEFAULT_INPUT, _PORT_EXT_3);
+    fnSetI2CPort(_PORT_EXT_3, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 4) && defined PORT_EXT0_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT4_DEFAULT_INPUT, _PORT_EXT_4);
+    fnSetI2CPort(_PORT_EXT_4, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 5) && defined PORT_EXT1_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT5_DEFAULT_INPUT, _PORT_EXT_5);
+    fnSetI2CPort(_PORT_EXT_5, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 6) && defined PORT_EXT2_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT6_DEFAULT_INPUT, _PORT_EXT_6);
+    fnSetI2CPort(_PORT_EXT_6, DEFINE_INPUT, initial_input_state);
+#endif
+#if defined _EXTERNAL_PORT_COUNT && (_EXTERNAL_PORT_COUNT > 7) && defined PORT_EXT3_DEFAULT_INPUT
+    initial_input_state = fnKeyPadState(PORT_EXT7_DEFAULT_INPUT, _PORT_EXT_7);
+    fnSetI2CPort(_PORT_EXT_7, DEFINE_INPUT, initial_input_state);
 #endif
 #if PART_DC2 & (I2C0_PRESENT2 | I2C1_PRESENT2)
     I2CMTPR_0 = 0x00000001;
@@ -1840,6 +1889,10 @@ extern int fnPortChanges(int iForce)                                     // {8}
 #if (PART_DC4 & GPIOD_PRESENT4 | GPIOD_PRESENT4)
     unsigned long _reg;
 #endif
+#if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {23}
+    static unsigned long ulPortExtValue[_EXTERNAL_PORT_COUNT] = { 0 };
+    int iExPort = 0;
+#endif
 #if PART_DC4 & GPIOA_PRESENT4
     if ((GPIODIR_A != ucGPIODIRA) || (GPIODATA_A != ucPort_out_A)) {
         ucPort_out_A = GPIODATA_A;
@@ -2055,6 +2108,16 @@ extern int fnPortChanges(int iForce)                                     // {8}
     }
     fnCheckPortInterrupts(_PORTJ, (unsigned char)ulOriginalInput);
 #endif
+#if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {23}
+    while (iExPort < _EXTERNAL_PORT_COUNT) {                             // external ports extensions
+        unsigned long ulNewValue = fnGetPresentPortState(iExPort + (_PORT_EXT_0 + 1));
+        if (ulNewValue != ulPortExtValue[iExPort]) {
+            ulPortExtValue[iExPort] = ulNewValue;
+            iRtn |= PORT_CHANGE;
+        }
+        iExPort++;
+    }
+#endif
 #if (PORTS_AVAILABLE != _PORTS_AVAILABLE)                                // {9} dedicated ADC port
     if ((RCGC0 & CGC_SARADC0) != ulLastRCGC0) {
         int iADC = 0;
@@ -2079,71 +2142,82 @@ extern int fnPortChanges(int iForce)                                     // {8}
 
 extern unsigned long fnGetPresentPortState(int portNr)
 {
-    switch (portNr-1) {
+    portNr--;
+    switch (portNr) {
 #if PART_DC4 & GPIOA_PRESENT4
     case _PORTA:
-    if ((!(RCGC2 & CGC_GPIOA)) || (SRCR2 & CGC_GPIOA)) {
+    if (((RCGC2 & CGC_GPIOA) == 0) || ((SRCR2 & CGC_GPIOA) != 0)) {
         return ucPort_in_A;                                              // not clocked or in reset
     }
     return ((GPIODATA_A & GPIODEN_A) | (~GPIODEN_A & ucPort_in_A));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOB_PRESENT4
     case _PORTB:
-    if ((!(RCGC2 & CGC_GPIOB)) || (SRCR2 & CGC_GPIOB)) {
+    if (((RCGC2 & CGC_GPIOB) == 0) || ((SRCR2 & CGC_GPIOB) != 0)) {
         return ucPort_in_B;                                              // not clocked or in reset
     }
     return ((GPIODATA_B & GPIODEN_B) | (~GPIODEN_B & ucPort_in_B));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOC_PRESENT4                               
     case _PORTC:
-    if ((!(RCGC2 & CGC_GPIOC)) || (SRCR2 & CGC_GPIOC)) {
+    if (((RCGC2 & CGC_GPIOC) == 0) || ((SRCR2 & CGC_GPIOC) != 0)) {
         return ucPort_in_C;                                              // not clocked or in reset
     }
     return ((GPIODATA_C & GPIODEN_C) | (~GPIODEN_C & ucPort_in_C));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOC_PRESENT4    
     case _PORTD:
-    if ((!(RCGC2 & CGC_GPIOD)) || (SRCR2 & CGC_GPIOD)) {
+    if (((RCGC2 & CGC_GPIOD) == 0) || ((SRCR2 & CGC_GPIOD) != 0)) {
         return ucPort_in_D;                                              // not clocked or in reset
     }
     return ((GPIODATA_D & GPIODEN_D) | (~GPIODEN_D & ucPort_in_D));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOE_PRESENT4
     case _PORTE:
-    if ((!(RCGC2 & CGC_GPIOE)) || (SRCR2 & CGC_GPIOE)) {
+    if (((RCGC2 & CGC_GPIOE) == 0) || ((SRCR2 & CGC_GPIOE) != 0)) {
         return ucPort_in_E;                                              // not clocked or in reset
     }
     return ((GPIODATA_E & GPIODEN_E) | (~GPIODEN_E & ucPort_in_E));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOF_PRESENT4
     case _PORTF:
-    if ((!(RCGC2 & CGC_GPIOF)) || (SRCR2 & CGC_GPIOF)) {
+    if (((RCGC2 & CGC_GPIOF) == 0) || ((SRCR2 & CGC_GPIOF) != 0)) {
         return ucPort_in_F;                                              // not clocked or in reset
     }
     return ((GPIODATA_F & GPIODEN_F) | (~GPIODEN_F & ucPort_in_F));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOG_PRESENT4
     case _PORTG:
-    if ((!(RCGC2 & CGC_GPIOG)) || (SRCR2 & CGC_GPIOG)) {
+    if (((RCGC2 & CGC_GPIOG) == 0) || ((SRCR2 & CGC_GPIOG) != 0)) {
         return ucPort_in_G;                                              // not clocked or in reset
     }
     return ((GPIODATA_G & GPIODEN_G) | (~GPIODEN_G & ucPort_in_G));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
     case _PORTH:
-    if ((!(RCGC2 & CGC_GPIOH)) || (SRCR2 & CGC_GPIOH)) {
+    if (((RCGC2 & CGC_GPIOH) == 0) || ((SRCR2 & CGC_GPIOH) != 0)) {
         return ucPort_in_H;                                              // not clocked or in reset
     }
     return ((GPIODATA_H & GPIODEN_H) | (~GPIODEN_H & ucPort_in_H));      // only bits set to digital bits are driven
 #endif
 #if PART_DC4 & GPIOJ_PRESENT4
     case _PORTJ:
-    if ((!(RCGC2 & CGC_GPIOJ)) || (SRCR2 & CGC_GPIOJ)) {
+    if (((RCGC2 & CGC_GPIOJ) == 0) || ((SRCR2 & CGC_GPIOJ) != 0)) {
         return ucPort_in_J;                                              // not clocked or in reset
     }
     return ((GPIODATA_J & GPIODEN_J) | (~GPIODEN_J & ucPort_in_J));      // only bits set to digital bits are driven
 #endif
-
+#if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {23}
+    case _PORT_EXT_0:                                                    // external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
+        return (fnGetExtPortState(portNr));                              // {8} pin states of external port
+#endif
     default:
         return 0;
     }
@@ -2203,7 +2277,7 @@ extern unsigned long fnGetPresentPortDir(int portNr)
 #endif
 #if PART_DC4 & GPIOH_PRESENT4                                            // {3}
     case _PORTH:
-    if ((!(RCGC2 & CGC_GPIOH)) || (SRCR2 & CGC_GPIOH)) {
+    if (((RCGC2 & CGC_GPIOH) == 0) || ((SRCR2 & CGC_GPIOH) != 0)) {
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_H & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
@@ -2214,6 +2288,17 @@ extern unsigned long fnGetPresentPortDir(int portNr)
         return 0;                                                        // not clocked or in reset
     }
     return (GPIODIR_J & ucGetPortType(portNr, GET_OUTPUTS, 0));          // non outputs returned as zeros
+#endif
+#if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0
+    case _PORT_EXT_0:                                                    // {23} external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
+        return (fnGetExtPortDirection(portNr));
 #endif
     default:
         return 0;
@@ -2356,7 +2441,7 @@ static void fnSampleChannel(int ADC, unsigned char ucChannel, unsigned long ulDi
             fnPutADCfifo(0, 0, 0x200);                                   // put the internal temperature value into the ADC FIFO (35°C)
         }
         else {
-    #ifdef SUPPORT_TOUCH_SCREEN
+    #if defined SUPPORT_TOUCH_SCREEN
     #endif
             fnPutADCfifo(0, 0, ulADC_values[ucChannel]);                 // put the present pin value into the ADC FIFO
         }
@@ -2854,17 +2939,31 @@ static void fnCheckPortInterrupts(unsigned char ucPort, unsigned char ucOriginal
     }
 }
 
+#if defined HANDLE_EXT_PORT
+    #if defined _EXT_PORT_32_BIT && PORT_WIDTH < 32
+        #define BLANK_PROCESSOR_PORTS (32 - PORT_WIDTH)
+    #elif defined _EXT_PORT_28_BIT && PORT_WIDTH < 28
+        #define BLANK_PROCESSOR_PORTS (28 - PORT_WIDTH)
+    #elif defined _EXT_PORT_16_BIT && PORT_WIDTH < 16
+        #define BLANK_PROCESSOR_PORTS (16 - PORT_WIDTH)
+    #else
+        #define BLANK_PROCESSOR_PORTS 0
+    #endif
+#endif
 extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit, int iChange)
 {
     unsigned char ucBit;
     unsigned char ucOriginalInput;
+#if BLANK_PROCESSOR_PORTS != 0
+    unsigned long ulBit = (0x01 << ((BLANK_PROCESSOR_PORTS + 7) - ucPortBit));
+#endif
     ucPortBit = (7 - ucPortBit);
     ucBit = (0x01 << ucPortBit);
 
     switch (ucPort) {
 #if PART_DC4 & GPIOA_PRESENT4
     case _PORTA:
-        if ((!(RCGC2 & CGC_GPIOA)) || (SRCR2 & CGC_GPIOA)) {
+        if (((RCGC2 & CGC_GPIOA) == 0) || ((SRCR2 & CGC_GPIOA) != 0)) {
             return;                                                      // port not clocked or in reset
         }
         if (GPIODIR_A & (1 << ucPortBit)) {
@@ -2999,7 +3098,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                         break;
         #endif
                     }
-                    if (TOGGLE_INPUT_NEG & iChange) {
+                    if ((TOGGLE_INPUT_NEG & iChange) != 0) {
                         if (ulADC_values[ucPortBit] >= usStepSize) {
                             ulADC_values[ucPortBit] -= usStepSize;
                         }
@@ -3207,10 +3306,15 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
 #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1) && (PORTS_AVAILABLE != _PORTS_AVAILABLE)
     case (PORTS_AVAILABLE):                                              // dedicated ADC port
-        if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
-            unsigned short usStepSize = ((ADC_SIM_STEP_SIZE) / ADC_REFERENCE_VOLTAGE);
-
-            if (TOGGLE_INPUT_NEG & iChange) {
+        if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG | TOGGLE_INPUT_POS | SET_INPUT)) != 0) {
+            unsigned short usStepSize;
+            if ((TOGGLE_INPUT_ANALOG & iChange) != 0) {
+                usStepSize = (ADC_FULL_SCALE/3);
+            }
+            else {
+                usStepSize = ((ADC_SIM_STEP_SIZE) / ADC_REFERENCE_VOLTAGE);
+            }
+            if ((TOGGLE_INPUT_NEG & iChange) != 0) {
                 if (ulADC_values[ucPortBit] >= usStepSize) {
                     ulADC_values[ucPortBit] -= usStepSize;
                 }
@@ -3224,6 +3328,18 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         }
         break;
 #endif
+    case _PORT_EXT_0:                                                    // {23} external ports extensions
+    case _PORT_EXT_1:
+    case _PORT_EXT_2:
+    case _PORT_EXT_3:
+    case _PORT_EXT_4:
+    case _PORT_EXT_5:
+    case _PORT_EXT_6:
+    case _PORT_EXT_7:
+#if defined HANDLE_EXT_PORT
+        HANDLE_EXT_PORT(ucPort, iChange, ulBit);
+#endif
+        break;
     }
 }
 

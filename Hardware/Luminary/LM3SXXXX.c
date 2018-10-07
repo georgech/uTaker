@@ -51,6 +51,7 @@
    01.04.2011 Add CC Studio support                                      {34}
    02.04.2011 Remove random seed from stack to a fixed location          {35}
    07.09.2018 Add hardware operating details for simulator display       {36}
+   07.10.2018 Add volatile to ensure that interrupt flags are not optimised away when code in-lining takes place {37}
 
 */
 
@@ -238,7 +239,7 @@ static int iInterruptLevel = 0;
     extern I2CQue *I2C_tx_control[NUMBER_I2C];
 #endif
 
-#ifdef _WINDOWS                              
+#if defined _WINDOWS                              
     extern unsigned char vector_ram[(RESERVE_DMA_MEMORY + sizeof(VECTOR_TABLE))];// vector table in simulated RAM (long word aligned)
 #endif
 
@@ -246,7 +247,7 @@ static int iInterruptLevel = 0;
 /*                      local function definitions                     */
 /* =================================================================== */
 
-#ifndef _WINDOWS
+#if !defined _WINDOWS
     static void fnInitHW(void);
 #endif
 
@@ -261,7 +262,7 @@ static int iInterruptLevel = 0;
 /* =================================================================== */
 
 
-#ifndef _WINDOWS
+#if !defined _WINDOWS
     extern void __segment_init(void);
     #if defined  COMPILE_IAR
         #if defined COMPILE_IAR5
@@ -391,8 +392,8 @@ extern int main(void)
 //
 static void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void))
 {
-    unsigned long *ptrIntSet = IRQ0_31_SER_ADD;
-    unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;
+    volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {7}
+    volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;  // {37}
     VECTOR_TABLE *ptrVect;
     void ( **processor_ints )( void );
     unsigned long ulInterruptBit;
@@ -443,11 +444,11 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)                 // {7}
 //
 INITHW void fnInitHW(void)                                               // perform hardware initialisation
 {
-#ifdef GLOBAL_HARDWARE_TIMER
+#if defined GLOBAL_HARDWARE_TIMER
   static __interrupt void hwtimer_interrupt(void);
   volatile unsigned int dummy;
 #endif
-#ifdef _WINDOWS
+#if defined _WINDOWS
     unsigned long ulPortPullups[] = {
     #if PART_DC4 & GPIOA_PRESENT4
         PORTA_DEFAULT_INPUT,                                             // set the port states out of reset in the project file app_hw_lm3sxxxx.h
@@ -477,24 +478,24 @@ INITHW void fnInitHW(void)                                               // perf
         PORTJ_DEFAULT_INPUT,                                             // {23}
     #endif
     #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1)
-        ((AN0_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),                   // initial voltages when simulating
-        ((AN1_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN2_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN3_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN4_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN5_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN6_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN7_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN0_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),  // initial voltages when simulating
+        ((AN1_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN2_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN3_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN4_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN5_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN6_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN7_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
     #endif
     #if defined SUPPORT_ADC && (PART_DC1 & ADC1_PRESENT1)                // second ADC - assume 16 ADC inputs available
-        ((AN8_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),                   // initial voltages when simulating
-        ((AN9_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN10_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN11_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN12_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN13_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN14_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
-        ((AN15_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN8_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),  // initial voltages when simulating
+        ((AN9_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN10_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN11_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN12_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN13_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN14_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN15_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
     #endif
     };
     #ifdef RANDOM_NUMBER_GENERATOR
@@ -3984,7 +3985,7 @@ static __interrupt void _ADC_sequence_0_complete(void)
 {
     int iSamples = 0;
     ADCISC_0 = INT_SS0;                                                  // clear the interrupt
-    while (!(ADCSSFSTAT0_0 & FIFO_EMPTY)) {
+    while ((ADCSSFSTAT0_0 & FIFO_EMPTY) == 0) {
         if (ptrSamples != 0) {
             *ptrSamples++ = (signed short)GET_ADC_FIFO(0, 0, ADCSSFIFO0_0); // read, clear and store the samples
             iSamples++;
@@ -3993,7 +3994,7 @@ static __interrupt void _ADC_sequence_0_complete(void)
     if (usSampleCount <= 1) {
         RCGC0 &= ~CGC_SARADC0;                                           // disable clocks to module
         uDisable_Interrupt();                                            // {19} protect the call from interrupts
-        adc_int_complete_handler();                                      // call the interrupt handler
+            adc_int_complete_handler();                                  // call the interrupt handler
         uEnable_Interrupt();
     }
     else {
