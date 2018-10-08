@@ -43,6 +43,7 @@
     02.06.2018 Zero optional user UART callback handlers                 {27}
     05.09.2018 Add FFT_SAMPLED_INPUT option                              {28}
     05.10.2018 Add PHASE_SHIFTED_COMBINED_OUTPUTS option for PWM         {29}
+    08.10.2018 Add MULTIPLE_CHANNEL_INTERRUPTS option for PWM            {30}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -107,11 +108,12 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
                   //#define PHASE_SHIFTED_COMBINED_OUTPUTS               // {29} generate phase shifted outputs
+                  //#define MULTIPLE_CHANNEL_INTERRUPTS                  // {30} generate multiple channel interrupts across multiple timers
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
             #endif
             #if defined SUPPORT_TIMER
@@ -1750,6 +1752,34 @@ static void __callback_interrupt fnEndOfRamp(void)
 //    TOGGLE_TEST_OUTPUT();
 //}
 
+#if defined MULTIPLE_CHANNEL_INTERRUPTS                                  // {30}
+static void __callback_interrupt _timer0_irq(void)
+{
+    TOGGLE_TEST_OUTPUT();                                                // toggle on timer 0 period interrupt
+}
+
+static void __callback_interrupt _channel0_0_irq(void)
+{
+    TOGGLE_TEST_OUTPUT();                                                // toggle on timer 0 channel 0 match interrupt
+}
+
+static void __callback_interrupt _channel0_1_irq(void)
+{
+    TOGGLE_TEST_OUTPUT();                                                // toggle on timer 0 channel 1 match interrupt
+}
+
+
+static void __callback_interrupt _timer1_irq(void)
+{
+    TOGGLE_TEST_OUTPUT();                                                // toggle on timer 1 period interrupt
+}
+
+static void __callback_interrupt _channel1_0_irq(void)
+{
+    TOGGLE_TEST_OUTPUT();                                                // toggle on timer 1 channel 0 match interrupt
+}
+#endif
+
 static void fnConfigure_Timer(void)
 {
 #if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
@@ -1780,6 +1810,26 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode |= (PWM_POLARITY | PWM_SYS_CLK | PWM_PRESCALER_128);// clock PWM timer from the system clock with /16 pre-scaler [clock is enabled here so that all prepared values are synchronised]
     pwm_setup.pwm_reference = (_TIMER_0 | 3);                            // timer module 0, channel 3
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
+    #elif defined MULTIPLE_CHANNEL_INTERRUPTS                            // {30}
+    pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
+    pwm_setup.pwm_mode = (PWM_PRESCALER_128 | PWM_EDGE_ALIGNED | PWM_POLARITY | PWM_CHANNEL_INTERRUPT); // clock PWM timer from the system clock with /16 pre-scaler (don't configure the clock until all channels are set up)
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 16);                   // generate 1000Hz on PWM output
+    pwm_setup.pwm_value = _PWM_PERCENT(50, pwm_setup.pwm_frequency);     // 50%
+    pwm_setup.int_priority = PRIORITY_HW_TIMER;                          // interrupt priority
+    pwm_setup.channel_int_handler = _channel0_0_irq;                     // interrupt called on channel 0 match
+    fnConfigureInterrupt((void *)&pwm_setup);                            // configure channel 0
+    pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1
+    pwm_setup.pwm_value = _PWM_PERCENT(60, pwm_setup.pwm_frequency);     // 60%
+    pwm_setup.channel_int_handler = _channel0_1_irq;                     // interrupt called on channel 1 match
+    pwm_setup.pwm_mode |= (PWM_SYS_CLK);                                 // start
+    pwm_setup.int_handler = _timer0_irq;                                 // interrupt called on each cycle
+    fnConfigureInterrupt((void *)&pwm_setup);                            // configure channel 1 and start
+
+    pwm_setup.pwm_reference = (_TIMER_1 | 0);                            // timer module 1, channel 0
+    pwm_setup.pwm_value = _PWM_PERCENT(70, pwm_setup.pwm_frequency);     // 70%
+    pwm_setup.int_handler = _timer1_irq;                                 // interrupt called on each cycle
+    pwm_setup.channel_int_handler = _channel1_0_irq;                     // interrupt called on channel 0 match
+    fnConfigureInterrupt((void *)&pwm_setup);                            // configure channel 0 and start
     #else
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_EDGE_ALIGNED); // clock PWM timer from the system clock with /16 pre-scaler
     pwm_setup.int_handler = 0;                                           // {22} no user interrupt call-back on PWM cycle

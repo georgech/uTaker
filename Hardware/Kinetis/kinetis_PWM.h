@@ -28,6 +28,7 @@
     08.05.2018 Add channel interrupt support (in addition to period interrupts) {12}
     29.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {13}
     05.10.2018 Add combined channel pairs to support phases shifted output pairs {14}
+    08.10.2018 Correct support for channel interrupts on multiple timers {15}
 
 */
 
@@ -82,7 +83,7 @@ static const unsigned char ucSumChannels[FLEX_TIMERS_AVAILABLE + 1] = {      // 
 
 static void (*_PWM_TimerHandler[FLEX_TIMERS_AVAILABLE])(void) = {0};     // user period interrupt handlers
 static void(*_PWM_ChannelHandler[FLEX_TIMERS_CHANNEL_COUNT])(void) = {0};// {12} user channel interrupt handlers
-static unsigned char ucEnabledChannelInterrupts = 0;
+static unsigned char ucEnabledChannelInterrupts[FLEX_TIMERS_AVAILABLE] = {0}; // {15} enabled channel flags for each timer
 
 static void (*_PWM_TimerInterrupt[FLEX_TIMERS_AVAILABLE])(void) = {
     _PWM_Interrupt_0,
@@ -138,7 +139,7 @@ static void fnHandleChannels(int iTimer, unsigned char ucPendingChannels)
 
 static __interrupt void _PWM_Interrupt_0(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM0_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM0_STATUS & ucEnabledChannelInterrupts[0]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL
         WRITE_ONE_TO_CLEAR(FTM0_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -164,7 +165,7 @@ static __interrupt void _PWM_Interrupt_0(void)
     #if FLEX_TIMERS_AVAILABLE > 1
 static __interrupt void _PWM_Interrupt_1(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM1_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM1_STATUS & ucEnabledChannelInterrupts[1]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL
         WRITE_ONE_TO_CLEAR(FTM1_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -190,7 +191,7 @@ static __interrupt void _PWM_Interrupt_1(void)
     #if FLEX_TIMERS_AVAILABLE > 2
 static __interrupt void _PWM_Interrupt_2(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM2_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM2_STATUS & ucEnabledChannelInterrupts[2]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL
         WRITE_ONE_TO_CLEAR(FTM2_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -216,7 +217,7 @@ static __interrupt void _PWM_Interrupt_2(void)
     #if FLEX_TIMERS_AVAILABLE > 3
 static __interrupt void _PWM_Interrupt_3(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM3_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM3_STATUS & ucEnabledChannelInterrupts[3]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL
         WRITE_ONE_TO_CLEAR(FTM3_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -242,7 +243,7 @@ static __interrupt void _PWM_Interrupt_3(void)
     #if FLEX_TIMERS_AVAILABLE > 4
 static __interrupt void _PWM_Interrupt_4(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM4_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM4_STATUS & ucEnabledChannelInterrupts[4]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL || defined TPMS_AVAILABLE_TOO
         WRITE_ONE_TO_CLEAR(FTM4_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -272,7 +273,7 @@ static __interrupt void _PWM_Interrupt_4(void)
     #if FLEX_TIMERS_AVAILABLE > 5
 static __interrupt void _PWM_Interrupt_5(void)
 {
-    unsigned char ucPendingChannels = (unsigned char)(FTM5_STATUS & ucEnabledChannelInterrupts);
+    unsigned char ucPendingChannels = (unsigned char)(FTM5_STATUS & ucEnabledChannelInterrupts[5]); // {15}
     if (ucPendingChannels != 0) {
     #if defined KINETIS_KL || defined TPMS_AVAILABLE_TOO
         WRITE_ONE_TO_CLEAR(FTM5_STATUS, (FTM_STATUS_CH7F | FTM_STATUS_CH6F | FTM_STATUS_CH5F | FTM_STATUS_CH4F | FTM_STATUS_CH3F | FTM_STATUS_CH2F | FTM_STATUS_CH1F | FTM_STATUS_CH0F)); // reset the flags (hardware ensures that any flags being set between the previous read and the clear are not cleared)
@@ -627,7 +628,6 @@ static __interrupt void _PWM_Interrupt_5(void)
             //
             //ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (FTM_CSC_ELSA | FTM_CSC_MSA); // test line
             //
-            ucEnabledChannelInterrupts &= ~(1 << ucChannel);
     #if !defined DEVICE_WITHOUT_DMA
             if ((ulMode & PWM_DMA_CHANNEL_ENABLE) != 0) {
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= (FTM_CSC_DMA | FTM_CSC_CHIE); // enable DMA trigger from this channel (also the interrupt needs to be enabled for the DMA to operate - interrupt is however not generated in this configuration)
@@ -727,8 +727,11 @@ static __interrupt void _PWM_Interrupt_5(void)
                 unsigned char ucChannelReference = (ucSumChannels[ucFlexTimer] + ucChannel);
                 _PWM_ChannelHandler[ucChannelReference] = ptrPWM_settings->channel_int_handler; // channel interrupt handler
                 fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
-                ucEnabledChannelInterrupts |= (1 << ucChannel);
+                ucEnabledChannelInterrupts[ucFlexTimer] |= (1 << ucChannel); // {15} mark that this flextimer channel is enabled for interrupts
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= FTM_CSC_CHIE; // enable channel interrupt
+            }
+            else {
+                ucEnabledChannelInterrupts[ucFlexTimer] &= ~(1 << ucChannel); // {15}
             }
     #if defined KINETIS_KE15                                             // {8}
             ulMode |= (ptrFlexTimer->FTM_SC & (FTM_SC_PWMEN0 | FTM_SC_PWMEN1 | FTM_SC_PWMEN2 | FTM_SC_PWMEN3 | FTM_SC_PWMEN4 | FTM_SC_PWMEN5 | FTM_SC_PWMEN6 | FTM_SC_PWMEN7)); // preserve already set PWM outputs

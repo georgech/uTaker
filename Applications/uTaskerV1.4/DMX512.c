@@ -780,7 +780,7 @@ static void fnConfigureDMX512_framing(void)
     pwm_setup.int_handler = 0;
     #if defined FRDM_K64F
     pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
-    pwm_setup.pwm_mode = (/*PWM_SYS_CLK | */PWM_PRESCALER_128 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /16 pre-scaler (don't configure the clock until all channels are set up)
+    pwm_setup.pwm_mode = (/*PWM_SYS_CLK | */PWM_PRESCALER_128 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /128 pre-scaler (don't configure the clock until all channels are set up)
     pwm_setup.pwm_frequency = (unsigned short)PWM_TIMER_US_DELAY(DMX512_PERIOD, 128); // generate frame rate frequency on PWM output
     #else
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_32 | PWM_EDGE_ALIGNED | PWM_POLARITY/* | PWM_NO_OUTPUT*/); // clock PWM timer from the system clock with /32 pre-scaler
