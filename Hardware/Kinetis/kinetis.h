@@ -130,6 +130,7 @@
     01.05.2018 Add SET_KUART_BAUD() SET_UART_BAUD() and SET_LPUART_BAUD() macros to directly change UART baud rates {109}
     09.05.2018 Add cortex debug and trace registers                      {110}
     09.08.2018 Add TIMER_FREEZE and TIMER_CONTINUE flags                 {111}
+    13.10.2018 Add comparator interface                                  {112}
 */
 
 #if defined _WINDOWS
@@ -1330,13 +1331,13 @@ typedef struct stRESET_VECTOR
     #define LPUARTS_AVAILABLE       1
 #elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define LPUARTS_AVAILABLE       1
-    #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0
+    #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
 #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
     #define LPUARTS_AVAILABLE       2
 #elif defined KINETIS_K22
     #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))
         #define LPUARTS_AVAILABLE   1
-        #define LPUARTS_PARALLEL                                         // LPUARTs and UARTs are counted from 0
+        #define LPUARTS_PARALLEL                                         // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
     #else
         #define LPUARTS_AVAILABLE   0
     #endif
@@ -1589,7 +1590,13 @@ typedef struct stRESET_VECTOR
 
 // DAC configuration
 //
-#if defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_KV31 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
+#if defined KINETIS_K64
+    #if (PIN_COUNT == PIN_COUNT_121_PIN) || (PIN_COUNT == PIN_COUNT_144_PIN)
+        #define DAC_CONTROLLERS     2
+    #else
+        #define DAC_CONTROLLERS     1
+    #endif
+#elif defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_KV31 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
     #define DAC_CONTROLLERS         2
 #elif defined KINETIS_KE18
     #define DAC_CONTROLLERS         1
@@ -1624,7 +1631,7 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KE18
     #define NUMBER_OF_COMPARATORS 3
-#elif defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))
+#elif defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
     #define NUMBER_OF_COMPARATORS 3
 #else
     #define NUMBER_OF_COMPARATORS 2
@@ -4057,10 +4064,18 @@ typedef struct stVECTOR_TABLE
         #define ACMP0_BLOCK                    ((unsigned char *)(&kinetis.ACMP[0])) // Analogue comparator 0
         #define ACMP1_BLOCK                    ((unsigned char *)(&kinetis.ACMP[1])) // Analogue comparator 1
     #else
-        #define CMP0_BLOCK                     ((unsigned char *)(&kinetis.CMP[0])) // comparator 0
-        #define CMP1_BLOCK                     ((unsigned char *)(&kinetis.CMP[1])) // comparator 1
-        #define CMP2_BLOCK                     ((unsigned char *)(&kinetis.CMP[2])) // comparator 2
-        #define CMP3_BLOCK                     ((unsigned char *)(&kinetis.CMP[3])) // comparator 3
+        #if NUMBER_OF_COMPARATORS > 0
+            #define CMP0_BLOCK                 ((unsigned char *)(&kinetis.CMP[0])) // comparator 0
+        #endif
+        #if NUMBER_OF_COMPARATORS > 1
+            #define CMP1_BLOCK                 ((unsigned char *)(&kinetis.CMP[1])) // comparator 1
+        #endif
+        #if NUMBER_OF_COMPARATORS > 2
+            #define CMP2_BLOCK                 ((unsigned char *)(&kinetis.CMP[2])) // comparator 2
+        #endif
+        #if NUMBER_OF_COMPARATORS > 3
+            #define CMP3_BLOCK                 ((unsigned char *)(&kinetis.CMP[3])) // comparator 3            
+        #endif
     #endif
     #if !defined KINETIS_KL
         #define VREF_ADD                       ((unsigned char *)(&kinetis.VREF)) // VREF
@@ -4464,10 +4479,18 @@ typedef struct stVECTOR_TABLE
         #define ACMP0_BLOCK                    0x40073000                // Analogue comparator 0
         #define ACMP1_BLOCK                    0x40074000                // Analogue comparator 1
     #else
-        #define CMP0_BLOCK                     0x40073000                // comparator 0
-        #define CMP1_BLOCK                     0x40073008                // comparator 1
-        #define CMP2_BLOCK                     0x40073010                // comparator 2
-        #define CMP3_BLOCK                     0x40073018                // comparator 3
+        #if NUMBER_OF_COMPARATORS > 0
+            #define CMP0_BLOCK                 0x40073000                // comparator 0
+        #endif
+        #if NUMBER_OF_COMPARATORS > 1
+            #define CMP1_BLOCK                 0x40073008                // comparator 1
+        #endif
+        #if NUMBER_OF_COMPARATORS > 2
+            #define CMP2_BLOCK                 0x40073010                // comparator 2
+        #endif
+        #if NUMBER_OF_COMPARATORS > 3
+            #define CMP3_BLOCK                 0x40073018                // comparator 3
+        #endif
     #endif
     #if !defined KINETIS_KL
         #define VREF_ADD                       0x40074000                // VREF
@@ -6573,20 +6596,29 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #if defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
+        #if defined KINETIS_KL17 || defined KINETIS_KL27
+          #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    2                   // 0x02 LPUART0 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    3                   // 0x03 LPUART0 TX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    4                   // 0x04 LPUART1 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX    5                   // 0x05 LPUART1 TX
+        #else
           #define DMAMUX0_CHCFG_SOURCE_UART0_RX      2                   // 0x02 UART0 RX - DMAMUX_CHCFG_xx are available on DMA MUX 0 and on DMA MUX 1 (when available)
           #define DMAMUX0_CHCFG_SOURCE_UART0_TX      3                   // 0x03 UART0 TX
           #define DMAMUX0_CHCFG_SOURCE_UART1_RX      4                   // 0x04 UART1 RX
           #define DMAMUX0_CHCFG_SOURCE_UART1_TX      5                   // 0x05 UART1 TX
+        #endif
           #define DMAMUX0_CHCFG_SOURCE_UART2_RX      6                   // 0x06 UART2 RX
           #define DMAMUX0_CHCFG_SOURCE_UART2_TX      7                   // 0x07 UART2 TX
           #define DMAMUX0_CHCFG_SOURCE_UART3_RX      8                   // 0x08 UART3 RX
           #define DMAMUX0_CHCFG_SOURCE_UART3_TX      9                   // 0x09 UART3 TX
         #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
-          #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX)
+          #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX) - single MUX channel that can be use for either Rx or Tx
+          #define DMAMUX0_CHCFG_SOURCE_UART4_TX      10                  // 0x0a UART4 TX (or RX/TX)
           #if defined KINETIS_K80
             #define DMAMUX0_CHCFG_SOURCE_UART4_TX    11                  // 0x0b UART4 TX
           #else
-            #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11                  // 0x0b UART5 (TX or RX)
+            #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11                  // 0x0b UART5 RX (TX or RX) - single MUX channel that can be use for either Rx or Tx
+            #define DMAMUX0_CHCFG_SOURCE_UART5_TX    11                  // 0x0b UART5 TX (TX or RX)
           #endif
           #define DMAMUX0_CHCFG_SOURCE_I2S0_RX       12                  // 0x0c I2S0 RX
           #define DMAMUX0_CHCFG_SOURCE_I2S0_TX       13                  // 0x0d I2S0 TX
@@ -6711,7 +6743,9 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_TPM0_OVERFLOW 54                  // 0x36 TPM0 overflow
           #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                  // 0x37 TPM1 overflow
           #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW 56                  // 0x38 TPM2 overflow
-          #define DMAMUX0_CHCFG_SOURCE_TSI           57                  // 0x39 TSI
+          #if !defined KINETIS_KL17 && !defined KINETIS_KL27
+            #define DMAMUX0_CHCFG_SOURCE_TSI         57                  // 0x39 TSI
+          #endif
         #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
@@ -6742,8 +6776,10 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
           #endif
         #elif LPUARTS_AVAILABLE > 0
-          #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    58                  // 0x3a LPUART0 RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    59                  // 0x3b LPUART0 TX
+          #if !defined KINETIS_KL17 && !defined KINETIS_KL27
+            #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
+            #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX  59                  // 0x3b LPUART0 TX
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
@@ -7708,7 +7744,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
 #if defined KINETIS_KE
 // Keyboard Interrupt                                                    {56}
 //
-  #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+  #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     #define KBI0_PE             *(unsigned long *)(KBI0_BLOCK + 0x0)     // KBI0 Pin Enable Register (enable pin as KBI interrupt)
     #define KBI0_ES             *(unsigned long *)(KBI0_BLOCK + 0x4)     // KBI0 Edge Select Register ('1' is rising edge / '0' is  falling edge)
     #define KBI0_SC             *(volatile unsigned long *)(KBI0_BLOCK + 0x8) // KBI0 Status and Control Register
@@ -7732,7 +7768,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         volatile unsigned long KBI_SC;
         volatile unsigned long KBI_SP;
     } _KINETIS_KBI;
-  #else                                                                  // KE02
+  #else                                                                  // KE02/KE04 with 8k Flash
     #define KBI0_SC             *(volatile unsigned char *)(KBI0_BLOCK + 0x0) // KBI0 Status and Control Register
       #define KBI_SC_KBMOD      0x00000001                               // KBI detection mode (detects levels as well as edges)
       #define KBI_SC_KBIE       0x00000002                               // KBI interrupt enable
@@ -13182,7 +13218,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PA_1_KBI0_P1                 PORT_MUX_ALT1
     #define PA_2_KBI0_P2                 PORT_MUX_ALT1
     #define PA_3_KBI0_P3                 PORT_MUX_ALT1
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         #define PA_4_KBI0_P4             PORT_MUX_ALT1
         #define PA_5_KBI0_P5             PORT_MUX_ALT1
         #define PA_6_KBI0_P6             PORT_MUX_ALT1
@@ -13372,6 +13408,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #else
         #define PE_30_DAC0_OUT           PORT_MUX_ALT0
     #endif
+    #define PD_5_ADC0_SE6b               PORT_MUX_ALT0
     #define PB_0_ADC0_SE8                PORT_MUX_ALT0
     #define PE_21_ADC0_SE4               PORT_MUX_ALT0
     #define PE_30_ADC0_SE23              PORT_MUX_ALT0
@@ -16717,33 +16754,98 @@ typedef struct stUSB_HW
     #define ACMP1_C1             *(unsigned char *)(ACMP1_BLOCK + 0x2)   // ACMP 1 control register 1
     #define ACMP1_C2             *(unsigned char *)(ACMP1_BLOCK + 0x3)   // ACMP 1 control register 2
 #else
-    #define CMP0_CR0             *(unsigned char *)(CMP0_BLOCK + 0x0)    // CMP 0 control register 0
-    #define CMP0_CR1             *(unsigned char *)(CMP0_BLOCK + 0x1)    // CMP 0 control register 1
-    #define CMP0_FPR             *(unsigned char *)(CMP0_BLOCK + 0x2)    // CMP 0 filter period register
-    #define CMP0_SCR             *(volatile unsigned char *)(CMP0_BLOCK + 0x3) // CMP 0 status and control register
-    #define CMP0_DACCR           *(unsigned char *)(CMP0_BLOCK + 0x4)    // CMP 0 DAC control register
-    #define CMP0_MUXCR           *(unsigned char *)(CMP0_BLOCK + 0x5)    // CMP 0 MUX control register
+    #if NUMBER_OF_COMPARATORS > 0
+        #define CMP0_CR0         *(unsigned char *)(CMP0_BLOCK + 0x0)    // CMP 0 control register 0
+            #define CMP_CR0_FILTER_1_SAMPLE   0x10                       // no filter
+            #define CMP_CR0_FILTER_2_SAMPLE   0x20                       // 2 samples must agree
+            #define CMP_CR0_FILTER_3_SAMPLE   0x30                       // 3 samples must agree
+            #define CMP_CR0_FILTER_4_SAMPLE   0x40                       // 4 samples must agree
+            #define CMP_CR0_FILTER_5_SAMPLE   0x50                       // 5 samples must agree
+            #define CMP_CR0_FILTER_6_SAMPLE   0x60                       // 6 samples must agree
+            #define CMP_CR0_FILTER_7_SAMPLE   0x70                       // 7 samples must agree
+            #define CMP_CR0_HYSTCTR_LEVEL_0   0x00                       // hysterisis level 0
+            #define CMP_CR0_HYSTCTR_LEVEL_1   0x01                       // hysterisis level 1
+            #define CMP_CR0_HYSTCTR_LEVEL_2   0x02                       // hysterisis level 2
+            #define CMP_CR0_HYSTCTR_LEVEL_3   0x03                       // hysterisis level 3
+        #define CMP0_CR1         *(unsigned char *)(CMP0_BLOCK + 0x1)    // CMP 0 control register 1
+            #define CMP_CR1_EN                0x01                       // enable comparator
+            #define CMP_CR1_OPE               0x02                       // CMPO enabled (if pin is configured)
+            #define CMP_CR1_COS_FILTERED      0x00                       // CMPO connected to filtered comparator output
+            #define CMP_CR1_COS_UNFILTERED    0x04                       // CMPO connected to unfiltered comparator output
+            #define CMP_CR1_INV               0x08                       // invert the comparator output
+            #define CMP_CR1_PMODE_LS          0x00                       // power mode low speed
+            #define CMP_CR1_PMODE_HS          0x10                       // power mode high speed
+            #define CMP_CR1_WE                0x40                       // window mode (should not be enabled together with sample mode)
+            #define CMP_CR1_SE                0x80                       // sample mode (should not be enabled together with window mode)
+        #define CMP0_FPR         *(unsigned char *)(CMP0_BLOCK + 0x2)    // CMP 0 filter period register
+        #define CMP0_SCR         *(volatile unsigned char *)(CMP0_BLOCK + 0x3) // CMP 0 status and control register
+            #define CMP_SCR_COUT              0x01                       // present COUT state (read-only)
+            #define CMP_SCR_CFF               0x02                       // analog comparator flag falling edge detected on COUT (write '1' to clear)
+            #define CMP_SCR_CRF               0x04                       // analog comparator flag rising edge detected on COUT (write '1' to clear)
+            #define CMP_SCR_IEF               0x08                       // comparator interrupt enable falling
+            #define CMP_SCR_IER               0x10                       // comparator interrupt enable rising
+            #define CMP_SCR_DMA               0x40                       // DMA enabled (on rising an/or falling, according to interrupt settings)
+        #define CMP0_DACCR       *(unsigned char *)(CMP0_BLOCK + 0x4)    // CMP 0 DAC control register
+            #define CMP_DACCR_VOSEL_MASK      0x3f                       // 0..63 (1 is 1/64th, 63 is 64/64th)
+            #define CMP_DACCR_VRSEL_VREF_OUT  0x00                       // select VREF_OUT as supply voltage to DAC ladder network
+            #define CMP_DACCR_VRSEL_VDD       0x40                       // select VDD as supply voltage to DAC ladder network
+            #define CMP_DACCR_DACEN           0x80                       // DAC enable
+        #define CMP0_MUXCR       *(unsigned char *)(CMP0_BLOCK + 0x5)    // CMP 0 MUX control register
+            #define CMP_MUXCR_MSEL_IN0        0x00                       // minus input 0 connected
+            #define CMP_MUXCR_MSEL_IN1        0x01                       // minus input 1 connected
+            #define CMP_MUXCR_MSEL_IN2        0x02                       // minus input 2 connected
+            #define CMP_MUXCR_MSEL_IN3        0x03                       // minus input 3 connected
+            #define CMP_MUXCR_MSEL_IN4        0x04                       // minus input 4 connected
+            #define CMP_MUXCR_MSEL_IN5        0x05                       // minus input 5connected
+            #define CMP_MUXCR_MSEL_IN6        0x06                       // minus input 6 connected
+            #define CMP_MUXCR_MSEL_IN7        0x07                       // minus input 7 connected
+            #define CMP_MUXCR_MSEL            0x07                       // minus input MUX control
+            #define CMP_MUXCR_PSEL_IN0        0x00                       // plus input 0 connected
+            #define CMP_MUXCR_PSEL_IN1        0x08                       // plus input 1 connected
+            #define CMP_MUXCR_PSEL_IN2        0x10                       // plus input 2 connected
+            #define CMP_MUXCR_PSEL_IN3        0x18                       // plus input 3 connected
+            #define CMP_MUXCR_PSEL_IN4        0x20                       // plus input 4 connected
+            #define CMP_MUXCR_PSEL_IN5        0x28                       // plus input 5connected
+            #define CMP_MUXCR_PSEL_IN6        0x30                       // plus input 6 connected
+            #define CMP_MUXCR_PSEL_IN7        0x38                       // plus input 7 connected
+            #define CMP_MUXCR_PSEL            0x38                       // plus input MUX control
+            #define CMP_MUXCR_PSTM            0x80                       // pass through mode enable
+    #endif
+    #if NUMBER_OF_COMPARATORS > 1
+        #define CMP1_CR0         *(unsigned char *)(CMP1_BLOCK + 0x0)    // CMP 1 control register 0
+        #define CMP1_CR1         *(unsigned char *)(CMP1_BLOCK + 0x1)    // CMP 1 control register 1
+        #define CMP1_FPR         *(unsigned char *)(CMP1_BLOCK + 0x2)    // CMP 1 filter period register
+        #define CMP1_SCR         *(volatile unsigned char *)(CMP1_BLOCK + 0x3) // CMP 1 status and control register
+        #define CMP1_DACCR       *(unsigned char *)(CMP1_BLOCK + 0x4)    // CMP 1 DAC control register
+        #define CMP1_MUXCR       *(unsigned char *)(CMP1_BLOCK + 0x5)    // CMP 1 MUX control register
+    #endif
+    #if NUMBER_OF_COMPARATORS > 2
+        #define CMP2_CR0         *(unsigned char *)(CMP2_BLOCK + 0x0)    // CMP 2 control register 0
+        #define CMP2_CR1         *(unsigned char *)(CMP2_BLOCK + 0x1)    // CMP 2 control register 1
+        #define CMP2_FPR         *(unsigned char *)(CMP2_BLOCK + 0x2)    // CMP 2 filter period register
+        #define CMP2_SCR         *(volatile unsigned char *)(CMP2_BLOCK + 0x3) // CMP 2 status and control register
+        #define CMP2_DACCR       *(unsigned char *)(CMP2_BLOCK + 0x4)    // CMP 2 DAC control register
+        #define CMP2_MUXCR       *(unsigned char *)(CMP2_BLOCK + 0x5)    // CMP 2 MUX control register
+    #endif
+    #if NUMBER_OF_COMPARATORS > 3
+        #define CMP3_CR0         *(unsigned char *)(CMP3_BLOCK + 0x0)    // CMP 3 control register 0
+        #define CMP3_CR1         *(unsigned char *)(CMP3_BLOCK + 0x1)    // CMP 3 control register 1
+        #define CMP3_FPR         *(unsigned char *)(CMP3_BLOCK + 0x2)    // CMP 3 filter period register
+        #define CMP3_SCR         *(volatile unsigned char *)(CMP3_BLOCK + 0x3) // CMP 3 status and control register
+        #define CMP3_DACCR       *(unsigned char *)(CMP3_BLOCK + 0x4)    // CMP 3 DAC control register
+        #define CMP3_MUXCR       *(unsigned char *)(CMP3_BLOCK + 0x5)    // CMP 3 MUX control register
+    #endif
 
-    #define CMP1_CR0             *(unsigned char *)(CMP1_BLOCK + 0x0)    // CMP 1 control register 0
-    #define CMP1_CR1             *(unsigned char *)(CMP1_BLOCK + 0x1)    // CMP 1 control register 1
-    #define CMP1_FPR             *(unsigned char *)(CMP1_BLOCK + 0x2)    // CMP 1 filter period register
-    #define CMP1_SCR             *(volatile unsigned char *)(CMP1_BLOCK + 0x3) // CMP 1 status and control register
-    #define CMP1_DACCR           *(unsigned char *)(CMP1_BLOCK + 0x4)    // CMP 1 DAC control register
-    #define CMP1_MUXCR           *(unsigned char *)(CMP1_BLOCK + 0x5)    // CMP 1 MUX control register
-
-    #define CMP2_CR0             *(unsigned char *)(CMP2_BLOCK + 0x0)    // CMP 2 control register 0
-    #define CMP2_CR1             *(unsigned char *)(CMP2_BLOCK + 0x1)    // CMP 2 control register 1
-    #define CMP2_FPR             *(unsigned char *)(CMP2_BLOCK + 0x2)    // CMP 2 filter period register
-    #define CMP2_SCR             *(volatile unsigned char *)(CMP2_BLOCK + 0x3) // CMP 2 status and control register
-    #define CMP2_DACCR           *(unsigned char *)(CMP2_BLOCK + 0x4)    // CMP 2 DAC control register
-    #define CMP2_MUXCR           *(unsigned char *)(CMP2_BLOCK + 0x5)    // CMP 2 MUX control register
-
-    #define CMP3_CR0             *(unsigned char *)(CMP3_BLOCK + 0x0)    // CMP 3 control register 0
-    #define CMP3_CR1             *(unsigned char *)(CMP3_BLOCK + 0x1)    // CMP 3 control register 1
-    #define CMP3_FPR             *(unsigned char *)(CMP3_BLOCK + 0x2)    // CMP 3 filter period register
-    #define CMP3_SCR             *(volatile unsigned char *)(CMP3_BLOCK + 0x3) // CMP 3 status and control register
-    #define CMP3_DACCR           *(unsigned char *)(CMP3_BLOCK + 0x4)    // CMP 3 DAC control register
-    #define CMP3_MUXCR           *(unsigned char *)(CMP3_BLOCK + 0x5)    // CMP 3 MUX control register
+    typedef struct _PACK stKINETIS_COMPARATOR
+    {
+        unsigned char CMP_CR0;
+        unsigned char CMP_CR1;
+        unsigned char CMP_FPR;
+        volatile unsigned char CMP_SCR;
+        unsigned char CMP_DACCR;
+        unsigned char CMP_MUXCR;
+        unsigned char res[2];
+    } KINETIS_COMPARATOR;
 #endif
 
 // VREF
@@ -18850,6 +18952,7 @@ extern void fnSimPers(void);
 #define KEYBOARD_INTERRUPT        8
 #define WAKEUP_INTERRUPT          9
 #define I2S_SAI_INTERRUPT         10
+#define COMPARATOR_INTERRUPT      11
 
 #define TIMER_SINGLE_SHOT         0x0000
 #define TIMER_CAPTURE_RISING      0x0002                                 // {97}
@@ -19483,6 +19586,68 @@ typedef struct stDAC_SETUP                                               // {23}
 #define DAC_DMA_LINKING                 0x00000800                       // use two linked DMA channels to ensure no sample loss at high speeds (used by KL parts)
 #define DAC_HW_TRIGGER_MODE             0x00001000
 #define DAC_BUFFER_DMA_START            0x00002000
+
+
+typedef struct stCOMPARATOR_SETUP                                        // {112}
+{
+    void (*int_handler)(int iCMP_reference, int iEvent);                 // interrupt handler to be configured
+    unsigned char    int_type;                                           // identifier for when configuring
+    unsigned char    int_priority;                                       // priority the user wants to set
+    unsigned long    comparator_mode;                                    // the mode of operation
+    unsigned char    comparator;                                         // comparator to be used
+    unsigned char    positive_input;                                     // positive input connection
+    unsigned char    negative_input;                                     // negative input connection
+    unsigned char    hysterisis_level;                                   // levels 0 to 3
+    unsigned char    filter;                                             // filter sample count (1..7) in external sampling mode or 0..255 in bus clock mode
+    unsigned char    DAC_level;                                          // 0..63
+} COMPARATOR_SETUP;
+
+// Comparator modes
+//
+#define COMPARATOR_DISABLED                       0x00000000             // not powered and consuming no current
+#define COMPARATOR_BUS_CLOCK                      (CMP_CR0_FILTER_1_SAMPLE) // powered and active - continuous operation with neither windows nor filter control
+#define COMPARATOR_SAMPLE_FILTER_OFF              COMPARATOR_BUS_CLOCK
+#define COMPARATOR_SAMPLE_FILTER_2                (CMP_CR0_FILTER_2_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_SAMPLE_FILTER_3                (CMP_CR0_FILTER_3_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_SAMPLE_FILTER_4                (CMP_CR0_FILTER_4_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_SAMPLE_FILTER_5                (CMP_CR0_FILTER_5_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_SAMPLE_FILTER_6                (CMP_CR0_FILTER_6_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_SAMPLE_FILTER_7                (CMP_CR0_FILTER_7_SAMPLE | (CMP_CR1_SE << 8))
+#define COMPARATOR_HYSTERISIS_LEVEL_0             (CMP_CR0_HYSTCTR_LEVEL_0)
+#define COMPARATOR_HYSTERISIS_LEVEL_1             (CMP_CR0_HYSTCTR_LEVEL_1)
+#define COMPARATOR_HYSTERISIS_LEVEL_2             (CMP_CR0_HYSTCTR_LEVEL_2)
+#define COMPARATOR_HYSTERISIS_LEVEL_3             (CMP_CR0_HYSTCTR_LEVEL_3)           
+#define COMPARATOR_WINDOWED_MODE                  (CMP_CR1_WE << 8)      // powered and active - continuous operation with window but no filter control
+#define COMPARATOR_HIGH_SPEED_MODE                (CMP_CR1_PMODE_HS << 8)
+#define COMPARATOR_LOW_SPEED_MODE                 0x00000000
+#define COMPARATOR_OUTPUT_ENABLE                  (CMP_CR1_OPE << 8)
+#define COMPARATOR_OUTPUT_INVERT                  (CMP_CR1_INV << 8)
+#define COMPARATOR_OUTPUT_FILTERED                0x00000000
+#define COMPARATOR_OUTPUT_UNFILTERED              (CMP_CR1_COS_UNFILTERED << 8)
+#define COMPARATOR_ENABLE                         (CMP_CR1_EN << 8)
+#define COMPARATOR_INTERRUPT_RISING               (CMP_SCR_IER << 16)
+#define COMPARATOR_INTERRUPT_FALLING              (CMP_SCR_IEF << 16)
+#define COMPARATOR_INTERRUPT_RISING_AND_FALLING   (COMPARATOR_INTERRUPT_RISING | COMPARATOR_INTERRUPT_FALLING)
+#define COMPARATOR_DMA_FALLING                    ((CMP_SCR_DMA << 16) | COMPARATOR_INTERRUPT_FALLING)
+#define COMPARATOR_DMA_RISING                     ((CMP_SCR_DMA << 16) | COMPARATOR_INTERRUPT_RISING)
+#define COMPARATOR_DMA_RISING_AND_FALLING         ((CMP_SCR_DMA << 16) | COMPARATOR_INTERRUPT_RISING_AND_FALLING)
+#define COMPARATOR_DAC_ENABLE                     (CMP_DACCR_DACEN << 24)
+#define COMPARATOR_DAC_VOLTAGE_VREF_OUT           (CMP_DACCR_VRSEL_VREF_OUT << 24)
+#define COMPARATOR_DAC_VOLTAGE_VDD                (CMP_DACCR_VRSEL_VDD << 24)
+
+#define COMPARATOR_IN0                            (CMP_MUXCR_MSEL_IN0)
+#define COMPARATOR_IN1                            (CMP_MUXCR_MSEL_IN1)
+#define COMPARATOR_IN2                            (CMP_MUXCR_MSEL_IN2)
+#define COMPARATOR_IN3                            (CMP_MUXCR_MSEL_IN3)
+#define COMPARATOR_IN4                            (CMP_MUXCR_MSEL_IN4)
+#define COMPARATOR_IN5                            (CMP_MUXCR_MSEL_IN5)
+#define COMPARATOR_IN6                            (CMP_MUXCR_MSEL_IN6)
+#define COMPARATOR_IN7                            (CMP_MUXCR_MSEL_IN7)
+#define COMPARATOR_IN_DAC_OUT                     (COMPARATOR_IN7)
+
+#define COMPARATOR_INTERRUPT_EVENT_FALLING        0x00                   // interrupt due to falling threshold detection
+#define COMPARATOR_INTERRUPT_EVENT_RISING         0x01                   // interrupt due to rising threshold detection
+#define COMPARATOR_INTERRUPT_EVENT_RISING_AND_FALLING 0x02               // interrupt due to falling and falling thresholds detection - both rising and fallin have been seen since last interrupt
 
 
 // Define interrupt setup structure to suit this processor

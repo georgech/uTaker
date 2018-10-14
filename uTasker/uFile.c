@@ -1112,10 +1112,10 @@ extern MAX_FILE_LENGTH uGetFileData(MEMORY_RANGE_POINTER ptrFile, MAX_FILE_SYSTE
     #else
     MAX_FILE_SYSTEM_OFFSET RemainingLength = uGetFileLength(ptrFile);
     #endif
-    if (RemainingLength) {
+    if (RemainingLength != 0) {
         RemainingLength -= FileOffset;                                   // this is remaining length in file from this position
         if (RemainingLength != 0) {
-            if (RemainingLength >= DataLength) {
+            if (RemainingLength > DataLength) {
                  RemainingLength = DataLength;
             }
     #if defined INTERNAL_USER_FILES                                      // {19}

@@ -5744,7 +5744,7 @@ extern void fnResetBoard(void)
 }
 
 
-#ifdef SUPPORT_RTC                                                       // {23}
+#if defined SUPPORT_RTC                                                   // {23}
 
 static void (*rtc_interrupt_handler[6])(void) = {0};                     // RTC interrupt handlers
 

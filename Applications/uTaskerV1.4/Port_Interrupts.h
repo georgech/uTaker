@@ -234,22 +234,37 @@ static void fnInitIRQ(void)
     interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
     interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
     interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
-        #elif defined FRDM_KE04Z || defined FRDM_KE06Z
+        #elif defined FRDM_KE04Z
     // Keyboard
     //
-  //interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
+    interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
+    interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
+    interrupt_setup.int_port_bits  = (KE_PORTA_BIT1 | KE_PORTA_BIT2);    // the IRQs input connected
+    // IRQ
+    //
+  //interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
+  //interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
+  //interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
+    //
+  //interrupt_setup.int_port       = KE_PORTI;                           // the port that the interrupt input is on
+  //interrupt_setup.int_port_bits  = KE_PORTI_BIT6;                      // the IRQ input connected
+        #elif defined FRDM_KE06Z
+    // Keyboard
+    //
+    interrupt_setup.int_type       = KEYBOARD_INTERRUPT;                 // define keyboard interrupt rather than IRQ
     interrupt_setup.int_priority   = PRIORITY_KEYBOARD_INT;              // interrupt priority level
   //interrupt_setup.int_port       = KE_PORTD;                           // the port that the interrupt input is on (KE_PORTA, KE_PORTB, KE_PORTC and KE_PORTD are the same)
     interrupt_setup.int_port       = KE_PORTH;                           // the port that the interrupt input is on (KE_PORTE, KE_PORTF, KE_PORTG and KE_PORTH are the same)
-    interrupt_setup.int_port_bits  = (KE_PORTH_BIT6 | KE_PORTH_BIT7);    // the IRQs input connected
+    interrupt_setup.int_port_bits  = (KE_PORTH_BIT3 | KE_PORTH_BIT4 | KE_PORTH_BIT5 | KE_PORTH_BIT6 | KE_PORTH_BIT7); // the IRQs input connected
     // IRQ
     //
-    interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
-    interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
-    interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
+  //interrupt_setup.int_priority   = PRIORITY_PORT_IRQ_INT;              // interrupt priority level
+  //interrupt_setup.int_port       = KE_PORTA;                           // the port that the interrupt input is on (when using PTA5 as IRQ SIM_SOPT_KE_DEFAULT must be configured to disable the reset function on the pin)
+  //interrupt_setup.int_port_bits  = KE_PORTA_BIT5;                      // the IRQ input connected
     //
-    interrupt_setup.int_port       = KE_PORTI;                           // the port that the interrupt input is on
-    interrupt_setup.int_port_bits  = KE_PORTI_BIT6;                      // the IRQ input connected
+  //interrupt_setup.int_port       = KE_PORTI;                           // the port that the interrupt input is on
+  //interrupt_setup.int_port_bits  = KE_PORTI_BIT6;                      // the IRQ input connected
         #elif defined TWR_K24F120M || defined TWR_K64F120M || defined FRDM_K64F || defined TWR_K21F120M || defined TWR_K22F120M || defined TEENSY_3_1 || defined TWR_K21D50M
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt

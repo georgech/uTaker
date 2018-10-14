@@ -1300,7 +1300,11 @@ static void fnEnableRxAndDMA(int channel, unsigned long buffer_length, unsigned 
     }
             #endif
         #else
+            #if defined DMAMUX0_CHCFG_SOURCE_UART0_RX
     unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART0_RX + (2 * channel));
+            #else
+    unsigned short usDMAMUX = (DMAMUX0_CHCFG_SOURCE_LPUART0_RX + (2 * channel));
+            #endif
             #if ((defined KINETIS_K21 || defined KINETIS_K22) && (UARTS_AVAILABLE > 4)) || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     if (channel > 3) {                                                   // channels 4 and above each share DMA source for TX and RX
         usDMAMUX = (DMAMUX0_CHCFG_SOURCE_UART4_RX + (channel - 4));      // {215}
@@ -2641,7 +2645,11 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     #if defined SERIAL_SUPPORT_DMA
     if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // if transmission is to be DMA driven
         if ((lpuart_reg->LPUART_BAUD & LPUART_BAUD_TDMAE) == 0) {        // if the DMA has already been configured don't disturb it
+        #if defined LPUARTS_PARALLEL                                     // serial interfaces referenced by UARTs first, followed by LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html
             fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * (Channel - UARTS_AVAILABLE))), 0, 0, (void *)&(lpuart_reg->LPUART_DATA), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+        #else
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * Channel)), 0, 0, (void *)&(lpuart_reg->LPUART_DATA), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+        #endif
             lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_TIE | LPUART_CTRL_TCIE); // ensure tx interrupts are not enabled
             lpuart_reg->LPUART_BAUD |= LPUART_BAUD_TDMAE;                // use DMA rather than interrupts for transmission
         }
@@ -2807,7 +2815,11 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
             #endif
         if (0 == iConfigured) {
             uart_reg->UART_C2 &= ~(UART_C2_TIE | UART_C2_TCIE);          // ensure tx interrupt is not enabled
+            #if defined DMAMUX0_CHCFG_SOURCE_UART0_TX
             fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_UART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            #else
+            fnConfigDMA_buffer(UART_DMA_TX_CHANNEL[Channel], (DMAMUX0_CHCFG_SOURCE_LPUART0_TX + (2 * Channel)), 0, 0, (void *)&(uart_reg->UART_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _uart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+            #endif
             #if UARTS_AVAILABLE > 1
             if (Channel == 0) {
                 uart_reg->UART_C5 |= UART_C5_TDMAS;                      // use DMA rather than interrupts for transmission
@@ -3823,7 +3835,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 
     #if defined _WINDOWS
     if (baud_config.iValid == 0) {
+        #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2
         baud_config.ucFraction = ucFraction;
+        #endif
         baud_config.usDivider = usDivider;
     }
         #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined KINETIS_K80) || defined K_STYLE_UART2

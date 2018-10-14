@@ -305,7 +305,7 @@ static CHAR *cDedicated[PORT_WIDTH] = {                                  // dedi
     "ADC0_DP1",
     "ADC0_DM1",
     "ADC1_DP1",
-    "ADC1_DM1"
+    "ADC1_DM1",
     "ADC0_DP0/ADC1_DP3",
     "ADC0_DM0/ADC1_DM3",
     "ADC1_DP0/ADC0_DP3",

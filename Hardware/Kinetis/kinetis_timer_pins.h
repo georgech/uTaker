@@ -416,7 +416,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
             _CONFIG_PERIPHERAL(F, 0, (PF_0_FTM2_CH0 | ulCharacteristics)); // FTM2_CH0 on PF.0 (alt. function 2)
             fnEnterTimer(_PORTF, 0, iTimer, iChannel, 1);
             #else
-                #if defined KINETIS_KE06
+                #if defined SIM_PINSEL1_FTM2PS0_MASK
             SIM_PINSEL1 &= ~SIM_PINSEL1_FTM2PS0_MASK;
                 #else
             SIM_PINSEL0 &= ~SIM_PINSEL_FTM2PS0;

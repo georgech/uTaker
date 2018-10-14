@@ -81,8 +81,8 @@
     //#define FRDM_KE04Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
     //#define FRDM_KE06Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE06Z.html
     //#define FRDM_KE15Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE15Z.html
-    //#define TWR_KE18F                                                  // tower board http://www.utasker.com/kinetis/TWR-KE18F.html
-    //#define HVP_KE18F                                                  // tower board http://www.utasker.com/kinetis/HVP-KE18F.html
+    //#define TWR_KE18F                                                  // tower board [Cortex-M4] http://www.utasker.com/kinetis/TWR-KE18F.html
+    //#define HVP_KE18F                                                  // tower board [Cortex-M4] http://www.utasker.com/kinetis/HVP-KE18F.html
 
     //#define FRDM_KL02Z                                                 // L processors Cortex-M0+ (ultra-low power) basic - freedom board http://www.utasker.com/kinetis/FRDM-KL02Z.html
     //#define FRDM_KL03Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL03Z.html
@@ -90,7 +90,7 @@
 
     //#define FRDM_KL25Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB - freedom board http://www.utasker.com/kinetis/FRDM-KL25Z.html
     //#define TWR_KL25Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
-    //#define RD_KL25_AGMP01                                             // KL25 baed 10-axis data logger tool kit http://www.utasker.com/kinetis/RD-KL25-AGMP01.html
+    //#define RD_KL25_AGMP01                                             // KL25 based 10-axis data logger tool kit http://www.utasker.com/kinetis/RD-KL25-AGMP01.html
     //#define FRDM_KL26Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
     //#define rcARM_KL26                                                 // development board with KL26
     //#define TEENSY_LC                                                  // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
@@ -2259,7 +2259,7 @@
 
 // Cryptography
 //
-//#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
+#define CRYPTOGRAPHY                                                     // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
   //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
     #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
@@ -2270,6 +2270,7 @@
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
           //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (less devices support LTC - Low Power Trusted Cryptography)
     #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
+      //#define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
 
 // Signal Processing (DSP)
 //

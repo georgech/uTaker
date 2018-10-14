@@ -478,6 +478,18 @@ extern int iAccelOutput;
 #define IRQ7_EVENT                 43
 #define IRQ11_EVENT                44
 #define CAPTURE_COMPLETE_EVENT     45
+#define CMP_EVENT_0_FALLING        46
+#define CMP_EVENT_0_RISING         47
+#define CMP_EVENT_0_FALLING_RISING 48
+#define CMP_EVENT_1_FALLING        49
+#define CMP_EVENT_1_RISING         50
+#define CMP_EVENT_1_FALLING_RISING 51
+#define CMP_EVENT_2_FALLING        52
+#define CMP_EVENT_2_RISING         53
+#define CMP_EVENT_2_FALLING_RISING 54
+#define CMP_EVENT_3_FALLING        55
+#define CMP_EVENT_3_RISING         56
+#define CMP_EVENT_3_FALLING_RISING 57
 
 #define E_TIMER_TX_NOW             60
 

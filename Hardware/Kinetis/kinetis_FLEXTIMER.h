@@ -445,7 +445,9 @@ static __interrupt void _flexTimerInterrupt_5(void)
                     ulEdge = (FTM_CSC_ELSA | FTM_CSC_ELSB);              // capture on rising and falling edges
                     break;
                 case TIMER_CAPTURE_RISING:
+        #if defined PORT_PS_DOWN_ENABLE
                     ulCharacteristics = PORT_PS_DOWN_ENABLE;
+        #endif
                     ulEdge = FTM_CSC_ELSA;                               // capture on rising edge
                     break;
               //case TIMER_CAPTURE_FALLING:

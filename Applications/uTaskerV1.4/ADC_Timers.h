@@ -44,6 +44,7 @@
     05.09.2018 Add FFT_SAMPLED_INPUT option                              {28}
     05.10.2018 Add PHASE_SHIFTED_COMBINED_OUTPUTS option for PWM         {29}
     08.10.2018 Add MULTIPLE_CHANNEL_INTERRUPTS option for PWM            {30}
+    13.10.2018 Add comparator reference                                  {31}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -86,6 +87,10 @@
             #endif
     #endif
 
+    #if defined SUPPORT_COMPARATOR
+      //#define TEST_COMPARATOR                                          // test a comparator interrupt
+    #endif
+
     #if (defined SUPPORT_PIT1 || defined SUPPORT_PITS) && !defined KINETIS_WITHOUT_PIT // M522xx and Kinetis periodic interrupt timer
       //#define TEST_PIT                                                 // test a user defined periodic interrupt (choose one of the following if enabled)
           //#define TEST_PIT_SINGLE_SHOT                                 // test single-shot PIT
@@ -108,7 +113,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
                 #define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -168,6 +173,9 @@
             static void fnSaveWaveToDisk(signed short *ptrInput, unsigned short usBufferLength);
             static void fnStartWaveDisk(void);
         #endif
+    #endif
+    #if defined TEST_COMPARATOR
+        static void fnConfigureComparator(void);
     #endif
     #if defined SUPPORT_ADC && defined TEST_ADC && defined TEST_POLL_ADC // {25}
         static int fnCheckADC(int iChannel);
@@ -265,6 +273,9 @@
         fnStartWaveDisk();                                               // configure an input interrupt to control starting and stopping voice recording
         #endif
     #endif
+    #if defined TEST_COMPARATOR
+        fnConfigureComparator();
+    #endif
     #if defined TEST_PIT || defined TEST_DMA_DAC
         fnConfigurePIT();
     #endif
@@ -324,7 +335,6 @@
             break;
     #endif
 #endif
-
 #if defined _ADC_TIMER_INT_EVENTS_1 && defined TEST_GPT                  // specific interrupt event handling
             case CAPTURE_COMPLETE_EVENT:
                 {
@@ -337,6 +347,28 @@
                     }
                 }
                 break;
+#endif
+#if defined _ADC_TIMER_INT_EVENTS_2  && defined SUPPORT_COMPARATOR && defined TEST_COMPARATOR // specific interrupt event handling
+                if ((ucInputMessage[MSG_INTERRUPT_EVENT] >= CMP_EVENT_0_FALLING) && (ucInputMessage[MSG_INTERRUPT_EVENT] <= CMP_EVENT_3_FALLING_RISING)) {
+                    unsigned long ulComparator = (ucInputMessage[MSG_INTERRUPT_EVENT] - CMP_EVENT_0_FALLING);
+                    int iEvent = (ulComparator % 3);
+                    ulComparator /= 3;
+                    fnDebugMsg("CMP-");
+                    fnDebugDec(ulComparator, 0);
+                    fnDebugMsg(" = ");
+                    switch (iEvent) {
+                    case COMPARATOR_INTERRUPT_EVENT_FALLING:
+                        fnDebugMsg("Falling");
+                        break;
+                    case COMPARATOR_INTERRUPT_EVENT_RISING:
+                        fnDebugMsg("Rising");
+                        break;
+                    case COMPARATOR_INTERRUPT_EVENT_RISING_AND_FALLING:
+                        fnDebugMsg("Rise/Fall");
+                        break;
+                    }
+                    fnDebugMsg("\r\n");
+                }
 #endif
 #if defined _ADC_TIMER_INT_EVENTS_2 && (defined TEST_ADC || defined TEST_AD_DA) // interrupt range event handling
     #if defined _M5223X || defined _KINETIS                              // {11}
@@ -402,8 +434,8 @@
                     #if defined MEASURE_FFT_TIME
                         ulTimeStamp = ((DWT_CYCCNT - ulTimeStamp) / (SYSTEM_CLOCK / 1000000)); // calculate the time the calculation took
                         fnDebugMsg("FFT = ");
-                        fnDebugDec(ulTimeStamp, 0);                      // ns
-                        fnDebugMsg("ns]\r\n");
+                        fnDebugDec(ulTimeStamp, 0);                      // us
+                        fnDebugMsg("us]\r\n");
                     #endif
                     }
                 #elif defined KWIKSTIK                                   // remove input's DC bias, amplify the signal and then add the bias again
@@ -477,7 +509,11 @@
                         fnDebugMsg(" degC\r\n");
                     }
                 #endif
+                #if defined GLOBAL_TIMER_TASK
+                    uTaskerGlobalMonoTimer(OWN_TASK, (DELAY_LIMIT)(3.0 * SEC), E_NEXT_SAMPLE);
+                #else
                     uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3.0 * SEC), E_NEXT_SAMPLE);
+                #endif
             #endif
                 }
         #endif
@@ -921,10 +957,12 @@ static void fnConfigureADC(void)
     adc_setup.int_handler = adc_range;                                   // handling function
         #elif defined FRDM_KE02Z40M || defined FRDM_KE06Z
     adc_setup.int_adc_bit = ADC_SE12_SINGLE;                             // thermistor positive terminal
-        #elif defined FRDM_KL43Z
+        #elif defined FRDM_KL43Z || defined TEST_COMPARATOR
     adc_setup.int_adc_bit = ADC_SE23_SINGLE;
         #elif defined FRDM_KL03Z
     adc_setup.int_adc_bit = ADC_SE0_SINGLE;
+        #elif defined FRDM_KL27Z
+    adc_setup.int_adc_bit = ADC_SE6_SINGLE;
         #else
     adc_setup.int_adc_bit = ADC_TEMP_SENSOR;                             // ADC internal temperature
         #endif
@@ -1023,6 +1061,9 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_sample = (ADC_SAMPLE_LONG_PLUS_12 | ADC_SAMPLE_AVERAGING_32); // additional sampling clocks
         #endif
     #endif
+    #if defined FRDM_KL27Z
+    adc_setup.int_adc_mode |= ADC_SELECT_INPUTS_B;
+    #endif
     adc_setup.int_adc_result = 0;                                        // no result is requested
 #else
     adc_setup.int_handler = adc_level_change_high;                       // handling function
@@ -1109,7 +1150,7 @@ static void fnConfigureADC(void)
     #endif
 #endif
 #if defined _KINETIS                                                     // {11}
-    #if (ADC_CONTROLLERS > 1) && !defined DEV1
+    #if (ADC_CONTROLLERS > 1) && !defined DEV1 && !defined TEST_COMPARATOR
     adc_setup.int_adc_controller = 1;                                    // ADC controller 1
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // ADC DM1 single-ended
   //adc_setup.int_adc_int_type = (ADC_LOW_LIMIT_INT);                    // interrupt type (trigger only when lower than the defined level)
@@ -1262,10 +1303,33 @@ static void fnSaveWaveToDisk(signed short *ptrInput, unsigned short usBufferLeng
     }
 }
 #endif
-
 #endif                                                                   // endif ADC configuration and interrupt handling routines
 
+#if defined _ADC_TIMER_ROUTINES && defined SUPPORT_COMPARATOR && defined TEST_COMPARATOR
+static void __callback_interrupt comparator_trigger(int iCMP_reference, int iEvent)
+{
+    fnInterruptMessage(OWN_TASK, (unsigned char)(CMP_EVENT_0_FALLING + iCMP_reference + iCMP_reference +iCMP_reference + iEvent));
+}
 
+static void fnConfigureComparator(void)
+{
+    COMPARATOR_SETUP comparator_setup;                                   // interrupt configuration parameters
+    comparator_setup.int_type = COMPARATOR_INTERRUPT;                    // identifier when configuring
+    comparator_setup.int_priority = PRIORITY_COMPARATOR;                 // comparator interrupt priority
+    comparator_setup.int_handler = comparator_trigger;                   // interrupt call-back
+    comparator_setup.comparator = 1;                                     // comparator 1
+    comparator_setup.comparator_mode = (COMPARATOR_BUS_CLOCK | COMPARATOR_HYSTERISIS_LEVEL_0 | COMPARATOR_HIGH_SPEED_MODE |
+                                        COMPARATOR_OUTPUT_ENABLE | COMPARATOR_OUTPUT_UNFILTERED |
+                                        COMPARATOR_INTERRUPT_RISING_AND_FALLING |
+                                        COMPARATOR_DAC_ENABLE | COMPARATOR_DAC_VOLTAGE_VDD |
+                                        COMPARATOR_ENABLE);
+    comparator_setup.filter = 0;                                         // filter sample count(1..7) in external sampling mode or 0..255 in bus clock mode
+    comparator_setup.DAC_level = 31;                                     // half-voltage reference generated
+    comparator_setup.positive_input = COMPARATOR_IN3;                    // positive input
+    comparator_setup.negative_input = COMPARATOR_IN_DAC_OUT;             // negative input
+    fnConfigureInterrupt((void *)&comparator_setup);                     // start operation
+}
+#endif
 
 #if defined _ADC_TIMER_ROUTINES && defined SUPPORT_LPTMR && (defined TEST_LPTMR_PERIODIC || defined TEST_LPTMR_SINGLE_SHOT) // {18}
 static void __callback_interrupt low_power_timer_int(void)

@@ -280,6 +280,8 @@ extern int fnConfigureRTC(void *ptrSettings)
         #elif defined RTC_USES_INT_REF
         ICS_C1 |= (ICS_C1_IRCLKEN | ICS_C1_IREFSTEN);                    // enable the internal reference clock and allow it to continue running in stop mode
         RTC_MOD = (((ICSIRCLK)/RTC_CLOCK_PRESCALER_1) - 1);              // set the match value for 1s
+        #elif defined RTC_USES_LPO_1kHz
+        RTC_MOD = (((1000)/ RTC_CLOCK_PRESCALER_2) - 1);                 // set the match value for 1s
         #else
         RTC_MOD = (((_EXTERNAL_CLOCK)/RTC_CLOCK_PRESCALER_2) - 1);       // set the match value for 1s
         #endif

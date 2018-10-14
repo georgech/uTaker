@@ -1782,7 +1782,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                     break;
                 }
             }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
             else if ((ulChangedBit & KE_PORTA_BIT4) != 0) {
                 if (ucPortFunctions[iPort][4] == PA_4_KBI0_P4) {         // this input is programmed as keyboard interrupt
                     KBI_input = 0x10;
@@ -1809,78 +1809,78 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
             }
     #endif
             else if ((ulChangedBit & KE_PORTB_BIT0) != 0) {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                if (ucPortFunctions[iPort][8] == PB_0_KBI0_P8) {         // this input is programmed as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                if (ucPortFunctions[iPort + 1][0] == PB_0_KBI0_P8) {     // this input is programmed as keyboard interrupt
                     KBI_input = 0x100;
                     break;
                 }
     #else
-                if (ucPortFunctions[iPort][8] == PB_0_KBI0_P4) {         // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][0] == PB_0_KBI0_P4) {     // this input is programmed as keyboard interrupt
                     KBI_input = 0x10;
                     break;
                 }
     #endif
             }
             else if ((ulChangedBit & KE_PORTB_BIT1) != 0) {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                if (ucPortFunctions[iPort][9] == PB_1_KBI0_P9) {         // this input is programmed as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                if (ucPortFunctions[iPort + 1][1] == PB_1_KBI0_P9) {     // this input is programmed as keyboard interrupt
                     KBI_input = 0x200;
                     break;
                 }
     #else
-                if (ucPortFunctions[iPort][9] == PB_1_KBI0_P5) {         // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][1] == PB_1_KBI0_P5) {     // this input is programmed as keyboard interrupt
                     KBI_input = 0x20;
                     break;
                 }
     #endif
             }
             else if ((ulChangedBit & KE_PORTB_BIT2) != 0) {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                if (ucPortFunctions[iPort][10] == PB_2_KBI0_P10) {       // this input is programmed as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                if (ucPortFunctions[iPort + 1][2] == PB_2_KBI0_P10) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x400;
                     break;
                 }
     #else
-                if ((ucPortFunctions[iPort][10] == PB_2_KBI0_P6) != 0) { // this input is programmed as keyboard interrupt
+                if ((ucPortFunctions[iPort + 1][2] == PB_2_KBI0_P6) != 0) { // this input is programmed as keyboard interrupt
                     KBI_input = 0x40;
                     break;
                 }
     #endif
             }
             else if ((ulChangedBit & KE_PORTB_BIT3) != 0) {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                if (ucPortFunctions[iPort][11] == PB_3_KBI0_P11) {       // this input is programmed as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                if (ucPortFunctions[iPort + 1][3] == PB_3_KBI0_P11) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x800;
                     break;
                 }
     #else
-                if (ucPortFunctions[iPort][11] == PB_3_KBI0_P7) {        // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][3] == PB_3_KBI0_P7) {     // this input is programmed as keyboard interrupt
                     KBI_input = 0x80;
                     break;
                 }
     #endif
             }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
             else if ((ulChangedBit & KE_PORTB_BIT4) != 0) {
-                if (ucPortFunctions[iPort][12] == PB_4_KBI0_P12) {       // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][4] == PB_4_KBI0_P12) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x1000;
                     break;
                 }
             }
             else if ((ulChangedBit & KE_PORTB_BIT5) != 0) {
-                if (ucPortFunctions[iPort][13] == PB_5_KBI0_P13) {       // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][5] == PB_5_KBI0_P13) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x2000;
                     break;
                 }
             }
             else if ((ulChangedBit & KE_PORTB_BIT6) != 0) {
-                if (ucPortFunctions[iPort][14] == PB_6_KBI0_P14) {       // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][6] == PB_6_KBI0_P14) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x4000;
                     break;
                 }
             }
             else if ((ulChangedBit & KE_PORTB_BIT7) != 0) {
-                if (ucPortFunctions[iPort][15] == PB_7_KBI0_P15) {       // this input is programmed as keyboard interrupt
+                if (ucPortFunctions[iPort + 1][7] == PB_7_KBI0_P15) {    // this input is programmed as keyboard interrupt
                     KBI_input = 0x8000;
                     break;
                 }
@@ -2086,45 +2086,45 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
         }
     #endif
         return;
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     case KE_PORTE:
-        if (ulChangedBit & KE_PORTE_BIT0) {
+        if ((ulChangedBit & KE_PORTE_BIT0) != 0) {
             if (ucPortFunctions[iPort][0] == PE_0_KBI1_P0) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000001;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT1) {
+        else if ((ulChangedBit & KE_PORTE_BIT1) != 0) {
             if (ucPortFunctions[iPort][1] == PE_1_KBI1_P1) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000002;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT2) {
+        else if ((ulChangedBit & KE_PORTE_BIT2) != 0) {
             if (ucPortFunctions[iPort][2] == PE_2_KBI1_P2) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000004;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT3) {
+        else if ((ulChangedBit & KE_PORTE_BIT3) != 0) {
             if (ucPortFunctions[iPort][3] == PE_3_KBI1_P3) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000008;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT4) {
+        else if ((ulChangedBit & KE_PORTE_BIT4) != 0) {
             if (ucPortFunctions[iPort][4] == PE_4_KBI1_P4) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000010;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT5) {
+        else if ((ulChangedBit & KE_PORTE_BIT5) != 0) {
             if (ucPortFunctions[iPort][5] == PE_5_KBI1_P5) {             // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000020;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTE_BIT6) {
+        else if ((ulChangedBit & KE_PORTE_BIT6) != 0) {
             if (ucPortFunctions[iPort][6] == PE_6_KBI1_P6) {           // this input is programmed as keyboard interrupt
                 KBI_input = 0x00000040;
                 break;
@@ -2232,50 +2232,50 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT0) {
-            if (ucPortFunctions[iPort][24] == PH_0_KBI1_P24) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT0) != 0) {
+            if (ucPortFunctions[7][0] == PH_0_KBI1_P24) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x01000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT1) {
-            if (ucPortFunctions[iPort][25] == PH_1_KBI1_P25) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT1) != 0) {
+            if (ucPortFunctions[7][1] == PH_1_KBI1_P25) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x02000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT2) {
-            if (ucPortFunctions[iPort][26] == PH_2_KBI1_P26) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT2) != 0) {
+            if (ucPortFunctions[7][2] == PH_2_KBI1_P26) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x04000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT3) {
-            if (ucPortFunctions[iPort][27] == PH_3_KBI1_P27) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT3) != 0) {
+            if (ucPortFunctions[7][3] == PH_3_KBI1_P27) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x08000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT4) {
-            if (ucPortFunctions[iPort][28] == PH_4_KBI1_P28) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT4) != 0) {
+            if (ucPortFunctions[7][4] == PH_4_KBI1_P28) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x10000000;
                 break;
             }
         }
         else if (ulChangedBit & KE_PORTH_BIT5) {
-            if (ucPortFunctions[iPort][29] == PH_5_KBI1_P29) {           // this input is programmed as keyboard interrupt
+            if (ucPortFunctions[7][5] == PH_5_KBI1_P29) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x20000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT6) {
-            if (ucPortFunctions[iPort][30] == PH_6_KBI1_P30) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT6) != 0) {
+            if (ucPortFunctions[7][6] == PH_6_KBI1_P30) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x40000000;
                 break;
             }
         }
-        else if (ulChangedBit & KE_PORTH_BIT7) {
-            if (ucPortFunctions[iPort][31] == PH_7_KBI1_P31) {           // this input is programmed as keyboard interrupt
+        else if ((ulChangedBit & KE_PORTH_BIT7) != 0) {
+            if (ucPortFunctions[7][7] == PH_7_KBI1_P31) {                // this input is programmed as keyboard interrupt
                 KBI_input = 0x80000000;
                 break;
             }
@@ -2301,7 +2301,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
             }
         }
         KBI0_SC |= KBI_SC_KBF;                                           // interrupt request detected
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         KBI0_SP |= ulChangedBit;                                         // flag the source that caused the interrupt
     #endif
         if (fnGenInt(irq_KBI0_ID) != 0) {                                // if the interrupt is enabled
@@ -2311,8 +2311,8 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
     }
     #if KBIS_AVAILABLE > 1
     else {
-        if (KBI1_SC & KBI_SC_KBIE) {                                     // main KBI interrupt enabled
-            if (KBI1_ES & KBI_input) {                                   // high or rising edge sensitive
+        if ((KBI1_SC & KBI_SC_KBIE) != 0) {                              // main KBI interrupt enabled
+            if ((KBI1_ES & KBI_input) != 0) {                            // high or rising edge sensitive
                 if ((ulNewState & ulChangedBit) == 0) {                  // input has changed to '0'
                     return;
                 }
@@ -2324,7 +2324,7 @@ static void fnHandleKBI(int iController, int iPort, unsigned long ulNewState, un
             }
         }
         KBI1_SC |= KBI_SC_KBF;                                           // interrupt request detected
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
         KBI1_SP |= ulChangedBit;                                         // flag the source that caused the interrupt
     #endif
         if (fnGenInt(irq_KBI1_ID) != 0) {                                // if the interrupt is enabled
@@ -3927,14 +3927,14 @@ extern void fnSimPers(void)
                     if ((SIM_SOPT0 & SIM_SOPT_SWDE) != 0) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_0_SWD_CLK;
+                        break;
                     }
-                    else
     #endif
-                    if ((FTM0_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && ((SIM_PINSEL0 & SIM_PINSEL_FTM0PS0) == 0)) {
+                    if (((FTM0_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM0PS0) == 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_0_FTM0_CH0;
                     }
-                    else if (KBI0_PE & 0x01) {                           // pin is enabled as keyboard interrupt
+                    else if ((KBI0_PE & 0x01) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_0_KBI0_P0;
                     }
@@ -3995,7 +3995,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_4_SWD_DIO;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x10) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_4_KBI0_P4;
@@ -4018,7 +4018,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[iPort][iPin] = PA_5_IRQ;
     #endif
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x20) != 0) {                    // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_5_KBI0_P5;
@@ -4033,17 +4033,16 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI0_PE & 0x40) != 0) {                         // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_6_KBI0_P6;
+                        break;
                     }
     #endif
     #if defined PA_6_DEFAULT
-                    else {
-                        ulPeripherals[iPort] |= ulBit;
-                        ucPortFunctions[_PORTA][iPin] = PA_6_DEFAULT;
-                    }
+                    ulPeripherals[iPort] |= ulBit;
+                    ucPortFunctions[_PORTA][iPin] = PA_6_DEFAULT;
     #endif
                     break;
                 case KE_PORTA_BIT7:
@@ -4054,17 +4053,16 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI0_PE & 0x80) != 0) {                         // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTA][iPin] = PA_7_KBI0_P7;
+                        break;
                     }
     #endif
     #if defined PA_7_DEFAULT
-                    else {
-                        ulPeripherals[iPort] |= ulBit;
-                        ucPortFunctions[_PORTA][iPin] = PA_7_DEFAULT;
-                    }
+                    ulPeripherals[iPort] |= ulBit;
+                    ucPortFunctions[_PORTA][iPin] = PA_7_DEFAULT;
     #endif
                     break;
                 case KE_PORTB_BIT0:
@@ -4079,7 +4077,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_0_UART0_RX;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x100) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_0_KBI0_P8;
@@ -4103,7 +4101,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_1_UART0_TX;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x200) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_1_KBI0_P9;
@@ -4131,7 +4129,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_2_SPI0_SCK;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x400) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_2_KBI0_P10;
@@ -4165,7 +4163,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_3_SPI0_MOSI;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x800) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_3_KBI0_P11;
@@ -4196,7 +4194,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_4_FTM2_CH4;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x1000) {                         // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_4_KBI0_P12;
@@ -4218,7 +4216,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_5_FTM2_CH5;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x2000) {                         // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_5_KBI0_P13;
@@ -4236,19 +4234,19 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_6_I2C0_SDA;
                     }
-                    else if (OSC0_CR & OSC_CR_OSCEN) {                   // crystal oscillator enabled
+                    else if ((OSC0_CR & OSC_CR_OSCEN) != 0) {            // crystal oscillator enabled
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_6_XTAL;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x4000) {                         // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    else if ((KBI0_PE & 0x4000) != 0) {                  // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_6_KBI0_P14;
                     }
     #endif
                     break;
                 case KE_PORTB_BIT7:
-                    if ((I2C0_C1 & I2C_IEN) && (SIM_PINSEL0 & SIM_PINSEL_I2C0PS)) { // if I2C is enabled and I2C0 is mapped to PTB7 and PTB6 rather than PTA3 and PTA2
+                    if (((I2C0_C1 & I2C_IEN) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_I2C0PS) != 0)) { // if I2C is enabled and I2C0 is mapped to PTB7 and PTB6 rather than PTA3 and PTA2
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_7_I2C0_SCL;
                     }
@@ -4256,8 +4254,8 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_7_EXTAL;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI0_PE & 0x8000) {                         // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    else if ((KBI0_PE & 0x8000) != 0) {                  // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_7_KBI0_P15;
                     }
@@ -4272,7 +4270,7 @@ extern void fnSimPers(void)
                     }
     #endif
                     if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
-    #if defined KINETIS_KE06
+    #if defined KINETIS_KE06 || defined KINETIS_KEA128
                     ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTC0)
     #else
                         ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) == 0)
@@ -4281,7 +4279,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_0_FTM2_CH0;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x10000) {                        // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_0_KBI0_P16;
@@ -4306,7 +4304,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_1_FTM2_CH1;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x20000) {                        // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_1_KBI0_P17;
@@ -4338,7 +4336,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[iPort + 2][iPin - 16] = PC_2_FTM2_CH2;                    
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x40000) {                        // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_2_KBI0_P18;
@@ -4370,7 +4368,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTC][iPin - 16] = PC_3_FTM2_CH3;                    
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x80000) {                        // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_3_KBI0_P19;
@@ -4394,7 +4392,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTC][iPin - 16] = PC_4_SWD_CLK;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x100000) {                       // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_4_KBI0_P20;
@@ -4411,7 +4409,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_5_FTM1_CH1;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x200000) {                       // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_5_KBI0_P21;
@@ -4437,7 +4435,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTC][iPin - 16] = PC_6_UART1_RX; 
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x400000) {                       // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_6_KBI0_P22;
@@ -4458,7 +4456,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTC][iPin - 16] = PC_7_UART1_TX; 
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x800000) {                       // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTC][iPin - 16] = PC_7_KBI0_P23;
@@ -4481,7 +4479,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTD][iPin - 24] = PD_0_FTM2_CH2;                    
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x1000000) {                      // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_0_KBI0_P24;
@@ -4509,7 +4507,7 @@ extern void fnSimPers(void)
                         ucPortFunctions[_PORTD][iPin - 24] = PD_1_FTM2_CH3;                    
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI0_PE & 0x2000000) {                      // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_1_KBI0_P25;
@@ -4526,7 +4524,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_2_SPI1_MISO;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x4000000) != 0) {               // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_2_KBI0_P26;
@@ -4543,7 +4541,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_3_SPI1_PCS0;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if ((KBI0_PE & 0x8000000) != 0) {               // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_3_KBI0_P27;
@@ -4556,7 +4554,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTD_BIT4:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI0_PE & 0x10000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_4_KBI0_P28;
@@ -4569,7 +4567,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTD_BIT5:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI0_PE & 0x20000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_5_KBI0_P29;
@@ -4595,7 +4593,7 @@ extern void fnSimPers(void)
         #endif
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI0_PE & 0x40000000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_6_KBI0_P30;
@@ -4622,7 +4620,7 @@ extern void fnSimPers(void)
         #endif
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI0_PE & 0x80000000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTD][iPin - 24] = PD_7_KBI0_P31;
@@ -4644,7 +4642,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_0_SPI0_SCK;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI1_PE & 0x00000001) {                     // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_0_KBI1_P0;
@@ -4656,7 +4654,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_1_SPI0_MOSI;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI1_PE & 0x00000002) {                     // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_1_KBI1_P1;
@@ -4668,7 +4666,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_2_SPI0_MISO;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI1_PE & 0x00000004) {                     // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_2_KBI1_P2;
@@ -4680,7 +4678,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_3_SPI0_PCS0;
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI1_PE & 0x00000008) {                     // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_3_KBI1_P3;
@@ -4688,7 +4686,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTE_BIT4:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00000010) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_4_KBI1_P4;
@@ -4696,7 +4694,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTE_BIT5:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI1_PE & 0x00000020) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_5_KBI1_P5;
@@ -4704,7 +4702,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTE_BIT6:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI1_PE & 0x00000040) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_6_KBI1_P6;
@@ -4723,7 +4721,7 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_7_FTM1_CH1;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     else if (KBI1_PE & 0x00000080) {                     // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTE][iPin] = PE_7_KBI1_P7;
@@ -4731,7 +4729,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTF_BIT0:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00000100) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_0_KBI1_P8;
@@ -4739,7 +4737,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTF_BIT1:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00000200) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_1_KBI1_P9;
@@ -4747,7 +4745,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTF_BIT2:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00000400) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_2_KBI1_P10;
@@ -4755,7 +4753,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTF_BIT3:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI1_PE & 0x00000800) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_3_KBI1_P11;
@@ -4770,7 +4768,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if ((KBI1_PE & 0x00001000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_4_KBI1_P12;
@@ -4785,7 +4783,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00002000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_5_KBI1_P13;
@@ -4800,7 +4798,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00004000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_6_KBI1_P14;
@@ -4815,7 +4813,7 @@ extern void fnSimPers(void)
                         break;
                     }
     #endif
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00008000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTF][iPin - 8] = PF_7_KBI1_P15;
@@ -4823,7 +4821,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT0:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00010000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_0_KBI1_P16;
@@ -4831,7 +4829,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT1:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00020000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_1_KBI1_P17;
@@ -4839,7 +4837,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT2:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00040000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_2_KBI1_P18;
@@ -4847,7 +4845,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT3:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00080000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_3_KBI1_P19;
@@ -4855,7 +4853,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT4:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00100000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_4_KBI1_P20;
@@ -4863,7 +4861,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT5:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00200000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_5_KBI1_P21;
@@ -4871,7 +4869,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT6:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00400000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_6_KBI1_P22;
@@ -4879,7 +4877,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTG_BIT7:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x00800000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTG][iPin - 16] = PG_7_KBI1_P23;
@@ -4888,7 +4886,7 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTH_BIT0:
                     if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
-    #if defined KINETIS_KE06
+    #if defined KINETIS_KE06 || defined KINETIS_KEA128
                         ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTH0)
     #else
                         ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) != 0)
@@ -4897,20 +4895,20 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_0_FTM2_CH0;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI1_PE & 0x01000000) {                     // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    else if ((KBI1_PE & 0x01000000) != 0) {              // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_0_KBI1_P24;
                     }
     #endif
                     break;
                 case KE_PORTH_BIT1:
-                    if ((FTM2_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) && (SIM_PINSEL0 & SIM_PINSEL_FTM1PS1)) {
+                    if (((FTM2_C1SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_FTM1PS1) != 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_1_FTM2_CH1;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI1_PE & 0x02000000) {                     // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    else if ((KBI1_PE & 0x02000000) != 0) {              // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_1_KBI1_P25;
                     }
@@ -4928,23 +4926,23 @@ extern void fnSimPers(void)
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_2_FTM1_CH0;                    
                     }
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    else if (KBI1_PE & 0x04000000) {                     // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    else if ((KBI1_PE & 0x04000000) != 0) {              // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_2_KBI1_P26;
                     }
     #endif
                     break;
                 case KE_PORTH_BIT3:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-                    if (KBI1_PE & 0x08000000) {                          // pin is enabled as keyboard interrupt
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+                    if ((KBI1_PE & 0x08000000) != 0) {                   // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_3_KBI1_P27;
                     }
     #endif
                     break;
                 case KE_PORTH_BIT4:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x10000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_4_KBI1_P28;
@@ -4952,7 +4950,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT5:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x20000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_5_KBI1_P29;
@@ -4960,7 +4958,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT6:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x40000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_6_KBI1_P30;
@@ -4968,7 +4966,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTH_BIT7:
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     if (KBI1_PE & 0x80000000) {                          // pin is enabled as keyboard interrupt
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTH][iPin - 24] = PH_7_KBI1_P31;
@@ -5071,13 +5069,23 @@ extern void fnSimPers(void)
     iFlagRefresh = PORT_CHANGE;
 }
 
-extern int fnSimulateDMA(int channel)                                    // {3}
+extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
 {
 #if !defined DEVICE_WITHOUT_DMA
 #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {32}
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
     ptrDMA += channel;
-    if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore is no count value remaining)
+    if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {                          // peripheral trigger
+        if (ucTriggerSource != 0) {
+            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+            // Check that the trigger source is correctly connected to the DMA channel
+            //
+            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
+                _EXCEPTION("DMUX source is not connected!!!");
+            }
+        }
+    }
+    if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore if no count value remaining)
         ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_BSY;
         while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0) {      // while bytes to be transferred
             if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_8) != 0) {              // 8 bit transfers
@@ -5266,7 +5274,16 @@ extern int fnSimulateDMA(int channel)                                    // {3}
         _EXCEPTION("Warning - invalid DMA channel being used!!");
     }
     #endif
-
+    if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
+        if (ucTriggerSource != 0) {
+            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+            // Check that the trigger source is correctly connected to the DMA channel
+            //
+            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
+                _EXCEPTION("DMUX source is not connected!!!");
+            }
+        }
+    }
     if ((ptrDMA_TCD->DMA_TCD_CSR & (DMA_TCD_CSR_START | DMA_TCD_CSR_ACTIVE)) != 0) { // sw commanded start or active
         int interrupt = 0;
         ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                   // mark active 
@@ -5436,6 +5453,8 @@ extern int fnSimulateDMA(int channel)                                    // {3}
 }
 
 #if !defined DEVICE_WITHOUT_DMA
+// Handler peripheral DMA triggers
+//
 static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 {
     #if defined KINETIS_KM
@@ -5512,10 +5531,10 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                 ptrDMA_TCD += iChannel;
                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE);         // trigger
-                fnSimulateDMA(iChannel);
+                fnSimulateDMA(iChannel, (unsigned char)iTriggerSource);
             }
     #else
-            fnSimulateDMA(iChannel);
+            fnSimulateDMA(iChannel, (unsigned char)iTriggerSource);
     #endif
         }
         iChannel++;
@@ -5933,13 +5952,19 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
 #endif
 
 #if LPUARTS_AVAILABLE > 0
-    #if defined LPUARTS_PARALLEL
-        #define LPUART0_CH_NUMBER     UARTS_AVAILABLE
+    #if defined LPUARTS_PARALLEL                                         // see http://www.utasker.com/kinetis/UART_LPUART.html for details of UART/LPUART indexing
+        #define LPUART0_CH_NUMBER     UARTS_AVAILABLE                    // LPUARTs are indexed after UARTs
         #define LPUART1_CH_NUMBER     (UARTS_AVAILABLE + 1)
         #define LPUART2_CH_NUMBER     (UARTS_AVAILABLE + 2)
         #define LPUART3_CH_NUMBER     (UARTS_AVAILABLE + 3)
         #define LPUART4_CH_NUMBER     (UARTS_AVAILABLE + 4)
         #define LPUART5_CH_NUMBER     (UARTS_AVAILABLE + 5)
+
+        #define DMUX_UART0_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART0_RX)
+        #define DMUX_UART1_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART1_RX)
+        #define DMUX_UART2_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART2_RX)
+        #define DMUX_UART3_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART3_RX)
+        #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART4_RX)
     #else
         #define LPUART0_CH_NUMBER     0
         #define LPUART1_CH_NUMBER     1
@@ -5947,6 +5972,37 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
         #define LPUART3_CH_NUMBER     3
         #define LPUART4_CH_NUMBER     4
         #define LPUART5_CH_NUMBER     5
+
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART0_RX
+            #define DMUX_UART0_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART0_RX)
+        #else
+            #define DMUX_UART0_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART0_RX)
+        #endif
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART1_RX
+            #define DMUX_UART1_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART1_RX)
+        #else
+            #define DMUX_UART1_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART1_RX)
+        #endif
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART2_RX
+            #define DMUX_UART2_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART2_RX)
+        #else
+            #define DMUX_UART2_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART2_RX)
+        #endif
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART3_RX
+            #define DMUX_UART3_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART3_RX)
+        #else
+            #define DMUX_UART3_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART3_RX)
+        #endif
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART4_RX
+            #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART4_RX)
+        #else
+            #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART4_RX)
+        #endif
+        #if defined DMAMUX0_CHCFG_SOURCE_LPUART5_RX
+            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART5_RX)
+        #else
+            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UAR5_RX)
+        #endif
     #endif
 
     #if defined SERIAL_INTERFACE && !defined DEVICE_WITHOUT_DMA
@@ -5966,6 +6022,25 @@ static const unsigned char ucUART_channel[] = {
         #endif
         #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5
     DMA_UART5_RX_CHANNEL
+        #endif
+};
+
+static const unsigned char ucUART_DMUX_channel[] = {
+    DMUX_UART0_RX_CHANNEL,
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
+    DMUX_UART1_RX_CHANNEL,
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 2
+    DMUX_UART2_RX_CHANNEL,
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 3
+    DMUX_UART3_RX_CHANNEL,
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 4
+    DMUX_UART4_RX_CHANNEL,
+        #endif
+        #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 5
+    DMUX_UART5_RX_CHANNEL
         #endif
 };
     #endif
@@ -6064,7 +6139,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += ucUART_channel[LPUART0_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) { // if source enabled
-                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER], ucUART_DMUX_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
@@ -6072,7 +6147,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += ucUART_channel[LPUART0_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER], ucUART_DMUX_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -6134,7 +6209,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += ucUART_channel[LPUART1_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER], ucUART_DMUX_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #else
@@ -6142,7 +6217,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += ucUART_channel[LPUART1_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER], ucUART_DMUX_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                     #endif
@@ -6209,7 +6284,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += cUART_channel[LPUART2_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(cUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART2_CH_NUMBER], ucUART_DMUX_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
@@ -6217,7 +6292,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += ucUART_channel[LPUART2_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(ucUART_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART2_CH_NUMBER], ucUART_DMUX_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -6264,7 +6339,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += cUART_channel[LPUART3_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER], ucUART_DMUX_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART13STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
@@ -6272,7 +6347,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += ucUART_channel[LPUART3_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(ucUART_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART3_CH_NUMBER], ucUART_DMUX_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -6306,7 +6381,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                             ptrDMA += cUART_channel[LPUART4_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
-                                fnSimulateDMA(cUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(cUART_channel[LPUART4_CH_NUMBER], ucUART_DMUX_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
@@ -6314,7 +6389,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                                 ptrDMA_TCD += ucUART_channel[LPUART4_CH_NUMBER];
                                 ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                                fnSimulateDMA(ucUART_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
+                                fnSimulateDMA(ucUART_channel[LPUART4_CH_NUMBER], ucUART_DMUX_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #endif
@@ -6356,7 +6431,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART0_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
-                            fnSimulateDMA(DMA_UART0_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART0_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART0_RX); // trigger DMA transfer on the UART's channel
                             UART0_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                     #else
@@ -6364,7 +6439,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART0_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART0_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART0_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART0_RX); // trigger DMA transfer on the UART's channel
                             UART0_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                     #endif
@@ -6412,7 +6487,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART1_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
-                            fnSimulateDMA(DMA_UART1_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART1_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART1_RX); // trigger DMA transfer on the UART's channel
                             UART1_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                 #else
@@ -6420,7 +6495,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART1_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART1_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART1_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART1_RX); // trigger DMA transfer on the UART's channel
                             UART1_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                 #endif
@@ -6486,7 +6561,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART2_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
-                            fnSimulateDMA(DMA_UART2_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART2_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART2_RX); // trigger DMA transfer on the UART's channel
                             UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                 #else
@@ -6494,7 +6569,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART2_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART2_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART2_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART2_RX); // trigger DMA transfer on the UART's channel
                             UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                #endif
@@ -6536,7 +6611,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
                         ptrDMA += DMA_UART3_RX_CHANNEL;
                         if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {      // if source enabled
-                            fnSimulateDMA(DMA_UART3_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART3_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART3_RX); // trigger DMA transfer on the UART's channel
                             UART3_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
             #else
@@ -6544,7 +6619,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART3_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART3_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART3_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART3_RX); // trigger DMA transfer on the UART's channel
                             UART3_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
             #endif
@@ -6583,7 +6658,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART4_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART4_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART4_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART4_RX); // trigger DMA transfer on the UART's channel
                             UART4_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
         #endif
@@ -6614,7 +6689,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART5_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
-                            fnSimulateDMA(DMA_UART5_RX_CHANNEL);         // trigger DMA transfer on the UART's channel
+                            fnSimulateDMA(DMA_UART5_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART5_RX); // trigger DMA transfer on the UART's channel
                             UART5_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
         #endif
@@ -8377,7 +8452,7 @@ extern unsigned long fnSimDMA(char *argv[])
             _iDMA &= ~ulChannel;
             switch (iChannel) {
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA           // {4}
-            case DMA_UART0_TX_CHANNEL:                                   // handle UART DMA transmission on UART 0
+            case DMA_UART0_TX_CHANNEL:                                   // handle UART DMA transmission on LPUART/UART 0
         #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
                 if ((LPUART0_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
         #else
@@ -8391,7 +8466,12 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+        #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART0_TX) > 0)
+        #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART0_TX) > 0)
+        #endif
+                            {                                            // process the trigger
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8424,7 +8504,12 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+            #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART1_TX) > 0)
+            #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART1_TX) > 0)
+            #endif
+                            {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8458,7 +8543,12 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+            #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART2_TX) > 0)
+            #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART2_TX) > 0)
+            #endif
+                            {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8492,7 +8582,14 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+            #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART3_TX) > 0)
+            #elif UARTS_AVAILABLE == 3 && LPUARTS_AVAILABLE == 1 && defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART0_TX) > 0)
+            #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART3_TX) > 0)
+            #endif
+                            {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8526,7 +8623,12 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+            #if LPUARTS_AVAILABLE > 4 && !defined LPUARTS_PARALLEL
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART4_TX) > 0)
+            #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART4_TX) > 0)
+            #endif
+                            {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8558,7 +8660,12 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-                            if (fnSimulateDMA(iChannel) > 0) {           // process the trigger
+            #if LPUARTS_AVAILABLE == 5
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART5_TX) > 0)
+            #else
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART5_TX) > 0)
+            #endif
+                            {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
@@ -8576,10 +8683,10 @@ extern unsigned long fnSimDMA(char *argv[])
                 break;
         #endif
     #endif
-            default:
+            default:                                                     // not a channel used by LPUART/UART
                 iDMA &= ~ulChannel;
     #if !defined KINETIS_KL
-                if (fnSimulateDMA(iChannel) > 1) {                      // process the trigger
+                if (fnSimulateDMA(iChannel, 0) > 1) {                   // process the trigger
                     iDMA |= ulChannel;                                  // further DMA triggers
                 }
     #endif

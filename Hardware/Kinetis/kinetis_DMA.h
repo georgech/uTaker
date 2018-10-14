@@ -394,7 +394,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             KINETIS_DMA_TDC *ptrDMA_TCD;
             ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
-            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(iChannel); } // wait until completed
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(iChannel, 0); } // wait until completed
         }
         break;
     case DMA_BUFFER_START:
@@ -636,7 +636,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         if ((ulRules & DMA_INITIATE_TRANSFER) != 0) {                    // if the transfer is to be initiated immediately
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
             if ((ulRules & DMA_WAIT_TERMINATION) != 0) {                 // if the call is a blocking call we wait until the transfer terminates
-                while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(ucDMA_channel); } // wait until completed
+                while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(ucDMA_channel, 0); } // wait until completed
             }
         }
         return;                                                          
@@ -783,7 +783,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
             buffer += ulTransfer;                                        // move the source pointer to beyond the transfer
             Size -= ulTransfer;                                          // bytes remaining
 
-            while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
+            while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL, 0); } // wait until completed
 
             while (Size-- != 0) {                                        // {103}{87} complete any remaining bytes
                 *ptr++ = *buffer++;
@@ -835,7 +835,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
             buffer += ulTransfer;                                        // move the source pointer to beyond the transfer
             Size -= ulTransfer;                                          // bytes remaining
 
-            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL, 0); } // wait until completed
 
             while (Size-- != 0) {                                        // {103}{87} complete any remaining bytes
                 *ptr++ = *buffer++;
@@ -949,7 +949,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
             ptr -= ulTransfer;                                           // move the destination pointer to before the transfer
             buffer -= ulTransfer;
 
-            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL, 0); } // wait until completed
 
             while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr-- = *buffer--;
@@ -978,7 +978,7 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
 //
 extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
 {
-    register unsigned char *ptr = (unsigned char *)ptrTo;
+    register volatile unsigned char *ptr = (unsigned char *)ptrTo;
     register unsigned char ucValue = (unsigned char)iValue;              // {7}
     
     if (Size >= SMALLEST_DMA_COPY) {                                     // if large enough to be worthwhile 
@@ -1009,7 +1009,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
             while (Size-- != 0) {                                        // {87} complete any remaining bytes
                 *ptr++ = ucValue;
             }
-            while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
+            while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL, 0); } // wait until completed
 
             ptrDMA->DMA_DCR = 0;                                         // free the DMA channel for further use
             return ptrTo;                                                // return pointer to original buffer according to memcpy() declaration
@@ -1044,7 +1044,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
                 *ptr++ = ucValue;
             }
 
-            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL); } // wait until completed
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(DMA_MEMCPY_CHANNEL, 0); } // wait until completed
             ptrDMA_TCD->DMA_TCD_SOFF = 4;                                // set source increment for the uMemcpy() function
             ptrDMA_TCD->DMA_TCD_CITER_ELINK = 0;                         // allow further use of the channel for DMA memory copy functions
             return ptrTo;                                                // return pointer to original buffer according to memcpy() declaration

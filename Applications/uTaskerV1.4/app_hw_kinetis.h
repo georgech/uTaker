@@ -1562,14 +1562,14 @@
 #if defined KINETIS_KV || defined KINETIS_KL02 || defined KINETIS_K02    // device without RTC
     #define SUPPORT_SW_RTC                                               // support real time clock based purely on software
 #elif defined KINETIS_KE && !defined KINETIS_KE15
-  //#define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
+    #define SUPPORT_RTC                                                  // support real time clock (do not use together with TICK_USES_RTC)
   //#define TICK_USES_RTC                                                // use RTC for TICK so that it continues to operate in stop based low power modes
     #if defined TICK_USES_RTC || defined SUPPORT_RTC
       //#define RTC_USES_EXT_CLK                                         // use the external clock as RTC clock source
-        #define RTC_USES_INT_REF                                         // use the internal reference clock (ICSIRCLK) as RTC clock source
+      //#define RTC_USES_INT_REF                                         // use the internal reference clock (ICSIRCLK) as RTC clock source
             #define RTC_CLOCK_PRESCALER_1  1                             // 1, 2, 4, 8, 16, 32 or 64 (valid for internal reference or external clock input)
       //#define RTC_USES_BUS_CLOCK                                       // use the bus clock as RTC clock source
-      //#define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
+        #define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
@@ -1616,7 +1616,7 @@
   //#define FTM_CLOCKED_FROM_MCGFFLCLK                                   // FTM timers clocked from MCGFFLCLK (32kHz or external FLL reference)
 #endif
 
-#define SUPPORT_LPTMR                                                    // {28} support low power timer
+//#define SUPPORT_LPTMR                                                  // {28} support low power timer
 #if defined SUPPORT_LPTMR
     //#define TICK_USES_LPTMR                                            // use low power timer for TICK so that it continues to operate in stop based low power modes
     //Select the clock used by the low power timer - if the timer if to continue running in low power modes the clock chosen should continue to run in that mode too
@@ -1642,7 +1642,7 @@
     #endif
 #endif
 
-#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+  #define SUPPORT_PORT_INTERRUPTS                                        // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
   //#define PORT_INTERRUPT_USER_DISPATCHER                               // use a single port interrupt callback since the user dispatches according to interrupted input (valid also for low-leakage wakeup interrupts)
     #if defined FRDM_KL03Z
         #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
@@ -2690,7 +2690,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
     #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                   // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                  // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support
@@ -2968,6 +2968,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
 #endif
 
+#define SUPPORT_COMPARATOR
+
 //#define SUPPORT_LOW_VOLTAGE_DETECTION                                  // enable a low voltage detection interrupt handler
     #define LOW_VOLTAGE_DETECTION_VOLTAGE_mV       2900                  // 2.9V warning threshold
 
@@ -2978,7 +2980,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI
 
 #if !defined KINETIS_WITHOUT_PIT
-    #define SUPPORT_PITS                                                 // support PITs
+  //#define SUPPORT_PITS                                                 // support PITs
   //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
     // Define behavior of low power PIT (when available) in debug and doze mode
     #if defined SUPPORT_LOW_POWER
@@ -3262,14 +3264,14 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
     #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
-#elif defined KINETIS_KL
+#elif defined KINETIS_KL                                                 // limited DMA channels available - select to not have conflicts between used channels!
     #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
     #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
 
-    #define DMA_UART0_RX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART0_RX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_RX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_RX_CHANNEL   1                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
 
     #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
     #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
@@ -3368,6 +3370,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PIT2_INTERRUPT_PRIORITY    1
     #define PIT3_INTERRUPT_PRIORITY    1
     #define PRIORITY_TICK_TIMER        2
+    #define PRIORITY_COMPARATOR        2
     #define PRIORITY_ADC               2
     #define USB_PRIORITY               3
     #define PRIORITY_RTC               3
@@ -3463,6 +3466,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_SPI0              3
     #define PRIORITY_SPI1              3
     #define PRIORITY_SPI2              3
+    #define PRIORITY_COMPARATOR        3
     #define PRIORITY_ADC               2
     #define USB_PRIORITY               2
     #define PRIORITY_RTC               2

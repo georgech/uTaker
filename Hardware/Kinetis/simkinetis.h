@@ -1213,7 +1213,7 @@ unsigned long SPI_RXFR3;
 #if defined KINETIS_KE
 typedef struct stKINETIS_KBI                                             // {22}
 {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     unsigned long KBI_PE;
     unsigned long KBI_ES;
     unsigned long KBI_SC;
@@ -2998,6 +2998,7 @@ unsigned char MC_PMCTRL;
     unsigned char CMP_SCR;
     unsigned char CMP_DACCR;
     unsigned char CMP_MUXCR;
+    unsigned char ucRes[2];
     } KINETIS_CMP;
 #endif
 
@@ -3857,7 +3858,7 @@ typedef struct stKINETIS_PERIPH
 #if defined KINETIS_KE                                                   // {30}
     KINETIS_ACMP       ACMP[2];
 #else
-    KINETIS_CMP        CMP[4];
+    KINETIS_CMP        CMP[NUMBER_OF_COMPARATORS];
 #endif
 #if !defined KINETIS_KL
     KINETIS_VREF       VREF;

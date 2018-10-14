@@ -1468,7 +1468,7 @@ typedef struct stADC_SETUP
 
 #define ADC_SEQUENTIAL_MODE             0x00000000
 #define ADC_PARALLEL_MODE               0x00000001
-#define ADC_SINGLE_ENDED                0x00000000
+#define ADC_SINGLE_ENDED_INPUT          0x00000000
 #define ADC_DIFFERENTIAL                0x00000002
 #define ADC_SINGLE_SHOT_MODE            0x00000000
 #define ADC_LOOP_MODE                   0x00000004

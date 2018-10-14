@@ -167,6 +167,11 @@ static unsigned char fnSetADC_channel(unsigned char ucADC_channel, int iDiffMode
         #endif
             break;
         #if defined KINETIS_KL17 || defined KINETIS_KL27
+        case ADC_SE6_SINGLE:
+            _CONFIG_PERIPHERAL(D, 5, PD_5_ADC0_SE6b);                     // ensure that the ADC pin is configured
+            break;
+        #endif
+        #if defined KINETIS_KL17 || defined KINETIS_KL27
         case ADC_SE8_SINGLE:
             _CONFIG_PERIPHERAL(B, 0, PB_0_ADC0_SE8);                     // ensure that the ADC pin is configured
             break;

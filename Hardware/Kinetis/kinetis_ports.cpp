@@ -334,9 +334,7 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
             return -1;                                                   // not ADC function
         }
     #else
-        if (ADC_MUX_CHANNEL[iPort][31 - iBit] == -1) {
-            return -1;                                                   // not ADC function
-        }
+        return ADC_MUX_CHANNEL[iPort][31 - iBit];                        // return -1 if not ADC, otherwise the ADC channel
     #endif
     }
 #endif

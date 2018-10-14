@@ -2346,6 +2346,38 @@
         #define SDHC_SYSCTL_SPEED_SUPER_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_1) // 60MHz when 120MHz clock
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
         #define SET_SPI_SD_INTERFACE_FAST_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_SUPER_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+    #else
+        #define SPI_CS4_0             PORTC_BIT0
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+                _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
+                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS4_0, SPI_CS4_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                SPI0_MCR |= SPI_MCR_HALT; \
+                SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_64); \
+                SPI0_MCR = (SPI_MCR_HALT | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)); \
+                SPI0_MCR = (0 | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5));
+
+		#define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS4_0)              // force DI and CS lines high ready for the initialisation sequence
+		#define SET_SD_CS_LOW()      _CLEARBITS(C, SPI_CS4_0)            // assert the CS line of the SD card to be read
+		#define SET_SD_CS_HIGH()     _SETBITS(C, SPI_CS4_0)              // negate the CS line of the SD card to be read
+
+		#define ENABLE_SPI_SD_OPERATION()
+		#define SET_SD_CARD_MODE()
+
+		// Set maximum speed
+		//
+		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
+		#if defined _WINDOWS
+			#define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#else
+			#define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#endif
+		#define POWER_UP_SD_CARD()
     #endif
 
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
@@ -2425,21 +2457,54 @@
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
 
     #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
-    #define SET_SD_CS_HIGH()                                             // dummy with SDHC controller
-    #define SET_SD_CS_LOW()                                              // dummy with SDHC controller
+    #if defined SD_CONTROLLER_AVAILABLE
+        #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
+        #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
 
-    #if defined _WINDOWS
-        #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
+        #if defined _WINDOWS
+            #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
+        #else
+            #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
+        #endif
+
+        #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
+        #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
+        #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #else
-        #define POWER_UP_SD_CARD()  SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
+        #define SPI_CS4_0             PORTC_BIT0
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+                _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
+                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, SPI_CS4_0, SPI_CS4_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                SPI0_MCR |= SPI_MCR_HALT; \
+                SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_64); \
+                SPI0_MCR = (SPI_MCR_HALT | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)); \
+                SPI0_MCR = (0 | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5));
+
+		#define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS4_0)              // force DI and CS lines high ready for the initialisation sequence
+		#define SET_SD_CS_LOW()      _CLEARBITS(C, SPI_CS4_0)            // assert the CS line of the SD card to be read
+		#define SET_SD_CS_HIGH()     _SETBITS(C, SPI_CS4_0)              // negate the CS line of the SD card to be read
+
+		#define ENABLE_SPI_SD_OPERATION()
+		#define SET_SD_CARD_MODE()
+
+		// Set maximum speed
+		//
+		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
+		#if defined _WINDOWS
+			#define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#else
+			#define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#endif
+		#define POWER_UP_SD_CARD()
+        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
     #endif
-
-    #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
-    #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
-    #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
-
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
-
     #define GET_SDCARD_WP_STATE()  1                                     // always write protect during boot loading
 
     #if defined ENC424J600_INTERFACE
@@ -2509,7 +2574,7 @@
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
     #else
         #define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
-        #define WAIT_TRANSMISSON_END() while (!(SPI0_SR & (SPI_SR_RFDF))) {}
+        #define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) = 0) {}
         #define READ_SPI_DATA()        (unsigned char)SPI0_POPR
     #endif
     #define SET_SD_DI_CS_HIGH()  _SETBITS(C, SPI_CS1_0)                  // force DI and CS lines high ready for the initialisation sequence

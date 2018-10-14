@@ -509,30 +509,74 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
 #include "../../stack/SSL/mbedtls-2.6/mbedtls/ssl_internal.h"
 
 #if !defined USE_SECURE_SOCKET_LAYER                                     // dummy function pointers to satisfy mbedTLS SHA256 test functions that are otherwise not used
-    extern void *(*mbedtls_calloc)(size_t n, size_t size) = 0;
-    extern void(*mbedtls_free)(void *ptr) = 0;
+    void *(*mbedtls_calloc)(size_t n, size_t size) = 0;
+    void(*mbedtls_free)(void *ptr) = 0;
+#endif
+#if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && !defined LTC_AVAILABLE)
+    #undef NATIVE_SHA256_CAU
+#endif
+
+#if !defined _WINDOWS && (defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE) && !defined SHA256_DISABLE_CAU
+    // Freescale mmCAU crypto acceleration routines
+    //
+    extern int  mmcau_sha256_initialize_output(const unsigned int *output);
+    extern void mmcau_sha256_hash_n(const unsigned char *input, const int num_blks, unsigned int *output);
+    extern void mmcau_sha256_update(const unsigned char *input, const int num_blks, unsigned int *output);
+    extern void mmcau_sha256_hash(const unsigned char *input, unsigned int *output);
 #endif
 
 extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
 {
-    static mbedtls_sha256_context sha256;
+    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time
     switch (iMode) {
-    case 0:
+    case SHA_START_CALCULATE_TERMINATE:
+    {
+        unsigned char ptrInput1[64];
+      //uMemset(ptrInput1, 'a', sizeof(ptrInput1));
         mbedtls_sha256_starts(&sha256, 0);
+      //mbedtls_sha256_update(&sha256, ptrInput1, 64);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
         mbedtls_sha256_finish(&sha256, ptrOutput);
+    }
+    #if defined NATIVE_SHA256_CAU
+        {
+            int iNumberofBlocks = (ulLength/64);
+            int iRemainder = (ulLength % 64);
+            mmcau_sha256_initialize_output((const unsigned int *)sha256.state);
+            if (iRemainder == 0) {
+                if (iNumberofBlocks == 0) {
+                    return 0;
+                }
+                mmcau_sha256_hash_n((const unsigned char *)ptrInput, (const int)iNumberofBlocks, (unsigned int *)sha256.state);
+            }
+            else {
+                if (iNumberofBlocks != 0) {
+                    mmcau_sha256_hash_n((const unsigned char *)ptrInput, (const int)iNumberofBlocks, (unsigned int *)sha256.state);
+                }
+                uMemcpy(sha256.buffer, ptrInput, iRemainder);
+                uMemset(&sha256.buffer[iRemainder], 0xaa, (sizeof(sha256.buffer) - iRemainder)); // pad the input buffer
+              //uMemset(sha256.buffer, 0x00, (sizeof(sha256.buffer))); // empty string test
+                mmcau_sha256_hash((const unsigned char *)sha256.buffer, (unsigned int *)sha256.state);
+              //uMemset(sha256.state, 0x00, (sizeof(sha256.state)));
+              //mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)1, (unsigned int *)sha256.state);
+              //uMemset(sha256.state, 0x00, (sizeof(sha256.state)));
+              //mmcau_sha256_update((const unsigned char *)sha256.buffer, (const int)1, (unsigned int *)sha256.state); // doesn't need initialisation
+            }
+            uMemcpy(ptrOutput, sha256.state, sizeof(sha256.state));
+        }
+    #endif
         break;
-    case 1:
+    case SHA_START_CALCULATE_STAY_OPEN:
         mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
       //mbedtls_sha256_finish(&sha256, ptrOutput);
         break;
-    case 2:
+    case SHA_CONTINUE_CALCULATING:
       //mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
       //mbedtls_sha256_finish(&sha256, ptrOutput);
         break;
-    case 3:
+    case SHA_CONTINUE_CALCULATING_TERMINATE:
         //mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
         mbedtls_sha256_finish(&sha256, ptrOutput);

@@ -31,7 +31,7 @@
 /*                             constants                               */
 /* =================================================================== */
 
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
 static const unsigned char _KBI[PORTS_AVAILABLE][32] = {
     {(_KBI_0 | 0),  (_KBI_0 | 1),  (_KBI_0 | 2),  (_KBI_0 | 3),  (_KBI_0 | 4),  (_KBI_0 | 5),  (_KBI_0 | 6),  (_KBI_0 | 7), // PTA0..PTA7
      (_KBI_0 | 8),  (_KBI_0 | 9),  (_KBI_0 | 10), (_KBI_0 | 11), (_KBI_0 | 12), (_KBI_0 | 29), (_KBI_0 | 30), (_KBI_0 | 15), // PTB0..PTB7
@@ -46,7 +46,7 @@ static const unsigned char _KBI[PORTS_AVAILABLE][32] = {
 };
 
 static void (*KBI_handlers[KBIS_AVAILABLE][KBI_WIDTH])(void) = {{0}};    // a handler for each possible KBI pin
-    #elif defined KINETIS_KEA8
+    #elif defined KINETIS_KEA8 || (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
 static const unsigned char _KBI[PORTS_AVAILABLE][32] = {
     {(_KBI_0 | 0),  (_KBI_0 | 1),  (_KBI_0 | 2),  (_KBI_0 | 3),  0,             0,             0,             0, // PTA0..PTA7
      (_KBI_0 | 4),  (_KBI_0 | 5),  (_KBI_0 | 6),  (_KBI_0 | 7),  (_KBI_1 | 6),  (_KBI_1 | 7),  0,             0, // PTB0..PTB7
@@ -76,7 +76,7 @@ static void (*KBI_handlers[KBIS_AVAILABLE])(void) = {0};                 // a si
 
 static void _KBI0_isr(void)                                              // KE keyboard interrupt 0
 {
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     int iPin = 0;
     unsigned long ulPin = 0x00000001;
     unsigned long ulFlags = KBI0_SP;                                     // read enabled interrupt flags
@@ -112,7 +112,7 @@ static void _KBI0_isr(void)                                              // KE k
     #if KBIS_AVAILABLE > 1
 static void _KBI1_isr(void)                                              // KE keyboard interrupt 1
 {
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+        #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     int iPin = 0;
     unsigned long ulPin = 0x00000001;
     unsigned long ulFlags = KBI1_SP;                                     // read enabled interrupt flags
@@ -172,7 +172,7 @@ static void _KBI1_isr(void)                                              // KE k
                     case _KBI_0:
                         POWER_UP_ATOMIC(0, KBI0);                        // ensure the module is powered
                         KBI_enables[0] |= (1 << (_KBI[port_interrupt->int_port][iBitNumber] & _KBI_PIN_REF_MASK));
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                         KBI_handlers[0][iBitNumber] = port_interrupt->int_handler; // enter the user handler for the individual pin
     #else
                         KBI_handlers[0] = port_interrupt->int_handler;   // enter the user handler for the keyboard interrupt controller
@@ -183,7 +183,7 @@ static void _KBI1_isr(void)                                              // KE k
                     case _KBI_1:
                         POWER_UP_ATOMIC(0, KBI1);                       // ensure the module is powered
                         KBI_enables[1] |= (1 << (_KBI[port_interrupt->int_port][iBitNumber] & _KBI_PIN_REF_MASK));
-        #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+        #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                         KBI_handlers[1][iBitNumber] = port_interrupt->int_handler; // enter the user handler for the individual pin
         #else
                         KBI_handlers[1] = port_interrupt->int_handler;   // enter the user handler for the keyboard interrupt controller
@@ -232,7 +232,7 @@ static void _KBI1_isr(void)                                              // KE k
                         ptrKBI->KBI_ES &= ~KBI_enables[iBitNumber];      // select falling edge interrupt
                     }
                     ptrKBI->KBI_PE |= KBI_enables[iBitNumber];           // enable the pin as KBI interrupt
-    #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
+    #if (defined KINETIS_KE04 && !(SIZE_OF_FLASH <= (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
                     ptrKBI->KBI_SC |= (KBI_SC_RSTKBSP | KBI_SC_KBACK | KBI_SC_KBSPEN); // clear any false interrupts and clear flagged interrupts - real KBI_SP register enable
     #else
                     ptrKBI->KBI_SC |= KBI_SC_KBACK;                      // clear any false interrupts

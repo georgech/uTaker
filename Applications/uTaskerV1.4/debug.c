@@ -310,6 +310,7 @@
     #define DO_CHANGE_TRIM_COARSE  58
     #define DO_CHANGE_TRIM_FINE    59
     #define DO_DISPLAY_PARS        60
+    #define DO_DAC_OUTPUT          61
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -861,6 +862,9 @@ static const DEBUG_COMMAND tIOCommand[] = {
 #endif
 #if defined SUPPORT_LPTMR
     { "lp_cnt",           "Read LPTMR CNT",                        DO_HARDWARE,      76 },
+#endif
+#if defined SUPPORT_DAC
+    { "dac",              "DAC [ref] [hex]",                       DO_HARDWARE,      DO_DAC_OUTPUT },
 #endif
 #if defined DEV1
     { "set_an",           "Set anode [hex]",                       DO_HARDWARE,      77 },
@@ -4064,9 +4068,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                   unsigned long  ulAlignedLongWord;                      // unused long word to ensure following data alignment
                   unsigned char  ucData[256/8];
               } ALIGNED_BUFFER;
+    #if defined CRYPTO_AES
               static const ALIGNED_BUFFER encryption_key = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
               static const ALIGNED_BUFFER plaintext = { 0, { 0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4 } };
               ALIGNED_BUFFER ciphertext = {0};
+    #endif
               ALIGNED_BUFFER recovered  = {0};
               int i;
     #if defined CRYPTO_AES
@@ -4087,14 +4093,13 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     #if defined CRYPTO_SHA
               case DO_SHA256:
                   {
-                      extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode);
                       static const ALIGNED_BUFFER text = { 0, { '1', '2', '3', '4', '5', '6', '7', '8', '9'} };
-                      static const ALIGNED_BUFFER text2 = { 0, { '0' } };
+                    //static const ALIGNED_BUFFER text2 = { 0, { '0' } };
                       TOGGLE_TEST_OUTPUT();
-                      fnSHA256(text.ucData, recovered.ucData, 9, 0);
+                      fnSHA256(text.ucData, recovered.ucData, 9, SHA_START_CALCULATE_TERMINATE);
 
-                      fnSHA256(text.ucData, 0, 9, 1);
-                      fnSHA256(text2.ucData, recovered.ucData, 1, 3);
+                    //fnSHA256(text.ucData, 0, 9, SHA_START_CALCULATE_STAY_OPEN);
+                    //fnSHA256(text2.ucData, recovered.ucData, 1, SHA_CONTINUE_CALCULATING_TERMINATE);
                       TOGGLE_TEST_OUTPUT();
                       for (i = 0; i < 32; i++) {
                           fnDebugHex(recovered.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
@@ -4907,6 +4912,24 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
           }
           else {
               fnDebugMsg("Cloning not allowed (master is secured)!!\r\n");
+          }
+          break;
+#endif
+#if defined SUPPORT_DAC && defined _KINETIS
+      case DO_DAC_OUTPUT:
+          {
+              unsigned char ucDAC = (unsigned char)fnDecStrHex(ptrInput);// the DAC reference
+              DAC_SETUP dac_setup;
+              if (ucDAC >= DAC_CONTROLLERS) {
+                  fnDebugMsg("Invalid DAC");
+                  return;
+              }
+              fnJumpWhiteSpace(&ptrInput);                               // move to value
+              dac_setup.int_type = DAC_INTERRUPT;
+              dac_setup.int_handler = 0;                                 // no interrupt used
+              dac_setup.dac_mode = (DAC_CONFIGURE | DAC_REF_VDDA | DAC_NON_BUFFERED_MODE | DAC_ENABLE | DAC_OUTPUT_VALUE);
+              dac_setup.usOutputValue = (unsigned short)fnHexStrHex(ptrInput);
+              fnConfigureInterrupt((void *)&dac_setup);                  // configure DAC
           }
           break;
 #endif

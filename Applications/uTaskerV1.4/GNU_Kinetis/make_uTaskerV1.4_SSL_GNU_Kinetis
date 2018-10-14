@@ -6,6 +6,7 @@
 # 29.05.2018 Add arm_abs_f32.c
 # 03.07.2018 Add -Wundef in order to discover any undefined definitions
 # 04.07.2018 Add ../../../Hardware/packages.h
+# 13.10.2018 Add Kinetis/kinetis_CMP.h
 
 #
 # When changing the project target check that the C_FLAGS selection (justb elow) and the linker script file (at bottom) matches the processor being used
@@ -113,6 +114,7 @@ PERIPH_DEP = ../../../Hardware/Kinetis/spi_sc16IS7xx.h \
              ../../../Hardware/Kinetis/kinetis_FLEXTIMER.h \
              ../../../Hardware/Kinetis/kinetis_DAC.h \
              ../../../Hardware/Kinetis/kinetis_ADC.h \
+			 ../../../Hardware/Kinetis/kinetis_CMP.h \
              ../../../Hardware/Kinetis/kinetis_low_power.h \
              ../../../Hardware/Kinetis/kinetis_KBI.h \
              ../../../Hardware/Kinetis/kinetis_RTC.h \

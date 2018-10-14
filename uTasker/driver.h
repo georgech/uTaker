@@ -1168,6 +1168,12 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
 #define AES_COMMAND_AES_RESET_IV        0x1000
 #define AES_COMMAND_AES_PRIME_IV        0x2000
 
+extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode);
+    #define SHA_START_CALCULATE_TERMINATE      0
+    #define SHA_START_CALCULATE_STAY_OPEN      1
+    #define SHA_CONTINUE_CALCULATING           2
+    #define SHA_CONTINUE_CALCULATING_TERMINATE 3
+
 // DSP                                                                   {74}
 //
 extern float fnGenerateWindowFloat(float *ptrWindowBuffer, int iInputSamples, int iWindowType);

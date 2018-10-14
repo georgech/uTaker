@@ -69,6 +69,7 @@
     07.03.2018 Add 25AA160 SPI EEPROM support                            {135}
     08.07.2018 Add optional power loss interrupt support (SUPPORT_LOW_VOLTAGE_DETECTION) {136}
     29.09.2018 Allow memcpy() type DMA to be pre-empted by higher priority DMA channels {137}
+    13.10.2018 Add comparator support                                    {138}
 
 */
 
@@ -81,7 +82,7 @@
     extern void fnUpdateOperatingDetails(void);                          // {91}
     #define INITHW  extern
     extern void fec_txf_isr(void);
-    extern void fnSimulateDMA(int channel);
+    extern void fnSimulateDMA(int channel, unsigned char ucTriggerSource);
     #define __disable_interrupt()
     #define __enable_interrupt()
     #define START_CODE 0
@@ -92,7 +93,7 @@
     #define OPSYS_CONFIG                                                 // this module owns the operating system configuration
     #define INITHW  static
     #include "config.h"
-    #define  fnSimulateDMA(x)
+    #define  fnSimulateDMA(x, y)
     #if defined _COMPILE_KEIL
         extern void __main(void);
         #define START_CODE _init
@@ -1750,6 +1751,15 @@ extern void fnRetriggerWatchdog(void)
 #undef _ADC_INTERRUPT_CODE
 #endif
 
+#if defined SUPPORT_COMPARATOR                                           // {138}
+/* =================================================================== */
+/*                            Comparator                               */
+/* =================================================================== */
+#define _CMP_INTERRUPT_CODE
+    #include "kinetis_CMP.h"                                             // include driver code for comparator
+#undef _CMP_INTERRUPT_CODE
+#endif
+
 #if defined MMDVSQ_AVAILABLE                                             // {132}
 /* =================================================================== */
 /*                 Memory-Mapped Divide and Square Root                */
@@ -1991,6 +2001,13 @@ extern void fnConfigureInterrupt(void *ptrSettings)
     #define _ADC_CONFIG_CODE
         #include "kinetis_ADC.h"                                         // include ADC configuration code
     #undef _ADC_CONFIG_CODE
+        break;
+#endif
+#if defined SUPPORT_COMPARATOR
+    case COMPARATOR_INTERRUPT:
+    #define _CMP_CONFIG_CODE
+        #include "kinetis_CMP.h"                                         // include comparator configuration code
+    #undef _CMP_CONFIG_CODE
         break;
 #endif
     default: 
