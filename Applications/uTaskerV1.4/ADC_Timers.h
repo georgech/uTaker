@@ -1852,6 +1852,7 @@ static void fnConfigure_Timer(void)
     #endif
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
+    pwm_setup.int_handler = 0;
     #if defined PHASE_SHIFTED_COMBINED_OUTPUTS                           // {29}
     // Set up two complimentary output pairs which are phase shifted from each other
     //
@@ -1871,7 +1872,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
 
-    pwm_setup.pwm_mode |= (PWM_POLARITY | PWM_SYS_CLK | PWM_PRESCALER_128);// clock PWM timer from the system clock with /16 pre-scaler [clock is enabled here so that all prepared values are synchronised]
+    pwm_setup.pwm_mode |= (PWM_POLARITY | PWM_SYS_CLK | PWM_PRESCALER_128);// clock PWM timer from the system clock with /128 pre-scaler [clock is enabled here so that all prepared values are synchronised]
     pwm_setup.pwm_reference = (_TIMER_0 | 3);                            // timer module 0, channel 3
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
     #elif defined MULTIPLE_CHANNEL_INTERRUPTS                            // {30}

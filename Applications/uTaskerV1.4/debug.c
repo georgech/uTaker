@@ -116,6 +116,7 @@
     17.03.2018 Add FlexIO menu                                           {91}
     04.05.2018 Change interface to fnSetNewSerialMode()                  {92}
     30.09.2018 Allow "sect" display with small output buffer (<= 256 bytes) {93}
+    15.10.2018 Add command to command restart in boot loader             {94}
 
 */
 
@@ -311,6 +312,7 @@
     #define DO_CHANGE_TRIM_FINE    59
     #define DO_DISPLAY_PARS        60
     #define DO_DAC_OUTPUT          61
+    #define DO_RESET_BOOT          62                                    // specific hardware command to reset target to boot loader (when boot loader available and uses mailbox)
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -918,6 +920,7 @@ static const DEBUG_COMMAND tADMINCommand[] = {
     { "lpc",              "low power cycling [1/0]",               DO_HARDWARE,      DO_LP_CYCLE }, // {85}
     #endif
 #endif
+    {"boot",              "Reset to boot loader",                  DO_HARDWARE,      DO_RESET_BOOT }, // {94}
     {"reset",             "Reset device",                          DO_HARDWARE,      DO_RESET },
     {"last_rst",          "Reset cause",                           DO_HARDWARE,      DO_LAST_RESET }, // {63}
     {"help",              "Display menu specific help",            DO_HELP,          DO_MAIN_HELP },
@@ -3943,6 +3946,10 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     static unsigned char ucTestBuffer[] = {'3','2','1',4,5,6,7,8,9,'A','b','C','d',14,15,16}; // test buffer {54}
 #endif
     switch (ucType) {
+    case DO_RESET_BOOT:
+        *BOOT_MAIL_BOX = RESET_TO_SERIAL_LOADER;                         // put a message in the boot mailbox and reset the board (if the serial loader is installed and uses the mailbox it will cause the loader to start)
+        // Fall through intentionally
+        //
     case DO_RESET:                                                       // hardware - reset
         fnResetBoard();
         break;

@@ -67,7 +67,7 @@
     //#define TWR_KL25Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL25Z48M.html
     //#define FRDM_KL26Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL26Z.html
     //#define TEENSY_LC                                                  // USB development board with KL26Z64 - http://www.utasker.com/kinetis/TEENSY_LC.html
-      #define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
+    //#define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
     //#define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
     //#define FRDM_KL43Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
     //#define TWR_KL43Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
@@ -80,6 +80,7 @@
     //#define TWR_KM34Z75M                                               // tower board http://www.utasker.com/kinetis/TWR-KM34Z75M.html
 
     //#define TWR_KV10Z32                                                // V processors Cortex M0+/M4 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
+    //#define FRDM_KV31F                                                 // (M4 - high dynamic control) - freedom board http://www.utasker.com/kinetis/FRDM-KV31F.html
     //#define TWR_KV31F120M                                              // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
     //#define TWR_KV58F220M                                              // (M7 - motor control and power coversion, Ethernet)
 
@@ -118,7 +119,7 @@
 
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -326,8 +327,14 @@
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
     #define DEVICE_WITHOUT_ETHERNET
-#elif defined TWR_KV31F120M
-    #define TARGET_HW            "TWR-KV31F120M"
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
+    #if defined FRDM_KV31F
+        #define TARGET_HW        "FRDM-KV31F"
+    #elif defined TWR_KV46F150M
+        #define TARGET_HW        "TWR-KV46F150M"
+    #else
+        #define TARGET_HW        "TWR-KV31F120M"
+    #endif
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
     #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -927,7 +934,7 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
           //#define KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
           //#define KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
@@ -976,7 +983,7 @@
 #if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)

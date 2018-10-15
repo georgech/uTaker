@@ -6,7 +6,7 @@
 
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00002800, LENGTH = 0x00080000-0x2800         /* 512k Flash - boot loader */
+    FLASH (rx) : ORIGIN = 0x00008000, LENGTH = 0x00080000-0x8000         /* 512k Flash - boot loader */
     SRAM (wx)  : ORIGIN = 0x1fff8170, LENGTH = 0x00018000-0x170          /* 96k RAM with vector size 0x170 (360 bytes - maximum for all processors) */
 }
 
@@ -14,9 +14,9 @@ SECTIONS
 {
   __SRAM_segment_start__   = 0x1fff8170;
   __SRAM_segment_end__     = 0x2000ffff;
-  __Vector_segment_start__ = 0x00002800;                                 /* application start address */
-  __Vector_segment_end__   = 0x0000280f;
-  __FLASH_segment_start__  = 0x00002810;
+  __Vector_segment_start__ = 0x00008000;                                 /* application start address */
+  __Vector_segment_end__   = 0x0000800f;
+  __FLASH_segment_start__  = 0x00008010;
   __FLASH_segment_end__    = 0x0007ffff;
 
   __STACKSIZE__ = 0;

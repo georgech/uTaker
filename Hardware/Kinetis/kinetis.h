@@ -6613,10 +6613,10 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_UART3_TX      9                   // 0x09 UART3 TX
         #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
           #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX) - single MUX channel that can be use for either Rx or Tx
-          #define DMAMUX0_CHCFG_SOURCE_UART4_TX      10                  // 0x0a UART4 TX (or RX/TX)
           #if defined KINETIS_K80
             #define DMAMUX0_CHCFG_SOURCE_UART4_TX    11                  // 0x0b UART4 TX
           #else
+            #define DMAMUX0_CHCFG_SOURCE_UART4_TX    10                  // 0x0a UART4 TX (or RX/TX)
             #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11                  // 0x0b UART5 RX (TX or RX) - single MUX channel that can be use for either Rx or Tx
             #define DMAMUX0_CHCFG_SOURCE_UART5_TX    11                  // 0x0b UART5 TX (TX or RX)
           #endif

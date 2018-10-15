@@ -531,7 +531,7 @@ extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, uns
     switch (iMode) {
     case SHA_START_CALCULATE_TERMINATE:
     {
-        unsigned char ptrInput1[64];
+      //unsigned char ptrInput1[64];
       //uMemset(ptrInput1, 'a', sizeof(ptrInput1));
         mbedtls_sha256_starts(&sha256, 0);
       //mbedtls_sha256_update(&sha256, ptrInput1, 64);

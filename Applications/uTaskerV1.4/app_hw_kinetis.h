@@ -3015,7 +3015,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
       //#define FTM2_1_ON_H
       //#define FTM2_2_ON_D
     #else
-        #if defined FRDM_K64F
+        #if defined FRDM_K64F || defined FRDM_K82F
             #define FTM0_0_ON_C                                          // FTM0 channel 0 on port C rather than port A
             #define FTM0_1_ON_C                                          // FTM0 channel 1 on port C rather than port A
             #define FTM0_4_ON_D                                          // FTM0 channel 4 on port D rather than port A

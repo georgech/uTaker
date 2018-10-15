@@ -218,7 +218,7 @@
     #if defined MEMORY_SWAP && defined FRDM_K66F
         #define SUPPORT_SWAP_BLOCK                                       // support flash swap block
     #endif
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
@@ -914,7 +914,7 @@
   //#define PACKAGE_TYPE        PACKAGE_BGA
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KV31F120M
+#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
   //#define PIN_COUNT           PIN_COUNT_64_PIN
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
@@ -1227,7 +1227,7 @@
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
     #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M || defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z || ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
-    #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
+    #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FRDM_KV31F || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
     #else
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
@@ -1266,7 +1266,7 @@
     #endif
 
   //#define UART0_A_LOW                                                  // alternative UART0 pin mapping
-    #if defined FRDM_K20D50M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K64F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined TWR_KV58F220M || defined FRDM_K66F || defined HEXIWEAR_K64F // {4}{9}
+    #if defined FRDM_K20D50M || defined TEENSY_3_1 || defined TEENSY_LC || defined FRDM_K64F || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FRDM_KV31F || defined TWR_KV58F220M || defined FRDM_K66F || defined HEXIWEAR_K64F // {4}{9}
         #define UART0_ON_B                                               // alternative UART0 pin mapping
     #elif defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z // {5}{7}
         #define UART0_A_LOW
@@ -2950,7 +2950,7 @@
   //#define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) != 0)   // hold SW1 down at reset to force boot loader mode
     // If the application has commanded a reset after writing RESET_TO_SERIAL_LOADER into the boot mail box the serial loader mode should be started as well
     //
-    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) != 0) || (((SIM_SRSID & SIM_SRSID_SW) != 0) && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) != 0) || ((SOFTWARE_RESET_DETECTED()) && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))
 
     #define TOGGLE_WATCHDOG_LED()  _TOGGLE_PORT(A, BLINK_LED)
 #elif defined FRDM_KEAZ128Q80 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZN32Q64
@@ -3002,7 +3002,7 @@
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(B, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_1), PORT_PS_UP_ENABLE) // configure as input
 
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(B, SWITCH_2) == 0)   // pull this input down to disable watchdog (J8-4)
-    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) == 0) || (((RCM_SRS1 & RCM_SRS1_SW) != 0) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER))) // pull this input down to force boot loader mode (J8-3)
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(A, SWITCH_1) == 0) || ((SOFTWARE_RESET_DETECTED()) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER))) // pull this input down to force boot loader mode (J8-3)
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(A, SWITCH_1) == 0)
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(B, BLINK_LED)
@@ -3484,6 +3484,40 @@
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
 
     #define FORCE_BOOT()           (_READ_PORT_MASK(A, SWITCH_1) == 0)   // pull this input down at reset to force boot loader mode [SW1]
+#elif defined FRDM_KV31F
+    #define DEMO_LED_1             (PORTD_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_2             (PORTD_BIT1)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_3             (PORTE_BIT25)                         // (red BLUE) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_4             (PORTE_BIT1)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define BLINK_LED              (DEMO_LED_1)
+    #define SWITCH_2               (PORTA_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_3               (PORTE_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_2_PORT          _PORTA
+    #define SWITCH_3_PORT          _PORTE
+
+    #define INIT_WATCHDOG_LED()     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(E, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_2) == 0)  // pull this input down at reset to disable watchdog [hold SW2]
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
+
+    #define FORCE_BOOT()           (((SOFTWARE_RESET_DETECTED()) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER)) || (_READ_PORT_MASK(E, SWITCH_3) == 0))   // pull this input down at reset to force boot loader mode [SW3]
+
+    #define BUTTON_KEY_DEFINITIONS  {SWITCH_2_PORT,    SWITCH_2,  {515, 24,  538, 41  }}, \
+                                    {SWITCH_3_PORT,    SWITCH_3,  {515, 341, 538, 357 }}
+                                    
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0,   255, 0), RGB(20,20,20), 1, {541, 264, 0, 10 }, _PORTD, BLINK_LED}, \
+        {RGB(255, 0,   0), RGB(20,20,20), 1, {541, 264, 0, 10 }, _PORTD, DEMO_LED_2}, \
+        {RGB(0,   0, 255), RGB(20,20,20), 1, {541, 264, 0, 10 }, _PORTE, DEMO_LED_3}
+
+    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 6
+
+    #define KEYPAD "../uTaskerV1.4/KeyPads/FRDM_KV31F.bmp"
+
 #elif defined TWR_KV31F120M || defined TWR_KV58F220M
     #define DEMO_LED_1             (PORTD_BIT7)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTB_BIT19)                         // (orange LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
