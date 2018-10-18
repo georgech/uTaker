@@ -21,7 +21,7 @@
 
 // Initially the processor is in FEI (FLL engaged internal) - running from 20..25MHz internal clock (32.768kHz IRC x 640 FLL factor; 20.97MHz)
 //
-#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode (FLL is used form 32kHz IRC)
+#if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode (FLL is used from 32kHz IRC)
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
     #if defined FLL_FACTOR                                               // if a different FLL multiplication factor is defined
     MCG_C4 = ((MCG_C4 & ~(MCG_C4_DMX32 | MCG_C4_HIGH_RANGE)) | (_FLL_VALUE)); // adjust FLL factor to obtain the required operating frequency

@@ -503,6 +503,9 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             if ((ulADC_clock < 2000000) || (ulADC_clock > 12000000)) { // check valid ADC clock rate
                                 _EXCEPTION("ADC clock rate outside valid range 2MHz..12MHz for 16 bit mode");
                             }
+                            else if ((ulADC_clock > 6000000) && ((ptrADC_settings->int_adc_sample & ADC_SAMPLE_HIGH_SPEED_CONFIG) == 0) || ((ptrADC_settings->int_adc_mode & ADC_LOW_POWER_CONFIG) != 0)) {
+                                _EXCEPTION("Advise adding ADC_SAMPLE_HIGH_SPEED_CONFIG in int_adc_sample and/or removing ADC_LOW_POWER_CONFIG from int_adc_mode since ADC clock is high");
+                            }
                             break;
         #endif
                         }

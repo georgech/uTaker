@@ -9028,7 +9028,7 @@ typedef struct stFLEX_TIMER_MODULE
         #define ADC0_CFG1       *(unsigned long *)(ADC0_BLOCK + 0x008)       // ADC0 Configuration Register 1
     #endif
       #define ADC_CFG1_ADICLK_BUS  0x00000000                                // input clock select - bus clock
-    #if defined KINETIS_KL82
+    #if defined KINETIS_KL82 || defined KINETIS_K02
       #define ADC_CFG1_ADICLK_ALT2 0x00000001                                // input clock select - IRC48MCLK
     #else
       #define ADC_CFG1_ADICLK_BUS2 0x00000001                                // input clock select - bus clock divided by 2
@@ -19604,8 +19604,9 @@ typedef struct stADC_SETUP
 
 
 #define ADC_CLOCK_BUS                   0x00000000                       // ADC_CFG1_ADICLK_BUS
-#if defined KINETIS_KL82
+#if defined KINETIS_KL82 || defined KINETIS_K02
     #define ADC_CLOCK_IRC48MCLK         0x00000001                       // ADC_CFG1_ADICLK2
+    #define ADC_CLOCK_OSCERCLK          0x00000002                       // ADC_CFG1_ADICLK
 #else
     #define ADC_CLOCK_BUS_DIV_2         0x00000001                       // ADC_CFG1_ADICLK_BUS2
 #endif
