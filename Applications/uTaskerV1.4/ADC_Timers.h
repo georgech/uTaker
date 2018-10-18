@@ -849,7 +849,7 @@ static void __callback_interrupt _pdb_interrupt(void)
 //
 static void fnStart_ADC_Trigger(void)
 {
-    #if PDB_AVAILABLE == 0                                               // for devices that do not have a PDB the PIT is used instead to trigger the ADC/DAC
+    #if PDB_AVAILABLE == 0                                               // for devices that do not have a PDB a PIT or FlexTimer is used instead to trigger the ADC/DAC
         #if defined ADC_TRIGGER_TPM                                      // ADC triggering from TPM 1 - channel 0 and 1 (these channels are the default ADC triggers for ADC 0 inputs A and B)
     PWM_INTERRUPT_SETUP pwm_setup;
     pwm_setup.int_type = PWM_INTERRUPT;
@@ -917,7 +917,7 @@ static void fnConfigureADC(void)
     static const unsigned char input[3] = { ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
     static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE, ADC_CALIBRATE };
 #endif
-#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15) && !defined DEV1   // {11}
+#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18) && !defined DEV1   // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;
 #endif
     ADC_SETUP adc_setup;                                                 // interrupt configuration parameters
@@ -1015,8 +1015,13 @@ static void fnConfigureADC(void)
                 #endif
             #else
                 #if defined KINETIS_KL                                   // {21}
+                    #if defined ADC_CLOCK_BUS_DIV_2
   //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
     adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS_DIV_2 | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
+                    #else                                                // not all KL parts (eg. KL82) have the bus/2 option
+  //adc_setup.int_adc_mode = (ulCalibrate | ADC_LOOP_MODE | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS | ADC_CLOCK_DIVIDE_4 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE); // continuous conversion (DMA to buffer)
+    adc_setup.int_adc_mode = (ulCalibrate | ADC_FULL_BUFFER_DMA | ADC_HALF_BUFFER_DMA | ADC_SELECT_INPUTS_A | ADC_CLOCK_BUS | ADC_CLOCK_DIVIDE_8 | ADC_SAMPLE_ACTIVATE_LONG | ADC_CONFIGURE_ADC | ADC_REFERENCE_VREF | ADC_CONFIGURE_CHANNEL | ADC_SINGLE_ENDED_INPUT | ADC_SINGLE_SHOT_MODE | ADC_12_BIT_MODE | ADC_HW_TRIGGERED); // hardware triggering (DMA to buffer)
+                    #endif
     adc_setup.int_adc_mode |= ADC_FULL_BUFFER_DMA_AUTO_REPEAT;           // automated DMA (using interrupt) restart when not using modulo repetitions
                     #if !defined DEVICE_WITHOUT_DMA
     adc_setup.dma_int_handler = 0;                                       // no user DMA interrupt call-back

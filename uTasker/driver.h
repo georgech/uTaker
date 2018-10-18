@@ -207,13 +207,14 @@
 #define ASCII_ACK                    0x06
 #define ASCII_BEL                    0x07
 #define DELETE_KEY                   0x08                                // back space (control-H)
-#define ASCII_HT                     0x09
+#define ASCII_HT                     0x09                                // horizontal TAB
 #define LINE_FEED                    0x0a
-#define ASCII_VT                     0x0b
+#define ASCII_VT                     0x0b                                // vertical TAB
 #define ASCII_FF                     0x0c
 #define CARRIAGE_RETURN              0x0d
-#define ASCII_SO                     0x0e
-#define TAB_KEY                      0x0f                                // SI
+#define ASCII_SO                     0x0e                                // shift out
+#define ASCII_SI                     0x0f                                // shift in
+#define TAB_KEY                      (ASCII_SI)                          // shift in
 #define ASCII_DLE                    0x10
 #define XON_CODE                     0x11                                // DC1
 #define ASCII_DC2                    0x12

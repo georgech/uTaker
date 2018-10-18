@@ -36,6 +36,7 @@
 
 #if defined _DAC_CONFIG_CODE
         {
+  #if !defined KINETIS_KE18
             DAC_SETUP *ptrDAC_settings = (DAC_SETUP *)ptrSettings;
             DAC_REGS *ptrDAC_regs;
             unsigned char ucConfig = (DAC_C0_DACRFS_VREF | DAC_C0_DACTRGSET_HW | DAC_C0_LPEN_HIGH_POWER);
@@ -136,6 +137,7 @@
                 ucConfig |= DAC_C0_DACEN;                                // DAC operation is to be enabled
             }
             ptrDAC_regs->DAC_C0 = ucConfig;                              // set configuration and enable, if requested
+  #endif
         }
 #endif
 

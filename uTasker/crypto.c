@@ -13,12 +13,13 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
+    18.10.2018 Add SHA256 with mmCAU support (for 1 block)
     
 */        
 
 #include "config.h"
 #if defined CRYPTOGRAPHY && defined CRYPTO_AES
-    #if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && !defined LTC_AVAILABLE)
+    #if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && (!defined LTC_AVAILABLE || defined AES_DISABLE_LTC))
         #undef NATIVE_AES_CAU
     #endif
     #if defined NATIVE_AES_CAU
@@ -512,7 +513,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
     void *(*mbedtls_calloc)(size_t n, size_t size) = 0;
     void(*mbedtls_free)(void *ptr) = 0;
 #endif
-#if defined _WINDOWS || (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && !defined LTC_AVAILABLE)
+#if (!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE && !defined LTC_AVAILABLE)
     #undef NATIVE_SHA256_CAU
 #endif
 
@@ -525,64 +526,172 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
     extern void mmcau_sha256_hash(const unsigned char *input, unsigned int *output);
 #endif
 
+
+
+
+
+
+
+
+#define CRYPTO_LITTLE_ENDIAN                  0
+#define CRYPTO_BIG_ENDIAN                     1
+
+#define CRYPTO_ARRAY_LENGTH                   8
+#define CRYPTO_MAX_PADDING_LENGTH             56
+#define CRYPTO_BLOCK_LENGTH                   64
+
+// Add padding to hash array
+//
+static void padding_start(mbedtls_sha256_context *ptr_sha256, const unsigned char *input, unsigned long *input_length, unsigned char endianess)
+{
+    unsigned char *padding_array = ptr_sha256->buffer;                   // long word aligned buffer (one block) followed by pad buffer space
+    signed char  padding_length;
+    unsigned int temp_length = (*input_length % CRYPTO_BLOCK_LENGTH);
+    unsigned int bits_length;
+    unsigned int final_length;
+
+    /*get padding length: padding special case when 448 mod 512*/
+    /*working with bytes rather than bits*/
+    if (((padding_length = CRYPTO_MAX_PADDING_LENGTH - (temp_length % CRYPTO_BLOCK_LENGTH)) > 0) == 0) {
+        padding_length = CRYPTO_BLOCK_LENGTH - (temp_length%CRYPTO_MAX_PADDING_LENGTH);
+    }
+
+    padding_length += (temp_length / CRYPTO_BLOCK_LENGTH);
+    temp_length = *input_length;
+
+    final_length = temp_length + padding_length + CRYPTO_ARRAY_LENGTH;
+
+    #if defined _WINDOWS
+    if (final_length > (sizeof(ptr_sha256->buffer) + sizeof(ptr_sha256->pad_buffer))) {
+        _EXCEPTION("context only has space for one block plus padding!");
+    }
+    #endif
+
+    uMemcpy(padding_array, input, temp_length);                          // copy original data to new padding array
+
+    /*add padding*/
+    padding_array[temp_length++] = 0x80;/*first bit enabled*/
+    uMemset(&padding_array[temp_length], 0, (padding_length + 8));       // fill with zero to end of padding array (inlcuding last double word, which will be used to save length to)
+
+    /*add length depending on endianess: get number of bits*/
+    bits_length = (*input_length << 3);
+    *input_length = final_length;
+
+    if (endianess == CRYPTO_LITTLE_ENDIAN) {                             // SHA256 needs the length in big endian format
+        temp_length += (padding_length - 1);
+        padding_array[temp_length++] = bits_length & 0xff;
+        padding_array[temp_length++] = bits_length >> 8 & 0xff;
+        padding_array[temp_length++] = bits_length >> 16 & 0xff;
+        padding_array[temp_length] = bits_length >> 24 & 0xff;
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length] = 0;
+    }
+    else {                                                               // CRYPTO_BIG_ENDIAN - MD-5 needs it in little-endian format
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length++] = 0;
+      //padding_array[temp_length++] = 0;
+        temp_length += (padding_length + 3);
+        padding_array[temp_length++] = bits_length >> 24 & 0xff;
+        padding_array[temp_length++] = bits_length >> 16 & 0xff;
+        padding_array[temp_length++] = bits_length >> 8 & 0xff;
+        padding_array[temp_length] = bits_length & 0xff;
+    }
+}
+
+
 extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
 {
-    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time
+    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time)
+    #if defined NATIVE_SHA256_CAU
+    unsigned long length = ulLength;
+    padding_start(&sha256, ptrInput, &length, CRYPTO_BIG_ENDIAN);
+        #if defined _LITTLE_ENDIAN && !defined _WINDOWS
+    int iOutLongWords;
+    unsigned long *ptrLongWord;
+        #endif
+    #endif
     switch (iMode) {
     case SHA_START_CALCULATE_TERMINATE:
-    {
-      //unsigned char ptrInput1[64];
-      //uMemset(ptrInput1, 'a', sizeof(ptrInput1));
+    #if defined NATIVE_SHA256_CAU
+        #if defined _WINDOWS
         mbedtls_sha256_starts(&sha256, 0);
-      //mbedtls_sha256_update(&sha256, ptrInput1, 64);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
         mbedtls_sha256_finish(&sha256, ptrOutput);
-    }
-    #if defined NATIVE_SHA256_CAU
-        {
-            int iNumberofBlocks = (ulLength/64);
-            int iRemainder = (ulLength % 64);
-            mmcau_sha256_initialize_output((const unsigned int *)sha256.state);
-            if (iRemainder == 0) {
-                if (iNumberofBlocks == 0) {
-                    return 0;
-                }
-                mmcau_sha256_hash_n((const unsigned char *)ptrInput, (const int)iNumberofBlocks, (unsigned int *)sha256.state);
-            }
-            else {
-                if (iNumberofBlocks != 0) {
-                    mmcau_sha256_hash_n((const unsigned char *)ptrInput, (const int)iNumberofBlocks, (unsigned int *)sha256.state);
-                }
-                uMemcpy(sha256.buffer, ptrInput, iRemainder);
-                uMemset(&sha256.buffer[iRemainder], 0xaa, (sizeof(sha256.buffer) - iRemainder)); // pad the input buffer
-              //uMemset(sha256.buffer, 0x00, (sizeof(sha256.buffer))); // empty string test
-                mmcau_sha256_hash((const unsigned char *)sha256.buffer, (unsigned int *)sha256.state);
-              //uMemset(sha256.state, 0x00, (sizeof(sha256.state)));
-              //mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)1, (unsigned int *)sha256.state);
-              //uMemset(sha256.state, 0x00, (sizeof(sha256.state)));
-              //mmcau_sha256_update((const unsigned char *)sha256.buffer, (const int)1, (unsigned int *)sha256.state); // doesn't need initialisation
-            }
-            uMemcpy(ptrOutput, sha256.state, sizeof(sha256.state));
+        #else
+        mmcau_sha256_update((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)ptrOutput);
+            #if defined _LITTLE_ENDIAN
+        iOutLongWords = ((CRYPTO_BLOCK_LENGTH / 2) / sizeof(unsigned long));
+        ptrLongWord = (unsigned long *)ptrOutput;
+        while (iOutLongWords-- != 0) {
+            *ptrLongWord = BIG_LONG_WORD(*ptrLongWord);                  // convert the output from big-endian long storage to little-endian
+            ptrLongWord++;
         }
+            #endif
+        #endif
+    #else
+        mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        mbedtls_sha256_finish(&sha256, ptrOutput);
     #endif
         break;
     case SHA_START_CALCULATE_STAY_OPEN:
+    #if defined NATIVE_SHA256_CAU
+        #if defined _WINDOWS
+        mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        //mbedtls_sha256_finish(&sha256, ptrOutput);
+        #else
+        mmcau_sha256_initialize_output((const unsigned int *)sha256.state);
+        mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)sha256.state);
+        #endif
+    #else
         mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
       //mbedtls_sha256_finish(&sha256, ptrOutput);
+    #endif
         break;
     case SHA_CONTINUE_CALCULATING:
+    #if defined NATIVE_SHA256_CAU
+        #if defined _WINDOWS
+        //mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        //mbedtls_sha256_finish(&sha256, ptrOutput);
+        #else
+        mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)sha256.state);
+        #endif
+    #else
       //mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
       //mbedtls_sha256_finish(&sha256, ptrOutput);
+    #endif
         break;
     case SHA_CONTINUE_CALCULATING_TERMINATE:
+    #if defined NATIVE_SHA256_CAU
+        #if defined _WINDOWS
         //mbedtls_sha256_starts(&sha256, 0);
         mbedtls_sha256_update(&sha256, ptrInput, ulLength);
         mbedtls_sha256_finish(&sha256, ptrOutput);
+        #else
+        mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length / CRYPTO_BLOCK_LENGTH), (unsigned int *)ptrOutput);
+            #if defined _LITTLE_ENDIAN
+        iOutLongWords = ((CRYPTO_BLOCK_LENGTH / 2) / sizeof(unsigned long));
+        ptrLongWord = (unsigned long *)ptrOutput;
+        while (iOutLongWords-- != 0) {
+            *ptrLongWord = BIG_LONG_WORD(*ptrLongWord);                  // convert the output from big-endian long storage to little-endian
+            ptrLongWord++;
+        }
+            #endif
+        #endif
+    #else
+      //mbedtls_sha256_starts(&sha256, 0);
+        mbedtls_sha256_update(&sha256, ptrInput, ulLength);
+        mbedtls_sha256_finish(&sha256, ptrOutput);
+    #endif
         break;
     }
     return 0;
 }
 #endif
-

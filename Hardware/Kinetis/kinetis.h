@@ -352,7 +352,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
 //
 #if defined MCGFFLCLK_EXTERNAL || defined MCGFFLCLK_IRC48M               // if the user defines a specific FRDIV value to control the MCGFFLCLK frequency from an external or IRC48M clock the FLL input frequency range is not checked
     #define FLL_INPUT_DIVIDE_VALUE    (MCGFFLCLK_FRDIV)                  // FLL input divide is user defined
-#elif defined _EXTERNAL_CLOCK && !(defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL) // calculate the FRDIV divide vale in order to best respect the FLL input range
+#elif defined _EXTERNAL_CLOCK && !(defined KINETIS_HAS_IRC48M && defined RUN_FROM_HIRC_FLL) // calculate the FRDIV divide value in order to best respect the FLL input range
     #if ((_EXTERNAL_CLOCK/32) <= 39062)
         #define FLL_INPUT_DIVIDE_VALUE    32
     #elif ((_EXTERNAL_CLOCK/64) <= 39062)
@@ -1227,7 +1227,7 @@ typedef struct stRESET_VECTOR
 
 // TRGMUX
 //
-#if defined KINETIS_KL28 || defined KINETIS_KE15
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define TRGMUX_AVAILABLE
 #endif
 
@@ -3808,7 +3808,11 @@ typedef struct stVECTOR_TABLE
 
 // PDB configuration
 //
-#if defined irq_PDB0_ID
+#if defined irq_PDB2_ID
+    #define PDB_AVAILABLE   3
+#elif defined irq_PDB1_ID
+    #define PDB_AVAILABLE   2
+#elif defined irq_PDB0_ID
     #define PDB_AVAILABLE   1
 #else
     #define PDB_AVAILABLE   0
@@ -5576,18 +5580,36 @@ typedef struct stKINETIS_INTMUX
 
 
 #if defined TRGMUX_AVAILABLE
-    #if defined KINETIS_KE15
+    #if defined KINETIS_KE15 || defined KINETIS_KE18
         #define TRGMUX_DMAMUX0        *(unsigned long *)(TRGMUX0_BLOCK + 0x00)
         #define TRGMUX_EXTOUT0        *(unsigned long *)(TRGMUX0_BLOCK + 0x04)
         #define TRGMUX_EXTOUT1        *(unsigned long *)(TRGMUX0_BLOCK + 0x08)
         #define TRGMUX_ADC0           *(unsigned long *)(TRGMUX0_BLOCK + 0x0c)
         #define TRGMUX_ADC1           *(unsigned long *)(TRGMUX0_BLOCK + 0x10)
+        #if ADC_CONTROLLERS > 2
+            #define TRGMUX_ADC2       *(unsigned long *)(TRGMUX0_BLOCK + 0x14)
+        #endif
+        #if defined KINETIS_KE18
+            #define TRGMUX_DAC0       *(unsigned long *)(TRGMUX0_BLOCK + 0x18)
+        #endif
         #define TRGMUX_CMP0           *(unsigned long *)(TRGMUX0_BLOCK + 0x1c)
         #define TRGMUX_CMP1           *(unsigned long *)(TRGMUX0_BLOCK + 0x20)
+        #if defined KINETIS_KE18
+            #define TRGMUX_CMP2       *(unsigned long *)(TRGMUX0_BLOCK + 0x24)
+        #endif
         #define TRGMUX_FTM0           *(unsigned long *)(TRGMUX0_BLOCK + 0x28)
         #define TRGMUX_FTM1           *(unsigned long *)(TRGMUX0_BLOCK + 0x2c)
         #define TRGMUX_FTM2           *(unsigned long *)(TRGMUX0_BLOCK + 0x30)
+        #if FLEX_TIMERS_AVAILABLE > 3
+            #define TRGMUX_FTM3       *(unsigned long *)(TRGMUX0_BLOCK + 0x34)
+        #endif
         #define TRGMUX_PDB0           *(unsigned long *)(TRGMUX0_BLOCK + 0x38)
+        #if PDB_AVAILABLE > 1
+            #define TRGMUX_PDB1       *(unsigned long *)(TRGMUX0_BLOCK + 0x3c)
+        #endif
+        #if PDB_AVAILABLE > 2
+            #define TRGMUX_PDB2       *(unsigned long *)(TRGMUX0_BLOCK + 0x40)
+        #endif
         #define TRGMUX_FLEXIO         *(unsigned long *)(TRGMUX0_BLOCK + 0x44)
         #define TRGMUX_LPIT0          *(unsigned long *)(TRGMUX0_BLOCK + 0x48)
         #define TRGMUX_LPUART0        *(unsigned long *)(TRGMUX0_BLOCK + 0x4c)
@@ -5597,7 +5619,9 @@ typedef struct stKINETIS_INTMUX
         #define TRGMUX_LPSPI0         *(unsigned long *)(TRGMUX0_BLOCK + 0x5c)
         #define TRGMUX_LPSPI1         *(unsigned long *)(TRGMUX0_BLOCK + 0x60)
         #define TRGMUX_LPTMR0         *(unsigned long *)(TRGMUX0_BLOCK + 0x64)
-        #define TRGMUX_TSI            *(unsigned long *)(TRGMUX0_BLOCK + 0x68)
+        #if defined KINETIS_KE15
+            #define TRGMUX_TSI        *(unsigned long *)(TRGMUX0_BLOCK + 0x68)
+        #endif
         #define TRGMUX_PWT            *(unsigned long *)(TRGMUX0_BLOCK + 0x6c)
 
         #define TRGMUX_CTRL0          *(unsigned long *)(TRGMUX1_BLOCK + 0x00)
@@ -5619,22 +5643,30 @@ typedef struct stKINETIS_INTMUX
         #define TRGMUX_SEL_FTM0               0x0b
         #define TRGMUX_SEL_FTM1               0x0c
         #define TRGMUX_SEL_FTM2               0x0d
+        #if FLEX_TIMERS_AVAILABLE > 3
+            #define TRGMUX_SEL_FTM3           0x0e
+        #endif
         #define TRGMUX_SEL_ADC0_CONVERSION_A  0x0f
         #define TRGMUX_SEL_ADC0_CONVERSION_B  0x10
         #define TRGMUX_SEL_CMP0               0x11
         #define TRGMUX_SEL_CMP1               0x12
+        #if defined KINETIS_KE18
+            #define TRGMUX_SEL_CMP2           0x13
+        #endif
         #define TRGMUX_SEL_FLEXIO_TRIGGER_0   0x14
         #define TRGMUX_SEL_FLEXIO_TRIGGER_1   0x15
         #define TRGMUX_SEL_FLEXIO_TRIGGER_2   0x16
         #define TRGMUX_SEL_FLEXIO_TRIGGER_3   0x17
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_0   0x18
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_1   0x19
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_2   0x1a
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_3   0x1b
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_4   0x1c
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_5   0x1d
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_6   0x1e
-        #define TRGMUX_SEL_TRGMUX1_OUTPUT_7   0x1f
+        #if defined KINETIS_KE15
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_0   0x18
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_1   0x19
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_2   0x1a
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_3   0x1b
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_4   0x1c
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_5   0x1d
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_6   0x1e
+            #define TRGMUX_SEL_TRGMUX1_OUTPUT_7   0x1f
+        #endif
 
         // TRGMUX 1
         //
@@ -5663,6 +5695,19 @@ typedef struct stKINETIS_INTMUX
         #define TRGMUX_SEL_ADC1_CONVERSION_B  0x16
         #define TRGMUX_SEL_PDB0_PULSE0        0x17
         #define TRGMUX_SEL_PDB0_PULSE1        0x18
+        #if defined KINETIS_KE18
+            #define TRGMUX_SEL_PDB0_DAC       0x17
+            #define TRGMUX_SEL_PDB0_PULSE     0x18
+            #define TRGMUX_SEL_PDB1_DAC       0x19
+            #define TRGMUX_SEL_PDB1_PULSE     0x1a
+            #define TRGMUX_SEL_PDB2_DAC       0x1b
+            #define TRGMUX_SEL_PDB2_PULSE     0x1c
+            #define TRGMUX_SEL_ADC2_CONVERSION_A  0x1d
+            #define TRGMUX_SEL_ADC2_CONVERSION_B  0x1e
+        #else
+            #define TRGMUX_SEL_PDB0_PULSE0    0x17
+            #define TRGMUX_SEL_PDB0_PULSE1    0x18
+        #endif
     #else
         #define TRGMUX_DMAMUX0        *(unsigned long *)(TRGMUX0_BLOCK + 0x00)
         #define TRGMUX_LPIT0          *(unsigned long *)(TRGMUX0_BLOCK + 0x04)
@@ -6507,13 +6552,13 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define DMAMUX0_CHCFG_SOURCE_TPM0_C4         31                  // 0x1f TPM0 channel 4
         #define DMAMUX0_CHCFG_SOURCE_TPM0_C5         32                  // 0x20 TPM0 channel 5
 
-        #define DMAMUX0_CHCFG_SOURCE_TPM0_OV         35                  // 0x23 TPM0 overflow
+        #define DMAMUX0_CHCFG_SOURCE_TPM0_OVERFLOW   35                  // 0x23 TPM0 overflow
         #define DMAMUX0_CHCFG_SOURCE_TPM1_C0         36                  // 0x24 TPM1 channel 0
         #define DMAMUX0_CHCFG_SOURCE_TPM1_C1         37                  // 0x25 TPM1 channel 1
-        #define DMAMUX0_CHCFG_SOURCE_TPM1_OV         38                  // 0x26 TPM1 overflow
+        #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW   38                  // 0x26 TPM1 overflow
         #define DMAMUX0_CHCFG_SOURCE_TPM2_C0         39                  // 0x27 TPM2 channel 0
         #define DMAMUX0_CHCFG_SOURCE_TPM2_C1         40                  // 0x28 TPM2 channel 1
-        #define DMAMUX0_CHCFG_SOURCE_TPM2_OV         41                  // 0x29 TPM2 overflow
+        #define DMAMUX0_CHCFG_SOURCE_TPM2_OVERFLOW   41                  // 0x29 TPM2 overflow
 
         #define DMAMUX0_CHCFG_SOURCE_EMVSIM0_RX      43                  // 0x2b EMVSIM0 receive
         #define DMAMUX0_CHCFG_SOURCE_EMVSIM0_TX      44                  // 0x2c EMVSIM0 transmit
@@ -6596,7 +6641,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #if defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
-        #if defined KINETIS_KL17 || defined KINETIS_KL27
+        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    2                   // 0x02 LPUART0 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    3                   // 0x03 LPUART0 TX
           #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    4                   // 0x04 LPUART1 RX
@@ -6607,10 +6652,15 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_UART1_RX      4                   // 0x04 UART1 RX
           #define DMAMUX0_CHCFG_SOURCE_UART1_TX      5                   // 0x05 UART1 TX
         #endif
+        #if defined KINETIS_KE18
+          #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    6                   // 0x06 LPUART2 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    7                   // 0x07 LPUART2 TX
+        #else
           #define DMAMUX0_CHCFG_SOURCE_UART2_RX      6                   // 0x06 UART2 RX
           #define DMAMUX0_CHCFG_SOURCE_UART2_TX      7                   // 0x07 UART2 TX
           #define DMAMUX0_CHCFG_SOURCE_UART3_RX      8                   // 0x08 UART3 RX
           #define DMAMUX0_CHCFG_SOURCE_UART3_TX      9                   // 0x09 UART3 TX
+        #endif
         #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
           #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX) - single MUX channel that can be use for either Rx or Tx
           #if defined KINETIS_K80
@@ -6674,6 +6724,39 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
             #if defined KINETIS_K65 || defined KINETIS_K66
               #define DMAMUX0_CHCFG_SOURCE_SPI2_TX   39
             #endif
+        #elif defined KINETIS_KE18
+          #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT0 10                 // 0x0a FlexIO shifter 0
+          #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT1 11                 // 0x0b FlexIO shifter 1
+          #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT2 12                 // 0x0c FlexIO shifter 2
+          #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT3 13                 // 0x0d FlexIO shifter 3
+          #define DMAMUX0_CHCFG_SOURCE_LPSPI0_RX     14                  // 0x0e LPSPI0 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPSPI0_TX     15                  // 0x0f LPSPI0 TX
+          #define DMAMUX0_CHCFG_SOURCE_LPSPI1_RX     16                  // 0x10 LPSPI1 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPSPI1_TX     17                  // 0x11 LPSPI1 TX
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C0_RX     18                  // 0x12 LPI2C0 receive
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C0_TX     19                  // 0x13 LPI2C0 transmit
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C0       20                  // 0x14 FTM0 channel 0
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C1       21                  // 0x15 FTM0 channel 1
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C2       22                  // 0x16 FTM0 channel 2
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C3       23                  // 0x17 FTM0 channel 3
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C4       24                  // 0x18 FTM0 channel 4
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C5       25                  // 0x19 FTM0 channel 5
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C6       26                  // 0x1a FTM0 channel 6
+          #define DMAMUX0_CHCFG_SOURCE_FTM0_C7       27                  // 0x1b FTM0 channel 7
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       28                  // 0x1c FTM1 channel 0
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                  // 0x1d FTM1 channel 1
+          #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                  // 0x1e FTM2 channel 0
+          #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                  // 0x1f FTM2 channel 1
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX     32                  // 0x20 LPI2C1 receive (or)
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C0       32                  // 0x20 FTM3 channel 0
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX     33                  // 0x21 LPI2C1 transmit (0r)
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       33                  // 0x21 FTM3 channel 1
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       34                  // 0x22 FTM3 channel 2
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       35                  // 0x23 FTM3 channel 3
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       36                  // 0x24 FTM3 channel 4
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       37                  // 0x25 FTM3 channel 5
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       38                  // 0x26 FTM3 channel 6
+          #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       39                  // 0x27 FTM3 channel 7
         #else
           #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX
           #define DMAMUX0_CHCFG_SOURCE_UART4_TX      11                  // 0x0b UART4 TX
@@ -6710,23 +6793,34 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39                  // 0x27 IEEE 1588 timer 3 (alternative)
          #endif
           #define DMAMUX0_CHCFG_SOURCE_ADC0          40                  // 0x28 ADC0
-          #if ADC_CONTROLLERS > 1
+          #if defined KINETIS_KE18
               #define DMAMUX0_CHCFG_SOURCE_ADC1      41                  // 0x29 ADC1
+              #define DMAMUX0_CHCFG_SOURCE_ADC2      42                  // 0x2a ADC2
+              #define DMAMUX0_CHCFG_SOURCE_CMP0      43                  // 0x2b CMP0
+              #define DMAMUX0_CHCFG_SOURCE_CMP1      44                  // 0x2c CMP1
+              #define DMAMUX0_CHCFG_SOURCE_CMP2      45                  // 0x2d CMP2
+              #define DMAMUX0_CHCFG_SOURCE_PDB0      46                  // 0x2e PDB 0
+              #define DMAMUX0_CHCFG_SOURCE_PDB1      47                  // 0x2f PDB 1
+              #define DMAMUX0_CHCFG_SOURCE_PDB2      48                  // 0x30 PDB 2
+          #else
+              #if ADC_CONTROLLERS > 1
+                  #define DMAMUX0_CHCFG_SOURCE_ADC1  41                  // 0x29 ADC1
+              #endif
+              #define DMAMUX0_CHCFG_SOURCE_CMP0      42                  // 0x2a CMP0
+              #define DMAMUX0_CHCFG_SOURCE_CMP1      43                  // 0x2b CMP1
+              #if NUMBER_OF_COMPARATORS > 2
+                  #define DMAMUX0_CHCFG_SOURCE_CMP2  44                  // 0x2c CMP2 (or CMP3 - K66)
+              #endif
+              #if defined KINETIS_K65 || defined KINETIS_K66
+                  #define DMAMUX0_CHCFG_SOURCE_CMP3  44
+              #endif
+              #define DMAMUX0_CHCFG_SOURCE_DAC0      45                  // 0x2d DAC0
+              #if DAC_CONTROLLERS > 1
+                  #define DMAMUX0_CHCFG_SOURCE_DAC1  46                  // 0x2e DAC1
+              #endif
+              #define DMAMUX0_CHCFG_SOURCE_CMT       47                  // 0x2f CMT
+              #define DMAMUX0_CHCFG_SOURCE_PDB0      48                  // 0x30 PDB 0
           #endif
-          #define DMAMUX0_CHCFG_SOURCE_CMP0          42                  // 0x2a CMP0
-          #define DMAMUX0_CHCFG_SOURCE_CMP1          43                  // 0x2b CMP1
-          #if NUMBER_OF_COMPARATORS > 2
-              #define DMAMUX0_CHCFG_SOURCE_CMP2      44                  // 0x2c CMP2 (or CMP3 - K66)
-          #endif
-          #if defined KINETIS_K65 || defined KINETIS_K66
-              #define DMAMUX0_CHCFG_SOURCE_CMP3      44
-          #endif
-          #define DMAMUX0_CHCFG_SOURCE_DAC0          45                  // 0x2d DAC0
-          #if DAC_CONTROLLERS > 1
-              #define DMAMUX0_CHCFG_SOURCE_DAC1      46                  // 0x2e DAC1
-          #endif
-          #define DMAMUX0_CHCFG_SOURCE_CMT           47                  // 0x2f CMT
-          #define DMAMUX0_CHCFG_SOURCE_PDB0          48                  // 0x30 PDB 0
           #define DMAMUX0_CHCFG_SOURCE_PORTA         49                  // 0x31 port A
           #define DMAMUX0_CHCFG_SOURCE_PORTB         50                  // 0x32 port B
           #define DMAMUX0_CHCFG_SOURCE_PORTC         51                  // 0x33 port C
@@ -6746,6 +6840,13 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #if !defined KINETIS_KL17 && !defined KINETIS_KL27
             #define DMAMUX0_CHCFG_SOURCE_TSI         57                  // 0x39 TSI
           #endif
+        #elif defined KINETIS_KE18
+          #define DMAMUX0_CHCFG_SOURCE_FlexCAN0      54                  // 0x36 FlexCAN0
+          #define DMAMUX0_CHCFG_SOURCE_FlexCAN1      55                  // 0x37 FlexCAN1
+          #define DMAMUX0_CHCFG_SOURCE_DAC0          56                  // 0x38 DAC0
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C2_C7    57                  // 0x39 FTM1 OR of channels 2 to 7
+          #define DMAMUX0_CHCFG_SOURCE_FTM2_C2_C7    58                  // 0x3a FTM2 OR of channels 2 to 7
+          #define DMAMUX0_CHCFG_SOURCE_LPTMR0        59                  // 0x3b LPTMR0
         #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
@@ -6776,7 +6877,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
           #endif
         #elif LPUARTS_AVAILABLE > 0
-          #if !defined KINETIS_KL17 && !defined KINETIS_KL27
+          #if !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE18
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX  59                  // 0x3b LPUART0 TX
           #endif
@@ -9997,7 +10098,7 @@ typedef struct stKINETIS_ADMA2_BD
       #if defined KINETIS_KL || defined KINETIS_KE15
         #define RTC_CR_WPS      0x00000010                               // wakeup pin select
       #endif
-      #if defined KINETIS_KE15
+      #if defined KINETIS_KE15 || defined KINETIS_KE18
         #define RTC_CR_CPS_PRE  0x00000000                               // clock pin select - prescale output clock (as selected by TSIC) is output on RTC_CLOKOUT
         #define RTC_CR_CPS_32k  0x00000020                               // clock pin select - RTC32 crystal clock is output on RTC_CLOKOUT
         #define RTC_CR_LPOS_32k 0x00000000                               // LPO select - RTC prescaler increments using 32kHz input
@@ -10801,10 +10902,11 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SIM_SOPT2_TPMSRC_OSCERCLK    0x02000000                  // TPM clock source OSCERCLK
         #define SIM_SOPT2_TPMSRC_MCGIRCLK    0x03000000                  // TPM clock source MCGIRCLK
         #if defined KINETIS_KL82
-            #define SIM_SOPT2_UARTSRC_DISABLED   0x00000000              // UART clock source disabled
-            #define SIM_SOPT2_UARTSRC_MCG        0x04000000              // UART clock MCGFLL or MCGPLLCLK/2
-            #define SIM_SOPT2_UARTSRC_IRC48M     0x04000000              // UART clock IRC48M
-            #define SIM_SOPT2_UARTSRC_OSCERCLK   0x08000000              // UART clock source OSCERCLK
+            #define SIM_SOPT2_LPUARTSRC_DISABLED   0x00000000            // LPUART clock source disabled
+            #define SIM_SOPT2_LPUARTSRC_SEL        0x04000000            // LPUARTs clock source - source selected by PLLFLLSEL
+            #define SIM_SOPT2_LPUARTSRC_IRC48M     0x04000000            // LPUART clock IRC48M
+            #define SIM_SOPT2_LPUARTSRC_OSCERCLK   0x08000000            // LPUART clock source OSCERCLK
+            #define SIM_SOPT2_LPUARTSRC_MGCIR      0x0c000000            // LPUARTs clock source - MCGIRCLK
         #else
             #if LPUARTS_AVAILABLE > 0
                 #define SIM_SOPT2_LPUART0SRC_DISABLED  0x00000000        // LPUART0 clock source disabled
@@ -10887,7 +10989,7 @@ typedef struct stKINETIS_LPTMR_CTL
                 #define SIM_SOPT2_TPMSRC_MCGIRCLK 0x03000000             // TPM clock from MCGIRCLK
             #define SIM_SOPT2_LPUARTSRC_SEL  0x04000000                  // LPUARTs clock source - source selected by PLLFLLSEL
             #define SIM_SOPT2_LPUARTSRC_OSC  0x08000000                  // LPUARTs clock source - OSCERCLK
-            #define SIM_SOPT2_LPUARTSRC_MGC  0x0c000000                  // LPUARTs clock source - MCGIRCLK
+            #define SIM_SOPT2_LPUARTSRC_MGCIR  0x0c000000                // LPUARTs clock source - MCGIRCLK
             #define SIM_SOPT2_SDHCSRC_CORE   0x00000000                  // SDHC clock source - core/system clock
             #define SIM_SOPT2_SDHCSRC_SEL    0x10000000                  // SDHC clock source - source selected by PLLFLLSEL
             #define SIM_SOPT2_SDHCSRC_OSC    0x20000000                  // SDHC clock source - OSCERCLK
@@ -17938,6 +18040,25 @@ typedef struct stUSB_HW
         #define DAC0_DAT6                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x18) // data register 6
         #define DAC0_DAT7                    *(volatile unsigned long *)(DAC0_BASE_ADD + 0x1c) // data register 7
         #define DAC0_STATCTRL                *(volatile unsigned long *)(DAC0_BASE_ADD + 0x20) // data status and control register
+            #define DAC_STATCTRL_DACBFRPBF   0x00000001                  // DAC buffer read pointer bottom position flag
+            #define DAC_STATCTRL_DACBFRPTF   0x00000002                  // DAC buffer read pointer top position flag
+            #define DAC_STATCTRL_DACBFWMF    0x00000004                  // DAC buffer watermark flag
+            #define DAC_STATCTRL_DACBBIEN    0x00000100                  // DAC buffer read pointer bottom flag interrupt enable
+            #define DAC_STATCTRL_DACBTIEN    0x00000200                  // DAC buffer read pointer top flag interrupt enable
+            #define DAC_STATCTRL_DACBWIEN    0x00000400                  // DAC buffer watermark interrupt enable
+            #define DAC_STATCTRL_LPEN        0x00000800                  // DAC low pwoer control
+            #define DAC_STATCTRL_DACSWTRG    0x00001000                  // DAC software trigger (reads always '0')
+            #define DAC_STATCTRL_DACTRGSEL   0x00002000                  // DAC trigger select
+            #define DAC_STATCTRL_DACRFS      0x00004000                  // DAC reference select
+            #define DAC_STATCTRL_DACEN       0x00008000                  // DAC enable
+            #define DAC_STATCTRL_DACBFEN     0x00010000                  // DAC buffer enable
+            #define DAC_STATCTRL_DACBFMD_MASK 0x00060000                 // DAC buffer work mode select
+            #define DAC_STATCTRL_DACBFWM_MASK 0x00180000                 // DAC buffer watermark select
+            #define DAC_STATCTRL_TESTOUTEN   0x00200000                  // DAC test output enable
+            #define DAC_STATCTRL_BFOUTEN     0x00400000                  // DAC output buffer enable
+            #define DAC_STATCTRL_DMAEN       0x00800000                  // DMA enable
+            #define DAC_STATCTRL_DACBFUP     0x0f000000                  // DAC buffer upper limit
+            #define DAC_STATCTRL_DACBFRP     0xf0000000                  // DAC buffer read pointer
     #else
         #define DAC0_DAT0L                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x00) // Data Low Register
         #define DAC0_DAT0H                   *(volatile unsigned char *)(DAC0_BASE_ADD + 0x01) // Data High Register

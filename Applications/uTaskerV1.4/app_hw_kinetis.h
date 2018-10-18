@@ -1662,7 +1662,9 @@
 #include "../../Hardware/Kinetis/kinetis.h"                              // include the Kinetis processor header at this location
 
 #if defined RNG_AVAILABLE                                                // hardware RNG support available
-    #if !defined KINETIS_K80 && !defined KINETIS_KL82                    // TRNG module is very slow and not yet suitable as general purpose random number generator
+    #if defined TRUE_RANDOM_NUMBER_GENERATOR                             // TRNG module is very slow and not yet suitable as general purpose random number generator (it generates 64 bytes at a time and required tyically 620ms to do this at 60MHz bus clock)
+        #define RND_HW_SUPPORT                                           // enable the use of the hardware resources in this chip
+    #else
         #define RND_HW_SUPPORT                                           // enable the use of the hardware resources in this chip
     #endif
 #endif
@@ -2560,12 +2562,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define KINETIS_FLASH_CONFIGURATION_SECURITY       (FTFL_FSEC_SEC_UNSECURE | FTFL_FSEC_FSLACC_GRANTED | FTFL_FSEC_MEEN_ENABLED | FTFL_FSEC_KEYEN_ENABLED)
     #endif
-    #if defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KE15
+    #if defined KINETIS_KL || defined KINETIS_KV || defined KINETIS_KE15 || defined KINETIS_KE18
         #if defined ROM_BOOTLOADER
-            #if !defined FRDM_KL28Z && !defined KINETIS_KE15 && !defined KINETIS_KV50
+            #if !defined FRDM_KL28Z && !defined KINETIS_KE15 && !defined KINETIS_KE18 && !defined KINETIS_KV50
                 #define BOOTLOADER_ERRATA
             #endif
-            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined CAPUCCINO_KL27 || defined KINETIS_KE15 || defined KINETIS_KE15 || defined KL33Z64
+            #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined CAPUCCINO_KL27 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KL33Z64
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_DISABLED) // never use boot ROM
               //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_ENABLE | FTFL_FOPT_NMI_DISABLED) // use boot ROM if NMI is held low at reset
               //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION (FTFL_FOPT_BOOTSRC_SEL_ROM | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_FAST_INIT | FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_NMI_DISABLED) // always use boot ROM
@@ -2846,10 +2848,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 // DAC
 //
 #if defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)                     // if the device has a DAC
-    #define SUPPORT_DAC                                                  // {15} enable general DAC support
-    #if defined SUPPORT_DAC
-        #define SUPPORT_DAC0                                             // enable DAC controller 0 support
-      //#define SUPPORT_DAC1                                             // enable DAC controller 1 support
+    #if !defined KINETIS_KE18_
+        #define SUPPORT_DAC                                              // {15} enable general DAC support
+        #if defined SUPPORT_DAC
+            #define SUPPORT_DAC0                                         // enable DAC controller 0 support
+          //#define SUPPORT_DAC1                                         // enable DAC controller 1 support
+        #endif
     #endif
 #endif
 

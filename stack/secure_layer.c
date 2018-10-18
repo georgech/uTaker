@@ -231,7 +231,7 @@ static unsigned char *fnInsertSessionID(unsigned char *ptrData, unsigned char uc
     }
     *ptrData++ = ucLength;
     for (i = 0; i < ucLength; i += sizeof(unsigned short)) {
-        usRandom = fnGetRndHW();
+        usRandom = fnRandom();
         *ptrData++ = (unsigned char)(usRandom >> 8);
         *ptrData++ = (unsigned char)(usRandom);
     }

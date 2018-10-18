@@ -393,20 +393,20 @@ static int fnCheckZero(unsigned long *ptrFlashPage)
 //
 INITHW void fnInitHW(void)                                               // perform hardware initialisation
 {
-#ifdef GLOBAL_HARDWARE_TIMER
+#if defined GLOBAL_HARDWARE_TIMER
     volatile unsigned long dummy;
 #endif
     int i = 0;
-#ifdef _WINDOWS
+#if defined _WINDOWS
     unsigned long *ulPtrEntries = AVR32_ExceptionRAM;
     unsigned long ulPortPullups[] = {
         PORT0_DEFAULT_INPUT,                                             // set the port states out of reset in the project file app_hw_avr32.h
         PORT1_DEFAULT_INPUT,
-    #ifndef _AT32UC3B                                                    // {3}
+    #if !defined _AT32UC3B                                                    // {3}
         PORT2_DEFAULT_INPUT,
         PORT3_DEFAULT_INPUT,
     #endif
-    #ifdef SUPPORT_ADC
+    #if defined SUPPORT_ADC
         ((AN0_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),                   // initial voltages when simulating
         ((AN1_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
         ((AN2_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
@@ -4892,7 +4892,7 @@ static __interrupt void _timer_handler(void)
 }
 #endif
 
-#ifdef SUPPORT_ADC
+#if defined SUPPORT_ADC
 static void (*_adc_handler)(ADC_INTERRUPT_RESULT*) = 0;
 static unsigned long adc_trigger_source;
 static unsigned short ucLevels[ADC_CHANNELS][3];
@@ -5507,7 +5507,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
         }
         break;
 #endif
-#ifdef SUPPORT_ADC
+#if defined SUPPORT_ADC
     case ADC_INTERRUPT:
         {
             ADC_SETUP *adc_setup = (ADC_SETUP *)ptrSettings;

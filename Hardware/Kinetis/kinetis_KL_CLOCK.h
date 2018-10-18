@@ -33,7 +33,8 @@
 #endif
 
 
-#if !defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK           // no configuration performed - remain in default clocked mode
+#if !defined MCG_C1_FRDIV_VALUE && (!defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK) // no configuration performed - remain in default clocked mode (local method phased out)
+/*
     #if CRYSTAL_FREQUENCY == 8000000
         #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
     #elif CRYSTAL_FREQUENCY == 16000000
@@ -51,6 +52,7 @@
     #else
         #error crystal speed support needs to be added!
     #endif
+    */
 #endif
 
 

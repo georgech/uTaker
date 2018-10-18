@@ -2958,7 +2958,7 @@ const KINETIS_FLASH_CONFIGURATION __flash_config
 #endif
 = {
     KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY,
-    #if defined KINETIS_KE && !defined KINETIS_KE15                      // {122}
+    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // {122}
     0xffffffff,                                                          // reserved - must be 0xffffffff
     KINETIS_FLASH_CONFIGURATION_EEPROM_PROT,
     KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION,

@@ -8383,7 +8383,7 @@ extern void fnSimulateBreak(int iPort)
     #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
         fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, (irq_INTMUX0_0_ID + INTMUX_LPUART2), ptrVect->processor_interrupts.irq_LPUART2, 1, INTMUX_LPUART2, INTMUX0_PERIPHERAL_LPUART2);
     #elif defined irq_LPUART2_RX_ID
-        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, irq_LPUART2_RX_ID, ptrVect->processor_interrupts.irq_LPUART2, 0, 0, 0);
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, irq_LPUART2_RX_ID, ptrVect->processor_interrupts.irq_LPUART2_RX, 0, 0, 0);
     #else
         fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART2_BLOCK, iPort, irq_LPUART2_ID, ptrVect->processor_interrupts.irq_LPUART2, 0, 0, 0);
     #endif

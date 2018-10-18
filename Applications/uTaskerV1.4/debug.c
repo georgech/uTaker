@@ -313,6 +313,7 @@
     #define DO_DISPLAY_PARS        60
     #define DO_DAC_OUTPUT          61
     #define DO_RESET_BOOT          62                                    // specific hardware command to reset target to boot loader (when boot loader available and uses mailbox)
+    #define DO_RND                 63                                    // specific hardware command to generate a block of random numbers
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -1227,6 +1228,9 @@ static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     #endif
     #if defined CRYPTO_SHA
     { "sha256",           "Test sha256",                           DO_HARDWARE,      DO_SHA256 },
+    #endif
+    #if defined RNG_AVAILABLE
+    { "rnd",              "random nr",                             DO_HARDWARE,      DO_RND },
     #endif
 #endif
 #if defined MMDVSQ_AVAILABLE                                             // {88}
@@ -3939,7 +3943,6 @@ static void fnTestFFT(int iLength)
 #endif
 
 
-
 static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
 {
 #if defined MEMORY_DEBUGGER && defined _WINDOWS
@@ -4104,11 +4107,10 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                     //static const ALIGNED_BUFFER text2 = { 0, { '0' } };
                       TOGGLE_TEST_OUTPUT();
                       fnSHA256(text.ucData, recovered.ucData, 9, SHA_START_CALCULATE_TERMINATE);
-
                     //fnSHA256(text.ucData, 0, 9, SHA_START_CALCULATE_STAY_OPEN);
                     //fnSHA256(text2.ucData, recovered.ucData, 1, SHA_CONTINUE_CALCULATING_TERMINATE);
                       TOGGLE_TEST_OUTPUT();
-                      for (i = 0; i < 32; i++) {
+                      for (i = 0; i < 32; i++) {                         // the HASH is always 32 bytes in length
                           fnDebugHex(recovered.ucData[i], (WITH_SPACE | sizeof(unsigned char) | WITH_LEADIN));
                       }
                   }
@@ -4144,6 +4146,27 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
     #endif
           }
           break;
+    #if defined RNG_AVAILABLE
+      case DO_RND:
+          {
+              unsigned long ulRandom[16];
+              int i;
+              TOGGLE_TEST_OUTPUT();
+              for (i = 0; i < 16; i++) {
+                  ulRandom[i] = fnRandom();
+                  ulRandom[i] |= (fnRandom() << 16);
+              }
+              TOGGLE_TEST_OUTPUT();
+              for (i = 0; i < 16; i++) {
+                  if (i%4 == 3 ) {
+                      fnDebugHex(ulRandom[i], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(ulRandom[i])));
+                  }
+                  else {
+                      fnDebugHex(ulRandom[i], (WITH_SPACE | WITH_LEADIN | sizeof(ulRandom[i])));
+                  }
+              }
+          }
+    #endif
 #endif
 #if defined TEST_FLEXIO                                                  // {91}
       case DO_FLEXIO_ON:

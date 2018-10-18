@@ -3227,7 +3227,7 @@ static void fnConfigLPUART_clock(int Channel, UART_BAUD_CONFIG *ptrBaudConfig)
         #if defined SIM_SOPT2_LPUART0SRC_MCGIRCLK
     SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUART0SRC_MCGIRCLK << (2 * Channel))) | (SIM_SOPT2_LPUART0SRC_IRC48M << (2 * Channel)) | SIM_SOPT2_PLLFLLSEL_IRC48M); // {3} select the 48MHz IRC48MHz clock as source for the particular LPUART
         #else
-    SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGC)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for all LPUARTs
+    SIM_SOPT2 = ((SIM_SOPT2 & ~(SIM_SOPT2_LPUARTSRC_MGCIR)) | (SIM_SOPT2_LPUARTSRC_SEL | SIM_SOPT2_PLLFLLSEL_IRC48M)); // {3} select the 48MHz IRC48MHz clock as source for all LPUARTs
         #endif
     ptrBaudConfig->usDivider = IRC48M_clock_divider[ptrBaudConfig->iBaudRateRef];
         #if !defined KINETIS_KL && !defined KINETIS_K80 && !defined KINETIS_KE15 && !defined KINETIS_KE18
