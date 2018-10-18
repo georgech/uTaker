@@ -530,7 +530,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
 
 
 
-
+#if defined NATIVE_SHA256_CAU
 
 
 #define CRYPTO_LITTLE_ENDIAN                  0
@@ -600,6 +600,7 @@ static void padding_start(mbedtls_sha256_context *ptr_sha256, const unsigned cha
         padding_array[temp_length] = bits_length & 0xff;
     }
 }
+#endif
 
 
 extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
