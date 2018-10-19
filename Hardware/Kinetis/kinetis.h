@@ -11083,6 +11083,22 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SOPT5_LPUART0RXSRC_CMP0    0x00040000            // LPUART0 receive data from CMP0
             #define SIM_SOPT5_LPUART0RXSRC_CMP1    0x00080000            // LPUART0 receive data from CMP1
         #endif
+      #elif defined KINETIS_KL27
+        #define SIM_SOPT5_LPUART0TXSRC_NORMAL  0x00000000                // LPUART0 transmit data on TX pin
+        #define SIM_SOPT5_LPUART0TXSRC_TPM1_0  0x00000001                // LPUART0 transmit data on TX pin - modulated with TPM1 channel 0
+        #define SIM_SOPT5_LPUART0TXSRC_TPM2_0  0x00000002                // LPUART0 transmit data on TX pin - modulated with TPM2 channel 0
+        #define SIM_SOPT5_LPUART0TXSRC_MASK    0x00000003
+        #define SIM_SOPT5_LPUART0RXSRC_NORMAL  0x00000000                // LPUART0 receive data from RX pin
+        #define SIM_SOPT5_LPUART0RXSRC_CMP0    0x00000004                // LPUART0 receive data from CMP0
+        #define SIM_SOPT5_LPUART1TXSRC_NORMAL  0x00000000                // LPUART1 transmit data on TX pin
+        #define SIM_SOPT5_LPUART1TXSRC_TPM1_0  0x00000010                // LPUART1 transmit data on TX pin - modulated with TPM1 channel 0
+        #define SIM_SOPT5_LPUART1TXSRC_TPM2_0  0x00000020                // LPUART1 transmit data on TX pin - modulated with TPM2 channel 0
+        #define SIM_SOPT5_LPUART1TXSRC_MASK    0x00000030
+        #define SIM_SOPT5_LPUART1RXSRC_NORMAL  0x00000000                // LPUART1 receive data from RX pin
+        #define SIM_SOPT5_LPUART1RXSRC_CMP0    0x00000040                // LPUART1 receive data from CMP0
+        #define SIM_SOPT5_LPUART0ODE           0x00010000                // LPUART0 open drain enable
+        #define SIM_SOPT5_LPUART1ODE           0x00020000                // LPUART1 open drain enable
+        #define SIM_SOPT5_UART2ODE             0x00040000                // UART2 open drain enable
       #endif
     #if !defined KINETIS_KL
         #define SIM_SOPT6                    *(unsigned long*)(SIM_BLOCK + 0x1014) // System Options Register 6
@@ -19183,7 +19199,7 @@ typedef struct stPWM_INTERRUPT_SETUP
     void             (*int_handler)(void);                               // interrupt handler to be configured (0 to disable PWM time base interrupt)
     unsigned char    int_type;                                           // identifier for when configuring
     unsigned char    int_priority;                                       // interrupt priority the user wants to set
-    unsigned char    pwm_reference;                                      // PWM channel to be used (0..7)
+    unsigned char    pwm_reference;                                      // PWM timer and channel to be used (0..7)
     unsigned short   pwm_value;                                          // PWM percentage value
     unsigned short   pwm_frequency;                                      // base frequency
     unsigned short   pwm_phase_shift;                                    // phase shift (used with combined channel mode on channels n and n+1 where n = 0, 2, 4 etc.)
@@ -19264,6 +19280,11 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_DMA_SPECIFY_LONG_WORD   0x00040000
 #define PWM_CHANNEL_INTERRUPT       0x00080000                           // chanel match interrupt (instead of, or in addition to period interrupt) - cannot be used together with DMA
 #define PWM_COMBINED_PHASE_SHIFT    0x00100000
+
+
+#define PWM_OPTION_MODULATE_LPUART0 0x00200000                           // output the PWM signal on LPUART0 Tx - possible only on TPM1-CH0 or TPM2-CH1
+#define PWM_OPTION_MODULATE_LPUART1 0x00400000                           // output the PWM signal on LPUART1 Tx - possible only on TPM1-CH0 or TPM2-CH1
+
 
 #define PWM_MODE_SETTINGS_MASK     (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 

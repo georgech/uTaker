@@ -1619,6 +1619,10 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
     #if defined SUPPORT_HW_FLOW
       //tInterfaceParameters.Config |= RTS_CTS;                          // enable RTS/CTS operation (HW flow control)
     #endif
+    #if defined UART_EXTENDED_MODE
+      //tInterfaceParameters.Config |= UART_INVERT_TX;                   // invert the UART Tx output
+      //tInterfaceParameters.Config |= UART_OPEN_DRAIN_OUTPUT;           // UART Tx output operates in open-drain mode
+    #endif
         ptrInterfaceParameters = &tInterfaceParameters;
     }
     if ((newSerialID = fnOpen(TYPE_TTY, ucDriverMode, ptrInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)

@@ -29,6 +29,7 @@
     29.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {13}
     05.10.2018 Add combined channel pairs to support phases shifted output pairs {14}
     08.10.2018 Correct support for channel interrupts on multiple timers {15}
+    19.10.2018 Add option to modulate UART Tx outputs                    {16}
 
 */
 
@@ -358,6 +359,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                 SELECT_PCC_PERIPHERAL_SOURCE(FTM1, FTM1_PCC_SOURCE);     // select the PCC clock used by FlexTimer/TPM 1
         #endif
                 POWER_UP_ATOMIC(6, FTM1);                                // ensure that the FlexTimer module is powered up
+                ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
         #if defined KINETIS_KL
                 iInterruptID = irq_TPM1_ID;
         #else
@@ -366,7 +368,30 @@ static __interrupt void _PWM_Interrupt_5(void)
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
                     fnConfigTimerPin(1, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
                 }
-                ptrFlexTimer = (FLEX_TIMER_MODULE *)FTM_BLOCK_1;
+                // Handle timer 1 - channel options
+                //
+                switch (ucChannel) {
+                case 0:
+        #if defined SIM_SOPT5_LPUART0TXSRC_TPM1_0                        // {16} LPUART0 modulation
+                    if ((ulMode & PWM_OPTION_MODULATE_LPUART0) != 0) {
+                        SIM_SOPT5 |= SIM_SOPT5_LPUART0TXSRC_TPM1_0;      // the PWM output will be driven onto the LPUART0 Tx line
+                    }
+                    else {
+                        SIM_SOPT5 &= ~(SIM_SOPT5_LPUART0TXSRC_TPM1_0);
+                    }
+        #endif
+        #if defined SIM_SOPT5_LPUART1TXSRC_TPM1_0                        // {16} LPUART1 modulation
+                    if ((ulMode & PWM_OPTION_MODULATE_LPUART1) != 0) {
+                        SIM_SOPT5 |= SIM_SOPT5_LPUART1TXSRC_TPM1_0;      // the PWM output will be driven onto the LPUART1 Tx line
+                    }
+                    else {
+                        SIM_SOPT5 &= ~(SIM_SOPT5_LPUART1TXSRC_TPM1_0);
+                    }
+        #endif
+                    break;
+                default:
+                    break;
+                }
                 break;
     #endif
     #if FLEX_TIMERS_AVAILABLE > 2
@@ -390,6 +415,30 @@ static __interrupt void _PWM_Interrupt_5(void)
         #endif
                 if ((ulMode & PWM_NO_OUTPUT) == 0) {                     // {6}
                     fnConfigTimerPin(2, ucChannel, (PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the PWM output pin
+                }
+                // Handle timer 2 - channel options
+                //
+                switch (ucChannel) {
+                case 0:
+        #if defined SIM_SOPT5_LPUART0TXSRC_TPM2_0                        // {16} LPUART0 modulation
+                    if ((ulMode & PWM_OPTION_MODULATE_LPUART0) != 0) {
+                        SIM_SOPT5 |= SIM_SOPT5_LPUART0TXSRC_TPM2_0;      // the PWM output will be driven onto the LPUART0 Tx line
+                    }
+                    else {
+                        SIM_SOPT5 &= ~(SIM_SOPT5_LPUART0TXSRC_TPM2_0);
+                    }
+        #endif
+        #if defined SIM_SOPT5_LPUART1TXSRC_TPM2_0                        // {16} LPUART1 modulation
+                    if ((ulMode & PWM_OPTION_MODULATE_LPUART1) != 0) {
+                        SIM_SOPT5 |= SIM_SOPT5_LPUART1TXSRC_TPM2_0;      // the PWM output will be driven onto the LPUART1 Tx line
+                    }
+                    else {
+                        SIM_SOPT5 &= ~(SIM_SOPT5_LPUART1TXSRC_TPM2_0);
+                    }
+        #endif
+                    break;
+                default:
+                    break;
                 }
                 break;
     #endif

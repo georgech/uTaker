@@ -116,7 +116,7 @@
       //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-                #define TEST_PWM                                         // {1} test generating PWM output from timer
+              //#define TEST_PWM                                         // {1} test generating PWM output from timer
                   //#define PHASE_SHIFTED_COMBINED_OUTPUTS               // {29} generate phase shifted outputs
                   //#define MULTIPLE_CHANNEL_INTERRUPTS                  // {30} generate multiple channel interrupts across multiple timers
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
@@ -1995,8 +1995,12 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode |= PWM_POLARITY;                                  // change polarity of second channel
     #elif defined FRDM_KL25Z || defined FRDM_KE02Z || defined FRDM_KE04Z || defined FRDM_KE06Z
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1 (green LED in RGB LED)
-    #elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
+    #elif defined FRDM_KL26Z || defined CAPUCCINO_KL27 || defined FRDM_KE15Z
     pwm_setup.pwm_reference = (_TIMER_0 | 4);                            // timer module 0, channel 4 (green LED in RGB LED)
+    #elif defined FRDM_KL27Z
+    pwm_setup.pwm_frequency = PWM_FREQUENCY(1000000, 16);                 // generate 1MHz on PWM output
+    pwm_setup.pwm_reference = (_TIMER_2 | 0);
+    pwm_setup.pwm_mode |= (PWM_OPTION_MODULATE_LPUART0);                  // modulate LPUART0 output with the PWM signal
     #elif defined FRDM_KL28Z
     pwm_setup.pwm_mode = (PWM_TRIGGER_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from trigger source
     pwm_setup.pwm_reference = (_TIMER_1 | 1);                            // timer module 1, channel 1
@@ -2036,7 +2040,7 @@ static void fnConfigure_Timer(void)
     #elif defined FRDM_KL25Z
     pwm_setup.pwm_reference = (_TIMER_0 | 1);                            // timer module 0, channel 1 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
-    #elif defined FRDM_KL27Z
+    #elif defined FRDM_KL27Z_
     pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from TPM_CLKIN0
   //pwm_setup.pwm_mode = (PWM_EXTERNAL_CLK_1 | PWM_PRESCALER_1 | PWM_EDGE_ALIGNED); // clock from TPM_CLKIN1
     pwm_setup.pwm_reference = (_TIMER_2 | 1);                            // timer module 2, channel 1

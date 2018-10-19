@@ -278,6 +278,7 @@
     #define UART_INVERT_TX               0x00080000                      // {78}
     #define UART_IDLE_LINE_INTERRUPT     0x00100000                      // {81}
     #define UART_HW_TRIGGERED_TX_MODE    0x00200000                      // {83}
+    #define UART_OPEN_DRAIN_OUTPUT       0x00400000
 #endif
 
 #define UART_TX_DMA                  0x01                                // UART uses DMA for transmission

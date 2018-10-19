@@ -2686,6 +2686,14 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     else {
         lpuart_reg->LPUART_CTRL &= ~LPUART_CTRL_TXINV;                   // ensure no transmit signal inversion
     }
+        #if defined SIM_SOPT5_LPUART0ODE
+    if ((pars->Config & UART_OPEN_DRAIN_OUTPUT) != 0) {
+        SIM_SOPT5 |= (SIM_SOPT5_LPUART0ODE << Channel);                  // enable open drain on the LPUART
+    }
+    else {
+        SIM_SOPT5 &= ~(SIM_SOPT5_LPUART0ODE << Channel);                 // ensure open drain mode is disabled
+    }
+        #endif
     if ((pars->Config & UART_IDLE_LINE_INTERRUPT) != 0) {                // if the idle line interrupt is to be used
         lpuart_reg->LPUART_CTRL |= (LPUART_CTRL_IDLECFG_4 | LPUART_CTRL_ILIE | LPUART_CTRL_ILT); // idle line starts after the stop bit and 4 idle characters
     }
@@ -2744,6 +2752,14 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
     else {
         uart_reg->UART_C3 = 0;                                           // ensure no transmit signal inversion
     }
+        #if defined SIM_SOPT5_UART2ODE
+    if ((pars->Config & UART_OPEN_DRAIN_OUTPUT) != 0) {
+        SIM_SOPT5 |= (SIM_SOPT5_UART2ODE);                               // enable open drain on the LPUART
+    }
+    else {
+        SIM_SOPT5 &= ~(SIM_SOPT5_UART2ODE);                              // ensure open drain mode is disabled
+    }
+        #endif
     if ((pars->Config & UART_IDLE_LINE_INTERRUPT) != 0) {                // if the idle line interrut is to be used
         uart_reg->UART_C1 |= UART_C1_ILT;                                // idle line starts after the stop bit
         uart_reg->UART_C2 |= UART_C2_ILIE;                               // enable idle line interrupt
