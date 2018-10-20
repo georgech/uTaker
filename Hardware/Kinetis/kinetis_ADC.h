@@ -405,7 +405,8 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                     // Check that the ADC frequency is set to a valid range
                     //
                     {
-                        unsigned long ulADC_clock = 0;
+                        unsigned long ulADC_clockMax = 0;
+                        unsigned long ulADC_clockMin = 0;
                         switch (ptrADC->ADC_CFG1 & ADC_CFG1_ADICLK_ASY) {
         #if defined KINETIS_KE15
                         case ADC_CFG1_ADICLK_BUS:                        // equivalent to ALTCLK1 in KE15
@@ -414,21 +415,21 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
         #endif
         #if defined KINETIS_WITH_PCC
                             if (ptrADC_settings->int_adc_controller == 0) {
-                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC0); // get the clock speed that is configured for ADC0 usage
+                                ulADC_clockMax = ulADC_clockMin = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC0); // get the clock speed that is configured for ADC0 usage
                             }
             #if ADC_CONTROLLERS > 1
                             else if (ptrADC_settings->int_adc_controller == 1) {
-                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC1); // get the clock speed that is configured for ADC1 usage
+                                ulADC_clockMax = ulADC_clockMin = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC1); // get the clock speed that is configured for ADC1 usage
                             }
             #endif
             #if ADC_CONTROLLERS > 2
                             else if (ptrADC_settings->int_adc_controller == 2) {
-                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC2); // get the clock speed that is configured for ADC2 usage
+                                ulADC_clockMax = ulADC_clockMin = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC2); // get the clock speed that is configured for ADC2 usage
                             }
             #endif
             #if ADC_CONTROLLERS > 3
                             else if (ptrADC_settings->int_adc_controller == 3) {
-                                ulADC_clock = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC3); // get the clock speed that is configured for ADC3 usage
+                                ulADC_clockMax = ulADC_clockMin = fnGetPCC_clock(KINETIS_PERIPHERAL_ADC3); // get the clock speed that is configured for ADC3 usage
                             }
             #endif
         #else
@@ -441,55 +442,60 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             break;
         #else
                         case ADC_CFG1_ADICLK_BUS:
-                            ulADC_clock = BUS_CLOCK;
+                            ulADC_clockMax = ulADC_clockMin = BUS_CLOCK;
                             break;
             #if defined ADC_CFG1_ADICLK_ALT2
                         case ADC_CFG1_ADICLK_ALT2:
-                            ulADC_clock = 48000000;
+                            ulADC_clockMax = ulADC_clockMin = 48000000;
                             break;
             #else
                         case ADC_CFG1_ADICLK_BUS2:
-                            ulADC_clock = (BUS_CLOCK/2);
+                            ulADC_clockMax = ulADC_clockMin = (BUS_CLOCK/2);
                             break;
             #endif
                         case ADC_CFG1_ADICLK_ASY:
                             if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power configuration is active (reduced power at the expense of the clock speed)
                                 if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
-                                    ulADC_clock = 4000000;               // 4.0MHz typical ADC clock speed (range 2.4MHz..6.1MHz)
+                                    ulADC_clockMax = 6100000;            // 4.0MHz typical ADC clock speed (range 2.4MHz..6.1MHz)
+                                    ulADC_clockMin = 2400000;
                                 }
                                 else {                                   // normal conversion sequence
-                                    ulADC_clock = 2400000;               // 2.4MHz typical ADC clock speed (range 1.2MHz..3.9MHz)
+                                    ulADC_clockMax = 3900000;            // 2.4MHz typical ADC clock speed (range 1.2MHz..3.9MHz)
+                                    ulADC_clockMin = 1200000;
                                 }
                             }
                             else {                                       // low power configuration is not active
                                 if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // high speed configuration
-                                    ulADC_clock = 6200000;               // 6.2MHz typical ADC clock speed (range 4.4MHz..9.5MHz)
+                                    ulADC_clockMax = 9500000;            // 6.2MHz typical ADC clock speed (range 4.4MHz..9.5MHz)
+                                    ulADC_clockMin = 4400000;
                                 }
                                 else {                                   // normal conversion sequence
-                                    ulADC_clock = 5200000;               // 5.2MHz typical ADC clock speed (range 3.0MHz..7.3MHz)
+                                    ulADC_clockMax = 7300000;            // 5.2MHz typical ADC clock speed (range 3.0MHz..7.3MHz)
+                                    ulADC_clockMin = 3000000;
                                 }
                             }
                             break;
         #endif
                         }
-                        ulADC_clock >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);                  
+                        ulADC_clockMax >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);
+                        ulADC_clockMin >>= ((ADC_CFG1_ADIV_8 & ptrADC->ADC_CFG1) >> 5);
                         switch (ptrADC->ADC_CFG1 & ADC_CFG1_MODE_MASK) {
                         case ADC_CFG1_MODE_8:
                         case ADC_CFG1_MODE_10:
                         case ADC_CFG1_MODE_12:
         #if defined KINETIS_KE_ADC
                             if ((ptrADC->ADC_CFG1 & ADC_CFG1_ADLPC) != 0) { // low power mode used when high sampling speeds are not required
-                                if ((ulADC_clock < 400000) || (ulADC_clock > 4000000)) { // check valid ADC clock rate in low power mode
+                                if ((ulADC_clockMin < 400000) || (ulADC_clockMax > 4000000)) { // check valid ADC clock rate in low power mode
                                     _EXCEPTION("ADC clock rate outside valid range 400kHz..4MHz");
                                 }
                             }
                             else {
-                                if ((ulADC_clock < 400000) || (ulADC_clock > 8000000)) { // check valid ADC clock rate in high speed mode
+                                if ((ulADC_clockMin < 400000) || (ulADC_clockMax > 8000000)) { // check valid ADC clock rate in high speed mode
                                     _EXCEPTION("ADC clock rate outside valid range 400kHz..8MHz");
                                 }
                             }
         #else
-                            if ((ulADC_clock < 1000000) || (ulADC_clock > 18000000)) { // check valid ADC clock rate
+                            if ((ulADC_clockMin < 1000000) || (ulADC_clockMax > 18000000)) { // check valid ADC clock rate
                                 _EXCEPTION("ADC clock rate outside valid range 1MHz..18MHz for modes <= 13 bits");
                             }
         #endif
@@ -500,10 +506,10 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                             break;
         #else
                         case ADC_CFG1_MODE_16:
-                            if ((ulADC_clock < 2000000) || (ulADC_clock > 12000000)) { // check valid ADC clock rate
+                            if ((ulADC_clockMin < 2000000) || (ulADC_clockMax > 12000000)) { // check valid ADC clock rate
                                 _EXCEPTION("ADC clock rate outside valid range 2MHz..12MHz for 16 bit mode");
                             }
-                            else if ((ulADC_clock > 6000000) && ((ptrADC_settings->int_adc_sample & ADC_SAMPLE_HIGH_SPEED_CONFIG) == 0) || ((ptrADC_settings->int_adc_mode & ADC_LOW_POWER_CONFIG) != 0)) {
+                            else if ((ulADC_clockMax > 10000000) && ((ptrADC_settings->int_adc_sample & ADC_SAMPLE_HIGH_SPEED_CONFIG) == 0) || ((ptrADC_settings->int_adc_mode & ADC_LOW_POWER_CONFIG) != 0)) {
                                 _EXCEPTION("Advise adding ADC_SAMPLE_HIGH_SPEED_CONFIG in int_adc_sample and/or removing ADC_LOW_POWER_CONFIG from int_adc_mode since ADC clock is high");
                             }
                             break;
