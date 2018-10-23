@@ -2639,15 +2639,13 @@ static void _LowLevelInit(void)
 //
 extern void start_application(unsigned long app_link_location)
 {
-    #if defined ARM_MATH_CM0PLUS                                         // {67} cortex-M0+ assembler code
-        #if !defined _WINDOWS
+    #if !defined _WINDOWS
+        #if defined ARM_MATH_CM0PLUS                                     // {67} cortex-M0+ assembler code
     asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
     asm(" mov sp, r1");                                                  // copy the value to the stack pointer
     asm(" ldr r0, [r0,#4]");                                             // get the program counter value from the program's reset vector
     asm(" blx r0");                                                      // jump to the start address
-        #endif
-    #else                                                                // cortex-M3/M4/M7 assembler code
-        #if !defined _WINDOWS
+        #else                                                            // cortex-M3/M4/M7 assembler code
     asm(" ldr sp, [r0,#0]");                                             // load the stack pointer value from the program's reset vector
     asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there
         #endif

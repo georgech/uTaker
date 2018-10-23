@@ -7273,6 +7273,7 @@ extern unsigned long fnSimInts(char *argv[])
 #if defined SPI_INTERFACE
     if ((iInts & CHANNEL_0_SPI_INT) != 0) {
         iInts &= ~CHANNEL_0_SPI_INT;                                     // interrupt has been handled
+        SPI0_SR |= SPI_SR_TFFF;
         if ((SPI0_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
             if (fnGenInt(irq_SPI0_ID) != 0) {                            // if SPI0 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -7283,10 +7284,23 @@ extern unsigned long fnSimInts(char *argv[])
     #if SPI_AVAILABLE > 1
     if ((iInts & CHANNEL_1_SPI_INT) != 0) {
         iInts &= ~CHANNEL_1_SPI_INT;                                     // interrupt has been handled
+        SPI1_SR |= SPI_SR_TFFF;
         if ((SPI1_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
             if (fnGenInt(irq_SPI1_ID) != 0) {                            // if SPI1 interrupt is not disabled
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                 ptrVect->processor_interrupts.irq_SPI1();                // call the interrupt handler
+            }
+        }
+    }
+    #endif
+    #if SPI_AVAILABLE > 2
+    if ((iInts & CHANNEL_2_SPI_INT) != 0) {
+        iInts &= ~CHANNEL_2_SPI_INT;                                     // interrupt has been handled
+        SPI2_SR |= SPI_SR_TFFF;
+        if ((SPI2_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
+            if (fnGenInt(irq_SPI2_ID) != 0) {                            // if SPI2 interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_SPI2();                // call the interrupt handler
             }
         }
     }

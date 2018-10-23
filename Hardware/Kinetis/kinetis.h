@@ -1390,6 +1390,7 @@ typedef struct stRESET_VECTOR
 #else
     #define SPI_AVAILABLE           3
 #endif
+#define SPI_CHIP_SELECTS            6
 
 #if defined KINETIS_K80
     #define QSPI_AVAILABLE          1

@@ -154,6 +154,7 @@
 #define FOR_WRITE         (unsigned char)0x02
 #define FOR_I_O           (unsigned char)(FOR_READ | FOR_WRITE)
 #define MODIFY_CONFIG     (unsigned char)0x04
+#define ADD_CONFIG       (unsigned char)0x08
 
 
 // Driver commands - on a bit basis
@@ -287,7 +288,7 @@
 #define UART_RX_DMA_HALF_BUFFER      0x08                                // DMA complete when rx buffer half full
 #define UART_RX_DMA_BREAK            0x10                                // DMA complete when break detected
 #define UART_RX_MODULO               0x20                                // {75} reception memory must be moduo aligned
-#define UART_TX_MODULO               0x40                                // {75} transmission memory must be moduo aligned
+#define UART_TX_MODULO               0x40                                // {75} transmission memory must be modulo aligned
 
 #define FLUSH_RX          0
 #define FLUSH_TX          1
@@ -363,9 +364,10 @@
 
 // SPI interface defines
 //
-#define SPI_SLAVE         0x00
-#define SPI_MASTER        0x80
-#define SPI_TRANSPARENT   0x33
+#define SPI_TX_MESSAGE_MODE 0x01
+#define SPI_TX_MULTI_MODE   0x02
+#define SPI_PHASE           0x04
+#define SPI_POL             0x08
 
 // SPI speed defines
 //
@@ -647,6 +649,8 @@ typedef struct stSPITABLE {
     UTASK_TASK     Task_to_wake;                                         // default task to wake when receive message available
     QUEUE_HANDLE   Channel;                                              // physical channel number 1,2,3...
     unsigned char  Config;                                               // mode details
+    unsigned char  ucWordWidth;
+    unsigned char  ucChipSelect;
 } SPITABLE;
 
 
@@ -771,6 +775,25 @@ typedef struct stTTYQue
         #endif
     #endif
 } TTYQUE;
+
+// SPI queue
+//
+typedef struct stSPIQue
+{
+    QUEQUE         spi_queue;                                            // the standard queue belonging to the SPI
+    QUEUE_TRANSFER msgLength;                                            // present transmission message length
+    QUEUE_TRANSFER msgchars;                                             // the number of characters in the present reception message
+    QUEUE_TRANSFER msgs;                                                 // the number of reception messages waiting in the input queue
+    UART_MODE_CONFIG opn_mode;                                           // operating mode details of the SPI
+    unsigned char  ucState;
+    unsigned char  ucChipSelect;                                         // chip select used for present transmission
+    UTASK_TASK     wake_task;                                            // the task to be woken on character or message reception (depending on mode)
+    unsigned char  uBusWidth[SPI_CHIP_SELECTS];
+    #if defined SPI_SUPPORT_DMA
+    unsigned char  ucDMA_mode;                                           // DMA operating mode details of the SPI
+    QUEUE_TRANSFER lastDMA_block_length;                                 // the last DMA transmission block length
+    #endif
+} SPIQUE;
 
 
 // Synchronous Serial Controller interface queue                         // {22}

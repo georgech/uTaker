@@ -212,13 +212,16 @@ extern void fnSetFragmentMode(int iMode);                                // {46}
 
 // SPI interface support
 //
-extern void fnConfigSPI(SPITABLE *pars);
+extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect);
 extern void fnSendSPIMessage(unsigned char *ptrData, QUEUE_TRANSFER Length);
  #define PREPARE_READ          0x00
  #define PREPARE_PAGE_WRITE    PREPARE_READ
  #define TERMINATE_WRITE       0x01
 
-extern int  fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, int iLast);
+extern int  fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, unsigned char ucChipSelect);
+    #define FIRST_SPI_MESSAGE_WORD 0x40
+    #define LAST_SPI_MESSAGE_WORD  0x80
+    #define SPI_CHIP_SELECT_MASK  ~(FIRST_SPI_MESSAGE_WORD | LAST_SPI_MESSAGE_WORD)
 extern void fnSPIRxByte(unsigned char ch, QUEUE_HANDLE Channel);
 extern void fnSPITxByte(QUEUE_HANDLE Channel);
 extern void fnClearSPITxInt(QUEUE_HANDLE channel);

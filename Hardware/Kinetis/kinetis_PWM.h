@@ -703,7 +703,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                     }
                     else {                                               // the second in the channel pair defines the end of the pulse
                         unsigned short usEnd = (ptrPWM_settings->pwm_phase_shift + ptrPWM_settings->pwm_value);
-                        if (usEnd > (ptrPWM_settings->pwm_frequency - 1)) { // limt the end - the phase shift is effectively limited by the pulse width duration
+                        if (usEnd > (ptrPWM_settings->pwm_frequency - 1)) { // limit the end - the phase shift is effectively limited by the pulse width duration
                             usEnd = (ptrPWM_settings->pwm_frequency - 1);
                         }
                         ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = usEnd; // set the point where the pulse ends

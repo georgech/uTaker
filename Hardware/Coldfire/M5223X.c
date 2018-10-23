@@ -5073,13 +5073,13 @@ static __interrupt__ void _QSPI_Interrupt(void)
 
 #if defined SPI_INTERFACE
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {29}
-void fnConfigSPI(SPITABLE *pars)
+void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
 {
 }
     #else
 // We support only master mode here
 //
-void fnConfigSPI(SPITABLE *pars)
+void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
 {
 }
     #endif
@@ -5092,7 +5092,7 @@ static __interrupt__ void SPI_Interrupt(void)
 {
 }
 
-extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, int iLast)
+extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, unsigned char ucChipSelect)
 {
     return 0;
 }
