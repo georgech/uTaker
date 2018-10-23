@@ -3194,7 +3194,11 @@ static void STM32_LowLevelInit(void)
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
 #if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32L4X5 && !defined _STM32L4X6
+    #if defined _EXTERNAL_CLOCK                                          // use external lock input rather than crystal oscillator
+    RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON | RCC_CR_HSEBYP); // enable the high-speed external clock
+    #else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
+    #endif
 #endif
 #if defined _STM32F7XX
     FLASH_ACR = (FLASH_ACR_ARTRS);                                       // reset ART accelerator

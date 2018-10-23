@@ -1383,7 +1383,7 @@ typedef struct stRESET_VECTOR
     #define SPI_AVAILABLE           1
 #elif defined KINETIS_KL82 || defined KINETIS_KE15
     #define SPI_AVAILABLE           2
-#elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
+#elif defined KINETIS_K22 && ((SIZE_OF_FLASH == (128 * 1024)) || (SIZE_OF_FLASH == (512 * 1024)))
     #define SPI_AVAILABLE           2
 #elif (defined KINETIS_K20 && (KINETIS_MAX_SPEED < 100000000))
     #define SPI_AVAILABLE           2
@@ -7620,6 +7620,23 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define SPI2_RXFR2          *(volatile unsigned long *)(DSPI2_BLOCK + 0x84) // SPI2 Receive FIFO Registers (read-only)
         #define SPI2_RXFR3          *(volatile unsigned long *)(DSPI2_BLOCK + 0x88) // SPI2 Receive FIFO Registers (read-only)
     #endif
+
+typedef struct st_KINETIS_DSPI
+{
+    volatile unsigned long SPI_MCR;
+    unsigned long          uRes0;
+    volatile unsigned long SPI_TCR;
+    volatile unsigned long SPI_CTAR0;
+    volatile unsigned long SPI_CTAR1;
+    unsigned long          uRes1[6];
+    volatile unsigned long SPI_SR;
+    volatile unsigned long SPI_RSER;
+    volatile unsigned long SPI_PUSHR;
+    volatile unsigned long SPI_POPR;
+    volatile unsigned long SPI_TXFR[4];
+    unsigned long          uRes2[13];
+    volatile unsigned long SPI_RXFR0[4];
+} _KINETIS_DSPI;
 #endif
 
 #if defined LTC_AVAILABLE                                                // {92}

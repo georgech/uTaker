@@ -3418,7 +3418,7 @@ int fnWriteBytesEEPROM(unsigned char *ucDestination, unsigned char *ucData, unsi
     usByteWrite[1] = (unsigned char)((CAST_POINTER_ARITHMETIC)(ucDestination)>> 8);
     usByteWrite[2] = (unsigned char)((CAST_POINTER_ARITHMETIC)ucDestination);
     usByteWrite[3] = PREPARE_PAGE_WRITE;
-#ifdef SPI_INTERFACE
+#if defined SPI_INTERFACE
     fnWrite(SPI_handle, usByteWrite, sizeof(usByteWrite));               // set the byte write address
     fnWrite(SPI_handle, ucData, usLength);                               // write the data
 #else
@@ -3508,7 +3508,7 @@ static void fnWaitWriteComplete(void)
     if (!ucEEPROMDanger) return;                                         // no point in checking since we are sure no write is in progress
 
     do {
- #ifdef SPI_INTERFACE
+ #if defined SPI_INTERFACE
         fnWrite(SPI_handle, (unsigned char *)ucRead, sizeof(ucRead));
         fnRead(SPI_handle, &ucStatus, 1);                                // read the present status
  #else
@@ -3664,7 +3664,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         ptrSector = (unsigned char *)usTemp;
         while (ucDeleted < FLASH_GRANULARITY) {
             fnWaitWriteComplete();                                       // wait until free to write
-        #ifdef SPI_INTERFACE
+        #if defined SPI_INTERFACE
             fnWrite(SPI_handle, (unsigned char *)ucWriteEnable, sizeof(ucWriteEnable)); // prepare write
             fnWriteBytesEEPROM(ptrSector, ucDel, EEPROM_PAGE_SIZE);      // delete a page
         #else
@@ -4045,7 +4045,7 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
     usRead[2] = (unsigned char)((CAST_POINTER_ARITHMETIC)ParLocation);
     usRead[3] = PREPARE_READ;
     fnWaitWriteComplete();                                               // ensure the chip is ready to be read
-        #ifdef SPI_INTERFACE
+        #if defined SPI_INTERFACE
     fnWrite(SPI_handle, usRead, sizeof(usRead));                         // set the read address
     fnRead(SPI_handle, ptrValue, usSize);                                // read from the device to the return buffer
         #else

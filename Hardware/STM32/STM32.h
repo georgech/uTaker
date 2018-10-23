@@ -185,13 +185,13 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
 
 // Ethernet configuration
 //
-#if defined _STM32F407 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
+#if defined _STM32F407 || defined _STM32F427 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
     #define ETHERNET_AVAILABLE
 #endif
 
 // UART configuration
 //
-#if defined _STM32F429
+#if defined _STM32F429 || defined _STM32F427
     #define USARTS_AVAILABLE   4
     #define UARTS_AVAILABLE    4
     #define LPUARTS_AVAILABLE  0
@@ -1008,7 +1008,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #if LPUARTS_AVAILABLE > 0
         #define LPUART1_BLOCK           ((unsigned char *)(&STM32.LPUART[0]))  // LPUART 1
     #endif
-    #if defined _STM32F7XX || defined _STM32F429
+    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427
         #define UART7_BLOCK             ((unsigned char *)(&STM32.UART[2]))    // UART 7
         #define UART8_BLOCK             ((unsigned char *)(&STM32.UART[3]))    // UART 8
     #endif
@@ -1084,7 +1084,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define USART3_BLOCK                0x40004800
     #define UART4_BLOCK                 0x40004c00
     #define UART5_BLOCK                 0x40005000
-    #if defined _STM32F7XX || defined _STM32F429
+    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427
         #define UART7_BLOCK             0x40007800
         #define UART8_BLOCK             0x40007c00
     #endif
@@ -2373,21 +2373,21 @@ typedef struct stSTM32_BD
 //
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     #define RCC_CR                           *(volatile unsigned long *)(RCC_BLOCK + 0x00) // clock control register
-      #define RCC_CR_HSION                   0x00000001
-      #define RCC_CR_HSIRDY                  0x00000002                  // read-only
-      #define RCC_CR_HSITRIM_MASK            0x000000f8
-      #define RCC_CR_HSICAL_MASK             0x0000ff00                  // read-only
-      #define RCC_CR_HSEON                   0x00010000
-      #define RCC_CR_HSERDY                  0x00020000                  // read-only
-      #define RCC_CR_HSEBYP                  0x00040000
-      #define RCC_CR_CSSON                   0x00080000
-      #define RCC_CR_PLLON                   0x01000000
-      #define RCC_CR_PLLRDY                  0x02000000                  // read-only
-      #if defined _STM32F7XX
-        #define RCC_CR_PLLI2SON              0x04000000
-        #define RCC_CR_PLLI2SRDY             0x08000000                  // read-only
-        #define RCC_CR_PLLSAION              0x10000000
-        #define RCC_CR_PLLSAIRDY             0x20000000                  // read-only
+      #define RCC_CR_HSION                   0x00000001                  // internal high speed clock enable (set by default)
+      #define RCC_CR_HSIRDY                  0x00000002                  // internal high speed clock read (read-only)
+      #define RCC_CR_HSITRIM_MASK            0x000000f8                  // internal high speed clock trip (0x80 after reset)
+      #define RCC_CR_HSICAL_MASK             0x0000ff00                  // internal high speed clock calibration (read-only)
+      #define RCC_CR_HSEON                   0x00010000                  // HSE - high speed external clock enable
+      #define RCC_CR_HSERDY                  0x00020000                  // high speed external clock (read-only)
+      #define RCC_CR_HSEBYP                  0x00040000                  // HSE clock bypass - for external clock input
+      #define RCC_CR_CSSON                   0x00080000                  // clock security system enable
+      #define RCC_CR_PLLON                   0x01000000                  // main phase lock loop enable
+      #define RCC_CR_PLLRDY                  0x02000000                  // main phase lock loop ready flag (read-only)
+      #if defined _STM32F7XX || defined _STM32F427 || defined _STM32F429
+        #define RCC_CR_PLLI2SON              0x04000000                  // PLL2 enable
+        #define RCC_CR_PLLI2SRDY             0x08000000                  // PLL2 ready flag (read-only)
+        #define RCC_CR_PLLSAION              0x10000000                  // phase lock loop SAI enable
+        #define RCC_CR_PLLSAIRDY             0x20000000                  // phase lock loop SAI enable ready flag (read-only)
       #endif
     #define RCC_PLLCFGR                      *(volatile unsigned long *)(RCC_BLOCK + 0x04) // PLL configuration register
         #define RCC_PLLCFGR_M_MASK           0x0000003f
@@ -4586,7 +4586,7 @@ typedef struct stSTM32_ADC_REGS
         #define USART6_CR3               *(volatile unsigned long *)(USART6_BLOCK + 0x14)  // USART6 control register 3
         #define USART6_GTPR              *(volatile unsigned long *)(USART6_BLOCK + 0x18)  // USART6 guard time and prescaler register
     #endif
-    #if defined _STM32F429
+    #if defined _STM32F429 || defined _STM32F427
         #define UART7_SR                 *(volatile unsigned long *)(UART7_BLOCK + 0x00)   // UART7 status register
         #define UART7_ISR                UART7_SR                        // for compatibility
         #define UART7_DR                 *(volatile unsigned long *)(UART7_BLOCK + 0x04)   // UART7 data register
@@ -6204,7 +6204,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_HASH_RNG)(void);                                         // 80
     void  (*irq_FPU)(void);                                              // 81
     #endif
-    #if defined _STM32F7XX || defined _STM32F429
+    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427
     void  (*irq_UART7)(void);                                            // 82
     void  (*irq_UART8)(void);                                            // 83
     #endif
@@ -6264,7 +6264,7 @@ typedef struct stVECTOR_TABLE
 #elif defined _STM32F7XX
     #define LAST_PROCESSOR_IRQ  irq_SPDIFRX
     #define CHECK_VECTOR_SIZE            456                             // (16 + 97 + 1) = 114) * 4 - adequate for this processor
-#elif defined _STM32F429
+#elif defined _STM32F429 || defined _STM32F427
     #define LAST_PROCESSOR_IRQ  irq_UART8
     #define CHECK_VECTOR_SIZE            400                             // (16 + 83 + 1) = 100) * 4 - adequate for this processor
 #elif defined _STM32F2XX || defined _STM32F4XX
@@ -8062,7 +8062,7 @@ typedef struct stADC_SETUP
     #define CHIP_HAS_UARTS       8
     #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         4
-#elif defined _STM32F429
+#elif defined _STM32F429 || defined _STM32F427
     #define PORTS_AVAILABLE      11
     #define CHIP_HAS_UARTS       8
     #define CHIP_HAS_LPUARTS     0

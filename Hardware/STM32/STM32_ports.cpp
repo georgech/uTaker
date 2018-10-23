@@ -99,6 +99,12 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     case _PORTI:
         STRCPY(cPortDetails, "GPIO I");
         break;
+    case _PORTJ:
+        STRCPY(cPortDetails, "GPIO J");
+        break;
+    case _PORTK:
+        STRCPY(cPortDetails, "GPIO K");
+        break;
     default:
         STRCPY(cPortDetails, "?????");
         return;

@@ -53,7 +53,7 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
     case 5:
         return (USART_REG *)(LPUART1_BLOCK);
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
         return (USART_REG *)(UART7_BLOCK);
     case 7:
@@ -165,7 +165,7 @@ static __interrupt void SCI6_Interrupt(void)
     }
 }
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
 static __interrupt void SCI7_Interrupt(void)
 {
     while (((UART7_CR1 & USART_CR1_RXNEIE) != 0) && ((UART7_ISR & USART_ISR_RXNE) != 0)) { // if an enabled reception interrupt
@@ -269,7 +269,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, SCI6_Interrupt);// enter LPUART interrupt handler
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
         POWER_UP(APB1, RCC_APB1ENR_UART7EN);                             // enable clocks to UART7
         fnEnterInterrupt(irq_UART7_ID, PRIORITY_UART7, SCI7_Interrupt);  // enter UART interrupt handler
@@ -812,7 +812,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE); // enable the receiver with Rx interrupts
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
     #if defined USART7_REMAP
         _CONFIG_PERIPHERAL_INPUT(F, (PERIPHERAL_USART4_5_6_7_8), (PORTF_BIT6), (UART_RX_INPUT_TYPE)); // RX 7 on PT6
@@ -937,7 +937,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         LPUART1_CR1 |= (USART_CR1_UE | USART_CR1_TE);                    // enable the transmitter
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
     #if defined USART7_REMAP
         _CONFIG_PERIPHERAL_OUTPUT(F, (PERIPHERAL_USART4_5_6_7_8), (PORTF_BIT7), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 7 on PF7
@@ -1000,7 +1000,7 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
         LPUART1_CR1 &= ~(USART_CR1_TXEIE);                               // disable transmit interrupts
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
         UART7_CR1 &= ~(USART_CR1_TXEIE);                                 // disable transmit interrupts
         break;
@@ -1147,7 +1147,7 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     #endif
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:                                                              // UART 7
         if ((UART7_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait
@@ -1291,7 +1291,7 @@ static void fnSetRTS(QUEUE_HANDLE channel, int iState)
         }    
         break;
 #endif
-#if defined _STM32F7XX || defined _STM32F429                             // {2}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {2}
     case 6:
         if (iState != 0) {
             if ((ucChannelMode & ucRS485Mode) != 0) {
@@ -1409,7 +1409,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
         #endif
                 break;
     #endif
-    #if defined _STM32F7XX || defined _STM32F429                         // {2}
+    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427   // {2}
             case 6:                                                      // UART 7
                 if ((usModifications & SET_RS485_MODE) != 0) {
                   //_CONFIG_PORT_OUTPUT(G, (PORTG_BIT8), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL));
@@ -1462,7 +1462,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
         #endif
                 break;
     #endif
-    #if defined _STM32F7XX || defined _STM32F429                         // {2}
+    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427   // {2}
             case 6:                                                      // UART 6 - no support in UART for peripheral function
             case 7:                                                      // UART 7 - no support in UART for peripheral function
                 return;

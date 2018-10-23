@@ -611,7 +611,7 @@ extern unsigned long fnSimInts(char *argv[])
 	}
 #endif
 
-#if defined _STM32F7XX || defined _STM32F429                             // {9}
+#if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427       // {9}
 	if (((iInts & CHANNEL_6_SERIAL_INT) != 0) && (argv != 0)) {
         ptrCnt = (int *)argv[THROUGHPUT_UART6];
         if (*ptrCnt != 0) {
