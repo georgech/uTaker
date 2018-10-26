@@ -1349,7 +1349,7 @@ static int fnActivateRemapArea(int iDiskNumber, int iSwap)
     ptrManagementContent += flashMedium[iDiskNumber].WearLevelArraySize; // move the pointer to the remap area
     fnWriteBytesFlash(ptrManagementContent, (unsigned char *)ptrRemapArray[iDiskNumber], flashMedium[iDiskNumber].RemapArraySize); // write the initial mapping table to flash
     ptrManagementContent = (unsigned char *)&ptrManagementArea->ucBlockStatus; // set the pointer back to the status
-    while (i--) {                                                        // flash types which don't support single byte writes are written with the defined status size (the minimum write size required)
+    while (i-- != 0) {                                                   // flash types which don't support single byte writes are written with the defined status size (the minimum write size required)
         fnWriteBytesFlash(ptrManagementContent++, &ucBlockStatus, 1);    // finally validate the management area
     }
     if (iSwap != 0) {                                                    // when swapping we delete the original management block
@@ -2185,7 +2185,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             #else
             {                                                            // send at least 74 clocks to the SD-card
                 int i = 10;
-                while (i--) {                                            // set the SD card to native command mode by sending 80 clocks
+                while (i-- != 0) {                                       // set the SD card to native command mode by sending 80 clocks
                     WRITE_SPI_CMD(0xff);                                 // write dummy tx
                     WAIT_TRANSMISSON_END();                              // wait until transmission complete
                     (void)READ_SPI_DATA();                               // read 10 dummy bytes from the interface in order to generate 80 clock pulses on the interface (at least 74 needed)
@@ -4206,7 +4206,7 @@ extern int utListDir(UTLISTDIRECTORY *ptr_utListDirectory, FILE_LISTING *ptrFile
                     usRights = 0x1a4;
                 }
             }
-            while (i--) {
+            while (i-- != 0) {
                 if (usRights & 0x200) {
                     *ptrBuf++ = cAccess;                                 // rights
                 }

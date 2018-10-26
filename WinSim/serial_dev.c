@@ -32,8 +32,10 @@
     03.09.2018 Added FM24W256                                             {14}
     10.09.2018 Added MAX6957                                              {15}
     13.09.2018 Added SPI shift registers                                  {16}
+    26.10.2018 Added FM24CL16B                                            {17}
 
 */                            
+
 
 // I2C Device simulation when communicating over I2C bus
 
@@ -43,8 +45,6 @@
 
 
 #include "config.h"
-
-
 
 /**************************************************************************/
 /*                  Dallas DS1621 Temperature sensor                      */
@@ -577,6 +577,44 @@ extern unsigned char *fnGetI2CFRAMStart(void)
 extern unsigned long fnGetI2CFRAMSize(void)
 {
     return (sizeof(FM24W256_fram));
+}
+#endif
+
+/**************************************************************************/
+/*                      FM24CL16B FRAM                                    */
+/**************************************************************************/
+#if defined FM24CL16B_PRESENT
+#define FM24CL16B_ADD   0xa0                                             // fixed ddress (but uses range 0xa0..0xaf on the bus due to its page addressing)
+
+static unsigned char FM24CL16B_fram[2 * 1024] = {{0}};                   // 2k FRAM
+
+typedef struct stFM24CL16B
+{
+    unsigned long  ulMaxFRAMLength;
+    unsigned char  address;
+    unsigned char  ucState;
+    unsigned char  ucRW;
+    unsigned long  ulInternalPointer;
+} FM24CL16B;
+
+
+static FM24CL16B simFM24CL16B = {{0}};
+
+// Initialise to deleted state
+//
+extern void fnInitI2C_FRAM(void)
+{
+    memset(FM24CL16B_fram, 0xff, sizeof(FM24CL16B_fram));
+}
+
+extern unsigned char *fnGetI2CFRAMStart(void)
+{
+    return &FM24CL16B_fram[0];
+}
+
+extern unsigned long fnGetI2CFRAMSize(void)
+{
+    return (sizeof(FM24CL16B_fram));
 }
 #endif
 
@@ -1464,6 +1502,10 @@ static void fnInitialiseI2CDevices(void)                                 // {10}
         i++;
     }
 #endif
+#if defined FM24CL16B_PRESENT                                            // {17}
+    simFM24CL16B.address = FM24CL16B_ADD;
+    simFM24CL16B.ulMaxFRAMLength = sizeof(FM24CL16B_fram);
+#endif
 #if defined SHIFT_REGISTER_IN_CNT && (SHIFT_REGISTER_IN_CNT > 0)         // input shifters after output shifters
     i = 0;
     while (i < SHIFT_REGISTER_IN_CNT) {
@@ -1516,6 +1558,11 @@ static void fnResetOthers(unsigned char ucAddress)
             simFM24W256[i].ucState = 0;
         }
         i++;
+    }
+#endif
+#if defined FM24CL16B_PRESENT                                            // {17}
+    if ((ucAddress & 0xf0) != (simFM24CL16B.address & 0xf0)) {
+        simFM24CL16B.ucState = 0;
     }
 #endif
     if (ucAddress != simDS1307.address) {
@@ -1971,6 +2018,13 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
             simSTMPE811.ucState = 1;
             simSTMPE811.ucRW = (ucData & 0x01);
         }
+#if defined FM24CL16B_PRESENT                                            // {17}
+        else if ((ucData & 0xf0) == (simFM24CL16B.address & 0xf0)) {     // if being addressed
+            simFM24CL16B.ucState = 1;                                    // being addressed
+            simFM24CL16B.address = (ucData & ~(0x01));                   // set the page address
+            simFM24CL16B.ucRW = (ucData & 0x01);                         // mark whether read or write
+        }
+#endif
 #if defined SHT21_CNT && SHT21_CNT > 0
         else if ((ucData & ~0x01) == simSHT21.address) {                 // {6} being addressed
             simSHT21.ucState = 1;
@@ -2301,6 +2355,24 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
             simPCF8574.ucOutput = ucData;
             simPCF8574.ucState = 0;
         }
+#if defined FM24CL16B_PRESENT                                            // {17}
+        else if ((simFM24CL16B.ucState > 0) && (simFM24CL16B.ucRW == 0)) { // being addressed for write
+            if (simFM24CL16B.ucState == 1) {                             // FRAM is being written to (collect word address)
+                simFM24CL16B.ulInternalPointer = ucData;                 // set the word address
+                simFM24CL16B.ulInternalPointer |= (((simFM24CL16B.address >> 1) & 0x07) << 8); // and add the page address
+                simFM24CL16B.ucState++;
+            }
+            else {
+                FM24CL16B_fram[simFM24CL16B.ulInternalPointer] = ucData; // write the data
+                if (simFM24CL16B.ulInternalPointer == (simFM24CL16B.ulMaxFRAMLength - 1)) { // increment the internal pointer and roll over if the end of the memory is reached
+                    simFM24CL16B.ulInternalPointer = 0;
+                }
+                else {
+                    simFM24CL16B.ulInternalPointer++;
+                }
+            }
+        }
+#endif
 #if defined PCA9539_CNT
         else if ((simPCA9539.ucState[0] >= 1) && (simPCA9539.ucRW[0] == 0)) { // {8} setting internal register
             if (simPCA9539.ucState[0] == 1) {
@@ -2570,6 +2642,24 @@ extern unsigned char fnSimI2C_devices(unsigned char ucType, unsigned char ucData
                 return 0;
             }
         }
+#if defined FM24CL16B_PRESENT                                            // {17}
+        else if ((simFM24CL16B.ucState > 0) && (simFM24CL16B.ucRW != 0)) { // being addressed for read
+            unsigned char ucReturnValue;
+            if (simFM24CL16B.ucState == 1) {
+                simFM24CL16B.ulInternalPointer &= ~(0x700);
+                simFM24CL16B.ulInternalPointer |= (((simFM24CL16B.address >> 1) & 0x07) << 8); // set the page address
+                simFM24CL16B.ucState++;
+            }
+            ucReturnValue = FM24CL16B_fram[simFM24CL16B.ulInternalPointer]; // read the data
+            if (simFM24CL16B.ulInternalPointer == (simFM24CL16B.ulMaxFRAMLength - 1)) { // increment the internal pointer and roll over if the end of the memory is reached
+                simFM24CL16B.ulInternalPointer = 0;
+            }
+            else {
+                simFM24CL16B.ulInternalPointer++;
+            }
+            return ucReturnValue;
+        }
+#endif
 #if defined M24M01_CNT && (M24M01_CNT > 0)
         else if ((simM24M01[0].ucRW) && (simM24M01[0].ucState == 4)) {   // reading
             unsigned char ucReturn = M24M01_eeprom[0][simM24M01[0].ulInternalPointer++];

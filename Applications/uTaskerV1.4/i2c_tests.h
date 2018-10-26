@@ -17,7 +17,8 @@
     09.04.2014 Add MMA8451Q, MMA7660F and FXOS8700 - 3/6-axis accelerometer/orientation/motion detection {1}
     17.06.2014 Allow the control of multi-coloured LEDs based on accelerometer values {2}
     10.09.2015 Add FXOS8700_14BIT_RES to allow 14 bit mode
-    24.09.2015 Add I2C slave test                                        // {3}
+    24.09.2015 Add I2C slave test                                        {3}
+    27.10.2018 Change TEST_I2C to TEST_I2C_EEPROM and add TEST_FM24CL16B option {4}
 
     The file is otherwise not specifically linked in to the project since it
     is included by application.c when needed.
@@ -31,8 +32,9 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-    #define TEST_I2C                                                     // test I2C EEPROM
+  //#define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
       //#define EEPROM_M24256                                            // EEPROM with two byte addressing
+    #define TEST_FM24CL16B                                               // test 2k FRAM
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
   //#define TEST_SENSIRION                                               // test reading temperature and humidity 
@@ -51,14 +53,17 @@
     #endif
   //#define DISPLAY_ACCELEROMETER_VALUES                                 // print values to debug output irrespective of debug setting
 
-    #if defined TEST_I2C
+    #if defined TEST_I2C_EEPROM
         #if defined EEPROM_M24256                                        // pin E0, E1 and E2 at '1'
-            #define ADD_EEPROM_READ      0xaf                            // read address of I2C EEPROM (M24256) - if accessing its identification page it would be 0xb1
-            #define ADD_EEPROM_WRITE     0xae                            // write address of I2C EEPROM
+            #define ADD_EEPROM_READ       0xaf                           // read address of I2C EEPROM (M24256) - if accessing its identification page it would be 0xb1
+            #define ADD_EEPROM_WRITE      0xae                           // write address of I2C EEPROM
         #else
-            #define ADD_EEPROM_READ      0xa5                            // read address of I2C EEPROM (24C01)
-            #define ADD_EEPROM_WRITE     0xa4                            // write address of I2C EEPROM
+            #define ADD_EEPROM_READ       0xa5                           // read address of I2C EEPROM (24C01)
+            #define ADD_EEPROM_WRITE      0xa4                           // write address of I2C EEPROM
         #endif
+    #elif defined TEST_FM24CL16B                                         // {4}
+        #define ADD_EEPROM_READ           (0xa1 + (3 << 1))              // read address of FRAM (page 3)
+        #define ADD_EEPROM_WRITE          (0xa0 + (3 << 1))              // write address of FRAM (page 3)
     #endif
     #if defined TEST_DS1307
         #define ADDRTC_READ               0xd1                           // read address of DS1307
@@ -214,7 +219,7 @@
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-    #if defined TEST_I2C || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
+    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B ||defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
         static void fnConfigI2C_Interface(void);
     #endif
     #if defined TEST_MMA8451Q && defined INTERRUPT_ON_READY
@@ -234,7 +239,7 @@
 /*                     global variable definitions                     */
 /* =================================================================== */
 
-    #if defined TEST_I2C || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
+    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
         QUEUE_HANDLE I2CPortID = NO_ID_ALLOCATED;                        // handle of I2C interface (global so that the debug task can access it)
     #endif
 
@@ -315,7 +320,7 @@
 #endif
 
 
-#if defined _I2C_INIT_CODE && (defined TEST_I2C || defined I2C_SLAVE_MODE || defined TEST_I2C_SLAVE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700)
+#if defined _I2C_INIT_CODE && (defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_I2C_SLAVE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700)
 
     #if defined TEST_I2C_SLAVE
     #define I2C_RAM_IDLE              0                                  // RAM pointer states
@@ -389,7 +394,7 @@ static void fnConfigI2C_Interface(void)
 
     if ((I2CPortID = fnOpen(TYPE_I2C, FOR_I_O, &tI2CParameters)) != NO_ID_ALLOCATED) { // open the channel with defined configurations
     #if !defined TEST_I2C_SLAVE                                          // when slave we don't initiate any activity but instead wait to be addressed
-        #if defined TEST_I2C
+        #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B
             #if defined TEST_I2C_INTENSIVE
         iAppState |= STATE_POLLING;                                      // mark test running
         uTaskerStateChange(OWN_TASK, UTASKER_GO);                        // set to polling mode
@@ -432,7 +437,7 @@ static void acc_data_ready(void)
 #endif
 
 
-#if defined _I2C_READ_CODE && (defined TEST_I2C || defined TEST_I2C_SLAVE)
+#if defined _I2C_READ_CODE && (defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined TEST_I2C_SLAVE)
     #if defined TEST_I2C_INTENSIVE && !defined TEST_I2C_SLAVE
     if ((iAppState & STATE_POLLING) != 0) {                              // if I2C intensive test active
         static unsigned char i2c_testMsg[] = {0xaa, 0x00};               // fictional I2C address

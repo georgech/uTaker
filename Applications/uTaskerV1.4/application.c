@@ -591,7 +591,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #else
     unsigned char       ucInputMessage[64];                              // reserve space for receiving messages (if the UART rx debug size if set less than 64 we use a 64 byte input otherwise it may be too small (and cause buffer overflow when used))
     #endif
-    #if (defined SERIAL_INTERFACE && defined DEMO_UART) || (defined CAN_INTERFACE && defined TEST_CAN) || defined TEST_I2C || (defined SPI_INTERFACE && defined TEST_SPI && defined TEST_SPI_SLAVE_MODE) // {32}{39}
+    #if (defined SERIAL_INTERFACE && defined DEMO_UART) || (defined CAN_INTERFACE && defined TEST_CAN) || defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || (defined SPI_INTERFACE && defined TEST_SPI && defined TEST_SPI_SLAVE_MODE) // {32}{39}
     QUEUE_TRANSFER Length = 0;
     #endif
 
@@ -741,7 +741,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined FREEMASTER_UART
         FreemasterPortID = fnOpenFreeMasterUART();                       // enable UART for FreeMaster use
 #endif
-#if defined TEST_I2C || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 // {56}
+#if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 // {56}
         fnConfigI2C_Interface();
 #endif
 #if defined USE_DHCP_CLIENT || defined USE_DHCP_SERVER || defined USE_ZERO_CONFIG

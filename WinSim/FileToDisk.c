@@ -152,6 +152,8 @@
 #endif
 #if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
     #define I2C_FRAM_FILE "FM24W256.ini"
+#elif defined FM24CL16B_PRESENT
+    #define I2C_FRAM_FILE "FM24CL16B.ini"
 #endif
 #if defined I2C_EEPROM_FILE_SYSTEM || (defined M24M01_CNT && (M24M01_CNT > 0)) // {18}
     #define I2C_EEPROM_FILE "M24M01.ini"
@@ -184,6 +186,8 @@ static signed char *fnGetFileName(signed char *ptrPath)
 extern void fnPrimeFileSystem(void)
 {
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined USE_PARAMETER_AREA || defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    int iFileIni;
+#elif defined FM24CL16B_PRESENT || (defined FM24W256_CNT && (FM24W256_CNT > 0))
     int iFileIni;
 #endif
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined USE_PARAMETER_AREA // {11}{21}{22}
@@ -243,7 +247,7 @@ extern void fnPrimeFileSystem(void)
         fnInitI2C_EEPROM();                                              // set blank I2C EEPROM
     }
 #endif
-#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
+#if defined FM24CL16B_PRESENT || (defined FM24W256_CNT && (FM24W256_CNT > 0)) // {23}
     #if _VC80_UPGRADE < 0x0600
 	iFileIni = _open(I2C_FRAM_FILE, (_O_BINARY | _O_RDWR));
     #else
@@ -311,6 +315,8 @@ extern void fnSaveFlashToFile(void)
 {
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined USE_PARAMETER_AREA || defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     int iFileIni;
+#elif defined FM24CL16B_PRESENT || (defined FM24W256_CNT && (FM24W256_CNT > 0))
+    int iFileIni;
 #endif
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined USE_PARAMETER_AREA // {11}{21}{22}
     #if _VC80_UPGRADE < 0x0600
@@ -357,7 +363,7 @@ extern void fnSaveFlashToFile(void)
 	    _close(iFileIni);        
     }
 #endif
-#if defined FM24W256_CNT && (FM24W256_CNT > 0)                           // {23}
+#if defined FM24CL16B_PRESENT || (defined FM24W256_CNT && (FM24W256_CNT > 0)) // {23}
     #if _VC80_UPGRADE < 0x0600
 	iFileIni = _open(I2C_FRAM_FILE, (_O_BINARY | _O_TRUNC  | _O_CREAT | _O_RDWR ), _S_IREAD | _S_IWRITE );
     #else
