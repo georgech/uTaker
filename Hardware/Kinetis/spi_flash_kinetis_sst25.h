@@ -364,16 +364,16 @@ static unsigned char fnCheckSST25xxx(void)
     fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if ((ucID[0] == MANUFACTURER_ID_SST) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // SST memory part recognised
         switch (ucID[2]) {
-        case DEVICE_ID_1_DATA_SST_FLASH_4M:
+        case DEVICE_ID_1_DATA_SST_FLASH_4M:                              // 4Mbit/0.5Meg byte
             ucReturnType = SST25VF040B;
             break;
-        case DEVICE_ID_1_DATA_SST_FLASH_8M:
+        case DEVICE_ID_1_DATA_SST_FLASH_8M:                              // 8Mbit/1Meg byte
             ucReturnType = SST25VF080B;
             break;
-        case DEVICE_ID_1_DATA_SST_FLASH_16M:
+        case DEVICE_ID_1_DATA_SST_FLASH_16M:                             // 16Mbit/2Meg byte
             ucReturnType = SST25VF016B;
             break;
-        case DEVICE_ID_1_DATA_SST_FLASH_32M:
+        case DEVICE_ID_1_DATA_SST_FLASH_32M:                             // 32Mbit/4Meg byte
             ucReturnType = SST25VF032B;
             break;
         default:                                                         // possibly a larger part but we don't accept it

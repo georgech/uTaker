@@ -7560,8 +7560,11 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
 {
     switch (ucPasswordState) {
     case TELNET_LOGIN:
+    #if defined USE_PARAMETER_BLOCK
     case START_PASSWORD:
+    #endif
         // The user has just entered the present user name and password in the form "user:pass"
+        //
         *(ptrData + ucInputLength) = '&';                                // terminate input in the form we require
         if (fnVerifyUser(ptrData, (DO_CHECK_USER_NAME | DO_CHECK_PASSWORD | HTML_PASS_CHECK)) != 0) {
             fnDebugMsg("\n\rError - false user details!\n\r");
@@ -7574,13 +7577,18 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
             }
             return PASSWORD_IDLE;
         }
+    #if defined USE_PARAMETER_BLOCK
         if (ucPasswordState == TELNET_LOGIN) {                           // the user has successfully logged in
             fnLoginSuccess();
             return PASSWORD_IDLE;
         }
         fnDebugMsg("\n\rPlease enter new user name (4..8 characters): ");
         return ENTER_USER_NAME;
-
+    #else
+        fnLoginSuccess();
+        return PASSWORD_IDLE;
+    #endif
+    #if defined USE_PARAMETER_BLOCK
     case ENTER_USER_NAME:
         if ((ucInputLength < 4) || (ucInputLength > 8)) {
             fnDebugMsg("\n\rError - invalid length\n\r");
@@ -7606,8 +7614,8 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
         return CONFIRM_NEW_PASS;
 
     case CONFIRM_NEW_PASS:
-        *(ptrData + ucInputLength) = '&';                                // Terminate input in the form we require
-        if (!fnCheckPass(temp_pars->temp_parameters.cUserPass, ptrData)) {
+        *(ptrData + ucInputLength) = '&';                                // terminate input in the form we require
+        if (fnCheckPass(temp_pars->temp_parameters.cUserPass, ptrData) == 0) {
             fnDebugMsg("\n\rNew user data set\n\r");
             fnSaveNewPars(SAVE_NEW_PARAMETERS);
         }
@@ -7615,6 +7623,7 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
             fnDebugMsg("\n\rError - false password!\n\r");
         }
         break;
+    #endif
     }
     return PASSWORD_IDLE;
 }

@@ -368,6 +368,7 @@
 #define SPI_TX_MULTI_MODE   0x02
 #define SPI_PHASE           0x04
 #define SPI_POL             0x08
+#define SPI_LSB             0x10
 
 // SPI speed defines
 //

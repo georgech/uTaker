@@ -112,7 +112,7 @@
 
     //#define TWR_KV10Z32                                                // V processors Cortex M0+/M4/M7 (M0+ - motor control and power conversion - low dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV10Z32.html
     //#define TWR_KV11Z75M                                               // tower board http://www.utasker.com/kinetis/TWR-KV11Z75M.html
-    //#define FRDM_KV31F                                                 // (M4 - high dynamic control) - freedom board http://www.utasker.com/kinetis/FRDM-KV32F.html
+    //#define FRDM_KV31F                                                 // (M4 - high dynamic control) - freedom board http://www.utasker.com/kinetis/FRDM-KV31F.html
     //#define TWR_KV31F120M                                              // (M4 - high dynamic control) - tower board http://www.utasker.com/kinetis/TWR-KV31F120M.html
     //#define TWR_KV46F150M                                              // tower board http://www.utasker.com/kinetis/TWR-KV46F150M.html
     //#define TWR_KV58F220M                                              // (M7 - power conversion) tower board http://www.utasker.com/kinetis/TWR-KV58F220M.html
@@ -2259,18 +2259,18 @@
 
 // Cryptography
 //
-#define CRYPTOGRAPHY                                                     // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
+//#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
   //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
     #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
-  //#define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
+    #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
-      //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+        #define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
           //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (less devices support LTC - Low Power Trusted Cryptography)
     #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
-      //#define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+        #define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
 
 // Signal Processing (DSP)
 //

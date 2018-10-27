@@ -428,19 +428,19 @@ static unsigned char fnCheckMX25L(void)
     fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if ((ucID[0] == MANUFACTURER_ID_MACRONIX) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // Macronix memory part recognised
         switch (ucID[2]) {
-        case DEVICE_ID_DATA_MX25L1645:
+        case DEVICE_ID_DATA_MX25L1645:                                   // 16Mbit/2Meg byte
             ucReturnType = MX25L1645;
             break;
-        case DEVICE_ID_DATA_MX25L1606:
+        case DEVICE_ID_DATA_MX25L1606:                                   // 16Mbit/2Meg byte
             ucReturnType = MX25L1606;
             break;
-        case DEVICE_ID_DATA_MX25L3245:
+        case DEVICE_ID_DATA_MX25L3245:                                   // 32Mbit/4Meg byte
             ucReturnType = MX25L3245;
             break;
-        case DEVICE_ID_DATA_MX25L6445:
+        case DEVICE_ID_DATA_MX25L6445:                                   // 64Mbit/8Meg byte
             ucReturnType = MX25L6445;
             break;
-        case DEVICE_ID_DATA_MX25L12845:
+        case DEVICE_ID_DATA_MX25L12845:                                   // 128Mbit/16Meg byte
             ucReturnType = MX25L12845;
             break;
         default:

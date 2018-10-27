@@ -444,13 +444,13 @@ static unsigned char fnCheckS25FL1_K(void)
     fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
     if ((ucID[0] == MANUFACTURER_ID_SPANSION) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // Spansion memory part recognised
         switch (ucID[2]) {
-        case DEVICE_ID_DATA_S25FL116K:
+        case DEVICE_ID_DATA_S25FL116K:                                   // 16Mbit/2Meg byte
             ucReturnType = S25FL116K;
             break;
-        case DEVICE_ID_DATA_S25FL132K:
+        case DEVICE_ID_DATA_S25FL132K:                                   // 32Mbit/4Meg byte
             ucReturnType = S25FL132K;
             break;
-        case DEVICE_ID_DATA_S25FL164K:
+        case DEVICE_ID_DATA_S25FL164K:                                   // 64Mbit/8Meg byte
             ucReturnType = S25FL164K;
             break;
         default:

@@ -230,7 +230,7 @@ static QUEUE_TRANSFER entry_spi(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             fnPrepareRxDMA(channel, (unsigned char *)&(ptSPIQue->spi_queue), 0); // update the input with present DMA reception information
     #if defined SUPPORT_FLOW_CONTROL && defined SUPPORT_HW_FLOW          // handle CTS control when the buffer is critical
             if (((ptSPIQue->opn_mode & RTS_CTS) != 0) && ((ptSPIQue->ucState & RX_HIGHWATER) == 0) // RTS/CTS for receiver
-        #if defined SUPPORT_FLOW_HIGH_LOW
+        #if defined SUPPORT_SPI_FLOW_HIGH_LOW
             && ((ptSPIQue->spi_queue.chars >= ptSPIQue->high_water_level)))
         #else
             && ((ptSPIQue->spi_queue.chars > (ptSPIQue->spi_queue.buf_length - HIGH_WATER_MARK))))
@@ -254,43 +254,6 @@ static QUEUE_TRANSFER entry_spi(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         }
 #endif
         return rtn_val;
-
-#if defined SPI_STATS
-    case CALL_STATS:                                                     // return a driver statistic value
-    {
-        unsigned char *ptr;
-        int i;
-        if (Counter >= SPI_COUNTERS) {
-            ptSPIQue = (struct stSPIQue *)(que_ids[DriverID].output_buffer_control); // set to output control block
-            Counter -= SERIAL_COUNTERS;
-        }
-        else {
-            ptSPIQue = (struct stSPIQue *)(que_ids[DriverID].input_buffer_control); // set to input control block
-        }
-        if (ptBuffer == 0) {                                             // reset a counter rather than obtain it
-            if (Counter >= SERIAL_COUNTERS) {
-                for (i = 0; i < SERIAL_COUNTERS; i++) {
-                    ptSPIQue->ulSerialCounter[i] = 0;                    // delete all output counters
-                }
-                ptSPIQue = (struct stSPIQue *)(que_ids[DriverID].input_buffer_control);  // set to input control block
-                for (i = 0; i < SPI_COUNTERS; i++) {
-                    ptSPIQue->ulSerialCounter[i] = 0;                    // delete all input counters
-                }
-            }
-            else {
-                ptSPIQue->ulSerialCounter[Counter] = 0;                  // reset specific counter
-            }
-        }
-        else {
-            ptr = (unsigned char *)&ptSPIQue->ulSerialCounter[Counter];
-            i = sizeof(ptSPIQue->ulSerialCounter[0]);
-            while (i-- != 0) {
-                *ptBuffer++ = *ptr++;
-            }
-        }
-    }
-    break;
-#endif
 
 #if defined SUPPORT_FLUSH
     case CALL_FLUSH:                                                     // flush input or output queue completely
@@ -420,7 +383,7 @@ extern QUEUE_HANDLE fnOpenSPI(SPITABLE *pars, unsigned char driver_mode)
 #if defined WAKE_BLOCKED_TX
     #if defined WAKE_BLOCKED_TX_BUFFER_LEVEL
         tx_control[pars->Channel]->low_water_level  = pars->tx_wake_level; // set specified wake up level
-    #elif defined SUPPORT_FLOW_HIGH_LOW
+    #elif defined SUPPORT_SPI_FLOW_HIGH_LOW
         tx_control[pars->Channel]->low_water_level  = ((pars->ucFlowLowWater * pars->Rx_tx_sizes.TxQueueSize)/100);   // save the number of byte converted from % of buffer size
     #endif
 #endif
@@ -463,6 +426,23 @@ static void fnWakeBlockedTx(SPIQUE *ptSPIQue, QUEUE_TRANSFER low_water_level)
 }
 #endif
 
+static unsigned char fnGetFromCircularBuffer(QUEQUE *ptrQUE)
+{
+    if (ptrQUE->chars > 0) {
+        unsigned char ucValue = *(ptrQUE->get);
+        if (++ptrQUE->get >= ptrQUE->buffer_end) {                       // check for end of circular buffer
+            ptrQUE->get = ptrQUE->QUEbuffer;                             // wrap to beginning
+        }
+        --ptrQUE->chars;                                                 // one less character
+        return ucValue;
+    }
+    else {
+        _EXCEPTION("Extracting non-existet character!");
+        return 0;
+    }
+}
+
+
 static void fnSendNextSPI_word(QUEUE_HANDLE channel, SPIQUE *ptSPIQue)   // interrupts are assumed to be disabled here
 {
     if ((ptSPIQue->ucState & TX_WAIT) == 0) {                            // send the next byte if possible - either first char or tx interrupt
@@ -471,85 +451,53 @@ static void fnSendNextSPI_word(QUEUE_HANDLE channel, SPIQUE *ptSPIQue)   // inte
             fnClearSPITxInt(channel);                                    // clear interrupt
         }
         else {
+            QUEQUE *ptrTxQUE = &(ptSPIQue->spi_queue);
             unsigned char ucChipSelect = ptSPIQue->ucChipSelect;
-            unsigned short usNextByte = *(ptSPIQue->spi_queue.get);
+            unsigned short usNextByte = fnGetFromCircularBuffer(ptrTxQUE);
             if ((ptSPIQue->opn_mode & SPI_TX_MESSAGE_MODE) != 0) {       // if transmission is based on independent message blocks
                 if (ptSPIQue->msgchars == 0) {                           // starting a new message
-                    if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                        ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-                    }
-                    --ptSPIQue->spi_queue.chars;
-                    if (ptSPIQue->spi_queue.chars == 0) {
-                        _EXCEPTION("Incorrect number of character in a message!!");
-                    }
-                    ptSPIQue->msgchars = (usNextByte | (*(ptSPIQue->spi_queue.get) << 8)); // the number of words in the message to be sent
-                    if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                        ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-                    }
-                    --ptSPIQue->spi_queue.chars;
+                    ptSPIQue->msgchars = (usNextByte | (fnGetFromCircularBuffer(ptrTxQUE) << 8)); // the number of words in the message to be sent
                     if ((ptSPIQue->opn_mode & SPI_TX_MULTI_MODE) != 0) { // if there are details of the chip select to be used
-                        if (ptSPIQue->spi_queue.chars == 0) {
-                            _EXCEPTION("Incorrect number of character in a message!!");
-                        }
-                        ptSPIQue->ucChipSelect = *(ptSPIQue->spi_queue.get);
-                        if (ptSPIQue->ucChipSelect > 5) {
+                        ptSPIQue->ucChipSelect = fnGetFromCircularBuffer(ptrTxQUE);
+                        ptSPIQue->ucChipSelect |= (fnGetFromCircularBuffer(ptrTxQUE) << 8);
+                        if (ptSPIQue->ucChipSelect >= SPI_CHIP_SELECTS) {
                             _EXCEPTION("Invalid chip select");
                         }
-                        if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                            ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-                        }
-                        --ptSPIQue->spi_queue.chars;
+                    }
+                    if (ptrTxQUE->chars == 0) {                          // allow preparing transmission details before adding the first message
+                        return;                                          // message details ready but not yet active
                     }
                     ucChipSelect = ptSPIQue->ucChipSelect;;
                     ucChipSelect |= FIRST_SPI_MESSAGE_WORD;
-                    if (ptSPIQue->uBusWidth[ptSPIQue->ucChipSelect] >= 8) {
-                        if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                            ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-                        }
-                        --ptSPIQue->spi_queue.chars;
-                    }
-                    usNextByte = *(ptSPIQue->spi_queue.get);             // first data byte
+                    usNextByte = fnGetFromCircularBuffer(ptrTxQUE);      // first data byte
                 }
-                if (ptSPIQue->uBusWidth[ptSPIQue->ucChipSelect] >= 8) {  // if the word is held in two bytes
-                    if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                        ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-                    }
-                    --ptSPIQue->spi_queue.chars;
-                    if (ptSPIQue->spi_queue.chars == 0) {
-                        _EXCEPTION("Incorrect number of character in a message!!");
-                    }
-                    usNextByte |= (*(ptSPIQue->spi_queue.get) << 8);     // 16 bit word
-                    if (ptSPIQue->msgchars <= 2) {
-                        ucChipSelect |= LAST_SPI_MESSAGE_WORD;
-                        ptSPIQue->msgchars = 0;
-                    }
-                    else {
-                        ptSPIQue->msgchars -= 2;
-                    }
+                else if ((ptSPIQue->ucState & TX_ACTIVE) == 0) {         // message being added after preparing its details
+                    ucChipSelect = ptSPIQue->ucChipSelect;;
+                    ucChipSelect |= FIRST_SPI_MESSAGE_WORD;
+                }
+                if (ptSPIQue->uBusWidth[ptSPIQue->ucChipSelect] > 8) {   // if the word is held in two bytes
+                    usNextByte |= (fnGetFromCircularBuffer(ptrTxQUE) << 8); // 16 bit word
+                }
+                if (ptSPIQue->msgchars <= 1) {
+                    ucChipSelect |= LAST_SPI_MESSAGE_WORD;
+                    ptSPIQue->msgchars = 0;
                 }
                 else {
-                    if (ptSPIQue->msgchars <= 1) {
-                        ucChipSelect |= LAST_SPI_MESSAGE_WORD;
-                        ptSPIQue->msgchars = 0;
-                    }
-                    else {
-                        ptSPIQue->msgchars--;
-                    }
+                    ptSPIQue->msgchars--;
                 }
             }
-            else {
+            else {                                                       // non message oriented transmission
+                if ((ptSPIQue->ucState & TX_ACTIVE) == 0) {
+                    ucChipSelect |= FIRST_SPI_MESSAGE_WORD;
+                }
                 if (ptSPIQue->spi_queue.chars <= 1) {
                     ucChipSelect |= LAST_SPI_MESSAGE_WORD;
                 }
             }
             fnTxSPIByte(channel, usNextByte, ucChipSelect);
             ptSPIQue->ucState |= TX_ACTIVE;                              // mark activity
-            if (++ptSPIQue->spi_queue.get >= ptSPIQue->spi_queue.buffer_end) { // wrap in circular buffer
-                ptSPIQue->spi_queue.get = ptSPIQue->spi_queue.QUEbuffer; // wrap to beginning
-            }
-            --ptSPIQue->spi_queue.chars;
 #if defined WAKE_BLOCKED_TX
-    #if defined SUPPORT_FLOW_HIGH_LOW
+    #if defined SUPPORT_SPI_FLOW_HIGH_LOW
             fnWakeBlockedTx(ptSPIQue, tx_control[channel]->low_water_level);
     #else
             fnWakeBlockedTx(ptSPIQue, LOW_WATER_MARK);
@@ -625,9 +573,6 @@ extern void fnSPIRxByte(unsigned char ch, QUEUE_HANDLE Channel)
             iBlockBuffer = 1;
         }
     }
-#endif
-#if defined SPI_STATS
-    rx_ctl->ulSerialCounter[SPI_STATS_CHARS]++;                          // count the number of characters we receive
 #endif
     if (iBlockBuffer == 0) {
         if (rx_ctl->spi_queue.chars < rx_ctl->spi_queue.buf_length) {    // never overwrite contents of buffer

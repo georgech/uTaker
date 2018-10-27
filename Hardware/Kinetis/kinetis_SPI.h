@@ -21,14 +21,22 @@
 /*                             constants                               */
 /* =================================================================== */
 
-
+static const _KINETIS_DSPI *DSPI_Base_Address[SPI_AVAILABLE] = {
+    (_KINETIS_DSPI *)DSPI0_BLOCK,
+#if SPI_AVAILABLE > 1
+    (_KINETIS_DSPI *)DSPI1_BLOCK,
+#endif
+#if SPI_AVAILABLE > 2
+    (_KINETIS_DSPI *)DSPI2_BLOCK,
+#endif
+};
 
 /* =================================================================== */
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static unsigned long ulTxChipSelectLine[SPI_AVAILABLE][6] = {{0}};
-static unsigned long ulCharacteristics[SPI_AVAILABLE][6] = {{0}};
+static unsigned long ulTxChipSelectLine[SPI_AVAILABLE][SPI_CHIP_SELECTS] = {{0}};
+static unsigned long ulCharacteristics[SPI_AVAILABLE][SPI_CHIP_SELECTS] = {{0}};
 static unsigned long ulTransmissionSet[SPI_AVAILABLE] = {0};
 
 /* =================================================================== */
@@ -44,6 +52,7 @@ static unsigned long ulTransmissionSet[SPI_AVAILABLE] = {0};
 //
 static __interrupt void int_spi_0_master(void)
 {
+    WRITE_ONE_TO_CLEAR(SPI0_SR, (SPI_SR_EOQF));                          // ensure that the end of queue flag is cleared
     while (((SPI0_RSER & SPI_SR_TFFF) & SPI0_SR) != 0) {                 // while there is space in the buffer and the interrupt is enabled
         fnSPITxByte(0);                                                  // put next byte into the output fifo or else disable further interrupts
         WRITE_ONE_TO_CLEAR(SPI0_SR, SPI_SR_TFFF);                        // reset the interrupt flag (after writing the next byte to be transmitted)
@@ -53,6 +62,7 @@ static __interrupt void int_spi_0_master(void)
 #if SPI_AVAILABLE > 1
 static __interrupt void int_spi_1_master(void)
 {
+    WRITE_ONE_TO_CLEAR(SPI1_SR, (SPI_SR_EOQF));                          // ensure that the end of queue flag is cleared
     while (((SPI1_RSER & SPI_SR_TFFF) & SPI1_SR) != 0) {                 // while there is space in the buffer and the interrupt is enabled
         fnSPITxByte(1);                                                  // put next byte into the output fifo or else disable further interrupts
         WRITE_ONE_TO_CLEAR(SPI1_SR, SPI_SR_TFFF);                        // reset the interrupt flag (after writing the next byte to be transmitted)
@@ -63,6 +73,7 @@ static __interrupt void int_spi_1_master(void)
 #if SPI_AVAILABLE > 2
 static __interrupt void int_spi_2_master(void)
 {
+    WRITE_ONE_TO_CLEAR(SPI2_SR, (SPI_SR_EOQF));                          // ensure that the end of queue flag is cleared
     while (((SPI2_RSER & SPI_SR_TFFF) & SPI2_SR) != 0) {                 // while there is space in the buffer and the interrupt is enabled
         fnSPITxByte(2);                                                  // put next byte into the output fifo or else disable further interrupts
         WRITE_ONE_TO_CLEAR(SPI2_SR, SPI_SR_TFFF);                        // reset the interrupt flag (after writing the next byte to be transmitted)
@@ -108,21 +119,8 @@ static __interrupt void int_spi_2_slave(void)
 //
 extern void fnClearSPITxInt(QUEUE_HANDLE channel)
 {
-    switch (channel) {
-    case 0:
-        SPI0_RSER &= ~(SPI_SRER_TFFF_RE);
-        break;
-    #if SPI_AVAILABLE > 1
-    case 1:
-        SPI1_RSER &= ~(SPI_SRER_TFFF_RE);
-        break;
-    #endif
-#if SPI_AVAILABLE > 2
-    case 2:
-        SPI2_RSER &= ~(SPI_SRER_TFFF_RE);
-        break;
-#endif
-    }
+    _KINETIS_DSPI *ptrDSPI = (_KINETIS_DSPI *)DSPI_Base_Address[channel];
+    ptrDSPI->SPI_RSER &= ~(SPI_SRER_TFFF_RE);
 }
 
 
@@ -130,38 +128,25 @@ extern void fnClearSPITxInt(QUEUE_HANDLE channel)
 //
 extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, unsigned char ucChipSelect)
 {
-    _KINETIS_DSPI *ptrDSPI;
-    switch (channel) {
-    case 0:
-        ptrDSPI = (_KINETIS_DSPI *)DSPI0_BLOCK;
-        break;
-    #if SPI_AVAILABLE > 1
-    case 1:
-        ptrDSPI = (_KINETIS_DSPI *)DSPI1_BLOCK;
-        break;
-    #endif
-    #if SPI_AVAILABLE > 2
-    case 2:
-        ptrDSPI = (_KINETIS_DSPI *)DSPI2_BLOCK;
-        break;
-    #endif
-    }
+    _KINETIS_DSPI *ptrDSPI = (_KINETIS_DSPI *)DSPI_Base_Address[channel];
     if ((ucChipSelect & FIRST_SPI_MESSAGE_WORD) != 0) {
         ulTransmissionSet[channel] ^= SPI_PUSHR_CTAS_CTAR1;              // each new message switches to the opposite transmission control set so that transmissions in progress can continue uninterrupted
+        ptrDSPI->SPI_MCR |= (SPI_MCR_HALT);                              // temporarily halt the operation so that the CTAR register can be written to
         if ((ulTransmissionSet[channel] & SPI_PUSHR_CTAS_CTAR1) != 0) {
             ptrDSPI->SPI_CTAR1 = ulCharacteristics[channel][ucChipSelect & SPI_CHIP_SELECT_MASK];
         }
         else {
             ptrDSPI->SPI_CTAR0 = ulCharacteristics[channel][ucChipSelect & SPI_CHIP_SELECT_MASK];
         }
+        ptrDSPI->SPI_MCR &= ~(SPI_MCR_HALT);
     }
     if ((ucChipSelect & LAST_SPI_MESSAGE_WORD) != 0) {
         ptrDSPI->SPI_PUSHR = (usTxByte | SPI_PUSHR_EOQ | ulTxChipSelectLine[channel][ucChipSelect & SPI_CHIP_SELECT_MASK] | ulTransmissionSet[channel]); // write a single byte/half-word to the output FIFO - negate CS line after transmission
     }
     else {
         ptrDSPI->SPI_PUSHR = (usTxByte | SPI_PUSHR_CONT | ulTxChipSelectLine[channel][ucChipSelect & SPI_CHIP_SELECT_MASK] | ulTransmissionSet[channel]); // write a single byte/half-word to the output FIFO - assert CS line
-        ptrDSPI->SPI_RSER |= SPI_SRER_TFFF_RE;                           // interrupt as long as the transmit fifo is not full
     }
+    ptrDSPI->SPI_RSER = (SPI_SRER_TFFF_RE | SPI_SRER_EOQF_RE);           // interrupt as long as the transmit fifo is not full or when final transmission terminates
     #if defined _WINDOWS
     iInts |= (CHANNEL_0_SPI_INT << channel);
     #endif
@@ -175,10 +160,11 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     _KINETIS_DSPI *ptrDSPI;
     int iIRQ_ID;
     unsigned char ucIRQ_priority;
+    int iChipSelect = pars->ucChipSelect;
     void(*InterruptFunc)(void);
     void(*InterruptFuncMaster)(void);
     void(*InterruptFuncSlave)(void);
-    unsigned long ulWordWidth = ((pars->ucWordWidth - 1) << 24);         // define the word with used by this channel
+    unsigned long ulWordWidth = ((pars->ucWordWidth - 1) << 27);         // define the word with used by this channel
     if ((pars->ucWordWidth < 4) || (pars->ucWordWidth > 16)) {
         _EXCEPTION("Invalid SPI word width");
     }
@@ -188,13 +174,42 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     if ((pars->Config & SPI_POL) != 0) {
         ulWordWidth |= (SPI_CTAR_CPOL);
     }
-    ulTxChipSelectLine[pars->Channel][pars->ucChipSelect] = (SPI_PUSHR_PCS0 << pars->ucChipSelect); // the chip select line control
-    ulCharacteristics[pars->Channel][pars->ucChipSelect] = (SPI_CTAR_DBR | ulWordWidth | SPI_CTAR_PDT_7 | SPI_CTAR_BR_128);
-    if (iAddChipSelect != 0) {
-        return;
+    if ((pars->Config & SPI_LSB) != 0) {                                 // least significant bit transmitted first
+        ulWordWidth |= SPI_CTAR_LSBFE;
     }
+    if ((pars->Config & SPI_TX_MULTI_MODE) == 0) {
+        iChipSelect = 0;                                                 // when multiple devices are not supported the first chip select entry is used
+    }
+    ulTxChipSelectLine[pars->Channel][iChipSelect] = (SPI_PUSHR_PCS0 << pars->ucChipSelect); // the chip select line control
+    ulCharacteristics[pars->Channel][iChipSelect] = (SPI_CTAR_DBR | ulWordWidth | SPI_CTAR_PDT_7 | SPI_CTAR_BR_128);
     switch (pars->Channel) {
     case 0:
+        switch (pars->ucChipSelect) {
+        case 0:
+            _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_PS_UP_ENABLE));
+            break;
+        case 1:
+            _CONFIG_PERIPHERAL(C, 3, (PC_3_SPI0_PCS1 | PORT_PS_UP_ENABLE));
+            break;
+        case 2:
+            _CONFIG_PERIPHERAL(C, 2, (PC_2_SPI0_PCS2 | PORT_PS_UP_ENABLE));
+            break;
+        case 3:
+            _CONFIG_PERIPHERAL(C, 1, (PC_1_SPI0_PCS3 | PORT_PS_UP_ENABLE));
+            break;
+        case 4:
+            _CONFIG_PERIPHERAL(C, 0, (PC_0_SPI0_PCS4 | PORT_PS_UP_ENABLE));
+            break;
+        case 5:
+            _CONFIG_PERIPHERAL(B, 23, (PB_23_SPI0_PCS5 | PORT_PS_UP_ENABLE));
+            break;
+        default:
+            _EXCEPTION("Chip select line not available");
+            break;
+        }
+        if (iAddChipSelect != 0) {
+            return;
+        }
         POWER_UP_ATOMIC(6, SPI0);
         ptrDSPI = (_KINETIS_DSPI *)DSPI0_BLOCK;
         _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_PS_UP_ENABLE));
@@ -208,8 +223,6 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
         break;
     #if SPI_AVAILABLE > 1
     case 1:
-        POWER_UP_ATOMIC(6, SPI1);
-        ptrDSPI = (_KINETIS_DSPI *)DSPI1_BLOCK;
         switch (pars->ucChipSelect) {
         case 0:
             _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0 | PORT_PS_UP_ENABLE));
@@ -227,6 +240,11 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
             _EXCEPTION("Chip select line not available");
             break;
         }
+        if (iAddChipSelect != 0) {
+            return;
+        }
+        POWER_UP_ATOMIC(6, SPI1);
+        ptrDSPI = (_KINETIS_DSPI *)DSPI1_BLOCK;
         _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));
         _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_SOUT));
         _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_SIN | PORT_PS_UP_ENABLE));
@@ -238,6 +256,20 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     #endif
     #if SPI_AVAILABLE > 2
     case 2:
+        switch (pars->ucChipSelect) {
+        case 0:
+            _CONFIG_PERIPHERAL(B, 20, (PB_20_SPI2_PCS0 | PORT_PS_UP_ENABLE));
+            break;
+        case 1:
+            _CONFIG_PERIPHERAL(D, 15, (PD_15_SPI2_PCS1 | PORT_PS_UP_ENABLE));
+            break;
+        default:
+            _EXCEPTION("Chip select line not available");
+            break;
+        }
+        if (iAddChipSelect != 0) {
+            return;
+        }
         POWER_UP_ATOMIC(3, SPI2);
         ptrDSPI = (_KINETIS_DSPI *)DSPI2_BLOCK;
         _CONFIG_PERIPHERAL(B, 20, (PB_20_SPI2_PCS0 | PORT_PS_UP_ENABLE));
@@ -269,7 +301,7 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     case SPI_1MEG:
     case SPI_100K:
     default:
-        if (pars->ucChipSelect > 5) {
+        if (pars->ucChipSelect >= SPI_CHIP_SELECTS) {
             _EXCEPTION("Invalid chip select line");
             return;
         }
