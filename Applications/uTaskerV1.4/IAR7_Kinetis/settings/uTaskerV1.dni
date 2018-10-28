@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=524894875
+Checksum=826950773
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -89,22 +89,22 @@ FREQ_LIGHTNING=_ "1"
 FREQ_OPENSDA=_ "0"
 RESET_DELAY=_ "0"
 PORT=_ "181"
-PORT_NAME_STRING=_ ""
-interface_selection=_ "1"
+PORT_NAME_STRING=_ "43603E57"
+interface_selection=_ "7"
 SHOWDIALOG=_ "1"
 TraceLink_MaxBufferSize=_ "1"
 [PE_STORED_DEVICES]
-device0=_ "NXP_K2x_K20DX64M7"
-device1=_ "NXP_KL0x_KL03Z32M4"
-device2=_ "NXP_KEx_KEAZ128M4"
-device3=_ "NXP_KMx_KM34Z128M5"
-device4=_ "NXP_K6x_K66FN2M0M18"
+device0=_ "NXP_KL0x_KL03Z32M4"
+device1=_ "NXP_KEx_KEAZ128M4"
+device2=_ "NXP_KMx_KM34Z128M5"
+device3=_ "NXP_K6x_K66FN2M0M18"
+device4=_ "NXP_KL2x_KL27Z64M4"
 [PE_PEDEBUG]
-CURRENTDEVICE=_ "NXP_K6x_K66FN2M0M18"
+CURRENTDEVICE=_ "NXP_KL2x_KL27Z64M4"
 ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
 CURRENTMODE=_ "4"
 [PE_DEVICE]
-CHIPMODE=_ "NXP_KMx_KM34Z128M5"
+CHIPMODE=_ "NXP_KL2x_KL27Z64M4"
 [PE_SETTINGS]
 MEMORYSTART1=_ "0"
 MEMORYSTART2=_ "0"
@@ -203,11 +203,6 @@ EventEXC=0
 EventFOLD=0
 EventLSU=0
 EventSLEEP=0
-[Breakpoints]
-Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis.c}.891.5" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.2854.5" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.1613.9" 0 0 0 0 "" 0 "" 0
-Count=3
 [struct_types]
 Fmt0=TTIMETABLE-taskDelay	4	0
 [array_types]
@@ -222,9 +217,22 @@ Fmt6=unsigned long[4]	4	0
 Fmt0={W}0:ulBlockWriteLength	4	0
 Fmt1={W}1:ulBlockReadLength	4	0
 Fmt2={W}1:ulLastCapture	4	4
+[Breakpoints]
+Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis.c}.895.5" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.2902.5" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.1622.9" 0 0 0 0 "" 0 "" 0
+Count=3
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=3
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "0x00004E30" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "0x00005130" 0 0 1 "" 0 "" 0
+Bp2=_ 0 "EMUL_CODE" "0x000013D0" 0 0 1 "" 0 "" 0
+Bp3=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\debug.c}.4133.15" 0 0 1 "" 0 "" 0
+Count=4
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -232,6 +240,9 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+Count=0
+SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -242,18 +253,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Disassemble mode]
-mode=3
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.c}.919.24" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x00000F04" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "0x00001AFC" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\utFAT\mass_storage.c}.872.10" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_DATA" "0x1fff0824" 2 0 0 0 4294967295
-Bp5=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis.c}.2261.1" 0 0 1 "" 0 "" 0
-Bp6=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLEXTIMER.h}.164.5" 0 0 1 "" 0 "" 0
-Bp7=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_FLEXTIMER.h}.236.13" 0 0 1 "" 0 "" 0
-Count=8
-[Aliases]
-Count=0
-SuppressDialog=0

@@ -2098,6 +2098,11 @@
     #define CLEAR_RECEPTION_FLAG()          SPI1_SR |= SPI_SR_RFDF
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
+
+    #if defined FRDM_KL82Z
+        #define SPI1_CS0_ON_E
+        #define SPI1_CS1_ON_E
+    #endif
 #elif defined KINETIS_K80 && defined QSPI_FILE_SYSTEM                    // interface using QSPI
     #define POWER_UP_SPI_FLASH_INTERFACE()     POWER_UP_ATOMIC(2, QSPI);
     #define POWER_DOWN_SPI_FLASH_INTERFACE()   POWER_DOWN_ATOMIC(2, QSPI);
@@ -3342,6 +3347,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_DMA0              2
     #define LPTMR0_INTERRUPT_PRIORITY  3
     #define LPTMR1_INTERRUPT_PRIORITY  2
+    #define PRIORITY_SPI0              3
+    #define PRIORITY_SPI1              3
+    #define PRIORITY_SPI2              3
     #define PRIORITY_PORT_A_INT        1
     #define PRIORITY_PORT_B_INT        1
     #define PRIORITY_PORT_C_INT        1
@@ -3391,6 +3399,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
         #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
         #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
+        #define INTMUX_SPI1                 INPUT_TO_INTMUX0_CHANNEL_2   // the SPI1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
     #endif
 #else

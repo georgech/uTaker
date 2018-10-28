@@ -7658,6 +7658,7 @@ typedef struct st_KINETIS_DSPI
       #define LTC_MD_AAI_XCBC_MAC      0x00000700
       #define LTC_MD_AAI_CCM           0x00000800
       #define LTC_MD_AAI_GCM           0x00000900
+      #define LTC_MD_AAI_DK            0x00001000                        // decrypt key
       #define LTC_MD_ALG_AES           0x00100000
       #define LTC_MD_ALG_DES           0x00200000
       #define LTC_MD_ALG_3DES          0x00210000

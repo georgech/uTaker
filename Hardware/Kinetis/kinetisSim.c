@@ -7286,9 +7286,18 @@ extern unsigned long fnSimInts(char *argv[])
         iInts &= ~CHANNEL_1_SPI_INT;                                     // interrupt has been handled
         SPI1_SR |= SPI_SR_TFFF;
         if ((SPI1_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
-            if (fnGenInt(irq_SPI1_ID) != 0) {                            // if SPI1 interrupt is not disabled
+        #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
+            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_SPI1) != 0)
+        #else
+            if (fnGenInt(irq_SPI1_ID) != 0)                              // if SPI1 interrupt is not disabled
+        #endif
+            {
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+        #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
+                fnCallINTMUX(INTMUX_SPI1, INTMUX0_PERIPHERAL_SPI1, (unsigned char *)&ptrVect->processor_interrupts.irq_SPI1);
+        #else
                 ptrVect->processor_interrupts.irq_SPI1();                // call the interrupt handler
+        #endif
             }
         }
     }

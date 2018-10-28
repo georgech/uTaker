@@ -1185,6 +1185,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
 #define AES_ENCRYPT_BAD_LENGTH         -3
 #define AES_ENCRYPT_BAD_ALIGNMENT      -4
 #define AES_INVALID_KEY_LENGTH         -5
+#define AES_INVALID_CIPHER_OPERATION   -6
 
 #define AES_INSTANCE_MASK               0x00ff
 #define AES_COMMAND_AES_ENCRYPT         0x0100

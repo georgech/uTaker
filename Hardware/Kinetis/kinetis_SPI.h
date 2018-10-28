@@ -225,13 +225,25 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     case 1:
         switch (pars->ucChipSelect) {
         case 0:
+        #if defined SPI1_CS0_ON_E
+            _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS0 | PORT_PS_UP_ENABLE));
+        #else
             _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0 | PORT_PS_UP_ENABLE));
+        #endif
             break;
         case 1:
+        #if defined SPI1_CS1_ON_E
+            _CONFIG_PERIPHERAL(E, 0, (PE_0_SPI1_PCS1 | PORT_PS_UP_ENABLE));
+        #else
             _CONFIG_PERIPHERAL(B, 9, (PB_9_SPI1_PCS1 | PORT_PS_UP_ENABLE));
+        #endif
             break;
         case 2:
+        #if defined PE_3_SPI1_PCS2
+            _CONFIG_PERIPHERAL(E, 2, (PE_3_SPI1_PCS2 | PORT_PS_UP_ENABLE)); 
+        #else
             _CONFIG_PERIPHERAL(E, 5, (PE_5_SPI1_PCS2 | PORT_PS_UP_ENABLE));
+        #endif
             break;
         case 3:
             _CONFIG_PERIPHERAL(E, 6, (PE_6_SPI1_PCS3 | PORT_PS_UP_ENABLE));
@@ -248,8 +260,13 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
         _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));
         _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_SOUT));
         _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_SIN | PORT_PS_UP_ENABLE));
+        #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+        iIRQ_ID = (irq_INTMUX0_0_ID + INTMUX_SPI1);
+        ucIRQ_priority = INTMUX0_PERIPHERAL_SPI1;
+        #else
         iIRQ_ID = irq_SPI1_ID;
         ucIRQ_priority = PRIORITY_SPI1;
+        #endif
         InterruptFuncMaster = int_spi_1_master;
         InterruptFuncSlave = int_spi_1_slave;
         break;
