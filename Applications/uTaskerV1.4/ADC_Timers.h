@@ -81,7 +81,7 @@
 
     #if defined SUPPORT_DAC
       //#define TEST_DMA_DAC                                             // test generating a signal using DMA to DAC (based on timer trigger)
-            #define GENERATE_SINE
+          //#define GENERATE_SINE
             #if defined GENERATE_SINE
                 #include <math.h>                                        // this may need libm.a explicitly linked (depending on IDE and compiler used)
             #endif

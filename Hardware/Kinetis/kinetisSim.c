@@ -5990,6 +5990,13 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
             #define DMUX_UART2_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART2_RX)
             #define DMUX_UART3_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART3_RX)
             #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART0_RX)
+        #elif UARTS_AVAILABLE == 5
+            #define DMUX_UART0_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART0_RX)
+            #define DMUX_UART1_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART1_RX)
+            #define DMUX_UART2_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART2_RX)
+            #define DMUX_UART3_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART3_RX)
+            #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART4_RX)
+            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART0_RX)
         #endif
     #else
         #define LPUART0_CH_NUMBER     0
@@ -6126,7 +6133,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
     }
     #endif
     #if LPUARTS_AVAILABLE > 0                                            // parts with LPUART
-        #if UARTS_AVAILABLE > 0                                          // parts with LPAURT and UART
+        #if UARTS_AVAILABLE > 0                                          // parts with LPUART and UART
     if (uart_type[iPort] == UART_TYPE_LPUART) {
         #endif
         switch (iPort) {
@@ -6366,7 +6373,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             ptrDMA += cUART_channel[LPUART3_CH_NUMBER];
                             if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {  // if source enabled
                                 fnSimulateDMA(cUART_channel[LPUART3_CH_NUMBER], ucUART_DMUX_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
-                                LPUART13STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
+                                LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART3_CH_NUMBER])) != 0) { // if source enabled

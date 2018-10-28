@@ -56,5 +56,5 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files/>
- <ARMCrossStudioWindow activeProject="uTaskerV1_4" fileDialogDefaultFilter="*.c" autoConnectTarget="CMSIS-DAP" buildConfiguration="THUMB Release" debugSearchFileMap="../Hardware/hardware.h&#xd;&#xa;C:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4/Hardware/hardware.h&#xd;&#xa;../stack/tcpip.h&#xd;&#xa;&#xd;&#xa;../uTasker/uTasker.h&#xd;&#xa;" fileDialogInitialDirectory="C:/MJBC/temporary/uTaskerV1.4.12_release_candidate/uTasker" debugSearchPath="" autoConnectCapabilities="266111"/>
+ <ARMCrossStudioWindow activeProject="uTaskerV1_4" fileDialogDefaultFilter="" autoConnectTarget="CMSIS-DAP" buildConfiguration="THUMB Release" debugSearchFileMap="../Hardware/hardware.h&#xd;&#xa;C:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4/Hardware/hardware.h&#xd;&#xa;../stack/tcpip.h&#xd;&#xa;&#xd;&#xa;../uTasker/uTasker.h&#xd;&#xa;" fileDialogInitialDirectory="D:/MJBC/Internal/Freescale/Kinetis/workspace/uTaskerV1.4.12_master/uTasker" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

@@ -918,7 +918,7 @@
     #if !defined K66FX1M0
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
     #endif
-    #define LAN8740_PHY                                                  // configuration with LAN8740 PHY in MII mode
+  //#define LAN8740_PHY                                                  // configuration with LAN8740 PHY in MII mode (for a test board)
 #elif defined TEENSY_3_6
     #define TARGET_HW            "Teensy 3.6 (K66FX1M0)"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
@@ -2260,17 +2260,19 @@
 // Cryptography
 //
 //#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
-  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code
-  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code
-    #define CRYPTO_MBEDTLS                                               // use mbedTLS library code
+  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code (for simulation or HW when native support si not available and enabled)
+  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code (for simulation or HW when native support si not available and enabled)
+    #define CRYPTO_MBEDTLS                                               // use mbedTLS library code (for simulation or HW when native support si not available and enabled)
     #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
         #define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
-          //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (less devices support LTC - Low Power Trusted Cryptography)
+          //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
     #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
         #define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+          //#define SHA_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
+          //#define SHA_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
 
 // Signal Processing (DSP)
 //

@@ -4,28 +4,30 @@
     <configuration
       Name="Common"
       Placement="Flash"
-      Target="MKL02Z16xxx4"
-      arm_architecture="v6M"
-      arm_core_type="Cortex-M0+"
-      arm_fpu_type="None"
+      Target="MK66FN2M0xxx18"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fpu_type="FPv4-SP-D16"
       arm_gcc_target="arm-unknown-eabi"
       arm_linker_heap_size="128"
       arm_linker_process_stack_size="0"
       arm_linker_stack_size="128"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/Kinetis/KinetisSimulatorMemory.dll"
-      arm_simulator_memory_simulation_parameter="MKL02Z16xxx4;0x4000;0x0;0x0;0x800"
+      arm_simulator_memory_simulation_parameter="MK66FN2M0xxx18;0x200000;0x0;0x0;0x40000;4"
       arm_target_debug_interface_type="ADIv5"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       c_additional_options="-fms-extensions"
       c_user_include_directories="$(TargetsDir)/Kinetis"
-      linker_memory_map_file="$(TargetsDir)/Kinetis/MKL02Z16xxx4_MemoryMap.xml"
+      debug_register_definition_file="$(TargetsDir)/Kinetis/MK66F18_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/Kinetis/MK66FN2M0xxx18_MemoryMap.xml"
       linker_memory_map_macros="NAME=MK20DX128xxx5;FLASHSIZE=0x20000;FlexNVMSIZE=0x8000;FlexRAMSIZE=0x800;SRAMSIZE=0x4000;SVD=MK20D5"
       linker_output_format="bin"
       linker_printf_enabled="No"
       linker_printf_width_precision_supported="No"
       linker_scanf_enabled="No"
       linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml"
+      macros="DeviceVectorsFile=MK66F18.vec"
       project_directory=""
       project_type="Executable"
       property_groups_file_path="$(TargetsDir)/Kinetis/propertyGroups.xml"
@@ -34,12 +36,13 @@
       target_reset_script="Reset()" />
     <configuration
       Name="Flash"
-      arm_target_flash_loader_file_path="$(TargetsDir)/Kinetis/Release/LoaderL.elf"
+      arm_target_flash_loader_file_path="$(TargetsDir)/Kinetis/Release/Loader.elf"
       arm_target_flash_loader_type="LIBMEM RPC Loader"
       arm_target_loader_can_lock_all="No"
       arm_target_loader_can_lock_range="No"
       arm_target_loader_can_unlock_all="No"
       arm_target_loader_can_unlock_range="No"
+      arm_target_loader_parameter="4"
       target_reset_script="FLASHReset()" />
     <folder Name="Source Files">
       <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
@@ -51,6 +54,7 @@
       <file file_name="../snmp_mib_handlers.c" />
       <file file_name="../usb_application.c" />
       <file file_name="../webInterface.c" />
+      <file file_name="../DMX512.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/Kinetis/Kinetis_Target.js">
@@ -124,6 +128,7 @@
       <file file_name="../../../uTasker/crypto.c" />
       <file file_name="../../../uTasker/DSP.c" />
       <file file_name="../../../uTasker/i2c_drv.c" />
+      <file file_name="../../../uTasker/SPI_drv.c" />
     </folder>
     <folder Name="TCP/IP">
       <file file_name="../../../stack/ip_utils.c" />
