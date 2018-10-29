@@ -193,6 +193,8 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
         *ptrCipherTextOutput++ = LTC0_CTX_6;
         *ptrCipherTextOutput++ = LTC0_CTX_7;
         *ptrCipherTextOutput = LTC0_CTX_8;
+        WRITE_ONE_TO_CLEAR(LTC0_CW, LTC_CW_CDS);                         // clear the data size
+        WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                        // reset the done interrupt
     }
     WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
 }

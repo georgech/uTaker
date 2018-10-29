@@ -2260,9 +2260,9 @@
 // Cryptography
 //
 //#define CRYPTOGRAPHY                                                   // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
-  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code (for simulation or HW when native support si not available and enabled)
-  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code (for simulation or HW when native support si not available and enabled)
-    #define CRYPTO_MBEDTLS                                               // use mbedTLS library code (for simulation or HW when native support si not available and enabled)
+  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code (for simulation or HW when native support is not available and enabled)
+  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code (for simulation or HW when native support is not available and enabled)
+    #define CRYPTO_MBEDTLS                                               // use mbedTLS library code (for simulation or HW when native support is not available and enabled)
     #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
