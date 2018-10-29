@@ -127,15 +127,8 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                            // reset the done interrupt
 }
 
-static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCipherTextOutput, unsigned long _ulDataLength, int iDecrypt)
+static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCipherTextOutput, unsigned long _ulDataLength, unsigned long ulCommand)
 {
-    unsigned long ulCommand;
-    if (iDecrypt != 0) {
-        ulCommand = (LTC_MD_ENC_DECRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC);
-    }
-    else {
-        ulCommand = (LTC_MD_ENC_ENCRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC);
-    }
     LTC0_MD = ulCommand;                                                 // set the mode
     while (_ulDataLength != 0) {
         unsigned long ulThisLengthIn;
@@ -148,30 +141,36 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
         }
         _ulDataLength -= ulThisLengthIn;
         LTC0_DS = ulThisLengthIn;                                        // write the data size
-        ulThisLengthIn /= sizeof(unsigned long);                         // the number of long words
+        ulThisLengthIn = ((ulThisLengthIn + (sizeof(unsigned long) - 1))/sizeof(unsigned long)); // the number of long words (rounded up)
         ulThisLengthOut = ulThisLengthIn;
         while (ulThisLengthIn-- != 0) {                                  // copy to the input FIFO and read from the output FIFO
             while ((LTC0_FIFOSTA & LTC_FIFOSTA_IFF) != 0) {              // if the input FIFO is full we must wait before adding further data
+                if ((ulCommand & 0x00400000) == 0) {                     // if not SHA
+                    if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {    // if there is at least one output result ready
+                        *ptrCipherTextOutput++ = LTC0_OFIFO;
+                        ulThisLengthOut--;
+                    }
+                }
+            }
+            LTC0_IFIFO = *ptrPlainTextInput++;                           // long word aligned
+            if ((ulCommand & 0x00400000) == 0) {                         // if not SHA
                 if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {        // if there is at least one output result ready
                     *ptrCipherTextOutput++ = LTC0_OFIFO;
                     ulThisLengthOut--;
                 }
-            }
-            LTC0_IFIFO = *ptrPlainTextInput++;                           // long word aligned
-            if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {            // if there is at least one output result ready
-                *ptrCipherTextOutput++ = LTC0_OFIFO;
-                ulThisLengthOut--;
-            }
     #if defined _WINDOWS
-            else {
-                LTC0_FIFOSTA |= LTC_FIFOSTA_OFL_MASK;
-            }
+                else {
+                    LTC0_FIFOSTA |= LTC_FIFOSTA_OFL_MASK;
+                }
     #endif
+            }
         }
-        while (ulThisLengthOut != 0) {
-            if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {            // if there is at least one output result ready
-                *ptrCipherTextOutput++ = LTC0_OFIFO;
-                ulThisLengthOut--;
+        if ((ulCommand & 0x00400000) == 0) {                             // if not SHA
+            while (ulThisLengthOut != 0) {
+                if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {        // if there is at least one output result ready
+                    *ptrCipherTextOutput++ = LTC0_OFIFO;
+                    ulThisLengthOut--;
+                }
             }
         }
         while ((LTC0_STA & LTC_STA_DI) == 0) {                           // wait for completion
@@ -179,9 +178,21 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
             LTC0_STA |= LTC_STA_DI;
     #endif
         }
-        WRITE_ONE_TO_CLEAR(LTC0_CW, LTC_CW_CDS);                         // clear the data size
-        WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                        // reset the done interrupt
-        LTC0_MD = ulCommand;                                             // re-write the mode
+        if ((ulCommand & 0x00400000) == 0) {                             // if not SHA
+            WRITE_ONE_TO_CLEAR(LTC0_CW, LTC_CW_CDS);                     // clear the data size
+            WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                    // reset the done interrupt
+            LTC0_MD = ulCommand;                                         // re-write the mode
+        }
+    }
+    if ((ulCommand & 0x00400000) != 0) {                                 // if SHA
+        *ptrCipherTextOutput++ = LTC0_CTX_0;                             // return the context
+        *ptrCipherTextOutput++ = LTC0_CTX_1;
+        *ptrCipherTextOutput++ = LTC0_CTX_2;
+        *ptrCipherTextOutput++ = LTC0_CTX_4;
+        *ptrCipherTextOutput++ = LTC0_CTX_5;
+        *ptrCipherTextOutput++ = LTC0_CTX_6;
+        *ptrCipherTextOutput++ = LTC0_CTX_7;
+        *ptrCipherTextOutput = LTC0_CTX_8;
     }
     WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
 }
@@ -376,7 +387,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                 LTC0_CTX_2 = 0;
                 LTC0_CTX_3 = 0;
             }
-            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, 0); // encrypt using LTC
+            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, (LTC_MD_ENC_ENCRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC)); // encrypt using LTC
         #else                                                            // mmCAU HW accelerator
             if (_ulDataLength >= 16) {                                   // first block
                 if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) != 0) {// if the initial vector is to be reset before start
@@ -530,7 +541,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                 }
             }
         #else                                                            // LTC hardware accelerator
-            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, 1); // decrypt using LTC
+            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, ((LTC_MD_ENC_DECRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC))); // decrypt using LTC
         #endif
     #endif
     #if defined SOFTWARE_BASE_AES                                        // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
@@ -563,7 +574,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
     void *(*mbedtls_calloc)(size_t n, size_t size) = 0;
     void(*mbedtls_free)(void *ptr) = 0;
 #endif
-#if (((!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE) || defined SHA_DISABLE_CAU) && (!defined LTC_AVAILABLE || defined SHA_DISABLE_LTC))
+#if (((!defined CAU_V1_AVAILABLE && !defined CAU_V2_AVAILABLE) || defined SHA_DISABLE_CAU) && (!(defined LTC_AVAILABLE && defined LTC_HAS_SHA) || defined SHA_DISABLE_LTC))
     #undef NATIVE_SHA256_CAU
 #endif
 #if defined _WINDOWS || !defined NATIVE_SHA256_CAU                       // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
@@ -583,7 +594,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
 
 
 
-#if defined NATIVE_SHA256_CAU
+#if defined NATIVE_SHA256_CAU && !((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC)
 
 #define CRYPTO_LITTLE_ENDIAN                  0
 #define CRYPTO_BIG_ENDIAN                     1
@@ -657,19 +668,30 @@ static void padding_start(mbedtls_sha256_context *ptr_sha256, const unsigned cha
 
 extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, unsigned long ulLength, int iMode)
 {
-    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time)
+    #if defined SOFTWARE_BASE_SHA || (defined NATIVE_SHA256_CAU && !((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC))
+    static mbedtls_sha256_context sha256;
+    #endif
     #if defined NATIVE_SHA256_CAU
+        #if (!(defined LTC_AVAILABLE && defined LTC_HAS_SHA) || defined SHA_DISABLE_LTC)
     unsigned long length = ulLength;
-        #if defined _LITTLE_ENDIAN && !defined _WINDOWS
+            #if defined _LITTLE_ENDIAN && !defined _WINDOWS
     int iOutLongWords;
     unsigned long *ptrLongWord;
+            #endif
         #endif
-    padding_start(&sha256, ptrInput, &length, CRYPTO_BIG_ENDIAN);	
+        #if defined NATIVE_SHA256_CAU && !((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC)
+    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time)
+    padding_start(&sha256, ptrInput, &length, CRYPTO_BIG_ENDIAN);        // prepare padding for mmCAU SHA256 operation
+        #endif
     #endif
     switch (iMode) {
     case SHA_START_CALCULATE_TERMINATE:
     #if defined NATIVE_SHA256_CAU
-        #if (defined LTC_AVAILABLE || !defined SHA_DISABLE_LTC)          // LTC hardware accelerator
+        #if ((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC) // LTC hardware accelerator
+        POWER_UP_LTC_MODULE();                                               // ensure that the module is powered up before use
+        WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
+        LTC0_CTL = (LTC_CTL_IFS | LTC_CTL_OFS | LTC_CTL_KIS | LTC_CTL_KOS | LTC_CTL_CIS | LTC_CTL_COS); // enable byte swap for registers to be used
+        fnExecuteLTC((unsigned long *)ptrInput, (unsigned long *)ptrOutput, ulLength, ((LTC_MD_AS_INIT_FINAL | LTC_MD_ALG_SHA256)));
         #elif !defined _WINDOWS                                          // mmCAU hardware accelerator
         mmcau_sha256_update((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)ptrOutput);
             #if defined _LITTLE_ENDIAN
@@ -690,7 +712,7 @@ extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, uns
         break;
     case SHA_START_CALCULATE_STAY_OPEN:
     #if defined NATIVE_SHA256_CAU
-        #if (defined LTC_AVAILABLE || !defined SHA_DISABLE_LTC)          // LTC hardware accelerator
+        #if ((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC) // LTC hardware accelerator
         #elif !defined _WINDOWS                                          // mmCAU hardware accelerator
         mmcau_sha256_initialize_output((const unsigned int *)sha256.state);
         mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)sha256.state);
@@ -704,7 +726,7 @@ extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, uns
         break;
     case SHA_CONTINUE_CALCULATING:
     #if defined NATIVE_SHA256_CAU
-        #if (defined LTC_AVAILABLE || !defined SHA_DISABLE_LTC)          // LTC hardware accelerator
+        #if ((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC) // LTC hardware accelerator
         #elif !defined _WINDOWS                                          // mmCAU hardware accelerator
         mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length/CRYPTO_BLOCK_LENGTH), (unsigned int *)sha256.state);
         #endif
@@ -717,7 +739,7 @@ extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, uns
         break;
     case SHA_CONTINUE_CALCULATING_TERMINATE:
     #if defined NATIVE_SHA256_CAU
-        #if (defined LTC_AVAILABLE || !defined SHA_DISABLE_LTC)          // LTC hardware accelerator
+        #if ((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC) // LTC hardware accelerator
         #elif !defined _WINDOWS                                          // mmCAU hardware accelerator
         mmcau_sha256_hash_n((const unsigned char *)sha256.buffer, (const int)(length / CRYPTO_BLOCK_LENGTH), (unsigned int *)ptrOutput);
             #if defined _LITTLE_ENDIAN

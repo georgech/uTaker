@@ -1249,7 +1249,10 @@ typedef struct stRESET_VECTOR
 // LTC (LP Trusted Cryptography)
 //
 #if defined KINETIS_K82 || defined KINETIS_KL82
-   #define LTC_AVAILABLE
+    #define LTC_AVAILABLE
+    #if defined KINETIS_KL82
+        #define LTC_HAS_SHA
+    #endif
 #endif
 
 // CAU configuration
@@ -7662,6 +7665,11 @@ typedef struct st_KINETIS_DSPI
       #define LTC_MD_ALG_AES           0x00100000
       #define LTC_MD_ALG_DES           0x00200000
       #define LTC_MD_ALG_3DES          0x00210000
+    #if defined LTC_HAS_SHA
+      #define LTC_MD_ALG_SHA1          0x00410000
+      #define LTC_MD_ALG_SHA224        0x00420000
+      #define LTC_MD_ALG_SHA256        0x00430000
+    #endif
     #define LTC0_MDPK           *(unsigned long *)(LTC_BLOCK + 0x000)    // LTC mode (public key)
     #define LTC0_KS             *(unsigned long *)(LTC_BLOCK + 0x008)    // LTC key size
     #define LTC0_DS             *(unsigned long *)(LTC_BLOCK + 0x010)    // LTC data size
