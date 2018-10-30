@@ -7712,12 +7712,6 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
         return 0;
     }
 #endif
-    {
-        QUEUE_HANDLE backup = DebugHandle;
-        DebugHandle = SerialPortID;
-        fnDebugDec(usLen, (WITH_CR_LF | WITH_SPACE));
-        DebugHandle = backup;
-    }
     while (usLen-- != 0) {
         if ((DELETE_KEY == *ptrData) || (CONTROL_QUESTION_MARK == *ptrData)) { // {90} putty defaults to using control-? instead of control-H for back space
             if (ucDebugCnt != 0) {
