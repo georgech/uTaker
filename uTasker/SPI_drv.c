@@ -437,7 +437,7 @@ static unsigned char fnGetFromCircularBuffer(QUEQUE *ptrQUE)
         return ucValue;
     }
     else {
-        _EXCEPTION("Extracting non-existet character!");
+        _EXCEPTION("Extracting non-existent character!");
         return 0;
     }
 }

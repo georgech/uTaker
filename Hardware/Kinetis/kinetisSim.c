@@ -6083,12 +6083,50 @@ extern void fnSimulateSPIIn(int iPort, unsigned char *ptrDebugIn, unsigned short
 {
 #if defined SPI_INTERFACE
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    while (usLen-- != 0) {                                               // for each byte
-        SPI0_POPR = *ptrDebugIn++;
-        SPI0_SR |= SPI_SR_RFDF;
-        if ((SPI0_RSER & SPI_SRER_RFDF_RE) != 0) {
-            ptrVect->processor_interrupts.irq_SPI0();                    // call the interrupt handler
+    switch (iPort) {
+    case 0:
+        while (usLen-- != 0) {                                           // for each byte
+        #if defined DSPI_SPI
+            SPI0_POPR = *ptrDebugIn++;
+            SPI0_SR |= SPI_SR_RFDF;
+            if ((SPI0_RSER & SPI_SRER_RFDF_RE) != 0) {
+                ptrVect->processor_interrupts.irq_SPI0();                // call the interrupt handler
+            }
+        #else
+            _EXCEPTION("To do...");
+        #endif
         }
+        break;
+    #if SPI_AVAILABLE > 1
+    case 1:
+        while (usLen-- != 0) {                                           // for each byte
+        #if defined DSPI_SPI
+            SPI1_POPR = *ptrDebugIn++;
+            SPI1_SR |= SPI_SR_RFDF;
+            if ((SPI1_RSER & SPI_SRER_RFDF_RE) != 0) {
+                ptrVect->processor_interrupts.irq_SPI1();                // call the interrupt handler
+            }
+        #else
+            _EXCEPTION("To do...");
+        #endif
+        }
+        break;
+    #endif
+    #if SPI_AVAILABLE > 2
+    case 2:
+        while (usLen-- != 0) {                                           // for each byte
+        #if defined DSPI_SPI
+            SPI2_POPR = *ptrDebugIn++;
+            SPI2_SR |= SPI_SR_RFDF;
+            if ((SPI2_RSER & SPI_SRER_RFDF_RE) != 0) {
+                ptrVect->processor_interrupts.irq_SPI2();                // call the interrupt handler
+            }
+        #else
+            _EXCEPTION("To do...");
+        #endif
+        }
+        break;
+    #endif
     }
 #endif
 }
@@ -7280,6 +7318,7 @@ extern unsigned long fnSimInts(char *argv[])
 #if defined SPI_INTERFACE
     if ((iInts & CHANNEL_0_SPI_INT) != 0) {
         iInts &= ~CHANNEL_0_SPI_INT;                                     // interrupt has been handled
+    #if defined DSPI_SPI
         SPI0_SR |= SPI_SR_TFFF;
         if ((SPI0_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
             if (fnGenInt(irq_SPI0_ID) != 0) {                            // if SPI0 interrupt is not disabled
@@ -7287,24 +7326,35 @@ extern unsigned long fnSimInts(char *argv[])
                 ptrVect->processor_interrupts.irq_SPI0();                // call the interrupt handler
             }
         }
+    #else
+        _EXCEPTION("To do..");
+    #endif
     }
     #if SPI_AVAILABLE > 1
     if ((iInts & CHANNEL_1_SPI_INT) != 0) {
         iInts &= ~CHANNEL_1_SPI_INT;                                     // interrupt has been handled
+        #if defined DSPI_SPI
         SPI1_SR |= SPI_SR_TFFF;
-        if ((SPI1_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
-        #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
-            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_SPI1) != 0)
+        if ((SPI1_RSER & SPI_SRER_TFFF_RE) != 0)
+        #elif defined LPSPI_SPI
+        if (0)
         #else
-            if (fnGenInt(irq_SPI1_ID) != 0)                              // if SPI1 interrupt is not disabled
+        SPI1_S |= (SPI_S_SPTEF | SPI_S_SPRF);                            // set tranmitter empty and receiver not empty flags
+        if ((SPI1_C1 & (SPI_C1_SPTIE | SPI_C1_SPIE)) != 0)               // if either of the interrupt sources are enabled
         #endif
+        {                                                                // if transmitter fifo not full interrupt enabled
+            #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
+            if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_SPI1) != 0)
+            #else
+            if (fnGenInt(irq_SPI1_ID) != 0)                              // if SPI1 interrupt is not disabled
+            #endif
             {
                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
+            #if !defined irq_SPI1_ID && defined INTMUX0_AVAILABLE
                 fnCallINTMUX(INTMUX_SPI1, INTMUX0_PERIPHERAL_SPI1, (unsigned char *)&ptrVect->processor_interrupts.irq_SPI1);
-        #else
+            #else
                 ptrVect->processor_interrupts.irq_SPI1();                // call the interrupt handler
-        #endif
+            #endif
             }
         }
     }
@@ -7312,6 +7362,7 @@ extern unsigned long fnSimInts(char *argv[])
     #if SPI_AVAILABLE > 2
     if ((iInts & CHANNEL_2_SPI_INT) != 0) {
         iInts &= ~CHANNEL_2_SPI_INT;                                     // interrupt has been handled
+        #if defined DSPI_SPI
         SPI2_SR |= SPI_SR_TFFF;
         if ((SPI2_RSER & SPI_SRER_TFFF_RE) != 0) {                       // if transmitter fifo not full interrupt enabled
             if (fnGenInt(irq_SPI2_ID) != 0) {                            // if SPI2 interrupt is not disabled
@@ -7319,6 +7370,9 @@ extern unsigned long fnSimInts(char *argv[])
                 ptrVect->processor_interrupts.irq_SPI2();                // call the interrupt handler
             }
         }
+        #else
+        _EXCEPTION("To do..");
+        #endif
     }
     #endif
 #endif

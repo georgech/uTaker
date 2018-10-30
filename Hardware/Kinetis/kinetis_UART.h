@@ -2621,7 +2621,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     lpuart_reg->LPUART_BAUD = ((lpuart_reg->LPUART_BAUD & ~LPUART_BAUD_SBR) | (usDivider | LPUART_BAUD_OSR_16)); // set the (new) baud rate
     uDisable_Interrupt();                                                // protect this region in case transmit interrupt is presently enabled
     {                                                                    // {204}
-        unsigned long ulCtrlReg = (lpuart_reg->LPUART_CTRL & (LPUART_CTRL_TCIE | LPUART_CTRL_TIE)); // preserve only the transmit interrupt values (in case a byte is presently being transmitted)
+        unsigned long ulCtrlReg = (lpuart_reg->LPUART_CTRL & (LPUART_CTRL_RIE | LPUART_CTRL_TCIE | LPUART_CTRL_TIE | LPUART_CTRL_RE | LPUART_CTRL_TE)); // preserve only the interrupt values and rx/tx enable (in case a byte is presently being transmitted)
         if ((pars->Config & CHAR_7) != 0) {                              // Kinetis supports only one fixed stop bit on its main UART(s)
             ucUART_mask[Channel] = 0x7f;                                 // set 7 bit mask to remove parity bits
         }

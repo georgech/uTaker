@@ -7632,17 +7632,16 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
 
 extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSource)
 {
-    #define MAX_DEBUG_IN 40
+    #define MAX_DEBUG_IN 39
     int iReturn = 0;
 #if defined PREVIOUS_COMMAND_BUFFERS                                     // {35}
-    static CHAR cDebugIn[PREVIOUS_COMMAND_BUFFERS][MAX_DEBUG_IN];        // list of previous commands
+    static CHAR cDebugIn[PREVIOUS_COMMAND_BUFFERS][MAX_DEBUG_IN + 1] = {{0}}; // list of previous commands
     static int iDebugBufferIndex = 0;
     static unsigned char ucEscapeSequence = 0;
 #else
     static CHAR cDebugIn[1][MAX_DEBUG_IN];
     #define iDebugBufferIndex      0
 #endif
-
 #if defined USE_TELNET_CLIENT                                            // {72}
     if (iTELNET_clientActive != 0) {                                     // if Telnet client connection is being controlled
         int iTELNET_interface = (iTELNET_clientActive - 1);              // the active interface index
@@ -7713,7 +7712,12 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
         return 0;
     }
 #endif
-
+    {
+        QUEUE_HANDLE backup = DebugHandle;
+        DebugHandle = SerialPortID;
+        fnDebugDec(usLen, (WITH_CR_LF | WITH_SPACE));
+        DebugHandle = backup;
+    }
     while (usLen-- != 0) {
         if ((DELETE_KEY == *ptrData) || (CONTROL_QUESTION_MARK == *ptrData)) { // {90} putty defaults to using control-? instead of control-H for back space
             if (ucDebugCnt != 0) {
@@ -7745,7 +7749,7 @@ extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSou
                 }
                 continue;
             case ARROW_RIGHT_SEQUENCE:                                   // move right in buffer to edit
-                if (ucDebugCnt < MAX_DEBUG_IN) {
+                if (ucDebugCnt < (MAX_DEBUG_IN - 1)) {
                     ucDebugCnt++;
                 }
                 continue;

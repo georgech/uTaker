@@ -66,6 +66,7 @@
     20.02.2018 When both host and device modes can operate handle CDC reception appropriately {48}
     04.05.2018 Change interface to fnSetNewSerialMode()                  {49}
     02.06.2018 Zero optional user UART callback handlers                 {50}
+    30.10.2018 Add optional USB-CDC interface to interface pass though reference {51}
 
 */
 
@@ -96,14 +97,18 @@
 #endif
 
 #if defined USB_HOST_SUPPORT
-    #define NUMBER_OF_HOST_ENDPOINTS             3                       // reserve 2 bulk endpoints for USB-MSD host as well as an interrupt endpoint (although not used, some memory sticks request this)
+    #define NUMBER_OF_HOST_ENDPOINTS        3                            // reserve 2 bulk endpoints for USB-MSD host as well as an interrupt endpoint (although not used, some memory sticks request this)
     #if defined USB_MSD_HOST
-        #define STATUS_TRANSPORT                0x100
+        #define STATUS_TRANSPORT            0x100
     #endif
 #endif
 
 #define INCLUDE_USB_DEFINES
     #if defined USE_USB_CDC                                              // one or more CDC interfaces (with optional MSD, mouse and/or keyboard)
+        #if USB_CDC_COUNT > 1
+            #define USB_CDC_INTERFACE_PASSTHROUGH                        // {51} if USB_CDC_COUNT is 2 or more reception on the first USB-CDC interface is passed to the second, and second to first
+        #endif
+      //#define USB_CDC_ECHO                                             // echo reception rather than sending to UART (when no command line interface) or to the command line interface
         #include "usb_cdc_descriptors.h"
       //#define DEBUG_RNDIS_ON                                           // warning can't be used with telnet as debug output!!
     #elif defined USE_USB_MSD                                            // MSD (with optional mouse and/or keyboard)
@@ -1315,7 +1320,10 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         }
         #endif
     #endif
-    #if defined USE_MAINTENANCE
+    #if defined USB_CDC_INTERFACE_PASSTHROUGH
+        Length = fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content
+        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE + 1], ucInputMessage, Length); // send input to next USB-CDC interface
+    #elif defined USE_MAINTENANCE
         if ((usUSB_state & (ES_USB_DOWNLOAD_MODE | ES_USB_RS232_MODE)) != 0) {
             if ((usUSB_state & ES_USB_RS232_MODE) != 0) {
         #if defined SERIAL_INTERFACE && defined DEMO_UART                // {8}
@@ -1329,7 +1337,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                                                                          // the TX_FREE event is not explicitly handled since it is used to wake a next check of the buffer progress
                 }
         #else
-            fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content to empty the queue
+                fnRead(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, LARGE_MESSAGE); // read the content to empty the queue
         #endif
             }
             else {                                                       // loading mode
@@ -1358,7 +1366,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #if defined USB_HOST_SUPPORT                                     // {48} when host or device modes can operate
         if (USB_DEVICE_MODE_OF_OPERATION == iUSB_mode) {                 // echo input only in device mode
         #endif
+        #if !defined USB_CDC_INTERFACE_PASSTHROUGH
             fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // echo input
+        #endif
         #if defined USB_HOST_SUPPORT
         }
         #endif
@@ -1367,17 +1377,19 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #if defined USB_HOST_SUPPORT                                     // {48} when host or device modes can operate
         if (USB_DEVICE_MODE_OF_OPERATION == iUSB_mode) {                 // handle command line input only when in device mode
         #endif
+        #if !defined USB_CDC_INTERFACE_PASSTHROUGH && !defined USB_CDC_ECHO
             if (usUSB_state == ES_NO_CONNECTION) {
                 if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
                     if (fnInitiateLogin(ES_USB_LOGIN) == TELNET_ON_LINE) {
                         static const CHAR ucCOMMAND_MODE_BLOCKED[] = "Command line blocked\r\n";
-                        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, sizeof(ucCOMMAND_MODE_BLOCKED));
+                        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, (sizeof(ucCOMMAND_MODE_BLOCKED) - 1));
                     }
                 }
             }
             else {
                 fnCommandInput(ucInputMessage, Length, SOURCE_USB);
             }
+        #endif
         #if defined USB_HOST_SUPPORT
         }
         #endif
@@ -1395,7 +1407,12 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         }
         #endif
         #if !defined FREEMASTER_CDC || (USB_CDC_VCOM_COUNT > 2)
-            #if defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS
+            #if defined USB_CDC_INTERFACE_PASSTHROUGH
+        while (fnMsgs(USBPortID_comms[iCDC_input]) != 0) {               // if there is data available in the USB input
+            Length = fnRead(USBPortID_comms[iCDC_input], ucInputMessage, LARGE_MESSAGE);
+            fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], ucInputMessage, Length); // send input to first USB-CDC interface
+        }
+            #elif defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS
         if (fnMsgs(USBPortID_comms[iCDC_input]) != 0) {                  // if there is data available in the USB input
             if (CDCSerialPortID[iCDC_input] == NO_ID_ALLOCATED) {        // no attached UART
                 fnRead(USBPortID_comms[iCDC_input], ucInputMessage, LARGE_MESSAGE); // clear input
@@ -1450,10 +1467,14 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
             if (uartID != NO_ID_ALLOCATED) {                             // if the UART interface has been opened
                 if (Length != 0) {                                       // CDC reception available
+        #if defined USB_CDC_ECHO
+                    fnWrite(USBPortID_comms[iCDC_input], ucInputMessage, Length); // echo back to the USB-CDC connection
+        #else
                     fnWrite(uartID, ucInputMessage, Length);             // send input to serial port (data loss not respected if the serial port has no more output buffer space)
+        #endif
                 }
                 if ((Length = fnRead(uartID, ucInputMessage, LARGE_MESSAGE)) != 0) { // read any UART input data
-                    fnWrite(USBPortID_comms[iCDC_input], ucInputMessage, Length); // pass it on the the USB-CDC connection
+                    fnWrite(USBPortID_comms[iCDC_input], ucInputMessage, Length); // pass it on to the USB-CDC connection
                 }
             }
         }

@@ -1384,7 +1384,7 @@ typedef struct stRESET_VECTOR
 
 #if defined KINETIS_K02 || defined KINETIS_K12
     #define SPI_AVAILABLE           1
-#elif defined KINETIS_KL82 || defined KINETIS_KE15
+#elif defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KL27
     #define SPI_AVAILABLE           2
 #elif defined KINETIS_K22 && ((SIZE_OF_FLASH == (128 * 1024)) || (SIZE_OF_FLASH == (512 * 1024)))
     #define SPI_AVAILABLE           2
@@ -7163,6 +7163,14 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define LPSPI_SR_DMF    0x00002000                               // data match flag (write '1' to clear)
         #define LPSPI_SR_MBF    0x01000000                               // module busy flag (read-only)
     #define LPSPI0_IER          *(unsigned long *)(LPSPI0_BLOCK + 0x18)  // LPSPI0 interrupt enable register
+        #define LPSPI_IER_TDIE  0x00000001                               // transmit data interrupt enable
+        #define LPSPI_IER_RDIE  0x00000002                               // receive data interrupt enable
+        #define LPSPI_IER_WCIE  0x00000100                               // word complete interrupt enable
+        #define LPSPI_IER_FCIE  0x00000200                               // frame complete interrupt enable
+        #define LPSPI_IER_TCIE  0x00000400                               // transmit complete interrupt enable
+        #define LPSPI_IER_TEIE  0x00000800                               // transmit error interrupt enable
+        #define LPSPI_IER_REIE  0x00001000                               // receive error interrupt enable
+        #define LPSPI_IER_DMIE  0x00002000                               // data match interrupt enable
     #define LPSPI0_DER          *(unsigned long *)(LPSPI0_BLOCK + 0x1c)  // LPSPI0 DMA enable register
     #define LPSPI0_CFGR0        *(unsigned long *)(LPSPI0_BLOCK + 0x20)  // LPSPI0 configuration register 0
         #define LPSPI_CFGR0_HREN    0x00000001                           // host request enable
@@ -7259,6 +7267,32 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #define LPSPI2_TDR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x64) // LPSPI2 transmit data register (write-only)
     #define LPSPI2_RSR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x70) // LPSPI2 receive status register (read-only)
     #define LPSPI2_RDR          *(volatile unsigned long *)(LPSPI2_BLOCK + 0x74) // LPSPI2 receive data register (read-only)
+
+    typedef struct st_KINETIS_LPSPI
+    {
+        volatile unsigned long LPSPI_VERID;
+        volatile unsigned long LPSPI_PARAM;
+        unsigned long ulRes0[2];
+        volatile unsigned long LPSPI_CR;
+        volatile unsigned long LPSPI_SR;
+        unsigned long LPSPI2_IER;
+        unsigned long LPSPI2_DER;
+        unsigned long LPSPI2_CFGR0;
+        unsigned long LPSPI2_CFGR1;
+        unsigned long ulRes1[2];
+        unsigned long LPSPI2_DMR0;
+        unsigned long LPSPI2_DMR1;
+        unsigned long ulRes2[2];
+        unsigned long LPSPI2_CCR;
+        unsigned long ulRes3[5];
+        unsigned long LPSPI2_FCR;
+        volatile unsigned long LPSPI_FSR;
+        unsigned long LPSPI2_TCR;
+        volatile unsigned long LPSPI2_TDR;
+        unsigned long ulRes4[2];
+        volatile unsigned long LPSPI2_RSR;
+        volatile unsigned long LPSPI2_RDR;
+    } _KINETIS_LPSPI;
 #elif !defined DSPI_SPI                                                  // SPI instead of DSPI
   #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KL33 // KL devices supporting 16 bit words
     #define SPI0_S              *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register (read only)
@@ -7335,6 +7369,22 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
 
     #define SPI1_CI             *(unsigned char *)(SPI1_BLOCK + 0xa)     // SPI1 clear interrupt register
     #define SPI1_C3             *(unsigned char *)(SPI1_BLOCK + 0xb)     // SPI1 control register 3
+
+    typedef struct st_KINETIS_SPI
+    {
+        volatile unsigned char SPI_S;
+        unsigned char SPI_BR;
+        unsigned char SPI_C2;
+        unsigned char SPI_C1;
+        unsigned char SPI_ML;
+        unsigned char SPI_MH;
+        volatile unsigned char SPI_D;                                    // SPI_DL
+        volatile unsigned char SPI_DH;
+        unsigned char ucRes0;
+        unsigned char ucRes1;
+        unsigned char SPI_CI;
+        unsigned char SPI_C3;
+    } _KINETIS_SPI;
   #elif defined KINETIS_KL03
     #define SPI0_S              *(volatile unsigned char *)(SPI0_BLOCK + 0x0) // SPI0 status register
       #define SPI_S_MODF        0x10                                     // master mode fault flag
@@ -7377,6 +7427,17 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #define SPI0_M              *(volatile unsigned char *)(SPI0_BLOCK + 0x4) // SPI0 match register
 
     #define SPI0_D              *(volatile unsigned char *)(SPI0_BLOCK + 0x6) // SPI0 data register
+
+    typedef struct st_KINETIS_SPI
+    {
+        volatile unsigned char SPI_S;
+        unsigned char SPI_BR;
+        unsigned char SPI_C2;
+        unsigned char SPI_C1;
+        unsigned char SPI_M;
+        unsigned char ucRes0;
+        volatile unsigned char SPI_D;
+    } _KINETIS_SPI;
   #else
     #define SPI0_C1             *(unsigned char *)(SPI0_BLOCK + 0x0)     // SPI0 control register 1
       #define SPI_C1_LSBFE      0x01                                     // LSB first
@@ -7431,6 +7492,18 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #define SPI1_D              *(volatile unsigned char *)(SPI1_BLOCK + 0x5) // SPI1 data register
 
     #define SPI1_M              *(volatile unsigned char *)(SPI1_BLOCK + 0x7) // SPI1 match register
+
+    typedef struct st_KINETIS_SPI
+    {
+        unsigned char SPI_C1;
+        unsigned char SPI_C2;
+        unsigned char SPI_BR;
+        volatile unsigned char SPI_S;
+        unsigned char ucRes0;
+        volatile unsigned char SPI_D;
+        unsigned char ucRes1;
+        unsigned char SPI_M;
+    } _KINETIS_SPI;
   #endif
 #else
 // DSPI
