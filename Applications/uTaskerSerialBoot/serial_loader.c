@@ -215,6 +215,13 @@ typedef struct
     #if !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
         static void fnPrintScreen(void);
     #endif
+    #if defined KBOOT_LOADER && defined KBOOT_SECURE_LOADER
+        static void fnPrepareDecrypt(void);
+    #endif
+#elif defined I2C_INTERFACE
+    #define NEEDS_BLANK_CHECK
+    static unsigned char *fnBlankCheck(void);
+    static int fnPerformBlankCheck(void);
 #endif
 #if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || (defined I2C_INTERFACE && !defined BLAZE_K22)
     static void fnCommittProgramStart(void);
@@ -324,6 +331,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined KBOOT_LOADER                                             // {20}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_57600;                // fixed baud rate for kboot compatibility
         tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
+    #if defined KBOOT_SECURE_LOADER
+        fnPrepareDecrypt();
+    #endif
     #elif defined DEVELOPERS_LOADER                                      // {23}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_115200;               // fixed baud rate for developer's loader
         tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
@@ -358,6 +368,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         tInterfaceParameters.Task_to_wake = OWN_TASK;                    // wake self when messages have been received
         if ((SerialPortID = fnOpen(TYPE_TTY, FOR_I_O, &tInterfaceParameters)) != NO_ID_ALLOCATED) { // open or change the channel with defined configurations (initially inactive)
             fnDriver(SerialPortID, (TX_ON | RX_ON), 0);                  // enable rx and tx
+    #if defined KBOOT_RS485
+            fnDriver(SerialPortID, (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE), 0); // configure RTS pin for control use
+    #endif
         }
         DebugHandle = SerialPortID;                                      // assign our serial interface as debug port
     #if defined MEMORY_SWAP
@@ -401,7 +414,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined USE_HTTP
         fnConfigureAndStartWebServer();
     #elif defined USE_TFTP
-        fnStartDHCP((UTASK_TASK)(FORCE_INIT | OWN_TASK));                // activate DHCP
+        fnStartDHCP((UTASK_TASK)(FORCE_INIT | OWN_TASK), (DHCP_CLIENT_OPERATION)); // activate DHCP
     #endif
     #if defined _WINDOWS
         fnSimulateLinkUp();                                              // Ethernet link up simulation
@@ -461,7 +474,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                     break;
 
                 case DHCP_MISSING_SERVER:
-                    fnStopDHCP();                                        // DHCP server is missing so stop and continue with backup address (if available)
+                    fnStopDHCP(ucInputMessage[1]);                       // DHCP server is missing so stop and continue with backup address (if available)
                     break;
     #endif
     #if defined BLAZE_K22
@@ -685,9 +698,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #else
                 fnCommittProgramStart();
                 RESET_PERIPHERALS();                                     // reset peripherals and disable interrupts ready for jumping to the application
-            #if !defined _WINDOWS
                 start_application(_UTASKER_APP_START_);                  // unconditional jump to application code
-            #endif
         #endif
                 break;
             }
@@ -767,9 +778,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
               //fnSendDevelopersAckNak(SerialPortID, DEVELOPERS_ACK);    // return OK (not required)
                 fnCommittProgramStart();
                 RESET_PERIPHERALS();                                     // reset peripherals and disable interrupts ready for jumping to the application
-            #if !defined _WINDOWS
                 start_application(_UTASKER_APP_START_);                  // unconditional jump to application code
-            #endif
             }
             break;
         #endif
@@ -1500,6 +1509,72 @@ static void fnPrepareGenericResponse(KBOOT_PACKET *ptrKBOOT_response, int iInter
     }
 }
 
+#if defined KBOOT_SECURE_LOADER
+#define SECURE_BLOCK_LENGTH 1024
+typedef struct stALIGNED_DATA_BUFFER
+{
+    unsigned char *ptrDestinationAddress;
+    unsigned long  ulLength;                                             // long word to ensure following data alignment
+    unsigned char  ucDataInput[SECURE_BLOCK_LENGTH];                     // data aligned
+} ALIGNED_DATA_BUFFER;
+
+static const CHAR decrypt_key[] = "hjdiidgqwegdoqwfqwoewudewfwezfqw";
+typedef struct stALIGNED_KEY
+{
+    unsigned long  ulLength;                                             // long word to ensure following key alignment
+    unsigned char  ucKey[sizeof(decrypt_key - 1)];                       // key aligned
+} ALIGNED_KEY;
+
+static int iCipherCommamd = 0;
+
+// It is assumed that the content is received in a linear fashion (addresses incrementing with each buffer)
+//
+static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *ptrData, unsigned short usBuff_length)
+{
+    static ALIGNED_DATA_BUFFER encryptBuffer = {{0}};
+    unsigned short usThisLength;
+    if (ptrData == 0) {                                                  // final block
+        if (encryptBuffer.ulLength != 0) {
+            fnAES_Cipher(iCipherCommamd, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, encryptBuffer.ulLength); // decrypt the buffer content
+            fnWriteBytesFlash(encryptBuffer.ptrDestinationAddress, encryptBuffer.ucDataInput, encryptBuffer.ulLength); // program flash
+        }
+    #if  defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+        fnWriteBytesFlash(0, 0, 0);                                      // close any outstanding FLASH buffer
+    #endif
+    }
+    if (encryptBuffer.ulLength == 0) {                                   // block starting
+        encryptBuffer.ptrDestinationAddress = ptrFlashAddress;           // the address that the block is destined for
+    }
+    while (usBuff_length != 0) {
+        if (usBuff_length <= (SECURE_BLOCK_LENGTH - encryptBuffer.ulLength)) {
+            usThisLength = usBuff_length;
+        }
+        else {
+            usThisLength = (unsigned short)(SECURE_BLOCK_LENGTH - encryptBuffer.ulLength);
+        }
+        uMemcpy(&encryptBuffer.ucDataInput[encryptBuffer.ulLength], ptrData, usBuff_length);
+        usBuff_length -= usThisLength;
+        encryptBuffer.ulLength += usThisLength;
+        if (encryptBuffer.ulLength >= SECURE_BLOCK_LENGTH) {             // if a complete buffer has been prepared
+            fnAES_Cipher(iCipherCommamd, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // decrypt the buffer content
+            fnWriteBytesFlash(encryptBuffer.ptrDestinationAddress, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // program flash
+            encryptBuffer.ptrDestinationAddress += SECURE_BLOCK_LENGTH;
+            encryptBuffer.ulLength = 0;
+            iCipherCommamd = (AES_COMMAND_AES_DECRYPT);                  // the vector is only initialised on first call
+        }
+    }
+}
+
+static void fnPrepareDecrypt(void)
+{
+    static ALIGNED_KEY decryptKey = {{0}};
+    decryptKey.ulLength = sizeof(decrypt_key - 1);
+    uMemcpy(decryptKey.ucKey, decrypt_key, sizeof(decrypt_key - 1));
+    iCipherCommamd = (AES_COMMAND_AES_DECRYPT | AES_COMMAND_AES_RESET_IV);
+    fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, decryptKey.ucKey, (sizeof(decrypt_key - 1))); // register the decryption key
+}
+#endif
+
 extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_packet)
 {
     int iReturn = KBOOT_NO_ACTION;
@@ -1538,6 +1613,9 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                             ulLength = ((unsigned long)UTASKER_APP_END - ulStartAddress);
                         }
                         fnEraseFlashSector((unsigned char *)ulStartAddress, (MAX_FILE_LENGTH)ulLength);
+    #if defined KBOOT_SECURE_LOADER
+                        fnPrepareDecrypt();
+    #endif
     #if defined ADD_FILE_OBJECT_AFTER_LOADING
                         fileObjInfo.ptrLastAddress = 0;
     #endif
@@ -1646,7 +1724,11 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                 if (usBuff_length > ulProg_length) {
                     usBuff_length = (unsigned short)ulProg_length;
                 }
+    #if defined KBOOT_SECURE_LOADER
+                fnWriteBytesSecure(ptrFlashAddress, ptrKBOOT_packet->ucData, usBuff_length);
+    #else
                 fnWriteBytesFlash(ptrFlashAddress, ptrKBOOT_packet->ucData, usBuff_length); // program flash
+    #endif
                 ptrFlashAddress += usBuff_length;
                 ulProg_length -= usBuff_length;
                 if (ulProg_length == 0) {                                // complete code has been received
@@ -1661,7 +1743,9 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                   //    KBOOT_response.ucData[2] = 2;
                   //}
                     KBOOT_response.ucData[8] = KBOOT_COMMAND_TAG_WRITE_MEMORY;
-    #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+    #if defined KBOOT_SECURE_LOADER
+                    fnWriteBytesSecure(0, 0, 0);
+    #elif  defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer
     #endif
                     fnReturnResponse(hInterface, iInterfaceType, &KBOOT_response); // send response to inform that all data has been programmed
@@ -2118,7 +2202,7 @@ static unsigned char *fnBlankCheck(void)
 #endif
 
 
-#if defined NEEDS_BLANK_CHECK && (defined I2C_INTERFACE || ((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC))
+#if defined I2C_INTERFACE || (defined NEEDS_BLANK_CHECK && ((defined SERIAL_INTERFACE && !defined USE_MODBUS) || defined USE_USB_CDC))
 static int fnPerformBlankCheck(void)
 {
     unsigned char *ptrFlash = fnBlankCheck();                            // subroutine for blank check added
@@ -2355,9 +2439,7 @@ extern void fnJumpToValidApplication(int iResetPeripherals)              // {25}
     #endif
             RESET_PERIPHERALS();                                         // {14} reset peripherals and disable interrupts ready for jumping to the application
         }
-    #if !defined _WINDOWS
         start_application(_UTASKER_APP_START_);                          // jump to the application
-    #endif
     }
 }
 

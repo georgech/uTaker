@@ -184,6 +184,10 @@
     #define KINETIS_KE15
     #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
+  //#define KBOOT_RS485
+    #if defined KBOOT_RS485
+        #define SUPPORT_HW_FLOW
+    #endif
 #elif defined TRK_KEA64
     #define TARGET_HW            "TRK-KEA64"
     #define KINETIS_MAX_SPEED    40000000                                // 40MHz version
@@ -937,6 +941,7 @@
         #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
           //#define KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
           //#define KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
+          //#define KBOOT_SECURE_LOADER                                  // decrypt and accept only encrypted/authenticated firmware
       //#define DEVELOPERS_LOADER                                        // Freescale Developer's Bootloader (AN2295) compatible mode (rather than SREC/iHex)
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
@@ -1156,7 +1161,7 @@
     #define ETHERNET_RELEASE_AFTER_EVERY_FRAME                           // handle only one Ethernet reception frame at a time and allow other tasks to be scheduled in between
         #define ETHERNET_RELEASE_LIMIT  3                                // allow a maximum of three reception frames to be handled
 /**************** Configure TCP/IP services ******************************************************************/
-    #define USE_IPV6                                                     // enable IPv6
+  //#define USE_IPV6                                                     // enable IPv6
       //#define USE_IPV6INV4                                             // support tunneling IPv6 ind IPv4
         #define USE_IPV6INV4_RELAY_DESTINATIONS 2                        // enable relaying to other nodes in the network - the number of destination in the IPv6 in IPv4 relay table
         #define MAX_HW_ADDRESS_LENGTH  MAC_LENGTH                        // set a variable maximum hardware address length - default is Ethernet MAC-48, 6 bytes
@@ -1166,7 +1171,7 @@
       //#define USE_IP_STATS                                             // enable IP statistics (counters)
         #define ARP_TABLE_ENTRIES      4                                 // the maximum entries in ARP table
         #define ARP_IGNORE_FOREIGN_ENTRIES                               // only add used addresses to ARP table
-        #define USE_ICMP                                                 // enable ICMP
+      //#define USE_ICMP                                                 // enable ICMP
         #if defined _WINDOWS
           //#define PSEUDO_LOOPBACK                                      // pseudo loop back when simulating - only for use with the simulator!! (this allows an application to send test frames to its own IP address)
         #endif
@@ -1211,16 +1216,16 @@
             #define USER_UDP_SOCKETS       1                             // we reserve  one non-standard UDP socket in case the UDP demo is required
 
           //#define USE_BOOTP                                            // enable BOOTP - needs UDP - IPCONFIG default zero.
-            #define USE_DHCP                                             // enable DHCP  - needs UDP - IPCONFIG default zero. Needs 1k Ethernet RX Buffers!! (set random number also)
+            #define USE_DHCP_CLIENT                                      // enable DHCP  - needs UDP - IPCONFIG default zero. Needs 1k Ethernet RX Buffers!! (set random number also)
           //#define USE_DNS                                              // enable DNS   - needs UDP
           //    #define DNS_SERVER_OWN_ADDRESS                           // command line menu allows DNS server address to be set, otherwise it uses the default gateway
-          //#define USE_TFTP                                             // enable TFTP  - needs UDP
+         // #define USE_TFTP                                             // enable TFTP  - needs UDP
 
           //#define USE_NETBIOS                                          // enable NetBIOS - needs UDP
           //#define USE_SNMP
           //#define USE_SNTP                                             // simple network time protocol
 
-            #if defined USE_DHCP
+            #if defined USE_DHCP_CLIENT
                 #define DHCP_SOCKET 1
             #else
                 #define DHCP_SOCKET 0
@@ -1430,6 +1435,26 @@
         #define _REMOVE_FORMATTED_OUTPUT
     #endif
 #endif
+
+// Cryptography
+//
+#if defined KBOOT_LOADER && defined KBOOT_SECURE_LOADER
+    #define CRYPTOGRAPHY                                                 // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
+#endif
+  //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code (for simulation or HW when native support is not available and enabled)
+  //#define CRYPTO_WOLF_SSL                                              // use wolfSSL library code (for simulation or HW when native support is not available and enabled)
+    #define CRYPTO_MBEDTLS                                               // use mbedTLS library code (for simulation or HW when native support is not available and enabled)
+    #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
+        #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
+        #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
+        #define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+          //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
+          //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
+    #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
+        #define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+          //#define SHA_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
+          //#define SHA_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
+
 
 #define PHYSICAL_QUEUES   (NUMBER_LAN + NUMBER_SERIAL + NUMBER_I2C + NUMBER_USB) // the number of physical queues in the system
 

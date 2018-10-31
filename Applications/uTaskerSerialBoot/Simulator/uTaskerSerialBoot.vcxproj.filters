@@ -78,6 +78,12 @@
     <Filter Include="WinSim\SIMstm32">
       <UniqueIdentifier>{c44045b1-8758-4d55-9f1e-33ea630aaa29}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TCP/IP\mbedtls">
+      <UniqueIdentifier>{3c54d9d3-fbcb-4743-b665-5491eea8cae7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Kinetis\Crypto">
+      <UniqueIdentifier>{97af07ea-75fc-4df5-b586-157cceb7e07c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\uTasker\Driver.c">
@@ -250,6 +256,24 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\STM32\STM32_ports.cpp">
       <Filter>WinSim\SIMstm32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\crypto.c">
+      <Filter>uTasker</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes_mbedTLS.c">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\sha256_mbedTLS.c">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\udp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\dhcp.c">
+      <Filter>TCP/IP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\stack\tftp.c">
+      <Filter>TCP/IP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -646,6 +670,15 @@
     <ClInclude Include="..\..\..\Hardware\packages.h">
       <Filter>Hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-1.3.10\aes.h">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\stack\SSL\mbedtls-1.3.10\sha256.h">
+      <Filter>TCP/IP\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_timer_pins.h">
+      <Filter>Hardware\Kinetis</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -667,6 +700,12 @@
     <None Include="..\GNU_STM32\make_uTaskerSerialBoot_GNU_STM32" />
     <None Include="..\GNU_STM32\Build_STM32.bat" />
     <None Include="..\GNU_Kinetis\make_uTaskerSerialBoot_GNU_Kinetis" />
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_aes_functions.S">
+      <Filter>Hardware\Kinetis\Crypto</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\Kinetis\Crypto\mmcau_sha256_functions.S">
+      <Filter>Hardware\Kinetis\Crypto</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">

@@ -2522,6 +2522,15 @@
     #define USB_HOST_POWER_CONFIG()
     #define USB_HOST_POWER_ON()                                          // the FRDM-K64F doesn't have a USB power supply that can be controlled, instead jumper J21 can be manually shorted so that the 5V power from the OpenSDA circuit is connected (use carefully since there is no protection!)
     #define USB_HOST_POWER_OFF()
+
+    #if defined USE_TFTP
+        #define uFILE_START        (FLASH_START_ADDRESS + (64 * 1024))   // FLASH location at 64k start
+        #define FILE_GRANULARITY   (1 * FLASH_GRANULARITY)               // each file a multiple of 4k
+        #define FILE_SYSTEM_SIZE   (100 * 1024)                          // 100k reserved for file system
+        #define uFILE_SYSTEM_END   (MEMORY_RANGE_POINTER)(uFILE_START + FILE_SYSTEM_SIZE)
+        #define LAST_FILE_BLOCK    ((FILE_SYSTEM_SIZE)/FILE_GRANULARITY) // last block in our file system
+        #define uFILE_SYSTEM_START (MEMORY_RANGE_POINTER)(uFILE_START)
+    #endif
 #elif defined HEXIWEAR_K64F
     #define RGB_G                  (PORTD_BIT0)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define RGB_R                  (PORTC_BIT8)                          // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
