@@ -1380,6 +1380,387 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
 }
     #endif
 
+#if LPUARTS_AVAILABLE > 0
+
+#if defined LPUARTS_PARALLEL
+    #define FIRST_LPUART_CHANNEL     (UARTS_AVAILABLE + 0)
+#else
+    #define FIRST_LPUART_CHANNEL     0
+#endif
+#if LPUARTS_AVAILABLE > 1
+    #if defined LPUARTS_PARALLEL
+        #define SECOND_LPUART_CHANNEL    (UARTS_AVAILABLE + 1)
+    #else
+        #define SECOND_LPUART_CHANNEL    1
+    #endif
+#endif
+#if LPUARTS_AVAILABLE > 2
+    #if defined LPUARTS_PARALLEL
+        #define THIRD_LPUART_CHANNEL    (UARTS_AVAILABLE + 2)
+    #else
+        #define THIRD_LPUART_CHANNEL    2
+    #endif
+#endif
+#if LPUARTS_AVAILABLE > 3
+    #if defined LPUARTS_PARALLEL
+        #define FOURTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 3)
+    #else
+        #define ROURTH_LPUART_CHANNEL    3
+    #endif
+#endif
+#if LPUARTS_AVAILABLE > 4
+    #if defined LPUARTS_PARALLEL
+        #define FIFTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 4)
+    #else
+        #define FIFTH_LPUART_CHANNEL    4
+    #endif
+#endif
+
+
+#define LPUART_TX_PIN            0
+#define LPUART_RX_PIN            1
+#define LPUART_RTS_PIN           2
+#endif
+
+
+static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
+{
+    int iInterruptID = 0;
+    unsigned char ucPriority = 0;
+    void (*InterruptFunc)(void) = 0;
+    switch (Channel) {
+    #if LPUARTS_AVAILABLE > 0
+    case FIRST_LPUART_CHANNEL:
+        switch (iPinReference) {
+        case LPUART_TX_PIN:                                              // LPUART0 tx pin configuration
+        #if defined KINETIS_KL03
+            #if defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA3 (alt. function 4)
+            #elif defined LPUART0_ON_B_HIGH
+            _CONFIG_PERIPHERAL(B, 3, (PB_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB2 (alt. function 3)
+            #elif defined LPUART0_ON_B_ALT
+            _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB2 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB1 (alt. function 2)
+            #endif
+        #elif defined KINETIS_K66 || defined KINETIS_K65
+            #if defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 9, (PD_9_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD9 (alt. function 5)
+            #elif defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 2, (PA_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA2 (alt. function 5)
+            #else
+            _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE8 (alt. function 5)
+            #endif
+        #elif defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
+            #if !defined KINETIS_K80 && defined LPUART0_ON_E
+            _CONFIG_PERIPHERAL(E, 20, (PE_20_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE20 (alt. function 4)
+            #elif (defined KINETIS_KL43 || defined KINETIS_KL33) && defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 7, (PD_7_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD7 (alt. function 3)
+            #elif defined LPUART0_ON_B
+            _CONFIG_PERIPHERAL(B, 17, (PB_17_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB17 (alt. function 3)
+            #elif defined LPUART0_ON_A_HIGH && (defined KINETIS_K80 || defined KINETIS_KL28)
+            _CONFIG_PERIPHERAL(A, 14, (PA_14_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA14 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(A, 2, (PA_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA2 (alt. function 2)
+            #endif
+        #else                                                            // K22, KV31
+            #if defined LPUART0_ON_E
+            _CONFIG_PERIPHERAL(E, 4, (PE_4_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE4 (alt. function 3)
+            #elif defined LPUART0_ON_B
+            _CONFIG_PERIPHERAL(B, 11, (PB_11_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB11 (alt. function 3)
+            #elif defined LPUART0_ON_D_HIGH && defined KINETIS_K22
+            _CONFIG_PERIPHERAL(D, 9, (PD_9_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD9 (alt. function 5)
+            #elif defined LPUART0_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD3 (alt. function 6)
+            #elif defined LPUART0_ON_C_HIGH
+            _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PC17 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(C, 4, (PC_4_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PC4 (alt. function 7)
+            #endif
+        #endif
+        #if defined irq_LPUART0_TX_ID
+            iInterruptID = irq_LPUART0_TX_ID;                            // LPUART0 transmitter has unique interrupt vector
+        #else
+            iInterruptID = irq_LPUART0_ID;                               // LPUART0 transmitter shares interrupt vector with receiver
+        #endif
+            ucPriority = PRIORITY_LPUART0;
+            InterruptFunc = _LPSCI0_Interrupt;
+            break;
+
+        case LPUART_RX_PIN:                                              // LPUART0 rx pin configuration
+        #if defined KINETIS_KL03
+            #if defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 4, (PA_4_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA4 (alt. function 4)
+            #elif defined LPUART0_ON_B_HIGH
+            _CONFIG_PERIPHERAL(B, 4, (PB_4_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB4 (alt. function 3)
+            #elif defined LPUART0_ON_B_ALT
+            _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB1 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB2 (alt. function 2)
+            #endif
+        #elif defined KINETIS_K66 || defined KINETIS_K65
+            #if defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 8, (PD_8_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD8 (alt. function 5)
+            #elif defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 1, (PA_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA1 (alt. function 5)
+            #else
+            _CONFIG_PERIPHERAL(E, 9, (PE_9_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE9 (alt. function 5)
+            #endif
+        #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
+            #if !defined KINETIS_K80 && defined LPUART0_ON_E
+            _CONFIG_PERIPHERAL(E, 21, (PE_21_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE21 (alt. function 4)
+            #elif (defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL28 || defined KINETIS_K80) && defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 6, (PD_6_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD6 (alt. function 3)
+            #elif defined LPUART0_ON_B
+            _CONFIG_PERIPHERAL(B, 16, (PB_16_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB16 (alt. function 3)
+            #elif defined LPUART0_ON_A_HIGH && (defined KINETIS_K80 || defined KINETIS_KL28)
+            _CONFIG_PERIPHERAL(A, 15, (PA_15_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA15 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(A, 1, (PA_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA1 (alt. function 2)
+            #endif
+        #else                                                            // K22, KV31
+            #if defined LPUART0_ON_E
+            _CONFIG_PERIPHERAL(E, 5, (PE_5_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE5 (alt. function 3)
+            #elif defined LPUART0_ON_B
+            _CONFIG_PERIPHERAL(B, 10, (PB_10_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB10 (alt. function 3)
+            #elif defined LPUART0_ON_D_HIGH && defined KINETIS_K22
+            _CONFIG_PERIPHERAL(D, 8, (PD_8_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD8 (alt. function 5)
+            #elif defined LPUART0_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD2 (alt. function 6)
+            #elif defined LPUART0_ON_C_HIGH
+            _CONFIG_PERIPHERAL(C, 16, (PC_16_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC16 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(C, 3, (PC_3_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC3 (alt. function 7)
+            #endif
+        #endif
+
+        #if defined irq_LPUART0_RX_ID
+            iInterruptID = irq_LPUART0_RX_ID;                            // LPUART0 receiver has unique interrupt vector
+        #else
+            iInterruptID = irq_LPUART0_ID;                               // LPUART0 receiver shares interrupt vector with transmitter
+        #endif
+            ucPriority = PRIORITY_LPUART0;
+            InterruptFunc = _LPSCI0_Interrupt;
+            break;
+
+        case LPUART_RTS_PIN:
+            #if defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(C, 9, (PC_9_LPUART0_RTS));                // LPUART0_RTS on PC9 (alt. function 6)
+            #endif
+            break;
+        }
+        break;
+    #endif
+
+    #if LPUARTS_AVAILABLE > 1
+    case SECOND_LPUART_CHANNEL:
+        switch (iPinReference) {
+        case LPUART_TX_PIN:                                              // LPUART1 tx pin configuration
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
+                #if defined LPUART1_ON_E
+            _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PE0 (alt. function 3)
+                #elif defined LPUART1_ON_C
+            _CONFIG_PERIPHERAL(C, 4, (PC_4_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PC4 (alt. function 3)
+                #elif !defined KINETIS_K80
+            _CONFIG_PERIPHERAL(A, 19, (PA_19_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PA19 (alt. function 3)
+                #endif
+            #elif defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(C, 7, (PC_7_LPUART1_TX | UART_PULL_UPS)); // LPUART1_RX on PC7 (alt. function 2)
+            #endif
+            #if defined irq_LPUART1_TX_ID
+            iInterruptID = irq_LPUART1_TX_ID;                            // LPUART1 transmitter has a unique vector
+            #else
+            iInterruptID = irq_LPUART1_ID;                               // LPUART1 transmitter shares interrupt vector with receiver
+            #endif
+            ucPriority = PRIORITY_LPUART1;
+            InterruptFunc = _LPSCI1_Interrupt;
+            break;
+        case LPUART_RX_PIN:                                              // LPUART1 rx pin configuration
+            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
+                #if defined LPUART1_ON_E
+            _CONFIG_PERIPHERAL(E, 1, (PE_1_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PE1 (alt. function 3)
+                #elif defined LPUART1_ON_C
+            _CONFIG_PERIPHERAL(C, 3, (PC_3_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PC3 (alt. function 3)
+                #elif !defined KINETIS_K80
+            _CONFIG_PERIPHERAL(A, 18, (PA_18_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PA18 (alt. function 3)
+                #endif
+            #elif defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(C, 6, (PC_6_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PC6 (alt. function 2)
+            #endif
+            #if defined irq_LPUART1_RX_ID
+            iInterruptID = irq_LPUART1_RX_ID;                            // LPUART1 receiver has unique interrupt vector
+            #else
+            iInterruptID = irq_LPUART1_ID;                               // LPUART1 receiver shares interrupt vector with transmitter
+            #endif
+            ucPriority = PRIORITY_LPUART1;
+            InterruptFunc = _LPSCI1_Interrupt;
+            break;
+        case LPUART_RTS_PIN:
+            #if defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(E, 6, (PE_6_LPUART1_RTS));                // LPUART1_RTS on PE6 (alt. function 6)
+            #endif
+            break;
+        }
+        break;
+    #endif
+
+    #if LPUARTS_AVAILABLE > 2
+    case THIRD_LPUART_CHANNEL:
+        switch (iPinReference) {
+        case LPUART_TX_PIN:                                              // LPUART2 tx pin configuration
+            #if defined KINETIS_KL28
+                #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 22, (PE_22_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE22 (alt. function 4)
+                #elif defined LPUART2_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 5, (PD_5_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD5 (alt. function 3)
+                #endif
+            #elif defined KINETIS_K80
+                #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 12, (PE_12_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE12 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
+                #endif
+            #endif
+            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+            iInterruptID = (irq_INTMUX0_0_ID + INTMUX_LPUART2);          // LPUART2 interrupt vector based on INTMUX
+            ucPriority = INTMUX0_PERIPHERAL_LPUART2;
+            #elif defined irq_LPUART2_TX_ID
+            iInterruptID = irq_LPUART2_TX_ID;                            // LPUART2 transmitter has a unique vector
+            ucPriority = PRIORITY_LPUART2;
+            #else
+            iInterruptID = irq_LPUART2_ID;                               // LPUART2 transmitter shares interrupt vector with receiver
+            ucPriority = PRIORITY_LPUART2;
+            #endif
+            InterruptFunc = _LPSCI2_Interrupt;
+            break;
+        case LPUART_RX_PIN:                                              // LPUART2 rx pin configuration
+            #if defined KINETIS_KL28
+                #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 17, (PE_17_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE17 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 23, (PE_23_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE23 (alt. function 4)
+                #elif defined LPUART2_ON_D_LOW
+            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 4, (PD_4_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD4 (alt. function 3)
+                #endif
+            #elif defined KINETIS_K80
+               #if defined LPUART2_ON_E_LOW
+            _CONFIG_PERIPHERAL(E, 13, (PE_13_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE13 (alt. function 3)
+                #elif defined LPUART2_ON_E_HIGH
+            _CONFIG_PERIPHERAL(E, 17, (PE_17_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE17 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
+                #endif
+            #endif
+            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
+            iInterruptID = (irq_INTMUX0_0_ID + INTMUX_LPUART2);          // LPUART2 interrupt vector based on INTMUX
+            ucPriority = INTMUX0_PERIPHERAL_LPUART2;
+            #elif defined irq_LPUART2_RX_ID
+            iInterruptID = irq_LPUART2_RX_ID;                            // LPUART2 receiver has a unique vector
+            ucPriority = PRIORITY_LPUART2;
+            #else
+            iInterruptID = irq_LPUART2_ID;                               // LPUART2 receiver shares interrupt vector with transmitter
+            ucPriority = PRIORITY_LPUART2;
+            #endif
+            InterruptFunc = _LPSCI2_Interrupt;
+            break;
+        case LPUART_RTS_PIN:
+            #if defined KINETIS_KE15
+            _CONFIG_PERIPHERAL(D, 12, (PD_12_LPUART2_RTS));              // LPUART2_RTS on PD12 (alt. function 6)
+            #endif
+            break;
+        }
+        break;
+    #endif
+
+    #if LPUARTS_AVAILABLE > 3
+    case FOURTH_LPUART_CHANNEL:
+        switch (iPinReference) {
+        case LPUART_TX_PIN:                                              // LPUART3 tx pin configuration
+            #if defined KINETIS_K80
+               #if defined LPUART2_ON_E
+            _CONFIG_PERIPHERAL(E, 4, (PE_4_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PE4 (alt. function 3)
+                #elif defined LPUART3_ON_B
+            _CONFIG_PERIPHERAL(B, 11, (PB_11_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PB11 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PC17 (alt. function 3)
+                #endif
+            #endif
+            iInterruptID = irq_LPUART3_ID;                               // LPUART3 transmitter shares interrupt vector with receiver
+            ucPriority = PRIORITY_LPUART3;
+            InterruptFunc = _LPSCI3_Interrupt;
+            break;
+        case LPUART_RX_PIN:                                              // LPUART3 rx pin configuration
+            #if defined KINETIS_K80
+               #if defined LPUART2_ON_E
+            _CONFIG_PERIPHERAL(E, 5, (PE_3_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PE3 (alt. function 3)
+                #elif defined LPUART3_ON_B
+            _CONFIG_PERIPHERAL(B, 10, (PB_10_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PB10 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(C, 16, (PC_16_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PC16 (alt. function 3)
+                #endif
+            #endif
+            iInterruptID = irq_LPUART3_ID;                               // LPUART3 receiver shares interrupt vector with transmitter
+            ucPriority = PRIORITY_LPUART3;
+            InterruptFunc = _LPSCI3_Interrupt;
+            break;
+        case LPUART_RTS_PIN:
+            _EXCEPTION("To do...");
+            break;
+        }
+        break;
+    #endif
+
+    #if LPUARTS_AVAILABLE > 4
+    case FIFTH_LPUART_CHANNEL:
+        switch (iPinReference) {
+        case LPUART_TX_PIN:                                              // LPUART4 tx pin configuration
+            #if defined KINETIS_K80
+               #if defined LPUART4_ON_A
+            _CONFIG_PERIPHERAL(A, 20, (PA_20_LPUART4_TX | UART_PULL_UPS)); // LPUART4_TX on PA20 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(C, 15, (PC_15_LPUART4_TX | UART_PULL_UPS)); // LPUART4_TX on PC15 (alt. function 3)
+                #endif
+            #endif
+            iInterruptID = irq_LPUART4_ID;                               // LPUART4 transmitter shares interrupt vector with receiver
+            ucPriority = PRIORITY_LPUART4;
+            InterruptFunc = _LPSCI4_Interrupt;
+            break;
+        case LPUART_RX_PIN:                                              // LPUART4 rx pin configuration
+            #if defined KINETIS_K80
+               #if defined LPUART4_ON_A
+            _CONFIG_PERIPHERAL(A, 21, (PA_21_LPUART4_RX | UART_PULL_UPS)); // LPUART4_RX on PA21 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(C, 14, (PC_14_LPUART4_RX | UART_PULL_UPS)); // LPUART4_RX on PC14 (alt. function 3)
+                #endif
+            #endif
+            iInterruptID = irq_LPUART4_ID;                               // LPUART4 receiver shares interrupt vector with transmitter
+            ucPriority = PRIORITY_LPUART4;
+            InterruptFunc = _LPSCI4_Interrupt;
+            break;
+        case LPUART_RTS_PIN:
+            _EXCEPTION("To do...");
+            break;
+        }
+        break;
+    #endif
+    default:
+        _EXCEPTION("To do...");
+        return;
+    }
+
+    if (InterruptFunc != 0) {                                            // if the interrupt handler is to be installed
+        fnEnterInterrupt(iInterruptID, ucPriority, InterruptFunc);       // enter UART/LPUART interrupt handler
+    }
+}
+
     #if defined SUPPORT_HW_FLOW
 extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
 {
@@ -1409,6 +1790,9 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
 
     if ((usModifications & (CONFIG_RTS_PIN | CONFIG_CTS_PIN)) != 0) {
         if ((usModifications & CONFIG_RTS_PIN) != 0) {                   // if the caller wants to modify the RTS pin configuration
+            #if defined KINETIS_KE15
+            fnConfigureUARTpin(channel, LPUART_RTS_PIN);                 // configure the LPUART rx pin and enter its interrupt handler
+            #else
             switch (channel) {
             case 0:                                                      // configure the UART0_RTS pin
                 #if defined KINETIS_KE || defined KINETIS_KL             // {200} families without RTS/CTS modem support
@@ -1546,7 +1930,18 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 break;
             #endif
             }
-            #if !defined KINETIS_KE && !defined KINETIS_KL
+            #endif
+            #if defined KINETIS_KE15
+            if ((usModifications & SET_RS485_MODE) != 0) {               // LPUART supports automatic control of the RTS line which is used in RS485 mode
+                KINETIS_LPUART_CONTROL *lpuart_reg = fnSelectChannel(channel);
+                if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
+                    lpuart_reg->LPUART_MODIR = (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL);  // positive RTS polarity
+                }
+                else {
+                    lpuart_reg->LPUART_MODIR = (LPUART_MODIR_RXRTSE);  // positive RTS polarity
+                }
+            }
+            #elif !defined KINETIS_KE && !defined KINETIS_KL
             if ((usModifications & SET_RS485_MODE) != 0) {               // kinetis supports automatic control of the RTS line which is used in RS485 mode
                 ulMode |= UART_MODEM_TXRTSE;                             // enable automatic RTS control
                 if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
@@ -1643,6 +2038,9 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     }
         #if defined KINETIS_KE || defined KINETIS_KL                     // {200}
         if ((((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
+            #if defined KINETIS_KE15
+            _EXCEPTION("To do");
+            #else
             switch (channel) {
             case 0:
                 _SET_RTS_0_LOW();
@@ -1673,8 +2071,12 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 break;
             #endif
             }
+            #endif
         }
         if ((((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
+            #if defined KINETIS_KE15
+            _EXCEPTION("To do");
+            #else
             switch (channel) {
             case 0:
                 _SET_RTS_0_HIGH();
@@ -1705,6 +2107,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 break;
             #endif
             }
+            #endif
         }
         #else
     if ((ulMode & UART_MODEM_TXRTSE) == 0) {                             // control the polarity of the RTS line when not in RS485 mode
@@ -1857,6 +2260,9 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
             #endif
     }
     return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
+        #elif defined KINETIS_KE15
+    _EXCEPTION("To do");
+    return 0;
         #else
     // Devices without CTS input use a port interrupt                    {212}
     //
@@ -1880,6 +2286,9 @@ extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned shor
 }
     #endif                                                               // end SUPPORT_HW_FLOW
 
+
+
+
 // Enable transmission on the defined channel - including configuring the transmit data output
 //
 extern void fnTxOn(QUEUE_HANDLE Channel)
@@ -1896,156 +2305,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         #if UARTS_AVAILABLE > 0
     if (uart_type[Channel] == UART_TYPE_LPUART) {                        // LPUART
         #endif
-        switch (Channel) {
-        #if defined LPUARTS_PARALLEL
-        case UARTS_AVAILABLE:
-        #else
-        case 0:                                                          // LPUART 0
-        #endif
-        #if defined KINETIS_KL03
-            #if defined LPUART0_ON_A
-            _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA3 (alt. function 4)
-            #elif defined LPUART0_ON_B_HIGH
-            _CONFIG_PERIPHERAL(B, 3, (PB_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB2 (alt. function 3)
-            #elif defined LPUART0_ON_B_ALT
-            _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB2 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB1 (alt. function 2)
-            #endif
-        #elif defined KINETIS_K66 || defined KINETIS_K65
-            #if defined LPUART0_ON_D
-            _CONFIG_PERIPHERAL(D, 9, (PD_9_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD9 (alt. function 5)
-            #elif defined LPUART0_ON_A
-            _CONFIG_PERIPHERAL(A, 2, (PA_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA2 (alt. function 5)
-            #else
-            _CONFIG_PERIPHERAL(E, 8, (PE_8_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE8 (alt. function 5)
-            #endif
-        #elif defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80
-            #if !defined KINETIS_K80 && defined LPUART0_ON_E
-            _CONFIG_PERIPHERAL(E, 20, (PE_20_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE20 (alt. function 4)
-            #elif (defined KINETIS_KL43 || defined KINETIS_KL33) && defined LPUART0_ON_D
-            _CONFIG_PERIPHERAL(D, 7, (PD_7_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD7 (alt. function 3)
-            #elif defined LPUART0_ON_B
-            _CONFIG_PERIPHERAL(B, 17, (PB_17_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB17 (alt. function 3)
-            #elif defined LPUART0_ON_A_HIGH && (defined KINETIS_K80 || defined KINETIS_KL28)
-            _CONFIG_PERIPHERAL(A, 14, (PA_14_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA14 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(A, 2, (PA_2_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA2 (alt. function 2)
-            #endif
-        #else                                                            // K22, KV31
-            #if defined LPUART0_ON_E
-            _CONFIG_PERIPHERAL(E, 4, (PE_4_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PE4 (alt. function 3)
-            #elif defined LPUART0_ON_B
-            _CONFIG_PERIPHERAL(B, 11, (PB_11_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB11 (alt. function 3)
-            #elif defined LPUART0_ON_D_HIGH && defined KINETIS_K22
-            _CONFIG_PERIPHERAL(D, 9, (PD_9_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD9 (alt. function 5)
-            #elif defined LPUART0_ON_D_LOW
-            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD3 (alt. function 6)
-            #elif defined LPUART0_ON_C_HIGH
-            _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PC17 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(C, 4, (PC_4_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PC4 (alt. function 7)
-            #endif
-        #endif
-        #if defined irq_LPUART0_TX_ID
-            fnEnterInterrupt(irq_LPUART0_TX_ID, PRIORITY_LPUART0, _LPSCI0_Interrupt); // enter LPUART0 tx interrupt handler
-        #else
-            fnEnterInterrupt(irq_LPUART0_ID, PRIORITY_LPUART0, _LPSCI0_Interrupt); // enter LPUART0 interrupt handler
-        #endif
-            break;
-        #if LPUARTS_AVAILABLE > 1
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 1):
-            #else
-        case (1):                                                        // LPUART 1
-            #endif
-            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
-                #if defined LPUART1_ON_E
-                _CONFIG_PERIPHERAL(E, 0, (PE_0_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PE0 (alt. function 3)
-                #elif defined LPUART1_ON_C
-                _CONFIG_PERIPHERAL(C, 4, (PC_4_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PC4 (alt. function 3)
-                #elif !defined KINETIS_K80
-                _CONFIG_PERIPHERAL(A, 19, (PA_19_LPUART1_TX | UART_PULL_UPS)); // LPUART1_TX on PA19 (alt. function 3)
-                #endif
-            #elif defined KINETIS_KE15
-            _CONFIG_PERIPHERAL(C, 7, (PC_7_LPUART1_TX | UART_PULL_UPS)); // LPUART1_RX on PC7 (alt. function 2)
-            #endif
-            #if defined irq_LPUART1_TX_ID
-            fnEnterInterrupt(irq_LPUART1_TX_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 tx interrupt handler
-            #else
-            fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 interrupt handler
-            #endif
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 2
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 2):
-            #else
-        case (2):                                                        // LPUART 2
-            #endif
-            #if defined KINETIS_KL28
-                #if defined LPUART2_ON_E_LOW
-            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
-                #elif defined LPUART2_ON_E_HIGH
-            _CONFIG_PERIPHERAL(E, 22, (PE_22_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE22 (alt. function 4)
-                #elif defined LPUART2_ON_D_LOW
-            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(D, 5, (PD_5_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD5 (alt. function 3)
-                #endif
-            #elif defined KINETIS_K80
-                #if defined LPUART2_ON_E_LOW
-            _CONFIG_PERIPHERAL(E, 12, (PE_12_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE12 (alt. function 3)
-                #elif defined LPUART2_ON_E_HIGH
-            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PE16 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(D, 3, (PD_3_LPUART2_TX | UART_PULL_UPS)); // LPUART2_TX on PD3 (alt. function 3)
-                #endif
-            #endif
-            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
-            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPUART2), INTMUX0_PERIPHERAL_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
-            #elif defined irq_LPUART2_TX_ID
-            fnEnterInterrupt(irq_LPUART2_TX_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 tx interrupt handler
-            #else
-            fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
-            #endif
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 3
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 3):
-            #else
-        case (3):                                                        // LPUART 3
-            #endif
-            #if defined KINETIS_K80
-               #if defined LPUART2_ON_E
-            _CONFIG_PERIPHERAL(E, 4, (PE_4_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PE4 (alt. function 3)
-                #elif defined LPUART3_ON_B
-            _CONFIG_PERIPHERAL(B, 11, (PB_11_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PB11 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(C, 17, (PC_17_LPUART3_TX | UART_PULL_UPS)); // LPUART3_TX on PC17 (alt. function 3)
-                #endif
-            #endif
-            fnEnterInterrupt(irq_LPUART3_ID, PRIORITY_LPUART3, _LPSCI3_Interrupt); // enter LPUART3 interrupt handler
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 4
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 4):
-            #else
-        case (4):                                                        // LPUART 4
-            #endif
-            #if defined KINETIS_K80
-               #if defined LPUART4_ON_A
-            _CONFIG_PERIPHERAL(A, 20, (PA_20_LPUART4_TX | UART_PULL_UPS)); // LPUART4_TX on PA20 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(C, 15, (PC_15_LPUART4_TX | UART_PULL_UPS)); // LPUART4_TX on PC15 (alt. function 3)
-                #endif
-            #endif
-            fnEnterInterrupt(irq_LPUART4_ID, PRIORITY_LPUART4, _LPSCI4_Interrupt); // enter LPUART4 interrupt handler
-            break;
-        #endif
-        }
+        fnConfigureUARTpin(Channel, LPUART_TX_PIN);                      // configure the LPUART tx pin and enter its interrupt handler
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= LPUART_CTRL_TE; // LPUART transmitter is enabled but not the transmission interrupt
         return;
         #if UARTS_AVAILABLE > 0        
@@ -2233,6 +2493,7 @@ extern void fnTxOff(QUEUE_HANDLE Channel)
     #endif
 }
 
+
 // Enable reception on the defined channel - including configuring the receive data input
 //
 extern void fnRxOn(QUEUE_HANDLE Channel)
@@ -2249,156 +2510,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         #if UARTS_AVAILABLE > 0
     if (uart_type[Channel] == UART_TYPE_LPUART) {                        // LPUART
         #endif
-        switch (Channel) {
-        #if defined LPUARTS_PARALLEL
-        case UARTS_AVAILABLE:
-        #else
-        case 0:                                                          // LPUART 0
-        #endif
-        #if defined KINETIS_KL03
-            #if defined LPUART0_ON_A
-            _CONFIG_PERIPHERAL(A, 4, (PA_4_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA4 (alt. function 4)
-            #elif defined LPUART0_ON_B_HIGH
-            _CONFIG_PERIPHERAL(B, 4, (PB_4_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB4 (alt. function 3)
-            #elif defined LPUART0_ON_B_ALT
-            _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB1 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB2 (alt. function 2)
-            #endif
-        #elif defined KINETIS_K66 || defined KINETIS_K65
-            #if defined LPUART0_ON_D
-            _CONFIG_PERIPHERAL(D, 8, (PD_8_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD8 (alt. function 5)
-            #elif defined LPUART0_ON_A
-            _CONFIG_PERIPHERAL(A, 1, (PA_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA1 (alt. function 5)
-            #else
-            _CONFIG_PERIPHERAL(E, 9, (PE_9_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE9 (alt. function 5)
-            #endif
-        #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL82 || defined KINETIS_K80
-            #if !defined KINETIS_K80 && defined LPUART0_ON_E
-            _CONFIG_PERIPHERAL(E, 21, (PE_21_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE21 (alt. function 4)
-            #elif (defined KINETIS_KL43 || defined KINETIS_KL33 || defined KINETIS_KL28 || defined KINETIS_K80) && defined LPUART0_ON_D
-            _CONFIG_PERIPHERAL(D, 6, (PD_6_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD6 (alt. function 3)
-            #elif defined LPUART0_ON_B
-            _CONFIG_PERIPHERAL(B, 16, (PB_16_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB16 (alt. function 3)
-            #elif defined LPUART0_ON_A_HIGH && (defined KINETIS_K80 || defined KINETIS_KL28)
-            _CONFIG_PERIPHERAL(A, 15, (PA_15_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA15 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(A, 1, (PA_1_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA1 (alt. function 2)
-            #endif
-        #else                                                            // K22, KV31
-            #if defined LPUART0_ON_E
-            _CONFIG_PERIPHERAL(E, 5, (PE_5_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PE5 (alt. function 3)
-            #elif defined LPUART0_ON_B
-            _CONFIG_PERIPHERAL(B, 10, (PB_10_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB10 (alt. function 3)
-            #elif defined LPUART0_ON_D_HIGH && defined KINETIS_K22
-            _CONFIG_PERIPHERAL(D, 8, (PD_8_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD8 (alt. function 5)
-            #elif defined LPUART0_ON_D_LOW
-            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD2 (alt. function 6)
-            #elif defined LPUART0_ON_C_HIGH
-            _CONFIG_PERIPHERAL(C, 16, (PC_16_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC16 (alt. function 3)
-            #else
-            _CONFIG_PERIPHERAL(C, 3, (PC_3_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC3 (alt. function 7)
-            #endif
-        #endif
-        #if defined irq_LPUART0_RX_ID
-            fnEnterInterrupt(irq_LPUART0_RX_ID, PRIORITY_LPUART0, _LPSCI0_Interrupt); // enter LPUART0 rx interrupt handler
-        #else
-            fnEnterInterrupt(irq_LPUART0_ID, PRIORITY_LPUART0, _LPSCI0_Interrupt); // enter LPUART0 interrupt handler
-        #endif
-            break;
-        #if LPUARTS_AVAILABLE > 1
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 1):
-            #else
-        case (1):                                                        // LPUART 1
-            #endif
-            #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
-                #if defined LPUART1_ON_E
-            _CONFIG_PERIPHERAL(E, 1, (PE_1_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PE1 (alt. function 3)
-                #elif defined LPUART1_ON_C
-            _CONFIG_PERIPHERAL(C, 3, (PC_3_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PC3 (alt. function 3)
-                #elif !defined KINETIS_K80
-            _CONFIG_PERIPHERAL(A, 18, (PA_18_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PA18 (alt. function 3)
-                #endif
-            #elif defined KINETIS_KE15
-            _CONFIG_PERIPHERAL(C, 6, (PC_6_LPUART1_RX | UART_PULL_UPS)); // LPUART1_RX on PC6 (alt. function 2)
-            #endif
-            #if defined irq_LPUART1_RX_ID
-            fnEnterInterrupt(irq_LPUART1_RX_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 rx interrupt handler
-            #else
-            fnEnterInterrupt(irq_LPUART1_ID, PRIORITY_LPUART1, _LPSCI1_Interrupt); // enter LPUART1 interrupt handler
-            #endif
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 2
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 2):
-            #else
-        case (2):                                                        // LPUART 2
-            #endif
-            #if defined KINETIS_KL28
-                #if defined LPUART2_ON_E_LOW
-            _CONFIG_PERIPHERAL(E, 17, (PE_17_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE17 (alt. function 3)
-                #elif defined LPUART2_ON_E_HIGH
-            _CONFIG_PERIPHERAL(E, 23, (PE_23_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE23 (alt. function 4)
-                #elif defined LPUART2_ON_D_LOW
-            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(D, 4, (PD_4_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD4 (alt. function 3)
-                #endif
-            #elif defined KINETIS_K80
-               #if defined LPUART2_ON_E_LOW
-            _CONFIG_PERIPHERAL(E, 13, (PE_13_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE13 (alt. function 3)
-                #elif defined LPUART2_ON_E_HIGH
-            _CONFIG_PERIPHERAL(E, 17, (PE_17_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PE17 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(D, 2, (PD_2_LPUART2_RX | UART_PULL_UPS)); // LPUART2_RX on PD2 (alt. function 3)
-                #endif
-            #endif
-            #if !defined irq_LPUART2_ID && defined INTMUX0_AVAILABLE
-            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPUART2), INTMUX0_PERIPHERAL_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler based on INTMUX
-            #elif defined irq_LPUART2_RX_ID
-            fnEnterInterrupt(irq_LPUART2_RX_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 rx interrupt handler
-            #else
-            fnEnterInterrupt(irq_LPUART2_ID, PRIORITY_LPUART2, _LPSCI2_Interrupt); // enter LPUART2 interrupt handler
-            #endif
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 3
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 3):
-            #else
-        case (3):                                                        // LPUART 3
-            #endif
-            #if defined KINETIS_K80
-               #if defined LPUART2_ON_E
-            _CONFIG_PERIPHERAL(E, 5, (PE_3_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PE3 (alt. function 3)
-                #elif defined LPUART3_ON_B
-            _CONFIG_PERIPHERAL(B, 10, (PB_10_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PB10 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(C, 16, (PC_16_LPUART3_RX | UART_PULL_UPS)); // LPUART3_RX on PC16 (alt. function 3)
-                #endif
-            #endif
-            fnEnterInterrupt(irq_LPUART3_ID, PRIORITY_LPUART3, _LPSCI3_Interrupt); // enter LPUART3 interrupt handler
-            break;
-        #endif
-        #if LPUARTS_AVAILABLE > 4
-            #if defined LPUARTS_PARALLEL
-        case (UARTS_AVAILABLE + 4):
-            #else
-        case (4):                                                        // LPUART 4
-            #endif
-            #if defined KINETIS_K80
-               #if defined LPUART4_ON_A
-            _CONFIG_PERIPHERAL(A, 21, (PA_21_LPUART4_RX | UART_PULL_UPS)); // LPUART4_RX on PA21 (alt. function 3)
-                #else
-            _CONFIG_PERIPHERAL(C, 14, (PC_14_LPUART4_RX | UART_PULL_UPS)); // LPUART4_RX on PC14 (alt. function 3)
-                #endif
-            #endif
-            fnEnterInterrupt(irq_LPUART4_ID, PRIORITY_LPUART4, _LPSCI4_Interrupt); // enter LPUART4 interrupt handler
-            break;
-        #endif
-        }
+        fnConfigureUARTpin(Channel, LPUART_RX_PIN);                      // configure the LPUART rx pin and enter its interrupt handler
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_RIE | LPUART_CTRL_RE); // enable LPUART receiver and reception interrupt (or DMA)
         #if defined KINETIS_KE
         _SIM_PER_CHANGE;

@@ -6645,7 +6645,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #if defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
-        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE18
+        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE15 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    2                   // 0x02 LPUART0 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    3                   // 0x03 LPUART0 TX
           #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    4                   // 0x04 LPUART1 RX
@@ -6656,7 +6656,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_UART1_RX      4                   // 0x04 UART1 RX
           #define DMAMUX0_CHCFG_SOURCE_UART1_TX      5                   // 0x05 UART1 TX
         #endif
-        #if defined KINETIS_KE18
+        #if  defined KINETIS_KE15 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    6                   // 0x06 LPUART2 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    7                   // 0x07 LPUART2 TX
         #else
@@ -6728,7 +6728,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
             #if defined KINETIS_K65 || defined KINETIS_K66
               #define DMAMUX0_CHCFG_SOURCE_SPI2_TX   39
             #endif
-        #elif defined KINETIS_KE18
+        #elif defined KINETIS_KE15 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT0 10                 // 0x0a FlexIO shifter 0
           #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT1 11                 // 0x0b FlexIO shifter 1
           #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT2 12                 // 0x0c FlexIO shifter 2
@@ -6751,16 +6751,20 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       29                  // 0x1d FTM1 channel 1
           #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       30                  // 0x1e FTM2 channel 0
           #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       31                  // 0x1f FTM2 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX     32                  // 0x20 LPI2C1 receive (or)
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C0       32                  // 0x20 FTM3 channel 0
-          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX     33                  // 0x21 LPI2C1 transmit (0r)
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       33                  // 0x21 FTM3 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       34                  // 0x22 FTM3 channel 2
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       35                  // 0x23 FTM3 channel 3
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       36                  // 0x24 FTM3 channel 4
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       37                  // 0x25 FTM3 channel 5
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       38                  // 0x26 FTM3 channel 6
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C7       39                  // 0x27 FTM3 channel 7
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_RX     32                  // 0x20 LPI2C1 receive
+          #if defined KINETIS_KE18
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C0   32                  // (or) 0x20 FTM3 channel 0
+          #endif
+          #define DMAMUX0_CHCFG_SOURCE_LPI2C1_TX     33                  // 0x21 LPI2C1 transmit
+          #if defined KINETIS_KE18
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C1   33                  // (or) 0x21 FTM3 channel 1
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C2   34                  // 0x22 FTM3 channel 2
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C3   35                  // 0x23 FTM3 channel 3
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C4   36                  // 0x24 FTM3 channel 4
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C5   37                  // 0x25 FTM3 channel 5
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C6   38                  // 0x26 FTM3 channel 6
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C7   39                  // 0x27 FTM3 channel 7
+          #endif
         #else
           #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX
           #define DMAMUX0_CHCFG_SOURCE_UART4_TX      11                  // 0x0b UART4 TX
@@ -6797,15 +6801,23 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39                  // 0x27 IEEE 1588 timer 3 (alternative)
          #endif
           #define DMAMUX0_CHCFG_SOURCE_ADC0          40                  // 0x28 ADC0
-          #if defined KINETIS_KE18
+          #if defined KINETIS_KE15 || defined KINETIS_KE18
               #define DMAMUX0_CHCFG_SOURCE_ADC1      41                  // 0x29 ADC1
-              #define DMAMUX0_CHCFG_SOURCE_ADC2      42                  // 0x2a ADC2
+              #if ADC_CONTROLLERS > 2
+                  #define DMAMUX0_CHCFG_SOURCE_ADC2  42                  // 0x2a ADC2
+              #endif
               #define DMAMUX0_CHCFG_SOURCE_CMP0      43                  // 0x2b CMP0
               #define DMAMUX0_CHCFG_SOURCE_CMP1      44                  // 0x2c CMP1
-              #define DMAMUX0_CHCFG_SOURCE_CMP2      45                  // 0x2d CMP2
+              #if NUMBER_OF_COMPARATORS > 2
+                  #define DMAMUX0_CHCFG_SOURCE_CMP2  45                  // 0x2d CMP2
+              #endif
               #define DMAMUX0_CHCFG_SOURCE_PDB0      46                  // 0x2e PDB 0
-              #define DMAMUX0_CHCFG_SOURCE_PDB1      47                  // 0x2f PDB 1
-              #define DMAMUX0_CHCFG_SOURCE_PDB2      48                  // 0x30 PDB 2
+              #if PDB_AVAILABLE > 1
+                  #define DMAMUX0_CHCFG_SOURCE_PDB1  47                  // 0x2f PDB 1
+              #endif
+              #if PDB_AVAILABLE > 2
+                  #define DMAMUX0_CHCFG_SOURCE_PDB2  48                  // 0x30 PDB 2
+              #endif
           #else
               #if ADC_CONTROLLERS > 1
                   #define DMAMUX0_CHCFG_SOURCE_ADC1  41                  // 0x29 ADC1
@@ -6851,6 +6863,10 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C2_C7    57                  // 0x39 FTM1 OR of channels 2 to 7
           #define DMAMUX0_CHCFG_SOURCE_FTM2_C2_C7    58                  // 0x3a FTM2 OR of channels 2 to 7
           #define DMAMUX0_CHCFG_SOURCE_LPTMR0        59                  // 0x3b LPTMR0
+        #elif defined KINETIS_KE15
+          #define DMAMUX0_CHCFG_SOURCE_FTM1_C2_C3    57                  // 0x39 FTM1 OR of channels 2 to 3
+          #define DMAMUX0_CHCFG_SOURCE_FTM2_C2_C3    58                  // 0x3a FTM2 OR of channels 2 to 3
+          #define DMAMUX0_CHCFG_SOURCE_LPTMR0        59                  // 0x3b LPTMR0
         #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
@@ -6881,7 +6897,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
           #endif
         #elif LPUARTS_AVAILABLE > 0
-          #if !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE18
+          #if !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE15 && !defined KINETIS_KE18
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX  59                  // 0x3b LPUART0 TX
           #endif
@@ -7275,23 +7291,23 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         unsigned long ulRes0[2];
         volatile unsigned long LPSPI_CR;
         volatile unsigned long LPSPI_SR;
-        unsigned long LPSPI2_IER;
-        unsigned long LPSPI2_DER;
-        unsigned long LPSPI2_CFGR0;
-        unsigned long LPSPI2_CFGR1;
+        unsigned long LPSPI_IER;
+        unsigned long LPSPI_DER;
+        unsigned long LPSPI_CFGR0;
+        unsigned long LPSPI_CFGR1;
         unsigned long ulRes1[2];
-        unsigned long LPSPI2_DMR0;
-        unsigned long LPSPI2_DMR1;
+        unsigned long LPSPI_DMR0;
+        unsigned long LPSPI_DMR1;
         unsigned long ulRes2[2];
-        unsigned long LPSPI2_CCR;
+        unsigned long LPSPI_CCR;
         unsigned long ulRes3[5];
-        unsigned long LPSPI2_FCR;
+        unsigned long LPSPI_FCR;
         volatile unsigned long LPSPI_FSR;
-        unsigned long LPSPI2_TCR;
-        volatile unsigned long LPSPI2_TDR;
+        unsigned long LPSPI_TCR;
+        volatile unsigned long LPSPI_TDR;
         unsigned long ulRes4[2];
-        volatile unsigned long LPSPI2_RSR;
-        volatile unsigned long LPSPI2_RDR;
+        volatile unsigned long LPSPI_RSR;
+        volatile unsigned long LPSPI_RDR;
     } _KINETIS_LPSPI;
 #elif !defined DSPI_SPI                                                  // SPI instead of DSPI
   #if defined KINETIS_KL17 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL43 || defined KINETIS_KL46 || defined KINETIS_KL33 // KL devices supporting 16 bit words
@@ -12711,12 +12727,19 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PC_16_LPUART0_RX         PORT_MUX_ALT3
         #define PC_17_LPUART0_TX         PORT_MUX_ALT3
     #endif
-    #define PA_3_LPUART0_RTS             PORT_MUX_ALT5
-    #define PD_10_LPUART0_RTS            PORT_MUX_ALT5
-    #define PE_11_LPUART0_RTS            PORT_MUX_ALT5
-    #define PA_0_LPUART0_CTS             PORT_MUX_ALT5
-    #define PD_11_LPUART0_CTS            PORT_MUX_ALT5
-    #define PE_10_LPUART0_CTS            PORT_MUX_ALT5
+    #if defined KINETIS_KE15
+        #define PC_9_LPUART0_RTS         PORT_MUX_ALT6
+        #define PC_8_LPUART0_CTS         PORT_MUX_ALT6
+        #define PA_1_LPUART0_RTS         PORT_MUX_ALT6
+        #define PA_0_LPUART0_CTS         PORT_MUX_ALT6
+    #else
+        #define PA_3_LPUART0_RTS         PORT_MUX_ALT5
+        #define PD_10_LPUART0_RTS        PORT_MUX_ALT5
+        #define PE_11_LPUART0_RTS        PORT_MUX_ALT5
+        #define PA_0_LPUART0_CTS         PORT_MUX_ALT5
+        #define PD_11_LPUART0_CTS        PORT_MUX_ALT5
+        #define PE_10_LPUART0_CTS        PORT_MUX_ALT5
+    #endif
 #endif
 #if LPUARTS_AVAILABLE > 1
     #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
@@ -12731,6 +12754,10 @@ typedef struct stKINETIS_LPTMR_CTL
     #elif defined KINETIS_KE15
         #define PC_6_LPUART1_RX          PORT_MUX_ALT2
         #define PC_7_LPUART1_TX          PORT_MUX_ALT2
+        #define PA_7_LPUART1_RTS         PORT_MUX_ALT6
+        #define PA_6_LPUART1_CTS         PORT_MUX_ALT6
+        #define PE_6_LPUART1_RTS         PORT_MUX_ALT6
+        #define PE_2_LPUART1_CTS         PORT_MUX_ALT6
     #endif
 #endif
 #if LPUARTS_AVAILABLE > 2
@@ -12750,6 +12777,15 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PD_3_LPUART2_TX          PORT_MUX_ALT3
         #define PD_4_LPUART2_RX          PORT_MUX_ALT3
         #define PD_5_LPUART2_TX          PORT_MUX_ALT3
+    #elif defined KINETIS_KE15
+        #define PD_7_LPUART2_TX          PORT_MUX_ALT2
+        #define PD_6_LPUART2_RX          PORT_MUX_ALT2
+        #define PE_12_LPUART2_TX         PORT_MUX_ALT3
+        #define PD_17_LPUART2_RX         PORT_MUX_ALT3
+        #define PD_12_LPUART2_RTS        PORT_MUX_ALT6
+        #define PD_11_LPUART2_CTS        PORT_MUX_ALT6
+        #define PE_3_LPUART2_RTS         PORT_MUX_ALT3
+        #define PE_9_LPUART2_CTS         PORT_MUX_ALT3
     #endif
 #endif
 #if LPUARTS_AVAILABLE > 3

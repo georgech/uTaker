@@ -1560,7 +1560,7 @@
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, SWITCH_2, PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_2) == 0)   // hold SW2 at reset to disable the watchdog
-    #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_3) == 0)   // hold SW3 at reset to force loader mode
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(C, SWITCH_3) == 0) || ((SOFTWARE_RESET_DETECTED()) && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))  // hold SW3 at reset to force loader mode
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_3) == 0)   // keep SW3 held down to retain loader mode after SD card or memory stick has been checked
 
     #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_3, PORT_PS_UP_ENABLE)
@@ -1599,7 +1599,7 @@
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, SWITCH_2, PORT_PS_UP_ENABLE) // use fast access version (beware that this can only operate on half of the 32 bits at a time)
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_2) == 0)   // hold SW2 at reset to disable the watchdog
-    #define FORCE_BOOT()           (_READ_PORT_MASK(D, SWITCH_3) == 0)   // hold SW3 at reset to force loader mode
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(D, SWITCH_3) == 0) || ((SOFTWARE_RESET_DETECTED()) && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))   // hold SW3 at reset to force loader mode
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(D, SWITCH_3) == 0)   // keep SW3 held down to retain loader mode after SD card or memory stick has been checked
 
     #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(D, SWITCH_3, PORT_PS_UP_ENABLE)
@@ -2330,7 +2330,7 @@
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
 
-    #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
+  //#define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
     #if defined SD_CONTROLLER_AVAILABLE
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
@@ -2378,6 +2378,7 @@
 			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
 		#endif
 		#define POWER_UP_SD_CARD()
+        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
     #endif
 
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
@@ -3502,7 +3503,7 @@
     #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(A, SWITCH_2) == 0)  // pull this input down at reset to disable watchdog [hold SW2]
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(D, BLINK_LED)
 
-    #define FORCE_BOOT()           (((SOFTWARE_RESET_DETECTED()) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER)) || (_READ_PORT_MASK(E, SWITCH_3) == 0))   // pull this input down at reset to force boot loader mode [SW3]
+    #define FORCE_BOOT()           (((SOFTWARE_RESET_DETECTED()) && (*BOOT_MAIL_BOX == RESET_TO_SERIAL_LOADER)) || (_READ_PORT_MASK(E, SWITCH_3) == 0)) // pull this input down at reset to force boot loader mode [SW3]
 
     #define BUTTON_KEY_DEFINITIONS  {SWITCH_2_PORT,    SWITCH_2,  {515, 24,  538, 41  }}, \
                                     {SWITCH_3_PORT,    SWITCH_3,  {515, 341, 538, 357 }}
