@@ -3115,6 +3115,7 @@ Build_Luminary.bat</Command>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_UART.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_uart_pins.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
     </ClInclude>

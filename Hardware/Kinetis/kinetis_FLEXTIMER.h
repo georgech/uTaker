@@ -25,6 +25,7 @@
     21.08.2018 Add flexible clocking (fixed clock source on individual modules) {10}
     21.08.2018 Correct FTM2 clock gating for K64, K65 and K66            {11}
     27.08.2018 Correct input capture mode pre-scaler setting             {12}
+    01.11.2018 Correct clearing of capture flag for FlexTimer and TPM types {13}
 
 */
 
@@ -50,6 +51,31 @@ static __interrupt void _flexTimerInterrupt_4(void);
     #if FLEX_TIMERS_AVAILABLE > 5
 static __interrupt void _flexTimerInterrupt_5(void);
     #endif
+
+/* =================================================================== */
+/*                             constants                               */
+/* =================================================================== */
+
+#if defined SUPPORT_CAPTURE
+static const unsigned char ucChannelsAvailable[FLEX_TIMERS_AVAILABLE] = {// {13} the number of channels of each FlexTimer / TPM
+    FLEX_TIMERS_0_CHANNELS,
+    #if FLEX_TIMERS_AVAILABLE > 1
+    FLEX_TIMERS_1_CHANNELS,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 2
+    FLEX_TIMERS_2_CHANNELS,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 3
+    FLEX_TIMERS_3_CHANNELS,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 4
+    FLEX_TIMERS_4_CHANNELS,
+    #endif
+    #if FLEX_TIMERS_AVAILABLE > 5
+    FLEX_TIMERS_5_CHANNELS,
+    #endif
+};
+#endif
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -93,24 +119,24 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
 {
 #if defined SUPPORT_CAPTURE
     if ((usFlexTimerMode[iFlexTimerReference] & FTM_SC_TOIE) == 0) {     // capture mode rather than timer overflow mode
-        if ((ptrFlexTimer->FTM_channel[0].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-            ptrFlexTimer->FTM_channel[0].FTM_CSC = ptrFlexTimer->FTM_channel[0].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
-        }
-        else if ((ptrFlexTimer->FTM_channel[1].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-            ptrFlexTimer->FTM_channel[1].FTM_CSC = ptrFlexTimer->FTM_channel[1].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
-        }
-        if (iFlexTimerReference == 0) {
-            if ((ptrFlexTimer->FTM_channel[2].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-                ptrFlexTimer->FTM_channel[2].FTM_CSC = ptrFlexTimer->FTM_channel[2].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
-            }
-            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-                ptrFlexTimer->FTM_channel[3].FTM_CSC = ptrFlexTimer->FTM_channel[3].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
-            }
-            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-                ptrFlexTimer->FTM_channel[4].FTM_CSC = ptrFlexTimer->FTM_channel[4].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
-            }
-            else if ((ptrFlexTimer->FTM_channel[3].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
-                ptrFlexTimer->FTM_channel[5].FTM_CSC = ptrFlexTimer->FTM_channel[5].FTM_CSC; // clear the interrupt - this allows the next capture event to be released
+        unsigned char ucChannel;
+        for (ucChannel = 0; ucChannel < ucChannelsAvailable[iFlexTimerReference]; ucChannel++) { // {13}
+            if ((ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC & (FTM_CSC_CHIE | FTM_CSC_CHF)) == (FTM_CSC_CHIE | FTM_CSC_CHF)) { // if the channel interrupt is enabled and its event flag set
+    #if defined TPMS_AVAILABLE_TOO                                       // device with both flex timers and TPM
+                if (iFlexTimerReference < (FLEX_TIMERS_AVAILABLE - TPMS_AVAILABLE_TOO)) { // if flex timer type
+                    ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC & ~(FTM_CSC_CHF)); // clear the interrupt (by writing FTM_CSC_CHF to '0') - this allows the next capture event to be released
+                }
+                else {                                                   // else TPM type
+                    ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC; // clear the interrupt (by writing FTM_CSC_CHF to '1') - this allows the next capture event to be released
+                }
+    #elif !defined TPMS_AVAILABLE                                        // flex timer type
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC & ~(FTM_CSC_CHF)); // clear the interrupt (by writing FTM_CSC_CHF to '0') - this allows the next capture event to be released
+    #else                                                                // TPM type
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC; // clear the interrupt (by writing FTM_CSC_CHF to '1') - this allows the next capture event to be released
+    #endif
+    #if defined _WINDOWS
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC &= ~(FTM_CSC_CHF);
+    #endif
             }
         }
     }

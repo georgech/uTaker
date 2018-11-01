@@ -6,9 +6,9 @@
 
 --plugin "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\bin\armbat.dll" 
 
---device_macro "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\debugger\NXP\Kxx.dmac" 
+--device_macro "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\debugger\NXP\K6x.dmac" 
 
---flash_loader "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\flashloader\NXP\FlashK80Fxxx256K.board" 
+--flash_loader "D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\config\flashloader\NXP\FlashK64Fxxx128K.board" 
 
 
 

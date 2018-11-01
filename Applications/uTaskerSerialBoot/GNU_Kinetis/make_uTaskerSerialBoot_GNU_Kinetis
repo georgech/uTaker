@@ -51,6 +51,7 @@ PERIPH_DEP = ../../../Hardware/Kinetis/spi_sc16IS7xx.h \
              ../../../Hardware/Kinetis/kinetis_USB_OTG.h \
              ../../../Hardware/Kinetis/kinetis_USB_HS_Device.h \
              ../../../Hardware/Kinetis/kinetis_UART.h \
+             ../../../Hardware/Kinetis/kinetis_uart_pins.h \
              ../../../Hardware/Kinetis/kinetis_CAN.h \
              ../../../Hardware/Kinetis/kinetis_I2C.h \
              ../../../Hardware/Kinetis/kinetis_FLASH.h \

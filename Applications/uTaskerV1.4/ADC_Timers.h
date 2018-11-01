@@ -113,7 +113,7 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-      //#define TEST_TIMER                                               // enable timer test(s)
+        #define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
               //#define TEST_PWM                                         // {1} test generating PWM output from timer
@@ -125,7 +125,7 @@
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
-              //#define TEST_CAPTURE                                     // {6} test timer capture mode
+                #define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
         #endif
     #endif
