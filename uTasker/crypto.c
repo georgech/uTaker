@@ -52,15 +52,15 @@
 /*                      local structure definitions                    */
 /* =================================================================== */
 
-typedef struct _PACK stAES_INSTANCE
+typedef struct stAES_INSTANCE
 {
     #if defined NATIVE_AES_CAU                                           // hardware accelerator to be used
-    int iRounds; 
+    unsigned long ulRounds;                                              // ensures long word alignment
         #if !defined LTC_AVAILABLE || defined AES_DISABLE_LTC            // mmCAU
             #if !defined SOFTWARE_BASE_AES
     unsigned char iv[AES_BLOCK_LENGTH];                                  // long word aligned
             #endif
-    unsigned char key[60 * 4];
+    unsigned char key[60 * 4];                                           // long word aligned
         #endif
     #endif
     #if defined SOFTWARE_BASE_AES                                        // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
@@ -220,17 +220,17 @@ extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKe
         switch (iKeyLength) {
         case 128:
     #if defined NATIVE_AES_CAU                                           // mmCAU/LTC hardware accelerator
-            aes_instance[iInstance].iRounds = 10;
+            aes_instance[iInstance].ulRounds = 10;
     #endif
             break;
         case 192:
     #if defined NATIVE_AES_CAU                                           // mmCAU/LTC hardware accelerator
-            aes_instance[iInstance].iRounds = 12;
+            aes_instance[iInstance].ulRounds = 12;
     #endif
             break;
         case 256:
     #if defined NATIVE_AES_CAU                                           // mmCAU/LTC hardware accelerator
-            aes_instance[iInstance].iRounds = 14;
+            aes_instance[iInstance].ulRounds = 14;
     #endif
             break;
         default:
@@ -330,7 +330,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
         int iMode;
     #endif
     #if defined NATIVE_AES_CAU                                           // hardware accelerator in use
-        if (aes_instance[iInstance].iRounds == 0) {
+        if (aes_instance[iInstance].ulRounds == 0) {
             _EXCEPTION("Initialise AES instance before use!!");
             return AES_INSTANCE_NOT_INITIALISED;
         }
@@ -405,7 +405,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                     ptrCipherTextOutput[3] = (ptrPlainTextInput[3] ^ ptrInputVector[3]);
                 }
             #if !defined _WINDOWS
-                mmcau_aes_encrypt((const unsigned char *)ptrCipherTextOutput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrCipherTextOutput);
+                mmcau_aes_encrypt((const unsigned char *)ptrCipherTextOutput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrCipherTextOutput);
                 ptrInputVector[0] = ptrCipherTextOutput[0];              // this can be performed as long word copies since both are long word aligned
                 ptrInputVector[1] = ptrCipherTextOutput[1];
                 ptrInputVector[2] = ptrCipherTextOutput[2];
@@ -421,7 +421,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                 ptrCipherTextOutput[2] = (ptrPlainTextInput[2] ^ ptrInputVector[2]);
                 ptrCipherTextOutput[3] = (ptrPlainTextInput[3] ^ ptrInputVector[3]);
             #if !defined _WINDOWS
-                mmcau_aes_encrypt((const unsigned char *)ptrCipherTextOutput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrCipherTextOutput);
+                mmcau_aes_encrypt((const unsigned char *)ptrCipherTextOutput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrCipherTextOutput);
                 ptrInputVector[0] = ptrCipherTextOutput[0];              // this can be performed as long word copies since both are long word aligned
                 ptrInputVector[1] = ptrCipherTextOutput[1];
                 ptrInputVector[2] = ptrCipherTextOutput[2];
@@ -461,7 +461,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                     ulBackup[2] = ptrCipherTextInput[2];
                     ulBackup[3] = ptrCipherTextInput[3];
             #if !defined _WINDOWS
-                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
+                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) == 0) { // if iv[] are zero we don't XOR the plaintext input with it
                         ptrPlainTextOutput[0] ^= ptrInputVector[0];      // this can be performed as long word copies since both are long word aligned
@@ -485,7 +485,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                     ulBackup[2] = ptrCipherTextInput[2];
                     ulBackup[3] = ptrCipherTextInput[3];
             #if !defined _WINDOWS
-                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
+                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     ptrPlainTextOutput[0] ^= ptrInputVector[0];          // this can be performed as long word copies since both are long word aligned
                     ptrPlainTextOutput[1] ^= ptrInputVector[1];
@@ -505,7 +505,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
             else {                                                       // not in place (no temporary buffer needed)
                 if (_ulDataLength >= 16) {                               // first block
             #if !defined _WINDOWS
-                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
+                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) == 0) { // if iv[] are zero we don't XOR the plaintext input with it
                         ptrPlainTextOutput[0] ^= ptrInputVector[0];      // this can be performed as long word copies since both are long word aligned
@@ -525,7 +525,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                 }
                 while (_ulDataLength >= 16) {                            // subsequent blocks
             #if !defined _WINDOWS
-                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, aes_instance[iInstance].iRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
+                    mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     ptrPlainTextOutput[0] ^= ptrInputVector[0];          // this can be performed as long word copies since both are long word aligned
                     ptrPlainTextOutput[1] ^= ptrInputVector[1];
