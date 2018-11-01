@@ -1971,7 +1971,7 @@ static int fnWebParHandler(unsigned char *ptrptrFile, unsigned short usDataLengt
                 return iReturn;                                          // application is not accepting but rather modifying something
             }
         }
-        if (*(++ptrFile) != ' ') {                                       // a space after the first character indicates the end of the input
+        if (*(++ptrFile) == ' ') {                                       // a space after the first character indicates the end of the input
             break;
         }
     }
