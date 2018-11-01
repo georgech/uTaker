@@ -95,6 +95,7 @@
     28.03.2015 Enable content caching                                                  {77}
     07.02.2016 Add web socket support                                                  {78}
     11.02 2016 Parameters for fnStartHTTP() modified                                   {79}
+    01.11.2018 Modify search for parameters to allow identification immediately at the start of a request {80}
 
 */
 
@@ -1963,16 +1964,15 @@ static int fnWebParHandler(unsigned char *ptrptrFile, unsigned short usDataLengt
     if ((iReturn = fnHandleWeb(GET_STARTING, (CHAR *)/*&ucFile*/ptrFile, http_session)) != APP_ACCEPT) { // inform that a GET is starting {26}{51}
         return iReturn;                                                  // if the initial connection is not accepted
     }
-    while (*(++ptrFile) != ' ') {
-        if ((--usDataLength) == 0) {
-            break;                                                       // end of data - terminate
-        }
-
+    while (usDataLength-- != 0) {                                        // {80}  while data is present in the input buffer
         if ((*ptrFile == '&') || (*ptrFile == '?')) {                    // search for parameters
             unsigned char ucType = *(++ptrFile);
             if ((iReturn = fnHandleWeb(ucType, (CHAR *)++ptrFile, http_session)) != APP_ACCEPT) { // allow the user to handle this frame and return a special page if desired
                 return iReturn;                                          // application is not accepting but rather modifying something
             }
+        }
+        if (*(++ptrFile) != ' ') {                                       // a space after the first character indicates the end of the input
+            break;
         }
     }
 #endif

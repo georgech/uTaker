@@ -1745,7 +1745,7 @@ unsigned long FTM_C4SC;
 unsigned long FTM_C4V;
 unsigned long FTM_C5SC;
 unsigned long FTM_C5V;
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE06)
     #if defined KINETIS_KL28
         unsigned long ulRes0[5];
         unsigned long FTM_COMBINE;
@@ -1780,7 +1780,11 @@ unsigned long FTM_C5V;
     unsigned long FTM_FMS;
     unsigned long FTM_FILTER;
     unsigned long FTM_FLTCTRL;
+    #if defined KINETIS_KE06
+    unsigned long ulRes10;
+    #else
     unsigned long FTM_QDCTRL;
+    #endif
     unsigned long FTM_CONF;
     unsigned long FTM_FLTPOL;
     unsigned long FTM_SYNCONF;

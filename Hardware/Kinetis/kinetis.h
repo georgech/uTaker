@@ -326,11 +326,11 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #endif
 
-#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KV50
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KV50 || defined KINETIS_KS
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15 || defined KINETIS_KS
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
@@ -1273,6 +1273,8 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
+#elif defined KINETIS_KS
+    #define UARTS_AVAILABLE         3
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
 #elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KEA8
@@ -1332,7 +1334,7 @@ typedef struct stRESET_VECTOR
     #define LPUARTS_AVAILABLE       3
 #elif defined KINETIS_KL03 || defined KINETIS_KW41
     #define LPUARTS_AVAILABLE       1
-#elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+#elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KS
     #define LPUARTS_AVAILABLE       1
     #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
 #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
@@ -1373,7 +1375,7 @@ typedef struct stRESET_VECTOR
 #else
     #define DSPI_SPI
     #define SPI0_FIFO_DEPTH        4                                     // SPI0 has 4 deep rx/tx FIFO
-    #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+    #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KS
         #define SPI1_FIFO_DEPTH    1                                     // SPI1 has 1 deep rx/tx FIFO
         #define SPI2_FIFO_DEPTH    1                                     // SPI2 has 1 deep rx/tx FIFO
     #else
@@ -1384,7 +1386,7 @@ typedef struct stRESET_VECTOR
 
 #if defined KINETIS_K02 || defined KINETIS_K12
     #define SPI_AVAILABLE           1
-#elif defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KL27
+#elif defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KL27 || defined KINETIS_KS
     #define SPI_AVAILABLE           2
 #elif defined KINETIS_K22 && ((SIZE_OF_FLASH == (128 * 1024)) || (SIZE_OF_FLASH == (512 * 1024)))
     #define SPI_AVAILABLE           2
@@ -1404,7 +1406,7 @@ typedef struct stRESET_VECTOR
 #if defined KINETIS_KL28
     #define I2C_AVAILABLE                0
     #define LPI2C_AVAILABLE              3
-#elif defined KINETIS_KE15
+#elif defined KINETIS_KE15 || defined KINETIS_KS
     #define I2C_AVAILABLE                0
     #define LPI2C_AVAILABLE              2
 #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
@@ -1445,7 +1447,9 @@ typedef struct stRESET_VECTOR
 
 // I2S configuration
 //
-#if defined KINETIS_K22 || defined KINETIS_KL43 || defined KINETIS_K80
+#if defined KINETIS_KS
+    #define I2S_AVAILABLE                2
+#elif defined KINETIS_K22 || defined KINETIS_KL43 || defined KINETIS_K80
     #define I2S_AVAILABLE                1
 #elif defined KINETIS_K61 || defined KINETIS_K70 || ((defined KINETIS_K60 || defined KINETIS_K20) && KINETIS_MAX_SPEED > 100000000)
     #define I2S_AVAILABLE                2
@@ -1614,6 +1618,12 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_KV50
     #define NUMBER_OF_CAN_INTERFACES 3
+#elif defined KINETSI_KS
+    #if defined KINETIS_K22
+        #define NUMBER_OF_CAN_INTERFACES 2
+    #else
+        #define NUMBER_OF_CAN_INTERFACES 1
+    #endif
 #elif defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
     #define NUMBER_OF_CAN_INTERFACES 1
     #if defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
@@ -1725,7 +1735,7 @@ typedef struct stRESET_VECTOR
 
 // FlexIO configuration
 //
-#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80
+#if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_K80 || defined KINETIS_KS
     #define CHIP_HAS_FLEXIO
 #endif
 
@@ -8549,7 +8559,7 @@ typedef struct st_KINETIS_DSPI
 #define FTM0_C4V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x030) // FTM0 channel 4 value (16 bit)
 #define FTM0_C5SC           *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x034) // FTM0 channel 5 and control
 #define FTM0_C5V            *(volatile unsigned long *)(FTM_BLOCK_0 + FTM_OFFSET_1 + 0x038) // FTM0 channel 5 value (16 bit)
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE06)
     #if defined KINETIS_KL28
         #define FTM0_COMBINE    *(unsigned long *)(FTM_BLOCK_0 + 0x064)      // FTM0 combine channel register
         #define FTM0_TRIG       *(unsigned long *)(FTM_BLOCK_0 + 0x06c)      // FTM0 channel trigger register
@@ -8686,7 +8696,9 @@ typedef struct st_KINETIS_DSPI
     #define FTM0_FMS            *(unsigned long *)(FTM_BLOCK_0 + 0x074)      // FTM0 fault mode status
     #define FTM0_FILTER         *(unsigned long *)(FTM_BLOCK_0 + 0x078)      // FTM0 input capture filter control
     #define FTM0_FLTCTRL        *(unsigned long *)(FTM_BLOCK_0 + 0x07c)      // FTM0 fault control
-    #define FTM0_QDCTRL         *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 quadrature decoder control and status
+    #if !defined KINETIS_KE06
+        #define FTM0_QDCTRL     *(unsigned long *)(FTM_BLOCK_0 + 0x080)      // FTM0 quadrature decoder control and status
+    #endif
     #define FTM0_CONF           *(unsigned long *)(FTM_BLOCK_0 + 0x084)      // FTM0 configuration
       #define FTM_CONF_NUMTOF   0x0000001f                                   // FOT frequency mask
       #define FTM_CONF_BDMMODE_0  0x00000000                                 // FTM counter stops in bdm mode
@@ -8725,7 +8737,7 @@ typedef struct st_KINETIS_DSPI
 #define FTM1_C4V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x030) // FTM1 channel 4 value
 #define FTM1_C5SC           *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x034) // FTM1 channel 5 and control
 #define FTM1_C5V            *(volatile unsigned long *)(FTM_BLOCK_1 + FTM_OFFSET_1 + 0x038) // FTM1 channel 5 value
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE06)
     #if defined KINETIS_KL28
         #define FTM1_COMBINE    *(unsigned long *)(FTM_BLOCK_1 + 0x064)      // FTM1 combine channel register
         #define FTM1_TRIG       *(unsigned long *)(FTM_BLOCK_1 + 0x06c)      // FTM1 channel trigger register
@@ -8754,7 +8766,9 @@ typedef struct st_KINETIS_DSPI
     #define FTM1_FMS            *(unsigned long *)(FTM_BLOCK_1 + 0x074)      // FTM1 Fault Mode Status
     #define FTM1_FILTER         *(unsigned long *)(FTM_BLOCK_1 + 0x078)      // FTM1 Input Capture Filter Control
     #define FTM1_FLTCTRL        *(unsigned long *)(FTM_BLOCK_1 + 0x07c)      // FTM1 Fault Control
-    #define FTM1_QDCTRL         *(unsigned long *)(FTM_BLOCK_1 + 0x080)      // FTM1 Quadrature Decoder Control and Status
+    #if !defined KINETIS_KE06
+        #define FTM1_QDCTRL     *(unsigned long *)(FTM_BLOCK_1 + 0x080)      // FTM1 Quadrature Decoder Control and Status
+    #endif
     #define FTM1_CONF           *(unsigned long *)(FTM_BLOCK_1 + 0x084)      // FTM1 Configuration
     #define FTM1_FLTPOL         *(unsigned long *)(FTM_BLOCK_1 + 0x088)      // FTM1 Fault Input Polarity
     #define FTM1_SYNCONF        *(unsigned long *)(FTM_BLOCK_1 + 0x08c)      // FTM1 Synchronisation Configuration
@@ -8786,7 +8800,7 @@ typedef struct st_KINETIS_DSPI
 #define FTM2_C4V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x030) // FTM2 channel 4 value
 #define FTM2_C5SC           *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x034) // FTM2 channel 5 and control
 #define FTM2_C5V            *(volatile unsigned long *)(FTM_BLOCK_2 + FTM_OFFSET_1 + 0x038) // FTM2 channel 5 value
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE06)
     #if defined KINETIS_KL28
         #define FTM2_COMBINE    *(unsigned long *)(FTM_BLOCK_2 + 0x064)      // FTM2 combine channel register
         #define FTM2_TRIG       *(unsigned long *)(FTM_BLOCK_2 + 0x06c)      // FTM2 channel trigger register
@@ -8815,7 +8829,9 @@ typedef struct st_KINETIS_DSPI
     #define FTM2_FMS            *(unsigned long *)(FTM_BLOCK_2 + 0x074)      // FTM2 Fault Mode Status
     #define FTM2_FILTER         *(unsigned long *)(FTM_BLOCK_2 + 0x078)      // FTM2 Input Capture Filter Control
     #define FTM2_FLTCTRL        *(unsigned long *)(FTM_BLOCK_2 + 0x07c)      // FTM2 Fault Control
-    #define FTM2_QDCTRL         *(unsigned long *)(FTM_BLOCK_2 + 0x080)      // FTM2 Quadrature Decoder Control and Status
+    #if !defined KINETIS_KE06
+        #define FTM2_QDCTRL     *(unsigned long *)(FTM_BLOCK_2 + 0x080)      // FTM2 Quadrature Decoder Control and Status
+    #endif
     #define FTM2_CONF           *(unsigned long *)(FTM_BLOCK_2 + 0x084)      // FTM2 Configuration
     #define FTM2_FLTPOL         *(unsigned long *)(FTM_BLOCK_2 + 0x088)      // FTM2 Fault Input Polarity
     #define FTM2_SYNCONF        *(unsigned long *)(FTM_BLOCK_2 + 0x08c)      // FTM2 Synchronisation Configuration
@@ -8929,7 +8945,7 @@ typedef struct stFLEX_TIMER_MODULE
 #if defined KINETIS_KL28
     volatile unsigned long FTM_STATUS;
 #endif
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE06)
     FLEX_TIMER_CHANNEL FTM_channel[6];                                   // up to 6 chnnels per timer (some may have less)
     #if defined KINETIS_KL28
         unsigned long ulRes0[5];
@@ -8962,7 +8978,11 @@ typedef struct stFLEX_TIMER_MODULE
     unsigned long FTM_FMS;
     unsigned long FTM_FILTER;
     unsigned long FTM_FLTCTRL;
-    unsigned long FTM_QDCTRL;
+    #if defined KINETIS_KE06
+        unsigned long ulRes10;
+    #else
+        unsigned long FTM_QDCTRL;
+    #endif
     unsigned long FTM_CONF;
     unsigned long FTM_FLTPOL;
     unsigned long FTM_SYNCONF;

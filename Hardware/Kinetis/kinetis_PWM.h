@@ -617,7 +617,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #if FLEX_TIMERS_AVAILABLE > 4 && defined TPMS_AVAILABLE_TOO
                 }
     #endif
-    #if defined KINETIS_KL || defined KINETIS_KE
+    #if defined FTM_CONF_TRGPOL_LOW
                 if ((PWM_TRIGGER_CLOCK_INVERT & ulMode) != 0) {
                     ptrFlexTimer->FTM_CONF |= FTM_CONF_TRGPOL_LOW;       // falling edge triggered (note that this has no effect on the KL28)
                 }

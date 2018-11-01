@@ -682,7 +682,6 @@ extern int fnSHA256(const unsigned char *ptrInput, unsigned char *ptrOutput, uns
             #endif
         #endif
         #if defined NATIVE_SHA256_CAU && !((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC)
-    static mbedtls_sha256_context sha256;                                // single instance (supports one SHA-256 operation at a time)
     padding_start(&sha256, ptrInput, &length, CRYPTO_BIG_ENDIAN);        // prepare padding for mmCAU SHA256 operation
         #endif
     #endif

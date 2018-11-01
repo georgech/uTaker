@@ -2464,7 +2464,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of 1k (4k larger devices)
             #define FILE_SYSTEM_SIZE (2 * 1024)                          // 2k reserved for file system
         #elif defined TEENSY_LC || defined FRDM_KL27Z || defined TRK_KEA64
-            #define uFILE_START      (FLASH_START_ADDRESS + (63 * 1024)) // FLASH location at 62k start
+            #define uFILE_START      (FLASH_START_ADDRESS + (63 * 1024)) // FLASH location at 63k start
             #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)             // each file a multiple of 1k
             #define FILE_SYSTEM_SIZE (2 * 1024)                          // 4k reserved for file system
         #elif defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined TWR_KL25Z48M || defined FRDM_KE06Z || defined TRK_KEA128 || defined rcARM_KL26 || defined FRDM_KEAZ128Q80 || defined FRDM_KE15Z || defined TWR_KM34Z50M || defined TWR_KM34Z75M // {21}{24}{30}
