@@ -11,7 +11,7 @@
     File:      stm32_FLASH.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     20.01.2017 Add 2MByte Flash support                                  {1}
 

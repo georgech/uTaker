@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>uTaskerV1.4/Debug STM32</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>153</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+    <Build><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Breakpoints</Factory></Window></Windows></PreferedWindows><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1155</ColumnWidth1><ColumnWidth2>308</ColumnWidth2><ColumnWidth3>77</ColumnWidth3></Build><TerminalIO/><Debug-Log><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Build</Factory></Window><Window><Factory>Breakpoints</Factory></Window></Windows></PreferedWindows><ColumnWidth0>21</ColumnWidth0><ColumnWidth1>1540</ColumnWidth1></Debug-Log><Breakpoints><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Build</Factory></Window></Windows></PreferedWindows><col-names><item>Breakpoint</item><item>_I0</item></col-names><col-widths><item>500</item><item>35</item></col-widths></Breakpoints></Static>
+    <Windows>
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-29162-32556</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>uTaskerV1.4</ExpandedNode><ExpandedNode>uTaskerV1.4/Hardware</ExpandedNode><ExpandedNode>uTaskerV1.4/Hardware/STM32.c</ExpandedNode><ExpandedNode>uTaskerV1.4/Output</ExpandedNode><ExpandedNode>uTaskerV1.4/uTasker</ExpandedNode><ExpandedNode>uTaskerV1.4/uTasker/uGLCDLIB</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd2><Tabs><Tab><Identity>TabID-28333-8354</Identity><TabName>Build</TabName><Factory>Build</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd2></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\..\..\..\..\..\Program Files\IAR Systems\Embedded Workbench 6.0 Kickstart_3\arm\inc\c\ycheck.h</Filename><XPos>0</XPos><YPos>77</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\app_hw_STM32.h</Filename><XPos>0</XPos><YPos>837</YPos><SelStart>54488</SelStart><SelEnd>54488</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\uGLCDLIB\GLCD.c</Filename><XPos>0</XPos><YPos>302</YPos><SelStart>16687</SelStart><SelEnd>16687</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\uGLCDLIB\glcd_cglcd.h</Filename><XPos>0</XPos><YPos>1727</YPos><SelStart>103589</SelStart><SelEnd>103589</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\Tty_drv.c</Filename><XPos>0</XPos><YPos>499</YPos><SelStart>24374</SelStart><SelEnd>24374</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\utFAT\mass_storage.c</Filename><XPos>0</XPos><YPos>1355</YPos><SelStart>84693</SelStart><SelEnd>84693</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\Driver.c</Filename><XPos>0</XPos><YPos>234</YPos><SelStart>11835</SelStart><SelEnd>11835</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\Hardware\STM32\STM32.c</Filename><XPos>0</XPos><YPos>2122</YPos><SelStart>95824</SelStart><SelEnd>95824</SelEnd></Tab><ActiveTab>7</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\debug.c</Filename><XPos>0</XPos><YPos>3323</YPos><SelStart>157967</SelStart><SelEnd>157979</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\usb_application.c</Filename><XPos>0</XPos><YPos>866</YPos><SelStart>56333</SelStart><SelEnd>56349</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\application.c</Filename><XPos>0</XPos><YPos>851</YPos><SelStart>46388</SelStart><SelEnd>46388</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\USB_drv.c</Filename><XPos>0</XPos><YPos>385</YPos><SelStart>21462</SelStart><SelEnd>21462</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\uTasker\uTasker.c</Filename><XPos>0</XPos><YPos>345</YPos><SelStart>18255</SelStart><SelEnd>18255</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-01c9f4f8><key>iaridepm.enu1</key></Toolbar-01c9f4f8></Sizes></Row0><Row1><Sizes/></Row1></Top><Left><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>477</Bottom><Right>244</Right><x>-2</x><y>-2</y><xscreen>339</xscreen><yscreen>239</yscreen><sizeHorzCX>211875</sizeHorzCX><sizeHorzCY>292176</sizeHorzCY><sizeVertCX>153750</sizeVertCX><sizeVertCY>585575</sizeVertCY></Rect></Wnd0></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>296</Bottom><Right>1602</Right><x>-2</x><y>-2</y><xscreen>1604</xscreen><yscreen>298</yscreen><sizeHorzCX>1002500</sizeHorzCX><sizeHorzCY>364303</sizeHorzCY><sizeVertCX>125000</sizeVertCX><sizeVertCY>244499</sizeVertCY></Rect></Wnd2></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

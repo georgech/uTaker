@@ -18,6 +18,7 @@
     02.10.2013 Correct STM32F1xx flash control                           {3}
     20.01.2017 Add 2MByte Flash support                                  {4}
     18.06.2018 Change uMemset() to match memset() parameters             {5}
+    01.11.2018 User flash driver instead of local code                   {6}
 
 
 */
@@ -33,8 +34,9 @@
     #include "config.h"
     #define INITHW  extern
     #define START_CODE 0
-    unsigned long ulFlashLockState = FLASH_CR_LOCK;
-
+    #if (defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM  || defined USE_PARAMETER_BLOCK || defined INTERNAL_USER_FILES)
+        extern int iFetchingInternalMemory = 0;
+    #endif
     extern unsigned char vector_ram[sizeof(VECTOR_TABLE)];               // vector table in simulated RAM (long word aligned)
 #else
     #define STM32_LowLevelInit main
@@ -56,6 +58,13 @@
     #define SIM_DMA(x)
 #endif
 
+#if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined SUPPORT_PROGRAM_ONCE // {6}
+/* =================================================================== */
+/*                           FLASH driver                              */
+/* =================================================================== */
+    #include "stm32_FLASH.h"                                             // include FLASH driver code
+#endif
+
 
 // This routine is called to reset the card
 //
@@ -64,14 +73,22 @@ extern void fnResetBoard(void)
     APPLICATION_INT_RESET_CTR_REG = (VECTKEY | SYSRESETREQ);
 }
 
+
 #if !defined _COMPILE_KEIL                                               // Keil doesn't support in-line assembler in Thumb mode so an assembler file is required
 // Allow the jump to a foreign application as if it were a reset (load SP and PC)
 //
-extern void start_application(unsigned long app_link_location)           // {1}
+extern void start_application(unsigned long app_link_location)
 {
     #if !defined _WINDOWS
-    asm(" ldr sp, [r0,#0]");
-    asm(" ldr pc, [r0,#4]");
+        #if defined ARM_MATH_CM0PLUS                                     // {67} cortex-M0+ assembler code
+    asm(" ldr r1, [r0,#0]");                                             // get the stack pointer value from the program's reset vector
+    asm(" mov sp, r1");                                                  // copy the value to the stack pointer
+    asm(" ldr r0, [r0,#4]");                                             // get the program counter value from the program's reset vector
+    asm(" blx r0");                                                      // jump to the start address
+        #else                                                            // cortex-M3/M4/M7 assembler code
+    asm(" ldr sp, [r0,#0]");                                             // load the stack pointer value from the program's reset vector
+    asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there
+        #endif
     #endif
 }
 #endif
@@ -90,7 +107,6 @@ extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, uns
     }
     return usCRC;
 }
-
 
 
 #if defined SPI_SW_UPLOAD
@@ -136,10 +152,6 @@ extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, uns
 #endif
 
 
-
-
-
-
 // memcpy implementation
 //
 extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
@@ -148,51 +160,13 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     unsigned char *ptr1 = (unsigned char *)ptrTo;
     unsigned char *ptr2 = (unsigned char *)ptrFrom;
 
-    while (Size--) {
+    while (Size-- != 0) {
         *ptr1++ = *ptr2++;
     }
 
     return buffer;
 }
 
-
-#if defined _STM32F2XX || defined _STM32F4XX
-// The STM32F2xx and STM32F4xx have variable flash granularity - this routine determines the size of the flash sector that the access is in as well as the sector's number
-//
-static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned long *ulSectorNumber)
-{
-    #if SIZE_OF_FLASH >= (2 * 1024 * 1024)                               // {4}
-    if (ptrSector < (unsigned char *)(FLASH_START_ADDRESS + (1 * 1024 * 1024))) {
-        *ulSectorNumber = 0;                                             // access in first bank
-    }
-    else {
-        ptrSector -= (1 * 1024 * 1024);
-        *ulSectorNumber = 16;                                            // access in second bank (note that the first sector in teh secdn bank is named as sector 1 but it has to be addressed as sector 16!)
-    }
-    #else
-    *ulSectorNumber = 0;
-    #endif
-    if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER))) { // {22}
-        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER));
-        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS + NUMBER_OF_PARAMETER_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY));
-        return FLASH_GRANULARITY;                                        // access in code area
-    }
-    else if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT))) {
-        #if NUMBER_OF_PARAMETER_SECTORS > 1
-        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT));
-        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_PARAMETER));
-        #else
-        *ulSectorNumber += (NUMBER_OF_BOOT_SECTORS);
-        #endif
-        return FLASH_GRANULARITY_PARAMETER;                              // access in parameter area
-    }
-    else {
-        ptrSector -= (FLASH_START_ADDRESS);
-        *ulSectorNumber += (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_BOOT);
-        return FLASH_GRANULARITY_BOOT;                                   // access in boot area
-    }
-}
-#endif
 
 #if defined SPI_SW_UPLOAD
 // This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
@@ -274,313 +248,9 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
 
 #endif
 
-extern int uFileErase(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
+extern int uFileErase(unsigned char *ptrFile, MAX_FILE_LENGTH FileLength)
 {
-#if defined _STM32F2XX || defined _STM32F4XX
-    unsigned long _ulSectorSize;
-    unsigned long ulSectorNumber;
-#else
-    #define _ulSectorSize  FLASH_GRANULARITY                             // {2}
-#endif
-#if defined SPI_SW_UPLOAD
-    if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH)) { // if in SPI flash
-        ACCESS_DETAILS AccessDetails;
-        Length += (((CAST_POINTER_ARITHMETIC)(ptrSector - (FLASH_START_ADDRESS + SIZE_OF_FLASH))) - ((CAST_POINTER_ARITHMETIC)(ptrSector - (FLASH_START_ADDRESS + SIZE_OF_FLASH)) & ~(SPI_FLASH_PAGE_LENGTH - 1)));
-        ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(SPI_FLASH_PAGE_LENGTH - 1)); // set to sector boundary
-        AccessDetails.ulOffset = (unsigned long)(ptrSector - (FLASH_START_ADDRESS + SIZE_OF_FLASH)); // offset in spi flash
-        while (Length != 0) {
-            AccessDetails.BlockLength = Length;
-            AccessDetails.BlockLength = fnDeleteSPI(&AccessDetails);     // delete page/block in SPI flash
-            if (Length <= AccessDetails.BlockLength) {
-                break;
-            }
-            Length -= AccessDetails.BlockLength;                         // length reduced by the last block deletion length
-            AccessDetails.ulOffset += AccessDetails.BlockLength;         // offset increased by the last block deletion length
-        }
-        return 0;
-    }
-#endif
-    do {
-#if defined _STM32F2XX || defined _STM32F4XX
-        _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber);
-#endif
-        Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
-        ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // set to sector boundary
-        if (FLASH_CR & FLASH_CR_LOCK) {                                  // if the flash has not been unlocked, unlock it before erasing
-            FLASH_KEYR = FLASH_KEYR_KEY1;
-            FLASH_KEYR = FLASH_KEYR_KEY2;
-#ifdef _WINDOWS
-            FLASH_CR &= ~FLASH_CR_LOCK;
-            ulFlashLockState = 0;
-#endif
-        }
-#if defined _STM32F2XX || defined _STM32F4XX
-        FLASH_CR = (FLASH_CR_SER | MAXIMUM_PARALLELISM | (ulSectorNumber << FLASH_CR_SNB_SHIFT)); // prepare the section to be deleted
-        FLASH_CR |= (FLASH_CR_STRT);                                     // start the erase operation
-#else
-        FLASH_CR = FLASH_CR_PER;                                         // {3} select page erase
-        FLASH_SR = (FLASH_SR_PGERR | FLASH_SR_WRPRTERR | FLASH_SR_EOP);  // {3} reset status flags
-    #if defined _WINDOWS                                                 // {3}
-        FLASH_SR = 0;                                                    // reset self-clearing status bits
-    #endif
-        FLASH_AR = (CAST_POINTER_ARITHMETIC)ptrSector;                   // set pointer to first location in the page to be erased
-        FLASH_CR = (FLASH_CR_PER | FLASH_CR_STRT);                       // {3} start page erase operation
-      //FLASH_CR |= FLASH_CR_STRT;                                       // start page erase operation
-#endif
-#ifdef _WINDOWS
-        FLASH_CR |= ulFlashLockState;
-        if (FLASH_CR & FLASH_CR_LOCK) {                                  // if lock bit set don't erase
-            FLASH_SR |= FLASH_ERROR_FLAGS;
-        }
-        else {
-            uMemset(fnGetFlashAdd(ptrSector), 0xff, _ulSectorSize);      // delete the page content
-        }
-#endif
-        while (FLASH_SR & FLASH_SR_BSY) {}                               // wait until delete operation completes
-        if (FLASH_SR & FLASH_ERROR_FLAGS) {
-            return -1;                                                   // erase error
-        }
-        if (Length <= _ulSectorSize) {
-            FLASH_CR = FLASH_CR_LOCK;                                    // lock flash when complete
-#ifdef _WINDOWS
-            ulFlashLockState = FLASH_CR_LOCK;
-#endif
-#ifdef MANAGED_FILES
-            if (OriginalLength == 0) {                                   // if a single page erase was called, return the page size
-	            return (int)_ulSectorSize;
-	        }
-#endif
-            break;
-        }
-        ptrSector += _ulSectorSize;                                      // advance sector point to next internal flash sector
-        Length -= _ulSectorSize;
-    } while (1);
-    return 0;
-}
-
-#if defined _STM32F2XX || defined _STM32F4XX
-static int fnSingleByteFlashWrite(unsigned char *ucDestination, unsigned char ucData)
-{
-    if (*(unsigned char *)fnGetFlashAdd((unsigned char *)ucDestination) == ucData) {
-        return 0;                                                        // if the value is already programmed in flash there is no need to write
-    }
-    FLASH_CR = FLASH_CR_PG;                                              // select byte programming
-    #ifdef _WINDOWS
-    FLASH_CR |= ulFlashLockState;
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if lock bit set don't program
-        FLASH_SR |= FLASH_ERROR_FLAGS;
-    }
-    else {
-    #endif
-        *((unsigned char *)fnGetFlashAdd((unsigned char *)ucDestination)) = ucData; // program the byte
-    #ifdef _WINDOWS
-    }
-    #endif
-    while (FLASH_SR & FLASH_SR_BSY) {}                                   // wait until write operation completes
-    if (FLASH_SR & (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR)) { // check for errors
-        return -1;                                                       // write error
-    }
-    return 0;
-}
-
-    #if SUPPLY_VOLTAGE > SUPPLY_1_8__2_1                                 // short word writes are only possible when the supply voltage is greater than 2.1V
-static int fnSingleWordFlashWrite(unsigned short *usDestination, unsigned short usData)
-{
-    if (*(unsigned short *)fnGetFlashAdd((unsigned char *)usDestination) == usData) {
-        return 0;                                                        // if the value is already programmed in flash there is no need to write
-    }
-    FLASH_CR = (FLASH_CR_PG | FLASH_CR_PSIZE_16);                        // select short word programming
-    #ifdef _WINDOWS
-    FLASH_CR |= ulFlashLockState;
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if lock bit set don't program
-        FLASH_SR |= FLASH_ERROR_FLAGS;
-    }
-    else {
-    #endif
-        *((unsigned short *)fnGetFlashAdd((unsigned char *)usDestination)) = usData; // program the byte
-    #ifdef _WINDOWS
-    }
-    #endif
-    while (FLASH_SR & FLASH_SR_BSY) {}                                   // wait until write operation completes
-    if (FLASH_SR & (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR)) { // check for errors
-        return -1;                                                       // write error
-    }
-    return 0;
-}
-    #endif
-
-    #if SUPPLY_VOLTAGE >= SUPPLY_2_7__3_6                                 // long word writes are only possible when the supply voltage is greater than 2.7V
-static int fnSingleLongWordFlashWrite(unsigned long *ulDestination, unsigned long ulData)
-{
-    if (*(unsigned long *)fnGetFlashAdd((unsigned char *)ulDestination) == ulData) {
-        return 0;                                                        // if the value is already programmed in flash there is no need to write
-    }
-    FLASH_CR = (FLASH_CR_PG | FLASH_CR_PSIZE_32);                        // select long short word programming
-    #ifdef _WINDOWS
-    FLASH_CR |= ulFlashLockState;
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if lock bit set don't program
-        FLASH_SR |= FLASH_ERROR_FLAGS;
-    }
-    else {
-    #endif
-        *((unsigned long *)fnGetFlashAdd((unsigned char *)ulDestination)) = ulData; // program the byte
-    #ifdef _WINDOWS
-    }
-    #endif
-    while (FLASH_SR & FLASH_SR_BSY) {}                                   // wait until write operation completes
-    if (FLASH_SR & (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR)) { // check for errors
-        return -1;                                                       // write error
-    }
-    return 0;
-}
-    #endif
-#endif
-
-static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ucData)
-{
-    MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
-    unsigned char *ucDestination = (unsigned char *)ptrAccessDetails->ulOffset;
-
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if the flash has not been unlocked, unlock it before programming
-        FLASH_KEYR = FLASH_KEYR_KEY1;
-        FLASH_KEYR = FLASH_KEYR_KEY2;
-    #ifdef _WINDOWS
-        FLASH_CR &= ~FLASH_CR_LOCK;
-        ulFlashLockState = 0;
-    #endif
-    }
-
-    #if defined _STM32F2XX || defined _STM32F4XX                         // depending on the power supply range it is possible to write bytes, short- and long words (with external Vpp 64 bits but this is not supported in this implementation)
-    FLASH_SR = (FLASH_STATUS_FLAGS);                                     // reset status flags
-        #ifdef _WINDOWS
-    FLASH_SR = 0;
-        #endif
-        #if SUPPLY_VOLTAGE == SUPPLY_1_8__2_1                            // only byte wise programming is possible
-    while (Length-- != 0) {        
-        if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) {
-            return 1;                                                    // write error
-        }
-        ucDestination++;
-        ucData++;
-    }
-        #elif SUPPLY_VOLTAGE < SUPPLY_2_7__3_6                           // byte or half-word programming possible
-    {
-        unsigned short usWord;
-        int iCollected = 0;
-        while (Length != 0) {
-            if (iCollected == 0) {
-                if ((Length == 1) || (((CAST_POINTER_ARITHMETIC)ucDestination) & 0x1)) { // single byte write (or final byte write) or misaligned half-word
-                    if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) { // perform single byte programming
-                        return 1;                                        // write error
-                    }
-                    ucDestination++;
-                }
-                else {
-                    usWord = *ucData;                                    // collect in little endian format
-                    iCollected++;
-                }
-            }
-            else {
-                usWord |= (*ucData << 8);
-                if (fnSingleWordFlashWrite((unsigned short *)ucDestination, usWord) != 0) { // perform a short word write
-                    return 1;
-                }
-                ucDestination += 2;
-                iCollected = 0;
-            }
-            ucData++;
-            Length--;
-        }
-    }
-        #else                                                            // byte, half-word and word programming possible when aligned
-    {
-        unsigned long  ulLongWord = 0;
-        unsigned short usWord = 0;
-        int iCollected = 0;
-        while (Length != 0) {
-            if (iCollected == 0) {
-                if ((Length == 1) || (((CAST_POINTER_ARITHMETIC)ucDestination) & 0x1)) { // single byte write (or final byte write) or misaligned half-word
-                    if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) { // perform single byte programming
-                        return 1;                                        // write error
-                    }
-                    ucDestination++;
-                }
-                else {
-                    usWord = *ucData;                                    // collect in little endian format
-                    iCollected++;
-                }
-            }
-            else if (iCollected == 1) {
-                usWord |= (*ucData << 8);
-                iCollected++;
-                if ((Length <= 2) || ((((CAST_POINTER_ARITHMETIC)(ucDestination + 2)) & 0x3) == 0)) { // last short word or ending on a 128 bit line boundary
-                    if (fnSingleWordFlashWrite((unsigned short *)ucDestination, usWord) != 0) { // perform a short word write
-                        return 1;
-                    }
-                    ucDestination += 2;
-                    iCollected = 0;
-                }
-            }
-            else if (iCollected == 2) {
-                ulLongWord = (usWord | (*ucData << 16));
-                iCollected++;
-            }
-            else {
-                ulLongWord |= (*ucData << 24);
-                if (fnSingleLongWordFlashWrite((unsigned long *)ucDestination, ulLongWord) != 0) { // perform a long word write
-                    return 1;
-                }
-                ucDestination += 4;
-                iCollected = 0;
-            }
-            ucData++;
-            Length--;
-        }
-    }
-        #endif
-    #else
-    {
-        unsigned short usValue;
-        // The STM32F1xx writes always in short words so the start is expected to be aligned and the length to be a multiple of half words
-        //
-        while (Length != 0) {
-            usValue = *ucData++;                                         // little endian format
-            usValue |= (*ucData++ << 8);
-            if (*(unsigned short *)fnGetFlashAdd((unsigned char *)ucDestination) != usValue) { // if the value is already programmed skip the write
-                FLASH_CR = FLASH_CR_PG;                                  // select half-word programming
-                FLASH_SR = (FLASH_STATUS_FLAGS);                         // reset status flags
-                #ifdef _WINDOWS
-                FLASH_SR = 0;
-                #endif
-                *(volatile unsigned short *)fnGetFlashAdd((unsigned char *)ucDestination) = usValue; // write the value to the flash location
-                while (FLASH_SR & FLASH_SR_BSY) {}                       // wait until write operation completes
-                if (FLASH_SR & (FLASH_SR_WRPRTERR | FLASH_SR_PGERR)) {   // check for errors
-                    return 1;                                            // write error
-                }
-            }
-            if (Length <= 2) {
-                break;
-            }
-            ucDestination += 2;
-            Length -= 2;
-        }
-    }
-    #endif
-    FLASH_CR = FLASH_CR_LOCK;                                            // lock flash when complete
-    #ifdef _WINDOWS
-    ulFlashLockState = FLASH_CR_LOCK;
-    #endif
-    return 0;
-}
-
-// RAW write of data to non-volatile memory
-//
-extern int fnWriteBytesFlash(unsigned char *ucDestination, unsigned char *ucData, MAX_FILE_LENGTH Length)
-{
-    ACCESS_DETAILS AccessDetails;
-    AccessDetails.ulOffset = (unsigned long)ucDestination;
-    AccessDetails.BlockLength = Length;
-    return (fnWriteInternalFlash(&AccessDetails, ucData));
+    return fnEraseFlashSector(ptrFile, FileLength);
 }
 
 
@@ -672,7 +342,7 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
 {
     #define LOOP_FACTOR  14000000                                        // tuned
     volatile unsigned long ulDelay = ((SYSCLK/LOOP_FACTOR) * ulDelay_us);
-    while (ulDelay--) {}                                                 // simple loop tuned to perform us timing
+    while (ulDelay-- != 0) {}                                            // simple loop tuned to perform us timing
 }
 
 
@@ -725,81 +395,7 @@ extern int STM32_LowLevelInit(void)
     void ( **processor_ints )( void );
 #endif
     VECTOR_TABLE *ptrVect;
-
-    RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // set reset state - default is high-speed internal clock
-    RCC_CFGR = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
-#endif
-#if !defined USE_HSI_CLOCK
-    RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
-#endif
-#if defined _STM32F2XX || defined _STM32F4XX
-    FLASH_ACR = (FLASH_ACR_ICRST | FLASH_ACR_DCRST);                     // flush data and instruction cache
-    FLASH_ACR = (/*FLASH_ACR_PRFTEN | */FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer anyd cache
-    RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
-#elif defined _CONNECTIVITY_LINE
-    FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_WAIT_STATES);                  // set flash wait states appropriately and enable pre-fetch buffer
-    RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
-#else
-    FLASH_ACR = 0; //FLASH_ACR_HLFCYA;                                   // enable half-cycle access - to do???
-    RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
-#endif
-#if !defined USE_HSI_CLOCK
-    while (!(RCC_CR & RCC_CR_HSERDY)) {                                  // wait until the oscillator is ready
-    #ifdef _WINDOWS
-        RCC_CR |= RCC_CR_HSERDY;
-    #endif
-    }
-#endif
-#if defined DISABLE_PLL
-    #if !defined USE_HSI_CLOCK
-    RCC_CFGR |= RCC_CFGR_HSE_SELECT;                                     // set oscillator as direct source
-    #endif
-#else
-    #if defined _STM32F2XX || defined _STM32F4XX
-        #if SYSCLK > 144000000
-    POWER_UP(APB1, (RCC_APB1ENR_PWREN));
-    PWR_CR = PWR_CR_VOS;                                                 // enable high performance mode when the speed is greater than 144MHz
-        #endif
-        #if defined USE_HSI_CLOCK    
-    RCC_PLLCFGR = ((PLL_Q_VALUE << 24) | (PLL_P_VALUE << 16) | PLL_INPUT_DIV | (_PLL_VCO_MUL << 6) | RCC_PLLCFGR_PLLSRC_HSI);
-        #else
-    RCC_PLLCFGR = ((PLL_Q_VALUE << 24) | (PLL_P_VALUE << 16) | PLL_INPUT_DIV | (_PLL_VCO_MUL << 6) | RCC_PLLCFGR_PLLSRC_HSE);
-        #endif
-    #else
-        #ifdef USE_HSI_CLOCK    
-    RCC_CFGR |= (((_PLL_VCO_MUL - 2) << 18));                            // set PLL multiplication factor from HSI input (divided by 2)
-        #else
-            #if defined _CONNECTIVITY_LINE && defined USE_PLL2_CLOCK
-    // Generate an intermediate frequency on PLL2 and then use this as input to the main PLL
-    //
-    RCC_CFGR2 = (((PLL2_INPUT_DIV - 1) << 4) | ((_PLL2_VCO_MUL - 2) << 8) | RCC_CFGR2_PREDIV1SRC | (PLL_INPUT_DIV - 1));
-    RCC_CR |= RCC_CR_PLL2ON;                                             // enable PLL2 and wait for it to become ready
-    while (!(RCC_CR & RCC_CR_PLL2RDY)) {
-                #ifdef _WINDOWS
-        RCC_CR |= RCC_CR_PLL2RDY;
-                #endif
-    }
-            #else
-    RCC_CFGR2 = (PLL_INPUT_DIV - 1);                                     // set PLL input pre-divide
-            #endif
-    RCC_CFGR |= (((_PLL_VCO_MUL - 2) << 18) | RCC_CFGR_PLL_SRC);         // set PLL multiplication factor and select the pre-divide clock source
-        #endif
-    #endif
-    RCC_CR |= RCC_CR_PLLON;                                              // enable PLL and wait for it to become ready
-    while (!(RCC_CR & RCC_CR_PLLRDY)) {
-    #ifdef _WINDOWS
-        RCC_CR |= RCC_CR_PLLRDY;
-    #endif
-    }   
-    RCC_CFGR |= RCC_CFGR_PLL_SELECT;                                     // select PLL as system clock source
-    while ((RCC_CFGR & RCC_CFGR_SWS_MASK) != RCC_CFGR_PLL_USED) {        // wait until PLL used as system clock
-    #ifdef _WINDOWS
-        RCC_CFGR &= ~RCC_CFGR_SWS_MASK; RCC_CFGR |= RCC_CFGR_PLL_USED;
-    #endif
-    }
-#endif
+#include "stm32_CLOCK.h"                                                 // {39} clock configuration
 #ifdef _WINDOWS
     ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
 #else
@@ -822,7 +418,7 @@ extern int STM32_LowLevelInit(void)
             break;
         }
         processor_ints++;
-    } while (1);
+    } FOREVER_LOOP();
 #else
     ptrVect->ptrHardFault     = irq_default;
     ptrVect->ptrMemManagement = irq_default;

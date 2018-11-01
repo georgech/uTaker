@@ -777,6 +777,10 @@ typedef struct stTTYQue
     #endif
 } TTYQUE;
 
+
+#if !defined SPI_CHIP_SELECTS
+    #define SPI_CHIP_SELECTS     1
+#endif
 // SPI queue
 //
 typedef struct stSPIQue

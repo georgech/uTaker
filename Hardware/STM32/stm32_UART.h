@@ -11,7 +11,7 @@
     File:      stm32_UART.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     03.03.2012 Correct UART fraction calculation                         {1}
     28.02.2017 Add UARTs 7 and 8                                         {2}

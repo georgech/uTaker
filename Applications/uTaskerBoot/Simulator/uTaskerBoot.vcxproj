@@ -747,6 +747,7 @@ Build_STM32.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_CLOCK.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_FLASH.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary plus GCC build|Win32'">true</ExcludedFromBuild>

@@ -121,6 +121,8 @@
     //#define TWR_KW24D512                                               // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
     //#define HEXIWEAR_KW40Z                                             // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
 
+    //#define MAPS_KS22F                                                 // KS22F
+
     //#define K02F100M                                                   // development board with 100MHz K02F
     //#define FRDM_K20D50M                                               // K processors Cortex M4 (performance and integration) with USB - freedom board http://www.utasker.com/kinetis/FRDM-K20D50M.html
     //#define tinyK20                                                    // USB memory stick format board with SD card and 50MHz K20DX128 http://www.utasker.com/kinetis/tinyK20.html
@@ -701,6 +703,17 @@
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K21 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
+#elif defined MAPS_KS22F
+    #define TARGET_HW        "MAPS-KS22F"
+    #define KINETIS_KS
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_MAX_SPEED    120000000
+    #define KINETIS_K20                                                  // specify the sub-family
+    #define KINETIS_K22                                                  // extra sub-family type precision
+    #define KINETIS_REVISION_2
+    #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
+    #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined TWR_K22F120M
     #define TARGET_HW            "TWR-K22F120M"
     #define KINETIS_K_FPU                                                // part with floating point unit
@@ -709,7 +722,6 @@
     #define KINETIS_REVISION_2
     #define KINETIS_MAX_SPEED    120000000
     #define DEVICE_WITHOUT_ETHERNET                                      // K22 doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_CAN                                           // this K22 doesn't have CAN controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)
 #elif defined FRDM_K22F ||defined tinyK22
     #if defined tinyK22
@@ -1156,6 +1168,7 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F429ZI
     #define TARGET_HW            "NUCLEO-F429ZI (STM32F429ZI)"
+    #define STM32_FPU                                                    // FPU present
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define _STM32F4XX                                                   // part group
     #define _STM32F42X
@@ -2266,11 +2279,11 @@
     #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
         #define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
         #define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
-        #define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+      //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
           //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
     #define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
-        #define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+      //#define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define SHA_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
           //#define SHA_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
 

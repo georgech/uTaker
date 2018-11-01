@@ -1447,6 +1447,9 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_CMP.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_CLOCK.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

@@ -11,7 +11,7 @@
 ;// File:      STM32_keil_asm.s
 ;// Project:   Single Chip Embedded Internet
 ;// ---------------------------------------------------------------------
-;// Copyright (C) M.J.Butcher Consulting 2004..2017
+;// Copyright (C) M.J.Butcher Consulting 2004..2018
 ;// *********************************************************************
 ;//
 ;// This file contains assembler code needed by Keil since it doesn't support in-line assmebler Thumb mode

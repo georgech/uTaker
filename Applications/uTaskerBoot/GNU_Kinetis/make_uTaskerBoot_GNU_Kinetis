@@ -15,7 +15,7 @@ OBJS = Build/uTaskerBootLoader.o Build/kinetis_boot.o
 
 #General dependencies
 #
-DEPENDS = ../config.h ../types.h ../../../Hardware/hardware.h ../../../Hardware/packages.h ../../../Hardware/Kinetis/kinetis.h 
+DEPENDS = ../config.h ../types.h ../../../Hardware/hardware.h ../../../Hardware/packages.h ../../../Hardware/Kinetis/kinetis.h make_uTaskerBoot_GNU_Kinetis
 
 #C_FLAGS = -mcpu=cortex-m0 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef

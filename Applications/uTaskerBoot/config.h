@@ -835,7 +835,8 @@
       //#define STM3210C_EVAL                                            // evaluation board with STM32F107VCT
       //#define STM3240G_EVAL                                            // evaluation board with STM32F407IGH6
       //#define ST_MB913C_DISCOVERY                                      // discovery board with STM32F100RB
-        #define ST_MB997A_DISCOVERY                                       // discovery board with STM32F407VGT6
+     // #define ST_MB997A_DISCOVERY                                      // discovery board with STM32F407VGT6
+        #define NUCLEO_F429ZI                                            // evaluation board with STM32F429ZIT6
         #if defined STM3210C_EVAL
             #define TARGET_HW       "STM3210C-EVAL (STM32F107VCT)"
         #elif defined STM3240G_EVAL
@@ -844,6 +845,8 @@
             #define TARGET_HW       "MB997A DISCOVERY (STM32F407VGT6)"
         #elif defined ST_MB913C_DISCOVERY
             #define TARGET_HW       "MB913C DISCOVERY (STM32F100RBT6B)"
+        #elif defined NUCLEO_F429ZI
+            #define TARGET_HW       "NUCLEO-F429ZI (STM32F429ZI)"
         #endif
 
         #if defined STM3210C_EVAL                                        // STM32F107VCT (72MHz)
@@ -910,6 +913,33 @@
             #define STM32F100RB                                          // exact processor type
             #define PCLK1_DIVIDE        2
             #define PCLK2_DIVIDE        1
+        #elif defined NUCLEO_F429ZI
+          //#define PT_427                                               // development variation
+            #define _STM32F4XX                                           // part group
+            #define _STM32F42X
+            #if defined (PT_427)
+                #define PIN_COUNT           PIN_COUNT_100_PIN
+                #define CRYSTAL_FREQ        19660800                     // 19.6608MHz oscillator
+                #define _EXTERNAL_CLOCK     CRYSTAL_FREQUENCY            // external clock rather than a crystal
+                #define PLL_INPUT_DIV       12                           // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+                #define PLL_VCO_MUL         205                          // 64 ..432 where VCO must be 192..432MHz
+                #define _STM32F427
+            #else
+                #define PIN_COUNT           PIN_COUNT_144_PIN
+                #define CRYSTAL_FREQ        8000000                      // 8MHz Crystal
+                #define PLL_INPUT_DIV       4                            // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+                #define PLL_VCO_MUL         168                          // 64 ..432 where VCO must be 192..432MHz
+                #define _STM32F429
+            #endif
+            #define PLL_POST_DIVIDE     2                                // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
+            #define HCLK_DIVIDE         1                                // HCLK is divided by 1 (1, 2, 4, 8, 16, 64, 128 or 512 are possible) - max. 168MHz
+            #define PCLK1_DIVIDE        4                                // PCLK1 is HCLK divided by 4 (1, 2, 4, 8, or 16 are possible) - max. 42MHz
+            #define PCLK2_DIVIDE        2                                // PCLK2 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+            #define SIZE_OF_RAM         (192 * 1024)                     // 192k SRAM (0x20000000)
+            #define SIZE_OF_CCM         (64 * 1024)                      // 64k Core Coupled Memory (0x10000000)
+            #define SIZE_OF_FLASH       (2 * 1024 * 1024)                // 2M FLASH
+            #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                  // power supply is in the range 2.7V..3.6V
         #endif
         // Include the hardware header here
         // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,

@@ -120,6 +120,10 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*I
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
 #endif
 
+#if defined STM32_FPU
+    #define __FPU_PRESENT  1
+#endif
+
 #define RTC_VALID_PATTERN       0xca35
 
 #if !defined PERSISTENT_RAM_SIZE

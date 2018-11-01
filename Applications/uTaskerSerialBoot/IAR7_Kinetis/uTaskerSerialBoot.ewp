@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK82FN256xxx15	NXP MK82FN256xxx15</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -149,7 +149,7 @@
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
+          <state>MK82FN256xxx15	NXP MK82FN256xxx15</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -727,7 +727,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\KL_256_32.icf</state>
+          <state>$PROJ_DIR$\settings\K_256_256.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

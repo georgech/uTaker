@@ -11,7 +11,7 @@
     File:      stm32_TIMER.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     17.10.2017 Add timers 9 and 12                                       {1}
     17.10.2017 Correct prescaler adjustment for PCLK2                    {2}

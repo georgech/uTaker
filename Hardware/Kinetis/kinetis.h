@@ -1195,11 +1195,6 @@ typedef struct stRESET_VECTOR
     #define RTC_PRESCALER_LOCATION  (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 16)) // {63}
 #endif
 
-#define RESET_TO_SERIAL_LOADER      0x89a2                               // pattern set to BOOT_MAIL_BOX to request the serial loader to start
-#define RESET_TO_APPLICATION        0x755d                               // pattern set to BOOT_MAIL_BOX to request the serial loader to jump to the application
-
-#define RTC_VALID_PATTERN           0xca35                               // pattern set the RTC_VALID_LOCATION when the RTC values are valid
-
 #if !defined PERSISTENT_RAM_SIZE
     #define PERSISTENT_RAM_SIZE          0
 #endif

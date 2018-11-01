@@ -226,6 +226,9 @@
     <ClInclude Include="..\..\..\Hardware\Luminary\SimLM3SXXXX.h">
       <Filter>WinSim\SIMluminary</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_CLOCK.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
