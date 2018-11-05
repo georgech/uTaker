@@ -6069,6 +6069,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_0_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define _SET_RTS_0_HIGH()       _SETBITS(B, RTS_0_LINE)
     #define _SET_RTS_0_LOW()        _CLEARBITS(B, RTS_0_LINE)
+
+    // CTS line configuration for RTS/CTS flow control
+    //
+    #define CTS_0_PORT              PORTB
+    #define CTS_0_PIN               PORTB_BIT1
+    #define CTS_0_INTERRUPT_PRIORITY PRIORITY_PORT_B_INT
 #elif defined TRK_KEA128 || defined TRK_KEA64 || defined TRK_KEA8
     #define DEMO_LED_1             (KE_PORTC_BIT0)                       // (blue LED - PTC0) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTC_BIT1)                       // (blue LED - PTC1) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
@@ -6373,21 +6379,37 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     // RTS control via GPIO output
     //
-    #define RTS_2_LINE              KE_PORTA_BIT1
-    #define _CONFIGURE_RTS_2_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (RTS_2_LINE), (RTS_2_LINE), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define _CONFIGURE_RTS_2_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (RTS_2_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
-    #define _SET_RTS_2_HIGH()       _SETBITS(A, RTS_2_LINE)
-    #define _SET_RTS_2_LOW()        _CLEARBITS(A, RTS_2_LINE)
+    #define RTS_0_LINE              PORTB_BIT0
+    #define _CONFIGURE_RTS_0_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_0_LINE), (RTS_0_LINE), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_0_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_0_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_0_HIGH()       _SETBITS(B, RTS_0_LINE)
+    #define _SET_RTS_0_LOW()        _CLEARBITS(B, RTS_0_LINE)
 
-    #define _CONFIGURE_RTS_1_HIGH()
-    #define _CONFIGURE_RTS_1_LOW()
-    #define _SET_RTS_1_HIGH()
-    #define _SET_RTS_1_LOW()
+    #define RTS_1_LINE              PORTB_BIT1
+    #define _CONFIGURE_RTS_1_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_1_LINE), (RTS_1_LINE), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_1_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_1_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_1_HIGH()       _SETBITS(B, RTS_1_LINE)
+    #define _SET_RTS_1_LOW()        _CLEARBITS(B, RTS_1_LINE)
 
-    #define _CONFIGURE_RTS_0_HIGH()
-    #define _CONFIGURE_RTS_0_LOW()
-    #define _SET_RTS_0_HIGH()
-    #define _SET_RTS_0_LOW()
+    #define RTS_2_LINE              PORTB_BIT2
+    #define _CONFIGURE_RTS_2_HIGH() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_2_LINE), (RTS_2_LINE), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _CONFIGURE_RTS_2_LOW()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (RTS_2_LINE), (0), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define _SET_RTS_2_HIGH()       _SETBITS(B, RTS_2_LINE)
+    #define _SET_RTS_2_LOW()        _CLEARBITS(B, RTS_2_LINE)
+
+    // CTS line configuration for RTS/CTS flow control
+    //
+    #define CTS_0_PORT              PORTB
+    #define CTS_0_PIN               PORTB_BIT3
+    #define CTS_0_INTERRUPT_PRIORITY PRIORITY_PORT_B_INT
+
+    #define CTS_1_PORT              PORTB
+    #define CTS_1_PIN               PORTB_BIT4
+    #define CTS_1_INTERRUPT_PRIORITY PRIORITY_PORT_B_INT
+
+    #define CTS_2_PORT              KE_PORTI
+    #define CTS_2_PIN               KE_PORTI_BIT4
+    #define CTS_2_INTERRUPT_PRIORITY PRIORITY_PORT_B_INT
 #elif defined FRDM_KE06Z                                                 // {30}
     #define DEMO_LED_1             (KE_PORTG_BIT6)                       // (green LED - PTG6) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (KE_PORTG_BIT5)                       // (red LED - PTG5) if the port is changed (eg. A to D) the port macros will require appropriate adjustment too

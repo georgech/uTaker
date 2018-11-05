@@ -213,7 +213,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
         #endif
     #endif
 #endif
-#if defined SUPPORT_HW_FLOW && (defined KINETIS_KE || defined KINETIS_KL)
+#if defined SUPPORT_HW_FLOW && defined UART_WITHOUT_MODEM_CONTROL
     static unsigned char ucRTS_neg[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
@@ -1417,14 +1417,14 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
         #endif
     #endif
 #endif
-#if (UARTS_AVAILABLE > 1)
+#if (UARTS_AVAILABLE > 0)
     #if (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         #define FIRST_UART_CHANNEL          0
     #endif
-    #if (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
+    #if (UARTS_AVAILABLE > 1) && ((LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL))
         #define SECOND_UART_CHANNEL         1
     #endif
-    #if ((LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
+    #if (UARTS_AVAILABLE > 2) && ((LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
         #define THIRD_UART_CHANNEL          2
     #endif
     #if UARTS_AVAILABLE > 3
@@ -1444,392 +1444,110 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
 #define UART_RX_PIN              1
 #define LPUART_RTS_PIN           2
 #define UART_RTS_PIN             2
+#define LPUART_CTS_PIN           3
+#define UART_CTS_PIN             3
+#define LPUART_RTS_PIN_INVERTED  4
+#define UART_RTS_PIN_INVERTED    4
+#define LPUART_RTS_PIN_ASSERT    5
+#define UART_RTS_PIN_ASSERT      5
+#define LPUART_RTS_PIN_NEGATE    6
+#define UART_RTS_PIN_NEGATE      6
+
 
 #include "kinetis_uart_pins.h"                                           // include fnConfigureUARTpin() for configuring LPUART/UART pins and entering related interrupt handlers 
 
-    #if defined SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
 extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
 {
-        #if NUMBER_EXTERNAL_SERIAL > 0
+    #if ((LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL) || ((UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL)
+    KINETIS_UART_CONTROL *uart_reg;
+    #endif
+    int iLPUART = 0;
+    #if NUMBER_EXTERNAL_SERIAL > 0
     if (channel >= NUMBER_SERIAL) {
         fnSetRTS(channel, 0);                                            // prepare to drive the RTS line in negated state
         return;
     }
-        #endif
-        #if !defined KINETIS_KE && !defined KINETIS_KL
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
-    unsigned long ulMode;
-    if (uart_reg == 0) {
-        return;                                                          // invalid channel
-    }
-            #if defined LPUART_WITH_RTS_CTS
-    if (uart_type[channel] == UART_TYPE_LPUART) {                        // if this is a LPUART with RTS/CTS control
-        ulMode = (((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSE | LPUART_MODIR_TXRTSPOL)); // read the original modem configuration
-    }
-    else {
-        ulMode = (uart_reg->UART_MODEM & ~(UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL)); // read the original modem configuration
-    }
-            #else
-    ulMode = (uart_reg->UART_MODEM & ~(UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL)); // read the original modem configuration
-            #endif
-        #endif
+    #endif
+    #if ((LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL) || ((UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL)
+    uart_reg = fnSelectChannel(channel);
+    #endif
+    #if UARTS_AVAILABLE > 0 && LPUARTS_AVAILABLE > 0
+    iLPUART = (int)(uart_type[channel] == UART_TYPE_LPUART);
+    #elif LPUARTS_AVAILABLE > 0
+    iLPUART = 1;
+    #else
+    iLPUART = 0;
+    #endif
 
-    if ((usModifications & (CONFIG_RTS_PIN | CONFIG_CTS_PIN)) != 0) {
-        if ((usModifications & CONFIG_RTS_PIN) != 0) {                   // if the caller wants to modify the RTS pin configuration
-            #if defined KINETIS_KE15
-            fnConfigureUARTpin(channel, LPUART_RTS_PIN);                 // configure the LPUART rx pin and enter its interrupt handler
-            #else
-            switch (channel) {
-            case 0:                                                      // configure the UART0_RTS pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // {200} families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_0_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[0] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_0_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[0] = 1;                                    // inverted RTS mode
-                }
-                #elif defined KINETIS_K02
-                    #if defined UART0_A_LOW
-                _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PA1 (alt. function 2)
-                    #elif defined UART0_ON_D
-                _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PD6 (alt. function 3)
-                    #else
-                _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS)); // UART0_RX on PB16 (alt. function 3)
-                    #endif
-                #elif defined UART0_A_LOW
-                _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PA3 (alt. function 2)
-                #elif defined UART0_ON_B
-                _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PB2 (alt. function 3)
-                #elif defined UART0_ON_D
-                _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on PD4 (alt. function 3)
-                #else
-                _CONFIG_PERIPHERAL(A, 17, (PA_17_UART0_RTS | UART_PULL_UPS)); // UART0_RTS on A17 (alt. function 3)
-                #endif
-                break;
-
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-            case 1:                                                      // configure the UART1_RTS pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_1_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[1] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_1_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[1] = 1;                                    // inverted RTS mode
-                }
-                #elif defined UART1_ON_C
-                _CONFIG_PERIPHERAL(C, 1, (PC_1_UART1_RTS | UART_PULL_UPS)); // UART1_RTS on PC1 (alt. function 3) {16}
-                #else
-                _CONFIG_PERIPHERAL(E, 3, (PE_3_UART1_RTS | UART_PULL_UPS)); // UART1_RTS on PE3 (alt. function 3)
-                #endif
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-            case 2:                                                      // configure the UART2_RTS pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_2_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[2] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_2_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[2] = 1;                                    // inverted RTS mode
-                }
-                #elif (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KW2X) && defined UART2_ON_E // {25}
-                _CONFIG_PERIPHERAL(E, 19, (PE_19_UART2_RTS | UART_PULL_UPS)); // UART2_RTS on PE19 (alt. function 3)
-                #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART2_ON_F // {25}
-                _CONFIG_PERIPHERAL(F, 11, (PF_11_UART2_RTS | UART_PULL_UPS)); // UART2_RTS on PF11 (alt. function 4)
-                #else
-                _CONFIG_PERIPHERAL(D, 0, (PD_0_UART2_RTS | UART_PULL_UPS)); // UART2_RTS on PD0 (alt. function 3)
-                #endif
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-            case 3:                                                      // configure the UART Rx 3 pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_3_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[3] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_3_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[3] = 1;                                    // inverted RTS mode
-                }
-                #elif defined UART3_ON_B
-                _CONFIG_PERIPHERAL(B, 8, (PB_8_UART3_RTS | UART_PULL_UPS)); // UART3_RTS on PB8 (alt. function 3)
-                #elif defined UART3_ON_C
-                _CONFIG_PERIPHERAL(C, 18, (PC_18_UART3_RTS | UART_PULL_UPS)); // UART3_RTS on PC18 (alt. function 3)
-                #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART3_ON_F // {25}
-               _CONFIG_PERIPHERAL(F, 9, (PF_9_UART3_RTS | UART_PULL_UPS)); // UART3_RTS on PF9 (alt. function 4) {12}
-                #else
-                _CONFIG_PERIPHERAL(E, 7, (PE_7_UART3_RTS | UART_PULL_UPS)); // UART3_RTS on PE7 (alt. function 3)
-                #endif
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-            case 4:                                                      // configure the UART4_RTS pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_4_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[4] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_4_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[4] = 1;                                    // inverted RTS mode
-                }
-                #elif defined UART4_ON_C
-                _CONFIG_PERIPHERAL(C, 12, (PC_12_UART4_RTS | UART_PULL_UPS)); // UART4_RTS on PC12 (alt. function 3)
-                #else
-                _CONFIG_PERIPHERAL(E, 27, (PE_27_UART4_RTS | UART_PULL_UPS)); // UART4_RTS on PE27 (alt. function 3)
-                #endif
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-            case 5:                                                      // configure the UART5_RTS pin
-                #if defined KINETIS_KE || defined KINETIS_KL             // families without RTS/CTS modem support
-                if ((usModifications & SET_RS485_NEG) == 0) {
-                    _CONFIGURE_RTS_5_HIGH();                             // configure RTS output and set to '1'
-                    ucRTS_neg[5] = 0;                                    // not inverted RTS mode
-                }
-                else {
-                    _CONFIGURE_RTS_5_LOW();                              // configure RTS output and set to '0'
-                    ucRTS_neg[5] = 1;                                    // inverted RTS mode
-                }
-                #elif defined UART5_ON_D
-                _CONFIG_PERIPHERAL(D, 10, (PD_10_UART5_RTS | UART_PULL_UPS)); // UART5_RTS on PD10 (alt. function 3)
-                #else
-                    #if UARTS_AVAILABLE == 5
-                        #if defined LPUART0_ON_A
-                _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PA3 (alt. function 5)
-                        #elif defined LPUART0_ON_D
-                _CONFIG_PERIPHERAL(D, 10, (PD_10_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PD10 (alt. function 5)
-                        #else
-                _CONFIG_PERIPHERAL(E, 11, (PE_11_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PE11 (alt. function 5)
-                        #endif
-                    #else
-                _CONFIG_PERIPHERAL(E, 11, (PE_11_UART5_RTS | UART_PULL_UPS)); // UART5_RTS on PE11 (alt. function 3)
-                    #endif
-                #endif
-                break;
-            #endif
-            }
-            #endif
-            #if defined KINETIS_KE15
-            if ((usModifications & SET_RS485_MODE) != 0) {               // LPUART supports automatic control of the RTS line which is used in RS485 mode
-                KINETIS_LPUART_CONTROL *lpuart_reg = fnSelectChannel(channel);
-                if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
-                    lpuart_reg->LPUART_MODIR = (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL);  // positive RTS polarity
-                }
-                else {
-                    lpuart_reg->LPUART_MODIR = (LPUART_MODIR_RXRTSE);  // positive RTS polarity
-                }
-            }
-            #elif !defined KINETIS_KE && !defined KINETIS_KL
-            if ((usModifications & SET_RS485_MODE) != 0) {               // kinetis supports automatic control of the RTS line which is used in RS485 mode
-                ulMode |= UART_MODEM_TXRTSE;                             // enable automatic RTS control
-                if ((usModifications & SET_RS485_NEG) == 0) {            // the polarity of the RTS line is inverted
-                    ulMode |= UART_MODEM_TXRTSPOL;                       // positive RTS polarity
-                } 
-            }
-                #if defined LPUART_WITH_RTS_CTS
-            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR = ulMode;
+    if ((usModifications & (CONFIG_RTS_PIN | SET_RS485_MODE)) != 0) {    // if the caller wants to modify the RTS pin configuration
+        if ((usModifications & SET_RS485_NEG) != 0) {
+            fnConfigureUARTpin(channel, UART_RTS_PIN_INVERTED);          // configure the LPUART/UART RTS pin in inverted mode
+            if (iLPUART != 0) {
+    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL);  // enable automatic RTS with positive polarity
+    #endif
             }
             else {
-                uart_reg->UART_MODEM = (unsigned char)ulMode;            // set the modem mode
-            }
-                #else
-            uart_reg->UART_MODEM = (unsigned char)ulMode;                // set the modem mode
-                #endif
-            #endif
-        }
-            #if !defined KINETIS_KE && !defined KINETIS_KL
-        if ((usModifications & CONFIG_CTS_PIN) != 0) {                   // configure CTS for HW flow control
-            switch (channel) {
-            case 0:                                                      // configure the UART0_CTS pin
-            #if defined UART0_A_LOW
-                _CONFIG_PERIPHERAL(A, 0, (PA_0_UART0_CTS | UART_PULL_UPS)); // UART0_CTS on PA0 (alt. function 2)
-            #elif defined UART0_ON_B
-                _CONFIG_PERIPHERAL(B, 3, (PB_3_UART0_CTS | UART_PULL_UPS)); // UART0_CTS on PB3 (alt. function 3)
-            #elif defined UART0_ON_D
-                _CONFIG_PERIPHERAL(D, 5, (PD_5_UART0_CTS | UART_PULL_UPS)); // UART0_CTS on PD5 (alt. function 3)
-            #else
-                _CONFIG_PERIPHERAL(A, 16, (PA_16_UART0_CTS | UART_PULL_UPS)); // UART0_CTS on PA16 (alt. function 3)
-            #endif
-                break;
-
-            case 1:                                                      // configure the UART1_CTS pin
-            #if defined UART1_ON_C
-                _CONFIG_PERIPHERAL(C, 2, (PC_2_UART1_CTS | UART_PULL_UPS)); // UART1_CTS on PC2 (alt. function 3)
-            #else
-                _CONFIG_PERIPHERAL(E, 2, (PE_2_UART1_CTS | UART_PULL_UPS)); // UART1_CTS on PE2 (alt. function 3)
-            #endif
-                break;
-
-            case 2:                                                      // configure the UART2_CTS pin
-            #if (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KW2X) && defined UART2_ON_E // {25}
-                _CONFIG_PERIPHERAL(E, 18, (PE_18_UART2_CTS | UART_PULL_UPS)); // UART2_CTS on PE18 (alt. function 3)
-            #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART2_ON_F // {25}
-                _CONFIG_PERIPHERAL(F, 12, (PF_12_UART2_CTS | UART_PULL_UPS)); // UART2_CTS on PF12 (alt. function 4)
-            #else
-                _CONFIG_PERIPHERAL(D, 1, (PD_1_UART2_CTS | UART_PULL_UPS)); // UART2_CTS on PD1 (alt. function 3)
-            #endif
-                break;
-            #if UARTS_AVAILABLE > 3
-            case 3:                                                      // configure the UART3_CTS pin
-                #if defined UART3_ON_B
-                _CONFIG_PERIPHERAL(B, 9, (PB_9_UART3_CTS | UART_PULL_UPS)); // UART3_CTS on PB9 (alt. function 3)
-                #elif defined UART3_ON_C
-                _CONFIG_PERIPHERAL(C, 19, (PC_19_UART3_CTS | UART_PULL_UPS)); // UART3_CTS on PC19 (alt. function 3)
-                #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART3_ON_F // {25}
-                _CONFIG_PERIPHERAL(F, 10, (PF_10_UART3_CTS | UART_PULL_UPS)); // UART3_CTS on PF10 (alt. function 4) {12}
-                #else
-                _CONFIG_PERIPHERAL(E, 6, (PE_6_UART3_CTS | UART_PULL_UPS)); // UART3_CTS on PE6 (alt. function 3)
-                #endif
-                break;
-            #endif
-            #if UARTS_AVAILABLE > 4
-            case 4:                                                      // configure the UART4_CTS pin
-                #if defined UART4_ON_C
-                _CONFIG_PERIPHERAL(C, 13, (PC_13_UART4_CTS | UART_PULL_UPS)); // UART4_CTS on PC13 (alt. function 3)
-                #else
-                _CONFIG_PERIPHERAL(E, 26, (PE_26_UART4_CTS | UART_PULL_UPS)); // UART4_CTS on PE26 (alt. function 3)
-                #endif
-                break;
-
-            case 5:                                                      // configure the UART5_CTS pin
-                #if defined UART5_ON_D
-                _CONFIG_PERIPHERAL(D, 11, (PD_11_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PD11 (alt. function 3)
-                #else
-                    #if UARTS_AVAILABLE == 5
-                        #if defined LPUART0_ON_A
-                _CONFIG_PERIPHERAL(A, 0, (PA_0_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PA0 (alt. function 5)
-                        #elif defined LPUART0_ON_D
-                _CONFIG_PERIPHERAL(D, 11, (PD_11_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PD11 (alt. function 5)
-                        #else
-                _CONFIG_PERIPHERAL(E, 10, (PE_10_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PE10 (alt. function 5)
-                        #endif
-                    #else
-                _CONFIG_PERIPHERAL(E, 10, (PE_10_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PE10 (alt. function 3)
-                    #endif
-                #endif
-                break;
-            #endif
+    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
+                uart_reg->UART_MODEM |= (UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL); // enable automatic RTS control with positive polarity
+    #endif
             }
         }
-            #endif
-    }
-        #if defined KINETIS_KE || defined KINETIS_KL                     // {200}
-        if ((((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
-            #if defined KINETIS_KE15
-            _EXCEPTION("To do");
-            #else
-            switch (channel) {
-            case 0:
-                _SET_RTS_0_LOW();
-                break;
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-            case 1:
-                _SET_RTS_1_LOW();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-            case 2:
-                _SET_RTS_2_LOW();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-            case 3:
-                _SET_RTS_3_LOW();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-            case 4:
-                _SET_RTS_4_LOW();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-            case 5:
-                _SET_RTS_5_LOW();
-                break;
-            #endif
-            }
-            #endif
-        }
-        if ((((usModifications & (CLEAR_RTS)) != 0) && (ucRTS_neg[0] == 0)) || (((usModifications & (SET_RTS)) != 0) && (ucRTS_neg[0] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
-            #if defined KINETIS_KE15
-            _EXCEPTION("To do");
-            #else
-            switch (channel) {
-            case 0:
-                _SET_RTS_0_HIGH();
-                break;
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-            case 1:
-                _SET_RTS_1_HIGH();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-            case 2:
-                _SET_RTS_2_HIGH();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-            case 3:
-                _SET_RTS_3_HIGH();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-            case 4:
-                _SET_RTS_4_HIGH();
-                break;
-            #endif
-            #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-            case 5:
-                _SET_RTS_5_HIGH();
-                break;
-            #endif
-            }
-            #endif
-        }
-        #else
-    if ((ulMode & UART_MODEM_TXRTSE) == 0) {                             // control the polarity of the RTS line when not in RS485 mode
-        if ((usModifications & (SET_RTS)) != 0) {                        // assert RTS output signal
-            #if defined LPUART_WITH_RTS_CTS
-            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_RXRTSE; // RTS is asserted as long as the receive FIFO has space to receive
+        else {
+            fnConfigureUARTpin(channel, UART_RTS_PIN);                   // configure the LPUART/UART RTS pin
+            if (iLPUART != 0) {
+    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSPOL);
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE); // enable automatic RTS with normal polarity
+    #endif
             }
             else {
-                //uart_reg->UART_MODEM |= UART_MODEM_TXRTSPOL;
-                uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;               // {7} RTS is asserted as long as the receive FIFO has space to receive
+    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
+                uart_reg->UART_MODEM &= ~(UART_MODEM_TXRTSPOL);
+                uart_reg->UART_MODEM |= (UART_MODEM_TXRTSE);             // enable automatic RTS control with normal polarity
+    #endif
             }
-            #else
-          //uart_reg->UART_MODEM |= UART_MODEM_TXRTSPOL;
-            uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;                   // {7} RTS is asserted as long as the receive FIFO has space to receive
-            #endif
         }
-        if ((usModifications & (CLEAR_RTS)) != 0) {                      // negate RTS output signal
-            #if defined LPUART_WITH_RTS_CTS
-            if (uart_type[channel] == UART_TYPE_LPUART) {                // if this is a LPUART with RTS/CTS control
+    }
+    if ((usModifications & CONFIG_CTS_PIN) != 0) {                       // configure CTS for HW flow control
+        fnConfigureUARTpin(channel, UART_CTS_PIN);                       // configure the UART CTS pin
+    }
+    #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART_WITHOUT_MODEM_CONTROL // {200}
+    if ((((usModifications & CLEAR_RTS) != 0) && (ucRTS_neg[channel] == 0)) || (((usModifications & SET_RTS) != 0) && (ucRTS_neg[channel] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
+        fnConfigureUARTpin(channel, UART_RTS_PIN_NEGATE);                // negate the LPUART/UART RTS pin
+    }
+    else if ((((usModifications & SET_RTS) != 0) && (ucRTS_neg[channel] == 0)) || (((usModifications & CLEAR_RTS) != 0) && (ucRTS_neg[channel] != 0))) { // assert RTS output signal by setting output to '0' (or inverted negate)
+        fnConfigureUARTpin(channel, UART_RTS_PIN_ASSERT);                // assert the LPUART/UART RTS pin
+    }
+    #endif
+    if (iLPUART != 0) {
+    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
+        if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR & LPUART_MODIR_RXRTSE) == 0) { // if not in RS485 mode
+            if ((usModifications & CLEAR_RTS) != 0) {                    // negate RTS output signal
                 ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~LPUART_MODIR_RXRTSE; // disable control of RTS by receiver space which negates the RTS line
             }
-            else {
-                //uart_reg->UART_MODEM &= ~UART_MODEM_TXRTSPOL;
+            if ((usModifications & SET_RTS) != 0) {                      // assert RTS output signal
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_RXRTSE; // RTS is asserted as long as the receive FIFO has space to receive
+            }
+        }
+    #endif
+    }
+    else {
+    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
+        if ((uart_reg->UART_MODEM & UART_MODEM_TXRTSE) == 0) {           // if not in RS485 mode
+            if ((usModifications & CLEAR_RTS) != 0) {                    // negate RTS output signal
                 uart_reg->UART_MODEM &= ~UART_MODEM_RXRTSE;              // {7} disable control of RTS by receiver space which negates the RTS line
             }
-            #else
-          //uart_reg->UART_MODEM &= ~UART_MODEM_TXRTSPOL;
-            uart_reg->UART_MODEM &= ~UART_MODEM_RXRTSE;                  // {7} disable control of RTS by receiver space which negates the RTS line
-            #endif
+            if ((usModifications & SET_RTS) != 0) {                      // assert RTS output signal
+                uart_reg->UART_MODEM |= UART_MODEM_RXRTSE;               // {7} RTS is asserted as long as the receive FIFO has space to receive
+            }
         }
+    #endif
     }
-        #endif
 }
 
-#if defined SUPPORT_HW_FLOW && (defined KINETIS_KL && !defined LPUART_WITH_RTS_CTS) // {212}
+#if defined SUPPORT_HW_FLOW && (defined UART_WITHOUT_MODEM_CONTROL || defined LPUART_WITHOUT_MODEM_CONTROL) // {212}
 static const unsigned char uCTS_priority[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
     CTS_0_INTERRUPT_PRIORITY,
     #if (LPUARTS_AVAILABLE + UARTS_AVAILABLE) > 1
@@ -1912,65 +1630,78 @@ static const void (*cts_handlers[LPUARTS_AVAILABLE + UARTS_AVAILABLE])(void) = {
     _cts_change_3,
     #endif
 };
-#endif
- 
-// Modify control line interrupt operation (this is called from entry_tty() with disabled interrupts)
-//
-extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
-{
-        #if !defined KINETIS_KE && !defined KINETIS_KL
-    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
 
-    if ((usModifications & ENABLE_CTS_CHANGE) != 0) {
-            #if defined LPUART_WITH_RTS_CTS
-        if (uart_type[channel] == UART_TYPE_LPUART) {                    // if this is a LPUART with RTS/CTS control
-            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_TXCTSE; // enable CTS line to automatically stop the transmitter when negated (HW flow control)
-        }
-        else {
-            uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                    // enable CTS line to automatically stop the transmitter when negated (HW flow control)
-        }
-            #else
-        uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                       // enable CTS line to automatically stop the transmitter when negated (HW flow control)
-            #endif
-    }
-    if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
-            #if defined LPUART_WITH_RTS_CTS
-        if (uart_type[channel] == UART_TYPE_LPUART) {                    // if this is a LPUART with RTS/CTS control
-            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~LPUART_MODIR_TXCTSE; // disable CTS line flow control
-        }
-        else {
-            uart_reg->UART_MODEM &= ~UART_MODEM_TXCTSE;                  // disable CTS line flow control
-        }
-            #else
-        uart_reg->UART_MODEM &= ~UART_MODEM_TXCTSE;                      // disable CTS line flow control
-            #endif
-    }
-    return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
-        #elif defined KINETIS_KE15
-    _EXCEPTION("To do");
-    return 0;
-        #else
+static int fnConfigCTS_port_interrupt(QUEUE_HANDLE channel, unsigned short usModifications)
+{
     // Devices without CTS input use a port interrupt                    {212}
     //
     GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
-    INTERRUPT_SETUP interrupt_setup;                                     // interrupt configuration parameters
-    interrupt_setup.int_type =       PORT_INTERRUPT;                     // identifier to configure port interrupt
-    interrupt_setup.int_handler =    (void(*)(void))cts_handlers[channel]; // handling function
-    interrupt_setup.int_priority =   uCTS_priority[channel];             // interrupt priority level
-    interrupt_setup.int_port =       ucCTS_port[channel];                // the port that the interrupt input is on
-    ptrGPIO += interrupt_setup.int_port;
-    interrupt_setup.int_port_bits =  ulPin[channel];                     // the IRQ input connected
-    interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLUP_ON);       // interrupt is to fire on any edge
-    fnConfigureInterrupt((void *)&interrupt_setup);                      // configure interrupt
-    if ((ptrGPIO->PDIR & interrupt_setup.int_port_bits) == 0) {          // return the present state of the CTS input
+    if ((usModifications & (ENABLE_CTS_CHANGE | DISABLE_CTS_CHANGE)) != 0) {
+        INTERRUPT_SETUP interrupt_setup;                                 // interrupt configuration parameters
+        interrupt_setup.int_type = PORT_INTERRUPT;                       // identifier to configure port interrupt
+        interrupt_setup.int_handler = (void(*)(void))cts_handlers[channel]; // handling function
+        interrupt_setup.int_priority = uCTS_priority[channel];           // interrupt priority level
+        interrupt_setup.int_port = ucCTS_port[channel];                  // the port that the interrupt input is on
+        interrupt_setup.int_port_bits = ulPin[channel];                  // the IRQ input connected
+        if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
+            interrupt_setup.int_port_sense = (IRQ_DISABLE_INT);          // disable interrupt
+        }
+        else {
+            interrupt_setup.int_port_sense = (IRQ_BOTH_EDGES | PULLUP_ON); // interrupt is to fire on any edge
+        }
+        fnConfigureInterrupt((void *)&interrupt_setup);                  // configure interrupt
+    }
+    ptrGPIO += ucCTS_port[channel];
+    if ((ptrGPIO->PDIR & ulPin[channel]) == 0) {                         // return the present state of the CTS input
         return SET_CTS;
     }
     else {
         return 0;
     }
-        #endif
 }
-    #endif                                                               // end SUPPORT_HW_FLOW
+#endif
+
+// Modify control line interrupt operation (this is called from entry_tty() with disabled interrupts)
+//
+extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
+{
+    #if !defined LPUART_WITHOUT_MODEM_CONTROL && !defined UART_WITHOUT_MODEM_CONTROL
+    KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
+    #endif
+    #if UARTS_AVAILABLE > 0 && LPUARTS_AVAILABLE > 0
+    int iLPUART = (int)(uart_type[channel] == UART_TYPE_LPUART);
+    #elif LPUARTS_AVAILABLE > 0
+    int iLPUART = 1;
+    #else
+    int iLPUART = 0;
+    #endif
+    if (iLPUART != 0) {
+    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
+        if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
+            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXCTSE); // disable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+        else if ((usModifications & ENABLE_CTS_CHANGE) != 0) {
+            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= LPUART_MODIR_TXCTSE; // enable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+    #elif LPUARTS_AVAILABLE > 0
+        return (fnConfigCTS_port_interrupt(channel, usModifications));
+    #endif
+    }
+    else {
+    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
+        if ((usModifications & DISABLE_CTS_CHANGE) != 0) {
+            uart_reg->UART_MODEM &= ~(UART_MODEM_TXCTSE);                // disable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+        else if ((usModifications & ENABLE_CTS_CHANGE) != 0) {
+            uart_reg->UART_MODEM |= UART_MODEM_TXCTSE;                   // enable CTS line to automatically stop the transmitter when negated (HW flow control)
+        }
+    #elif UARTS_AVAILABLE > 0
+        return (fnConfigCTS_port_interrupt(channel, usModifications));
+    #endif
+    }
+    return SET_CTS;                                                      // the state of the CTS line cannot be read but report that it is asserted since flow control is performed by hardware
+}
+#endif                                                                   // end SUPPORT_HW_FLOW
 
 
 
@@ -2868,7 +2599,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
             #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
-            #elif defined KINETIS_K80 || defined KINETIS_K66 || defined KINETIS_K65
+            #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K66 || defined KINETIS_K65
             POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
             #else
             POWER_UP_ATOMIC(6, LPUART0);                                 // power up LPUART 0

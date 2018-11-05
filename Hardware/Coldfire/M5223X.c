@@ -3576,7 +3576,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
 
     #if defined SUPPORT_HW_FLOW                                          // {81}
-    if (pars->Config & RTS_CTS) {                                        // {104} HW flow control defined so configure RTS/CTS pins
+    if ((pars->Config & RTS_CTS) != 0) {                                 // {104} HW flow control defined so configure RTS/CTS pins
         fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
     }
     #endif

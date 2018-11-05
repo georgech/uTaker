@@ -1853,7 +1853,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         return;
     }
 
-#ifdef SERIAL_SUPPORT_DMA
+#if defined SERIAL_SUPPORT_DMA
     if (pars->ucDMAConfig & (UART_TX_DMA | UART_RX_DMA)) {
         POWER_UP(HSB, HSBMASK_PDCA);                                     // apply power to the peripheral DMA module
         HSB_MCFG0 = SINGLE_ACCESS;                                       // this ensures that CPU instruction bursts don't block DMA operation
@@ -1874,11 +1874,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
 #endif
 
-    #ifdef SUPPORT_HW_FLOW
-    if (pars->Config & RTS_CTS) {                                        // HW flow control defined so configure RTS/CTS pins
+#if defined SUPPORT_HW_FLOW
+    if ((pars->Config & RTS_CTS) != 0) {                                 // HW flow control defined so configure RTS/CTS pins
         fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
     }
-    #endif
+#endif
 
     *ulReg = (AVR32_TX_OFF | AVR32_RX_OFF);                              // start with uart disabled
     ulReg += (US_BRGR_OFFSET/sizeof(unsigned long));                     // set to baud rate generator register

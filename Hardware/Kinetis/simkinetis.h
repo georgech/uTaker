@@ -2823,7 +2823,7 @@ typedef struct stKINETIS_LPUART
     volatile unsigned long LPUART_CTRL;
     volatile unsigned long LPUART_DATA;
     unsigned long LPUART_MATCH;
-#if defined LPUART_WITH_RTS_CTS
+#if !defined LPUART_WITHOUT_MODEM_CONTROL
     unsigned long LPUART_MODIR;
 #endif
 #if defined KINETIS_KL28 || defined KINETIS_KE15

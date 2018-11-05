@@ -1274,6 +1274,7 @@ typedef struct stRESET_VECTOR
     #define UARTS_AVAILABLE         5
 #elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KEA8
     #define UARTS_AVAILABLE         1
+    #define UART_WITHOUT_MODEM_CONTROL
     #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
         #define K_STYLE_UART2                                            // KL parts with K type UART2
     #endif
@@ -1315,6 +1316,7 @@ typedef struct stRESET_VECTOR
     #endif
 #elif defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KW2X   // {42}
     #define UARTS_AVAILABLE         3
+    #define UART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_K12
     #define UARTS_AVAILABLE         4
 #else
@@ -1325,28 +1327,34 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
+    #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define LPUARTS_AVAILABLE       3
 #elif defined KINETIS_KL03 || defined KINETIS_KW41
     #define LPUARTS_AVAILABLE       1
-#elif defined KINETIS_KV31 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KS
+    #define LPUART_WITHOUT_MODEM_CONTROL
+#elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define LPUARTS_AVAILABLE       1
     #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
+#elif defined KINETIS_KV31 || defined KINETIS_KS
+    #define LPUARTS_AVAILABLE       1
+    #define LPUARTS_PARALLEL                                             // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
+    #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43
     #define LPUARTS_AVAILABLE       2
+    #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_K22
     #if ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (256 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))
         #define LPUARTS_AVAILABLE   1
         #define LPUARTS_PARALLEL                                         // LPUARTs and UARTs are counted from 0 (we reference them starting with UARTs and continuing to LPUARTs - see http://www.utasker.com/kinetis/UART_LPUART.html)
+        #define LPUART_WITHOUT_MODEM_CONTROL
     #else
         #define LPUARTS_AVAILABLE   0
     #endif
 #else
     #define LPUARTS_AVAILABLE       0
 #endif
-#if defined KINETIS_KL28 || defined KINETIS_K66 || defined KINETIS_KE15
-    #define LPUART_WITH_RTS_CTS
-#endif
+
 
 // SPI configuration
 //
@@ -15756,7 +15764,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define LPUART0_MATCH                *(unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x10) // LPUART 0 Match Address Register
         #define LPUART_MATCH_MA1_MASK    0x000003ff                      // match address 1 mask
         #define LPUART_MATCH_MA2_MASK    0x03ff0000                      // match address 2 mask
-    #if defined LPUART_WITH_RTS_CTS                                      // LPUART with modem control
+    #if !defined LPUART_WITHOUT_MODEM_CONTROL                            // LPUART with modem control
         #define LPUART0_MODIR            *(unsigned long *)(LPUART0_BLOCK + 0x24) // LPUART 0 modem IrDA register
             #define LPUART_MODIR_TXCTSE  0x00000001                      // transmitter clear-to-send enable
             #define LPUART_MODIR_TXRTSE  0x00000002                      // transmitter request-to-send enable
@@ -15787,7 +15795,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x08) // LPUART 1 Control Register
         #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 1 Data Register
         #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x10) // LPUART 1 Match Address Register
-        #if defined LPUART_WITH_RTS_CTS
+        #if !defined LPUART_WITHOUT_MODEM_CONTROL
             #define LPUART1_MODIR        *(unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART 1 modem IrDA register
         #endif
         #if defined KINETIS_KL28 || defined KINETIS_KE15
@@ -15807,7 +15815,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x08) // LPUART 2 Control Register
         #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 2 Data Register
         #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x10) // LPUART 2 Match Address Register
-        #if defined LPUART_WITH_RTS_CTS
+        #if !defined LPUART_WITHOUT_MODEM_CONTROL
             #define LPUART2_MODIR        *(unsigned long *)(LPUART2_BLOCK + 0x24) // LPUART 2 modem IrDA register
         #endif
         #if defined KINETIS_KL28 || defined KINETIS_KE15
@@ -15927,7 +15935,7 @@ typedef struct stKINETIS_CAN_CONTROL
       #define UART_C5_RDMAS              0x20                            // receive DMA select
       #define UART_C5_TDMAS              0x80                            // transmit DMA select
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART0_ED                     *(volatile unsigned char *)(UART0_BLOCK + 0x0c) // UART 0 Extended Data Register (read-only)
       #define UART_ED_PARITYE            0x40                            // current received dataword contained in D and C3 was received with a parity error
       #define UART_ED_NOISY              0x80                            // current received dataword contained in D and C3 was received with noise
@@ -16013,7 +16021,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART1_C4                     *(unsigned char*)(UART1_BLOCK + 0x0a)            // UART 1 Control Register 4
     #define UART1_C5                     *(unsigned char*)(UART1_BLOCK + 0x0b)            // UART 1 Control Register 5
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART1_ED                     *(volatile unsigned char*)(UART1_BLOCK + 0x0c)   // UART 1 extended data register (read-only)
     #define UART1_MODEM                  *(unsigned char*)(UART1_BLOCK + 0x0d)            // UART 1 modem register
     #define UART1_IR                     *(unsigned char*)(UART1_BLOCK + 0x0e)            // UART 1 infrared register
@@ -16052,7 +16060,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART2_C4                     *(unsigned char*)(UART2_BLOCK + 0x0a)            // UART 2 control register 4
     #define UART2_C5                     *(unsigned char*)(UART2_BLOCK + 0x0b)            // UART 2 control register 5
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART2_ED                     *(volatile unsigned char*)(UART2_BLOCK + 0x0c)   // UART 2 Extended Data Register (read-only)
     #define UART2_MODEM                  *(unsigned char*)(UART2_BLOCK + 0x0d)            // UART 2 Modem Register
     #define UART2_IR                     *(unsigned char*)(UART2_BLOCK + 0x0e)            // UART 2 Infrared Register
@@ -16093,7 +16101,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART3_C4                     *(unsigned char*)(UART3_BLOCK + 0x0a)            // UART 3 Control Register 4
     #define UART3_C5                     *(unsigned char*)(UART3_BLOCK + 0x0b)            // UART 3 Control Register 5
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART3_ED                     *(volatile unsigned char*)(UART3_BLOCK + 0x0c)   // UART 3 Extended Data Register (read-only)
     #define UART3_MODEM                  *(unsigned char*)(UART3_BLOCK + 0x0d)            // UART 3 Modem Register
     #define UART3_IR                     *(unsigned char*)(UART3_BLOCK + 0x0e)            // UART 3 Infrared Register
@@ -16132,7 +16140,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART4_C4                     *(unsigned char*)(UART4_BLOCK + 0x0a)            // UART 4 Control Register 4
     #define UART4_C5                     *(unsigned char*)(UART4_BLOCK + 0x0b)            // UART 4 Control Register 5
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART4_ED                     *(volatile unsigned char*)(UART4_BLOCK + 0x0c)   // UART 4 Extended Data Register (read-only)
     #define UART4_MODEM                  *(unsigned char*)(UART4_BLOCK + 0x0d)            // UART 4 Modem Register
     #define UART4_IR                     *(unsigned char*)(UART4_BLOCK + 0x0e)            // UART 4 Infrared Register
@@ -16171,7 +16179,7 @@ typedef struct stKINETIS_CAN_CONTROL
     #define UART5_C4                     *(unsigned char*)(UART5_BLOCK + 0x0a)            // UART 5 Control Register 4
     #define UART5_C5                     *(unsigned char*)(UART5_BLOCK + 0x0b)            // UART 5 Control Register 5
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     #define UART5_ED                     *(volatile unsigned char*)(UART5_BLOCK + 0x0c)   // UART 5 Extended Data Register (read-only)
     #define UART5_MODEM                  *(unsigned char*)(UART5_BLOCK + 0x0d)            // UART 5 Modem Register
     #define UART5_IR                     *(unsigned char*)(UART5_BLOCK + 0x0e)            // UART 5 Infrared Register
@@ -16215,7 +16223,7 @@ typedef struct stKINETIS_UART_CONTROL
     unsigned char UART_C5;
     volatile unsigned char UART_ED;
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
+#if !defined UART_WITHOUT_MODEM_CONTROL
     unsigned char UART_MODEM;
     #if defined KINETIS_KM
     unsigned char ucRes00;

@@ -1729,8 +1729,8 @@ static void fnHandleIRQ(int iPort, unsigned long ulNewState, unsigned long ulCha
     }
     // IRQ input has changed so we check to see whether the change/state matches with the programmed one
     //
-    if (IRQ_SC & IRQ_SC_IRQIE) {                                         // interrupt is enabled
-        if (IRQ_SC & IRQ_SC_IRQEDG) {                                    // high or rising edge sensitive
+    if ((IRQ_SC & IRQ_SC_IRQIE) != 0) {                                  // interrupt is enabled
+        if ((IRQ_SC & IRQ_SC_IRQEDG) != 0) {                             // high or rising edge sensitive
             if ((ulNewState & ulChangedBit) == 0) {                      // input has changed to '0'
                 return;
             }
@@ -4270,7 +4270,7 @@ extern void fnSimPers(void)
                     }
     #endif
                     if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
-    #if defined KINETIS_KE06 || defined KINETIS_KEA128
+    #if defined KINETIS_KE06 || defined KINETIS_KEA128 || (defined KINETIS_KEA64 && !defined KINETIS_KEAN64)
                     ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTC0)
     #else
                         ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) == 0)
@@ -4886,7 +4886,7 @@ extern void fnSimPers(void)
                     break;
                 case KE_PORTH_BIT0:
                     if (((FTM2_C0SC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) != 0) &&
-    #if defined KINETIS_KE06 || defined KINETIS_KEA128
+    #if defined KINETIS_KE06 || defined KINETIS_KEA128 || (defined KINETIS_KEA64 && !defined KINETIS_KEAN64)
                         ((SIM_PINSEL1 & SIM_PINSEL1_FTM2PS0_MASK) == SIM_PINSEL1_FTM2PS0_PTH0)
     #else
                         ((SIM_PINSEL0 & SIM_PINSEL_FTM2PS0) != 0)

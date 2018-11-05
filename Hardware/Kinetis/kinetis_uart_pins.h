@@ -24,7 +24,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
     unsigned char ucPriority = 0;
     void (*InterruptFunc)(void) = 0;
     switch (Channel) {
-    #if LPUARTS_AVAILABLE > 0
+    #if defined FIRST_LPUART_CHANNEL
     case FIRST_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART0 tx pin configuration
@@ -138,16 +138,47 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _LPSCI0_Interrupt;
             break;
 
+        #if defined SUPPORT_HW_FLOW
+            #if defined LPUART_WITHOUT_MODEM_CONTROL
+        case LPUART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[0] != 0) {
+                _SET_RTS_0_HIGH();
+            }
+            else {
+                _SET_RTS_0_LOW();
+            }
+            break;
+        case LPUART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[0] != 0) {
+                _SET_RTS_0_LOW();
+            }
+            else {
+                _SET_RTS_0_HIGH();
+            }
+            break;
+            #endif
+
+        case LPUART_RTS_PIN_INVERTED:
         case LPUART_RTS_PIN:
-            #if defined KINETIS_KE15
+            #if defined LPUART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == LPUART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_0_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[0] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_0_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined KINETIS_KE15
             _CONFIG_PERIPHERAL(C, 9, (PC_9_LPUART0_RTS));                // LPUART0_RTS on PC9 (alt. function 6)
             #endif
             break;
         }
         break;
+        #endif
     #endif
 
-    #if LPUARTS_AVAILABLE > 1
+    #if defined SECOND_LPUART_CHANNEL
     case SECOND_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART1 tx pin configuration
@@ -199,7 +230,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         break;
     #endif
 
-    #if LPUARTS_AVAILABLE > 2
+    #if defined THIRD_LPUART_CHANNEL
     case THIRD_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART2 tx pin configuration
@@ -275,7 +306,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         break;
     #endif
 
-    #if LPUARTS_AVAILABLE > 3
+    #if defined FOURTH_LPUART_CHANNEL
     case FOURTH_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART3 tx pin configuration
@@ -313,7 +344,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         break;
     #endif
 
-    #if LPUARTS_AVAILABLE > 4
+    #if defined FIFTH_LPUART_CHANNEL
     case FIFTH_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART4 tx pin configuration
@@ -347,7 +378,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 0
+    #if defined FIRST_UART_CHANNEL
     case FIRST_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART0 tx pin configuration
@@ -453,14 +484,74 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             ucPriority = PRIORITY_UART0;
             InterruptFunc = _SCI0_Interrupt;
             break;
-
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[0] != 0) {
+                _SET_RTS_0_HIGH();
+            }
+            else {
+                _SET_RTS_0_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[0] != 0) {
+                _SET_RTS_0_LOW();
+            }
+            else {
+                _SET_RTS_0_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_0_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[0] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_0_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined KINETIS_K02
+                #if defined UART0_A_LOW
+            _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS));  // UART0_RX on PA1 (alt. function 2)
+                #elif defined UART0_ON_D
+            _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS));  // UART0_RX on PD6 (alt. function 3)
+                #else
+            _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS));  // UART0_RX on PB16 (alt. function 3)
+                #endif
+            #elif defined UART0_A_LOW
+            _CONFIG_PERIPHERAL(A, 3, (PA_3_UART0_RTS | UART_PULL_UPS));  // UART0_RTS on PA3 (alt. function 2)
+            #elif defined UART0_ON_B
+            _CONFIG_PERIPHERAL(B, 2, (PB_2_UART0_RTS | UART_PULL_UPS));  // UART0_RTS on PB2 (alt. function 3)
+            #elif defined UART0_ON_D
+            _CONFIG_PERIPHERAL(D, 4, (PD_4_UART0_RTS | UART_PULL_UPS));  // UART0_RTS on PD4 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(A, 17, (PA_17_UART0_RTS | UART_PULL_UPS));// UART0_RTS on A17 (alt. function 3)
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            #elif defined UART0_A_LOW
+            _CONFIG_PERIPHERAL(A, 0, (PA_0_UART0_CTS | UART_PULL_UPS));  // UART0_CTS on PA0 (alt. function 2)
+            #elif defined UART0_ON_B
+            _CONFIG_PERIPHERAL(B, 3, (PB_3_UART0_CTS | UART_PULL_UPS));  // UART0_CTS on PB3 (alt. function 3)
+            #elif defined UART0_ON_D
+            _CONFIG_PERIPHERAL(D, 5, (PD_5_UART0_CTS | UART_PULL_UPS));  // UART0_CTS on PD5 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(A, 16, (PA_16_UART0_CTS | UART_PULL_UPS));// UART0_CTS on PA16 (alt. function 3)
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 1
+    #if defined SECOND_UART_CHANNEL
     case SECOND_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART1 tx pin configuration
@@ -517,13 +608,58 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI1_Interrupt;
             break;
 
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[1] != 0) {
+                _SET_RTS_1_HIGH();
+            }
+            else {
+                _SET_RTS_1_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[1] != 0) {
+                _SET_RTS_1_LOW();
+            }
+            else {
+                _SET_RTS_1_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:                                               // configure RTS1 pin
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_1_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[1] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_1_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[1] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined UART1_ON_C
+            _CONFIG_PERIPHERAL(C, 1, (PC_1_UART1_RTS | UART_PULL_UPS));  // UART1_RTS on PC1 (alt. function 3) {16}
+            #else
+            _CONFIG_PERIPHERAL(E, 3, (PE_3_UART1_RTS | UART_PULL_UPS));  // UART1_RTS on PE3 (alt. function 3)
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            #elif defined UART1_ON_C
+            _CONFIG_PERIPHERAL(C, 2, (PC_2_UART1_CTS | UART_PULL_UPS));  // UART1_CTS on PC2 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(E, 2, (PE_2_UART1_CTS | UART_PULL_UPS));  // UART1_CTS on PE2 (alt. function 3)
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 2
+    #if defined THIRD_UART_CHANNEL
     case THIRD_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART2 tx pin configuration
@@ -586,13 +722,62 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI2_Interrupt;
             break;
 
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[2] != 0) {
+                _SET_RTS_2_HIGH();
+            }
+            else {
+                _SET_RTS_2_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[2] != 0) {
+                _SET_RTS_2_LOW();
+            }
+            else {
+                _SET_RTS_2_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_2_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[2] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_2_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[2] = 0;                                        // not inverted RTS mode
+            }
+            #elif (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KW2X) && defined UART2_ON_E // {25}
+            _CONFIG_PERIPHERAL(E, 19, (PE_19_UART2_RTS | UART_PULL_UPS));// UART2_RTS on PE19 (alt. function 3)
+            #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART2_ON_F // {25}
+            _CONFIG_PERIPHERAL(F, 11, (PF_11_UART2_RTS | UART_PULL_UPS));// UART2_RTS on PF11 (alt. function 4)
+            #else
+            _CONFIG_PERIPHERAL(D, 0, (PD_0_UART2_RTS | UART_PULL_UPS));  // UART2_RTS on PD0 (alt. function 3)
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            #elif (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KW2X) && defined UART2_ON_E // {25}
+            _CONFIG_PERIPHERAL(E, 18, (PE_18_UART2_CTS | UART_PULL_UPS));// UART2_CTS on PE18 (alt. function 3)
+            #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART2_ON_F // {25}
+            _CONFIG_PERIPHERAL(F, 12, (PF_12_UART2_CTS | UART_PULL_UPS));// UART2_CTS on PF12 (alt. function 4)
+            #else
+            _CONFIG_PERIPHERAL(D, 1, (PD_1_UART2_CTS | UART_PULL_UPS));  // UART2_CTS on PD1 (alt. function 3)
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 3
+    #if defined FOURTH_UART_CHANNEL
     case FOURTH_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART3 tx pin configuration
@@ -633,13 +818,66 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI3_Interrupt;
             break;
 
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[3] != 0) {
+                _SET_RTS_3_HIGH();
+            }
+            else {
+                _SET_RTS_3_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[3] != 0) {
+                _SET_RTS_3_LOW();
+            }
+            else {
+                _SET_RTS_3_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_3_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[3] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_3_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[3] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined UART3_ON_B
+            _CONFIG_PERIPHERAL(B, 8, (PB_8_UART3_RTS | UART_PULL_UPS));  // UART3_RTS on PB8 (alt. function 3)
+            #elif defined UART3_ON_C
+            _CONFIG_PERIPHERAL(C, 18, (PC_18_UART3_RTS | UART_PULL_UPS));// UART3_RTS on PC18 (alt. function 3)
+            #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART3_ON_F // {25}
+            _CONFIG_PERIPHERAL(F, 9, (PF_9_UART3_RTS | UART_PULL_UPS));  // UART3_RTS on PF9 (alt. function 4) {12}
+            #else
+            _CONFIG_PERIPHERAL(E, 7, (PE_7_UART3_RTS | UART_PULL_UPS));  // UART3_RTS on PE7 (alt. function 3)
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            #elif defined UART3_ON_B
+            _CONFIG_PERIPHERAL(B, 9, (PB_9_UART3_CTS | UART_PULL_UPS)); // UART3_CTS on PB9 (alt. function 3)
+            #elif defined UART3_ON_C
+            _CONFIG_PERIPHERAL(C, 19, (PC_19_UART3_CTS | UART_PULL_UPS));// UART3_CTS on PC19 (alt. function 3)
+            #elif (defined KINETIS_K61 || defined KINETIS_K70) && defined UART3_ON_F // {25}
+            _CONFIG_PERIPHERAL(F, 10, (PF_10_UART3_CTS | UART_PULL_UPS));// UART3_CTS on PF10 (alt. function 4) {12}
+            #else
+            _CONFIG_PERIPHERAL(E, 6, (PE_6_UART3_CTS | UART_PULL_UPS));  // UART3_CTS on PE6 (alt. function 3)
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 4
+    #if defined FIFTH_UART_CHANNEL
     case FIFTH_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART4 tx pin configuration
@@ -664,13 +902,58 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI4_Interrupt;
             break;
 
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[4] != 0) {
+                _SET_RTS_4_HIGH();
+            }
+            else {
+                _SET_RTS_4_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[4] != 0) {
+                _SET_RTS_4_LOW();
+            }
+            else {
+                _SET_RTS_4_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_4_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[4] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_4_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[4] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined UART4_ON_C
+            _CONFIG_PERIPHERAL(C, 12, (PC_12_UART4_RTS | UART_PULL_UPS));// UART4_RTS on PC12 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(E, 27, (PE_27_UART4_RTS | UART_PULL_UPS));// UART4_RTS on PE27 (alt. function 3)
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            #elif defined UART4_ON_C
+            _CONFIG_PERIPHERAL(C, 13, (PC_13_UART4_CTS | UART_PULL_UPS));// UART4_CTS on PC13 (alt. function 3)
+            #else
+            _CONFIG_PERIPHERAL(E, 26, (PE_26_UART4_CTS | UART_PULL_UPS));// UART4_CTS on PE26 (alt. function 3)
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
-    #if UARTS_AVAILABLE > 5
+    #if defined SIXTH_UART_CHANNEL
     case SIXTH_UART_CHANNEL:
         switch (iPinReference) {
         case UART_TX_PIN:                                                // UART5 tx pin configuration
@@ -695,14 +978,77 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI5_Interrupt;
             break;
 
-        case UART_RTS_PIN:
+        #if defined SUPPORT_HW_FLOW
+            #if defined UART_WITHOUT_MODEM_CONTROL
+        case UART_RTS_PIN_ASSERT:
+            if (ucRTS_neg[5] != 0) {
+                _SET_RTS_5_HIGH();
+            }
+            else {
+                _SET_RTS_5_LOW();
+            }
             break;
+        case UART_RTS_PIN_NEGATE:
+            if (ucRTS_neg[5] != 0) {
+                _SET_RTS_5_LOW();
+            }
+            else {
+                _SET_RTS_5_HIGH();
+            }
+            break;
+            #endif
+
+        case UART_RTS_PIN_INVERTED:
+        case UART_RTS_PIN:
+            #if defined UART_WITHOUT_MODEM_CONTROL
+            if (iPinReference == UART_RTS_PIN_INVERTED) {
+                _CONFIGURE_RTS_5_LOW();                                  // configure RTS output and set to '0'
+                ucRTS_neg[5] = 1;                                        // inverted RTS mode
+            }
+            else {
+                _CONFIGURE_RTS_5_HIGH();                                 // configure RTS output and set to '1'
+                ucRTS_neg[5] = 0;                                        // not inverted RTS mode
+            }
+            #elif defined UART5_ON_D
+            _CONFIG_PERIPHERAL(D, 10, (PD_10_UART5_RTS | UART_PULL_UPS));// UART5_RTS on PD10 (alt. function 3)
+            #else
+                #if UARTS_AVAILABLE == 5
+                    #if defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_RTS | UART_PULL_UPS));// LPUART0_RTS on PA3 (alt. function 5)
+                    #elif defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 10, (PD_10_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PD10 (alt. function 5)
+                    #else
+            _CONFIG_PERIPHERAL(E, 11, (PE_11_LPUART0_RTS | UART_PULL_UPS)); // LPUART0_RTS on PE11 (alt. function 5)
+                    #endif
+                #else
+            _CONFIG_PERIPHERAL(E, 11, (PE_11_UART5_RTS | UART_PULL_UPS));// UART5_RTS on PE11 (alt. function 3)
+                #endif
+            #endif
+            break;
+
+        case UART_CTS_PIN:
+            #if defined UART5_ON_D
+            _CONFIG_PERIPHERAL(D, 11, (PD_11_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PD11 (alt. function 3)
+            #else
+                #if UARTS_AVAILABLE == 5
+                    #if defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 0, (PA_0_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PA0 (alt. function 5)
+                    #elif defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 11, (PD_11_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PD11 (alt. function 5)
+                    #else
+            _CONFIG_PERIPHERAL(E, 10, (PE_10_LPUART0_CTS | UART_PULL_UPS)); // LPUART0_CTS on PE10 (alt. function 5)
+                    #endif
+                #else
+            _CONFIG_PERIPHERAL(E, 10, (PE_10_UART5_CTS | UART_PULL_UPS)); // UART5_CTS on PE10 (alt. function 3)
+                #endif
+            #endif
+            break;
+        #endif
         }
         break;
     #endif
 
     default:
-        _EXCEPTION("To do...");
         return;
     }
 

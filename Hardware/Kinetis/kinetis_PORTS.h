@@ -1065,11 +1065,11 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         {
             INTERRUPT_SETUP *port_interrupt = (INTERRUPT_SETUP *)ptrSettings;
     #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // KE uses external interrupt
-        #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA128)
+        #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA128 || (defined KINETIS_KEA64 && !defined KINETIS_KEAN64))
             unsigned char ucPortPin = SIM_PINSEL_IRQPS_PTA5;             // default IRQ input
         #endif
             POWER_UP_ATOMIC(0, IRQ);                                     // enable clocks to the external interrupt module
-        #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA128)
+        #if ((defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA128 || (defined KINETIS_KEA64 && !defined KINETIS_KEAN64))
             if (port_interrupt->int_port == KE_PORTA) {
               //SIM_SOPT0 &= ~(SIM_SOPT_RSTPE);                          // remove reset function so that IRQ function can be selected (PTA5) - this is a "write-once" field so will not actually work as such; the value must be configured in SIM_SOPT_KE_DEFAULT if this input is to be used
             }
