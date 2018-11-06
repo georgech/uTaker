@@ -9093,7 +9093,7 @@ extern void mcf52235_init(void)
     
 #if !defined _COMPILE_IAR && !defined _WINDOWS
     mcf5xxx_wr_vbr((unsigned long)__VECTOR_RAM);                         // move vector to RAM position
-    #if defined EXTERNAL_RAM && defined _M5225X                          // {107} when using external RAM configure the external memory interface ready to copy teh initialised variables to
+    #if defined EXTERNAL_RAM && defined _M5225X                          // {107} when using external RAM configure the external memory interface ready to copy the initialised variables to
     fnConfigureBus(0, 2);                                                // configure the FlexBus interface accordingly with 1:2 clocking and 2 wait states
     #endif
 

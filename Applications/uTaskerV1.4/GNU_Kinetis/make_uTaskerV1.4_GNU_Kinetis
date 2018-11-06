@@ -369,10 +369,10 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../modbus_app.c -o Build/modbus_app.o
 
 #CRYPTO
-Build/mmcau_aes_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.S make_uTaskerV1.4_GNU_Kinetis
+Build/mmcau_aes_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.S
 	 	$(CC) $(C_FLAGS) $(A_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/Crypto/mmcau_aes_functions.S -o Build/mmcau_aes_functions.o
 
-Build/mmcau_sha256_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_sha256_functions.S make_uTaskerV1.4_GNU_Kinetis
+Build/mmcau_sha256_functions.o: ../../../Hardware/Kinetis/Crypto/mmcau_sha256_functions.S
 	 	$(CC) $(C_FLAGS) $(A_FLAGS) $(INC) $(OPTS) ../../../Hardware/Kinetis/Crypto/mmcau_sha256_functions.S -o Build/mmcau_sha256_functions.o
 
 Build/w_aes.o: ../../../stack/SSL/wolfssl-3.9.6/w_aes.c $(DEPENDS) ../../../stack/SSL/wolfssl-3.9.6/aes.h

@@ -1712,7 +1712,7 @@ static int fnRemoteSimUDP_Listner(USOCKET SocketNr, unsigned char ucEvent, unsig
 
 
 // ENC424J600 config
-// - The SRAM buffer in the ENC424J600 is a bulk 12k word x 16 bit (24k) memory used for TX/RX packet buffering and general purpose storage by teh host microcontroller.
+// - The SRAM buffer in the ENC424J600 is a bulk 12k word x 16 bit (24k) memory used for TX/RX packet buffering and general purpose storage by the host microcontroller.
 //
 #define ENC424J600_RAMSIZE                        (24 * 1024)            // fixed size of SRAM
 #define ENC424J600_CIRCULAR_RX_FIFO_BUFFER_SIZE   (18 * 1025)            // define 18k of the SRAM for receiver use (size must be even)

@@ -331,9 +331,6 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined KBOOT_LOADER                                             // {20}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_57600;                // fixed baud rate for kboot compatibility
         tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
-    #if defined KBOOT_SECURE_LOADER
-        fnPrepareDecrypt();
-    #endif
     #elif defined DEVELOPERS_LOADER                                      // {23}
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_115200;               // fixed baud rate for developer's loader
         tInterfaceParameters.Config = (CHAR_8 | NO_PARITY | ONE_STOP | CHAR_MODE); // ensure no XON/XOFF mode used since the transfer is binary
@@ -1518,24 +1515,25 @@ typedef struct stALIGNED_DATA_BUFFER
     unsigned char  ucDataInput[SECURE_BLOCK_LENGTH];                     // data aligned
 } ALIGNED_DATA_BUFFER;
 
-static const CHAR decrypt_key[] = "hjdiidgqwegdoqwfqwoewudewfwezfqw";
+static const CHAR decrypt_key[] = "aes256 secret key";
+static const CHAR initial_vector[] = "initial vector";
+
+
 typedef struct stALIGNED_KEY
 {
     unsigned long  ulLength;                                             // long word to ensure following key alignment
-    unsigned char  ucKey[sizeof(decrypt_key - 1)];                       // key aligned
+    unsigned char  ucKey[32];                                            // key aligned
 } ALIGNED_KEY;
-
-static int iCipherCommamd = 0;
 
 // It is assumed that the content is received in a linear fashion (addresses incrementing with each buffer)
 //
 static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *ptrData, unsigned short usBuff_length)
 {
-    static ALIGNED_DATA_BUFFER encryptBuffer = {{0}};
+    static ALIGNED_DATA_BUFFER encryptBuffer = { 0,0,{0} };
     unsigned short usThisLength;
     if (ptrData == 0) {                                                  // final block
         if (encryptBuffer.ulLength != 0) {
-            fnAES_Cipher(iCipherCommamd, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, encryptBuffer.ulLength); // decrypt the buffer content
+            fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, encryptBuffer.ulLength); // decrypt the buffer content
             fnWriteBytesFlash(encryptBuffer.ptrDestinationAddress, encryptBuffer.ucDataInput, encryptBuffer.ulLength); // program flash
         }
     #if  defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
@@ -1556,22 +1554,30 @@ static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *pt
         usBuff_length -= usThisLength;
         encryptBuffer.ulLength += usThisLength;
         if (encryptBuffer.ulLength >= SECURE_BLOCK_LENGTH) {             // if a complete buffer has been prepared
-            fnAES_Cipher(iCipherCommamd, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // decrypt the buffer content
+            fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // decrypt the buffer content
             fnWriteBytesFlash(encryptBuffer.ptrDestinationAddress, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // program flash
             encryptBuffer.ptrDestinationAddress += SECURE_BLOCK_LENGTH;
             encryptBuffer.ulLength = 0;
-            iCipherCommamd = (AES_COMMAND_AES_DECRYPT);                  // the vector is only initialised on first call
         }
     }
 }
 
 static void fnPrepareDecrypt(void)
 {
-    static ALIGNED_KEY decryptKey = {{0}};
-    decryptKey.ulLength = sizeof(decrypt_key - 1);
-    uMemcpy(decryptKey.ucKey, decrypt_key, sizeof(decrypt_key - 1));
-    iCipherCommamd = (AES_COMMAND_AES_DECRYPT | AES_COMMAND_AES_RESET_IV);
-    fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, decryptKey.ucKey, (sizeof(decrypt_key - 1))); // register the decryption key
+    static ALIGNED_KEY decryptKey = {0, {0}};
+    unsigned char initVector[32];
+    int iVectorLength = (sizeof(initial_vector) - 1);
+    decryptKey.ulLength = (sizeof(decrypt_key) - 1);
+    uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
+    while (decryptKey.ulLength < 32) {
+        decryptKey.ucKey[decryptKey.ulLength++] = 'X';
+    }
+    fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, decryptKey.ucKey, 256);  // register the decryption key
+    uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
+    while (iVectorLength < 16) {
+        initVector[iVectorLength++] = 'X';
+    }
+    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the vector
 }
 #endif
 

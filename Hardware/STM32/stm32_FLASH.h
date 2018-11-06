@@ -536,7 +536,7 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
     }
     else {
         ptrSector -= (1 * 1024 * 1024);
-        *ulSectorNumber = 16;                                            // access in second bank (note that the first sector in teh secdn bank is named as sector 1 but it has to be addressed as sector 16!)
+        *ulSectorNumber = 16;                                            // access in second bank (note that the first sector in the second bank is named as sector 1 but it has to be addressed as sector 16!)
     }
     #else
     *ulSectorNumber = 0;

@@ -299,7 +299,7 @@ extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKe
         #endif
     #endif
     }
-    else if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) != 0) {       // reset teh vector (or prime with zero vector content)
+    else if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) != 0) {       // reset the vector (or prime with zero vector content)
     #if defined NATIVE_AES_CAU && defined LTC_AVAILABLE && !defined AES_DISABLE_LTC // LTC HW accelerator
         LTC0_CTX_0 = 0;                                                  // zero IV
         LTC0_CTX_1 = 0;

@@ -8387,7 +8387,7 @@ static void fnGenericLPUARTBreakHandling(KINETIS_LPUART_CONTROL *ptrLPUART, int 
     ptrLPUART->LPUART_STAT |= (LPUART_STAT_LBKDIF | LPUART_STAT_RDRF);   // set the status flags
     if ((ptrLPUART->LPUART_BAUD & LPUART_BAUD_LBKDIE) != 0) {            // if the break interrupt is enabled
         ptrLPUART->LPUART_DATA = 0;                                      // a break character is seen as a data reception of 0
-        if (iUseIntMux != 0) {                                           // if teh interrupt is assigned via the interrupt multiplexer
+        if (iUseIntMux != 0) {                                           // if the interrupt is assigned via the interrupt multiplexer
     #if defined INTMUX0_AVAILABLE
             fnCallINTMUX(iMuxChannel, iInterruptAssignment, (unsigned char *)&irq_LPUART);
     #else

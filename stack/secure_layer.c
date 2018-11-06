@@ -977,7 +977,7 @@ extern int fnSecureLayerReception(USOCKET Socket, unsigned char **ptr_ucPrtData,
             iTLS_rx_state = TLS_RX_STATE_TYPE_LENGTH_LSB;
             break;
         case TLS_RX_STATE_TYPE_LENGTH_LSB:                               // collecting LSB of type length
-            ulHandshakeSize |= *ucPrtData;                               // teh handshake size is now known
+            ulHandshakeSize |= *ucPrtData;                               // the handshake size is now known
             iTLS_rx_state = TLS_RX_STATE_CONTENT;
             if (ulHandshakeSize != 0) {
                 break;                                                   // collect the handshake content
