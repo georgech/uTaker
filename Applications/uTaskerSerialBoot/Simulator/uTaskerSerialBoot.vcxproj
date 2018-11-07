@@ -745,6 +745,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Serial Loader - STM32 plus GNU uild|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Serial Loader - STM32|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_uart_pins.h" />
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Serial Loader - STM32 plus GNU uild|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Serial Loader - STM32|Win32'">true</ExcludedFromBuild>

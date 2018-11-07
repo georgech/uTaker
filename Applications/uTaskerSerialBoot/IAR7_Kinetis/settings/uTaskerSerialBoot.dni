@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-756824098
+Checksum=972290355
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -222,6 +222,11 @@ Count=4
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=1
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\crypto.c}.187.9" 0 0 1 "" 0 "" 0
+Count=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -229,6 +234,9 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+Count=0
+SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -239,18 +247,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Disassemble mode]
-mode=1
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\Hardware\Kinetis\kinetis_SDHC.h}.444.13" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x00002068" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "0x00002338" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "0x00001E64" 0 0 1 "" 0 "" 0
-Bp4=_ 0 "EMUL_CODE" "0x00000618" 0 0 1 "" 0 "" 0
-Bp5=_ 0 "EMUL_CODE" "0x00007932" 0 0 1 "" 0 "" 0
-Bp6=_ 0 "EMUL_CODE" "0x000027F4" 0 0 1 "" 0 "" 0
-Bp7=_ 0 "EMUL_CODE" "0x0000CB36" 0 0 1 "" 0 "" 0
-Count=8
-[Aliases]
-Count=0
-SuppressDialog=0

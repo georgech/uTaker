@@ -1628,7 +1628,7 @@
     #define USER_KEY_BUTTON            PORTI_BIT11
 
     #define LED1                       PORTI_BIT1                        // green LED
-    #define LED2                       PORTI_BIT2                        // no further LEDs available on teh board
+    #define LED2                       PORTI_BIT2                        // no further LEDs available on the board
     #define LED3                       PORTI_BIT3
     #define LED4                       PORTI_BIT4
 

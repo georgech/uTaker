@@ -30,7 +30,7 @@
         #define POLARSSL_CIPHER_MODE_CBC
     #endif
     #if !defined _WINDOWS && (defined CAU_V1_AVAILABLE || defined CAU_V2_AVAILABLE) && !defined AES_DISABLE_CAU
-        #define USE_CRYPTO_ACCELERATION
+      //#define USE_CRYPTO_ACCELERATION
         // Freescale mmCAU crypto acceleration routines
         //
         extern void mmcau_aes_set_key(const unsigned char *key, const int key_size, unsigned char *key_sch);

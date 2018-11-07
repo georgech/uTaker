@@ -56,10 +56,10 @@ typedef struct stAES_INSTANCE
 {
     #if defined NATIVE_AES_CAU                                           // hardware accelerator to be used
     unsigned long ulRounds;                                              // ensures long word alignment
-        #if !defined LTC_AVAILABLE || defined AES_DISABLE_LTC            // mmCAU
-            #if !defined SOFTWARE_BASE_AES
+        #if !defined SOFTWARE_BASE_AES
     unsigned char iv[AES_BLOCK_LENGTH];                                  // long word aligned
-            #endif
+        #endif
+        #if !defined LTC_AVAILABLE || defined AES_DISABLE_LTC            // mmCAU
     unsigned char key[60 * 4];                                           // long word aligned
         #endif
     #endif
@@ -96,10 +96,10 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
     LTC0_CTL = (LTC_CTL_IFS | LTC_CTL_OFS | LTC_CTL_KIS | LTC_CTL_KOS | LTC_CTL_CIS | LTC_CTL_COS); // enable byte swap for registers to be used
     if (iDecrypt != 0) {
-        LTC0_MD = LTC_MD_AAI_DK;
+        LTC0_MD = (/*LTC_MD_ALG_AES | */LTC_MD_AAI_CBC | LTC_MD_AAI_DK); // AES key for decryption (this sets the error interrupt but allow descrypt to operate - setting AES algorithm doesn't trigger error interrupt but causes descrpt to fail)
     }
     else {
-        LTC0_MD = 0;
+        LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC);                     // AES key for encryption
     }
     LTC0_KEY_0 = *_ptr_ulKey++;                                          // key needs to be long word aligned - enter them into the LTC
     LTC0_KEY_1 = *_ptr_ulKey++;
@@ -129,8 +129,8 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
 
 static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCipherTextOutput, unsigned long _ulDataLength, unsigned long ulCommand)
 {
-    LTC0_MD = ulCommand;                                                 // set the mode
     while (_ulDataLength != 0) {
+        LTC0_MD = ulCommand;                                             // set/re-write the mode
         unsigned long ulThisLengthIn;
         unsigned long ulThisLengthOut;
         if (_ulDataLength > 0xff0) {
@@ -145,7 +145,7 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
         ulThisLengthOut = ulThisLengthIn;
         while (ulThisLengthIn-- != 0) {                                  // copy to the input FIFO and read from the output FIFO
             while ((LTC0_FIFOSTA & LTC_FIFOSTA_IFF) != 0) {              // if the input FIFO is full we must wait before adding further data
-                if ((ulCommand & 0x00400000) == 0) {                     // if not SHA
+                if ((ulCommand & LTC_MD_ALG_AES) != 0) {                 // if AES type
                     if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {    // if there is at least one output result ready
                         *ptrCipherTextOutput++ = LTC0_OFIFO;
                         ulThisLengthOut--;
@@ -153,19 +153,18 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
                 }
             }
             LTC0_IFIFO = *ptrPlainTextInput++;                           // long word aligned
-            if ((ulCommand & 0x00400000) == 0) {                         // if not SHA
+    #if defined _WINDOWS
+            LTC0_FIFOSTA |= LTC_FIFOSTA_OFL_MASK;
+            LTC0_OFIFO = LTC0_IFIFO;
+    #endif
+            if ((ulCommand & LTC_MD_ALG_AES) != 0) {                     // if AES type
                 if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {        // if there is at least one output result ready
                     *ptrCipherTextOutput++ = LTC0_OFIFO;
                     ulThisLengthOut--;
                 }
-    #if defined _WINDOWS
-                else {
-                    LTC0_FIFOSTA |= LTC_FIFOSTA_OFL_MASK;
-                }
-    #endif
             }
         }
-        if ((ulCommand & 0x00400000) == 0) {                             // if not SHA
+        if ((ulCommand & LTC_MD_ALG_AES) != 0) {                         // if AES type
             while (ulThisLengthOut != 0) {
                 if ((LTC0_FIFOSTA & LTC_FIFOSTA_OFL_MASK) != 0) {        // if there is at least one output result ready
                     *ptrCipherTextOutput++ = LTC0_OFIFO;
@@ -173,18 +172,17 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
                 }
             }
         }
-        while ((LTC0_STA & LTC_STA_DI) == 0) {                           // wait for completion
+        while ((LTC0_STA & LTC_STA_DI) == 0) {                       // wait for completion
     #if defined _WINDOWS
             LTC0_STA |= LTC_STA_DI;
     #endif
         }
-        if ((ulCommand & 0x00400000) == 0) {                             // if not SHA
+        if ((ulCommand & LTC_MD_ALG_AES) != 0) {                         // if AES type
             WRITE_ONE_TO_CLEAR(LTC0_CW, LTC_CW_CDS);                     // clear the data size
             WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                    // reset the done interrupt
-            LTC0_MD = ulCommand;                                         // re-write the mode
         }
     }
-    if ((ulCommand & 0x00400000) != 0) {                                 // if SHA
+    if ((ulCommand & LTC_MD_ALG_SHA_TYPE) != 0) {                        // if SHA type
         *ptrCipherTextOutput++ = LTC0_CTX_0;                             // return the context
         *ptrCipherTextOutput++ = LTC0_CTX_1;
         *ptrCipherTextOutput++ = LTC0_CTX_2;
@@ -193,10 +191,13 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
         *ptrCipherTextOutput++ = LTC0_CTX_6;
         *ptrCipherTextOutput++ = LTC0_CTX_7;
         *ptrCipherTextOutput = LTC0_CTX_8;
-        WRITE_ONE_TO_CLEAR(LTC0_CW, LTC_CW_CDS);                         // clear the data size
+        WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
         WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                        // reset the done interrupt
     }
-    WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
+    else {
+      //WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
+        WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
+    }
 }
 #endif
 
@@ -284,19 +285,17 @@ extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKe
         #endif
     #endif
     }
-    else if ((iInstanceCommand & AES_COMMAND_AES_PRIME_IV) != 0) {       // prine the vector
+    else if ((iInstanceCommand & AES_COMMAND_AES_PRIME_IV) != 0) {       // prime the vector
     #if defined NATIVE_AES_CAU && defined LTC_AVAILABLE && !defined AES_DISABLE_LTC // LTC HW accelerator
-        LTC0_CTX_0 = ((ptrKey[3] << 24) | (ptrKey[2] << 16) | (ptrKey[1] << 8) | ptrKey[0]); // zero IV
+        LTC0_CTX_0 = ((ptrKey[3] << 24) | (ptrKey[2] << 16) | (ptrKey[1] << 8) | ptrKey[0]); // prime IV
         LTC0_CTX_1 = ((ptrKey[7] << 24) | (ptrKey[6] << 16) | (ptrKey[5] << 8) | ptrKey[4]);
         LTC0_CTX_2 = ((ptrKey[11] << 24) | (ptrKey[10] << 16) | (ptrKey[9] << 8) | ptrKey[8]);
         LTC0_CTX_3 = ((ptrKey[15] << 24) | (ptrKey[14] << 16) | (ptrKey[13] << 8) | ptrKey[12]);
     #endif
-    #if defined SOFTWARE_BASE_AES                                        // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
-        #if defined CRYPTO_WOLF_SSL
+    #if defined SOFTWARE_BASE_AES && defined CRYPTO_WOLF_SSL
         uMemcpy(aes_instance[iInstance].aes_encrypt_context.reg, ptrKey, sizeof(aes_instance[iInstance].aes_encrypt_context.reg)); // prime the iv
-        #else
+    #else
         uMemcpy(aes_instance[iInstance].iv, ptrKey, sizeof(aes_instance[iInstance].iv)); // prime the iv
-        #endif
     #endif
     }
     else if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) != 0) {       // reset the vector (or prime with zero vector content)
@@ -464,10 +463,12 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                     mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) == 0) { // if iv[] are zero we don't XOR the plaintext input with it
+            #if !defined _WINDOWS
                         ptrPlainTextOutput[0] ^= ptrInputVector[0];      // this can be performed as long word copies since both are long word aligned
                         ptrPlainTextOutput[1] ^= ptrInputVector[1];
                         ptrPlainTextOutput[2] ^= ptrInputVector[2];
                         ptrPlainTextOutput[3] ^= ptrInputVector[3];
+            #endif
                     }
             #if !defined _WINDOWS
                     ptrInputVector[0] = ulBackup[0];                     // next iv[] is the input before descrypting (this can be performed as long word copies since both are long word aligned)
@@ -487,11 +488,11 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
             #if !defined _WINDOWS
                     mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
+            #if !defined _WINDOWS
                     ptrPlainTextOutput[0] ^= ptrInputVector[0];          // this can be performed as long word copies since both are long word aligned
                     ptrPlainTextOutput[1] ^= ptrInputVector[1];
                     ptrPlainTextOutput[2] ^= ptrInputVector[2];
                     ptrPlainTextOutput[3] ^= ptrInputVector[3];
-            #if !defined _WINDOWS
                     ptrInputVector[0] = ulBackup[0];                     // next iv[] is the input before descrypting (this can be performed as long word copies since both are long word aligned)
                     ptrInputVector[1] = ulBackup[1];
                     ptrInputVector[2] = ulBackup[2];
@@ -508,10 +509,12 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                     mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
                     if ((iInstanceCommand & AES_COMMAND_AES_RESET_IV) == 0) { // if iv[] are zero we don't XOR the plaintext input with it
+            #if !defined _WINDOWS
                         ptrPlainTextOutput[0] ^= ptrInputVector[0];      // this can be performed as long word copies since both are long word aligned
                         ptrPlainTextOutput[1] ^= ptrInputVector[1];
                         ptrPlainTextOutput[2] ^= ptrInputVector[2];
                         ptrPlainTextOutput[3] ^= ptrInputVector[3];
+            #endif
                     }
             #if !defined _WINDOWS
                     ptrInputVector[0] = ptrCipherTextInput[0];           // next iv[] is the input before descrypting (this can be performed as long word copies since both are long word aligned)
@@ -527,11 +530,11 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
             #if !defined _WINDOWS
                     mmcau_aes_decrypt((const unsigned char *)ptrCipherTextInput, aes_instance[iInstance].key, (const int)aes_instance[iInstance].ulRounds, (unsigned char *)ptrPlainTextOutput); // decrypt a block
             #endif
+            #if !defined _WINDOWS
                     ptrPlainTextOutput[0] ^= ptrInputVector[0];          // this can be performed as long word copies since both are long word aligned
                     ptrPlainTextOutput[1] ^= ptrInputVector[1];
                     ptrPlainTextOutput[2] ^= ptrInputVector[2];
                     ptrPlainTextOutput[3] ^= ptrInputVector[3];
-            #if !defined _WINDOWS
                     ptrInputVector[0] = ptrCipherTextInput[0];           // next iv[] is the input before descrypting (this can be performed as long word copies since both are long word aligned)
                     ptrInputVector[1] = ptrCipherTextInput[1];
                     ptrInputVector[2] = ptrCipherTextInput[2];

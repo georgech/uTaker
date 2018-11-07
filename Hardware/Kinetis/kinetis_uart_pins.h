@@ -174,8 +174,9 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             #endif
             break;
         }
-        break;
         #endif
+        }
+        break;
     #endif
 
     #if defined SECOND_LPUART_CHANNEL

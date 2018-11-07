@@ -8,7 +8,7 @@ uTaskerConvert.exe uTaskerV1.4_BM.bin z_Upload.bin -0x1234 -a748b6531124
 rem arm-none-eabi-objcopy --input-target=ihex --output-target=binary software.hex application.bin
 rem uTaskerConvert.exe application.bin software.bin -0x1234 -a748b6531124
 rem uTaskerConvert.exe uTaskerV1.4_BM.bin sd_card_enc.bin -0x1235 -b748b6531124 -ff25a788f2e681338777 -afe1 -c298
-rem uTaskerConvert.exe uTaskerV1.4_BM.bin aes256_coded.bin +"aes256 secret key" +"initial vector"
+uTaskerConvert.exe uTaskerV1.4_BM.bin aes256_coded.bin $"aes256 secret key" $"initial vector"
 
 
 

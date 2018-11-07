@@ -7748,35 +7748,41 @@ typedef struct st_KINETIS_DSPI
 #if defined LTC_AVAILABLE                                                // {92}
     // LTC
     //
-    #define LTC0_MD             *(unsigned long *)(LTC_BLOCK + 0x000)    // LTC mode (non-PKHA/non-RNG use)
-      #define LTC_MD_ENC_DECRYPT       0x00000000
-      #define LTC_MD_ENC_ENCRYPT       0x00000001
-      #define LTC_MD_ICV_TEST          0x00000002
-      #define LTC_MD_AS_UPDATE         0x00000000
-      #define LTC_MD_AS_INITIALISE     0x00000004
-      #define LTC_MD_AS_FINALISE       0x00000008
-      #define LTC_MD_AS_INIT_FINAL     0x0000000c
-      #define LTC_MD_AAI_CTR           0x00000000
-      #define LTC_MD_AAI_CBC           0x00000100
-      #define LTC_MD_AAI_ECB           0x00000200
-      #define LTC_MD_AAI_CMAC          0x00000600
-      #define LTC_MD_AAI_XCBC_MAC      0x00000700
-      #define LTC_MD_AAI_CCM           0x00000800
-      #define LTC_MD_AAI_GCM           0x00000900
+    #define LTC0_MD             *(volatile unsigned long *)(LTC_BLOCK + 0x000) // LTC mode (non-PKHA/non-RNG use)
+      #define LTC_MD_ENC_DECRYPT       0x00000000                        // decrypt
+      #define LTC_MD_ENC_ENCRYPT       0x00000001                        // encrypt
+      #define LTC_MD_ICV_TEST          0x00000002                        // ICV checking/test AES fault detection
+      #define LTC_MD_AS_UPDATE         0x00000000                        // algorithm update
+      #define LTC_MD_AS_INITIALISE     0x00000004                        // algorithm initialise
+      #define LTC_MD_AS_FINALISE       0x00000008                        // algorithm finalise
+      #define LTC_MD_AS_INIT_FINAL     0x0000000c                        // algorithm initialise/finalise
+      #define LTC_MD_AAI_CTR           0x00000000                        // additional algorithm information CTR (mod 2^128)
+      #define LTC_MD_AAI_CBC           0x00000100                        // additional algorithm information CBC
+      #define LTC_MD_AAI_ECB           0x00000200                        // additional algorithm information ECB
+      #define LTC_MD_AAI_CMAC          0x00000600                        // additional algorithm information CMAC
+      #define LTC_MD_AAI_XCBC_MAC      0x00000700                        // additional algorithm information XCBC-MAC
+      #define LTC_MD_AAI_CCM           0x00000800                        // additional algorithm information CCM
+      #define LTC_MD_AAI_GCM           0x00000900                        // additional algorithm information GCM
       #define LTC_MD_AAI_DK            0x00001000                        // decrypt key
-      #define LTC_MD_ALG_AES           0x00100000
-      #define LTC_MD_ALG_DES           0x00200000
-      #define LTC_MD_ALG_3DES          0x00210000
+      #define LTC_MD_ALG_AES           0x00100000                        // algorithm AES
+      #define LTC_MD_ALG_DES           0x00200000                        // algorithm DES
+      #define LTC_MD_ALG_3DES          0x00210000                        // algorithm 3DES
     #if defined LTC_HAS_SHA
-      #define LTC_MD_ALG_SHA1          0x00410000
-      #define LTC_MD_ALG_SHA224        0x00420000
-      #define LTC_MD_ALG_SHA256        0x00430000
+      #define LTC_MD_ALG_SHA1          0x00410000                        // algorithm MDHA SHA-1
+      #define LTC_MD_ALG_SHA224        0x00420000                        // algorithm MDHA SHA-224
+      #define LTC_MD_ALG_SHA256        0x00430000                        // algorithm MDHA SHA-256
+      #define LTC_MD_ALG_SHA_TYPE      0x00400000                        // SHA modes share this bit - it can be used to recognise a SHA mode type
     #endif
     #define LTC0_MDPK           *(unsigned long *)(LTC_BLOCK + 0x000)    // LTC mode (public key)
-    #define LTC0_KS             *(unsigned long *)(LTC_BLOCK + 0x008)    // LTC key size
-    #define LTC0_DS             *(unsigned long *)(LTC_BLOCK + 0x010)    // LTC data size
+    #define LTC0_KS             *(unsigned long *)(LTC_BLOCK + 0x008)    // LTC key size (size of AES key - in bytes - loaded into the key register)
+    #define LTC0_DS             *(unsigned long *)(LTC_BLOCK + 0x010)    // LTC data size (the amount of AES data that will be loaded into the input data register)
     #define LTC0_ICVS           *(unsigned long *)(LTC_BLOCK + 0x018)    // LTC ICV size
     #define LTC0_COM            *(volatile unsigned long *)(LTC_BLOCK + 0x030) // LTC command (write-only)
+      #define LTC_COM_ALL        0x00000001                              // reset all hardware accelerator engines and internal registers
+      #define LTC_COM_AES        0x00000002                              // reset AES accelerator
+      #define LTC_COM_DES        0x00000004                              // reset DES accelerator
+      #define LTC_COM_PK         0x00000040                              // reset public key hardware accelerator
+      #define LTC_COM_MD         0x00000080                              // reset message digest hardware accelerator
     #define LTC0_CTL            *(volatile unsigned long *)(LTC_BLOCK + 0x034) // LTC control
       #define LTC_CTL_IM         0x00000001                              // interrupt masked (only cleared by hard reset)
       #define LTC_CTL_PDE        0x00000010                              // PKHA register DMA enable
