@@ -67,6 +67,83 @@
     static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock);
 #endif
 
+
+
+// Rules for numbering LPUARTS/UART channels
+//
+#if LPUARTS_AVAILABLE > 0
+    #if defined LPUARTS_PARALLEL
+        #define FIRST_LPUART_CHANNEL     (UARTS_AVAILABLE + 0)
+    #else
+        #define FIRST_LPUART_CHANNEL     0
+    #endif
+    #if LPUARTS_AVAILABLE > 1
+        #if defined LPUARTS_PARALLEL
+            #define SECOND_LPUART_CHANNEL    (UARTS_AVAILABLE + 1)
+        #else
+            #define SECOND_LPUART_CHANNEL    1
+        #endif
+    #endif
+    #if LPUARTS_AVAILABLE > 2
+        #if defined LPUARTS_PARALLEL
+            #define THIRD_LPUART_CHANNEL    (UARTS_AVAILABLE + 2)
+        #else
+            #define THIRD_LPUART_CHANNEL    2
+        #endif
+    #endif
+    #if LPUARTS_AVAILABLE > 3
+        #if defined LPUARTS_PARALLEL
+            #define FOURTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 3)
+        #else
+            #define ROURTH_LPUART_CHANNEL    3
+        #endif
+    #endif
+    #if LPUARTS_AVAILABLE > 4
+        #if defined LPUARTS_PARALLEL
+            #define FIFTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 4)
+        #else
+            #define FIFTH_LPUART_CHANNEL    4
+        #endif
+    #endif
+#endif
+#if (UARTS_AVAILABLE > 0)
+    #if ((UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)) && !defined LPUARTS_PARALLEL
+        #define THIRD_UART_CHANNEL          2
+    #elif (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
+        #define FIRST_UART_CHANNEL          0
+    #endif
+    #if (UARTS_AVAILABLE > 1) && ((LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL))
+        #define SECOND_UART_CHANNEL         1
+    #endif
+    #if (UARTS_AVAILABLE > 2) && ((LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
+        #define THIRD_UART_CHANNEL          2
+    #endif
+    #if UARTS_AVAILABLE > 3
+        #define FOURTH_UART_CHANNEL         3
+    #endif
+    #if UARTS_AVAILABLE > 4
+        #define FIFTH_UART_CHANNEL          4
+    #endif
+    #if UARTS_AVAILABLE > 5
+        #define SIXTH_UART_CHANNEL          5
+    #endif
+#endif
+
+#define LPUART_TX_PIN            0
+#define UART_TX_PIN              0
+#define LPUART_RX_PIN            1
+#define UART_RX_PIN              1
+#define LPUART_RTS_PIN           2
+#define UART_RTS_PIN             2
+#define LPUART_CTS_PIN           3
+#define UART_CTS_PIN             3
+#define LPUART_RTS_PIN_INVERTED  4
+#define UART_RTS_PIN_INVERTED    4
+#define LPUART_RTS_PIN_ASSERT    5
+#define UART_RTS_PIN_ASSERT      5
+#define LPUART_RTS_PIN_NEGATE    6
+#define UART_RTS_PIN_NEGATE      6
+
 /* =================================================================== */
 /*                             constants                               */
 /* =================================================================== */
@@ -1380,78 +1457,6 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
 }
     #endif
 
-// Rules for numbering LPUARTS/UART channels
-//
-#if LPUARTS_AVAILABLE > 0
-    #if defined LPUARTS_PARALLEL
-        #define FIRST_LPUART_CHANNEL     (UARTS_AVAILABLE + 0)
-    #else
-        #define FIRST_LPUART_CHANNEL     0
-    #endif
-    #if LPUARTS_AVAILABLE > 1
-        #if defined LPUARTS_PARALLEL
-            #define SECOND_LPUART_CHANNEL    (UARTS_AVAILABLE + 1)
-        #else
-            #define SECOND_LPUART_CHANNEL    1
-        #endif
-    #endif
-    #if LPUARTS_AVAILABLE > 2
-        #if defined LPUARTS_PARALLEL
-            #define THIRD_LPUART_CHANNEL    (UARTS_AVAILABLE + 2)
-        #else
-            #define THIRD_LPUART_CHANNEL    2
-        #endif
-    #endif
-    #if LPUARTS_AVAILABLE > 3
-        #if defined LPUARTS_PARALLEL
-            #define FOURTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 3)
-        #else
-            #define ROURTH_LPUART_CHANNEL    3
-        #endif
-    #endif
-    #if LPUARTS_AVAILABLE > 4
-        #if defined LPUARTS_PARALLEL
-            #define FIFTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 4)
-        #else
-            #define FIFTH_LPUART_CHANNEL    4
-        #endif
-    #endif
-#endif
-#if (UARTS_AVAILABLE > 0)
-    #if (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
-        #define FIRST_UART_CHANNEL          0
-    #endif
-    #if (UARTS_AVAILABLE > 1) && ((LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL))
-        #define SECOND_UART_CHANNEL         1
-    #endif
-    #if (UARTS_AVAILABLE > 2) && ((LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2))
-        #define THIRD_UART_CHANNEL          2
-    #endif
-    #if UARTS_AVAILABLE > 3
-        #define FOURTH_UART_CHANNEL         3
-    #endif
-    #if UARTS_AVAILABLE > 4
-        #define FIFTH_UART_CHANNEL          4
-    #endif
-    #if UARTS_AVAILABLE > 5
-        #define SIXTH_UART_CHANNEL          5
-    #endif
-#endif
-
-#define LPUART_TX_PIN            0
-#define UART_TX_PIN              0
-#define LPUART_RX_PIN            1
-#define UART_RX_PIN              1
-#define LPUART_RTS_PIN           2
-#define UART_RTS_PIN             2
-#define LPUART_CTS_PIN           3
-#define UART_CTS_PIN             3
-#define LPUART_RTS_PIN_INVERTED  4
-#define UART_RTS_PIN_INVERTED    4
-#define LPUART_RTS_PIN_ASSERT    5
-#define UART_RTS_PIN_ASSERT      5
-#define LPUART_RTS_PIN_NEGATE    6
-#define UART_RTS_PIN_NEGATE      6
 
 
 #include "kinetis_uart_pins.h"                                           // include fnConfigureUARTpin() for configuring LPUART/UART pins and entering related interrupt handlers 

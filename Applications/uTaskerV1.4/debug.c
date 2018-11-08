@@ -314,6 +314,7 @@
     #define DO_DAC_OUTPUT          61
     #define DO_RESET_BOOT          62                                    // specific hardware command to reset target to boot loader (when boot loader available and uses mailbox)
     #define DO_RND                 63                                    // specific hardware command to generate a block of random numbers
+    #define DO_PWM_PHASE_SHIFT     64                                    // specific hardware command to phase shift a PWM output with respect to another
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -860,6 +861,9 @@ static const DEBUG_COMMAND tIOCommand[] = {
     {"ez_clone",          "Clone software",                        DO_HARDWARE,      DO_EZCLONE },
     {"ez_s_clone",        "Securely Clone software",               DO_HARDWARE,      DO_EZSCLONE },
 #endif
+#if defined SUPPORT_PWM_MODULE && defined _KINETIS
+    {"shift",             "-180..180",                             DO_HARDWARE,      DO_PWM_PHASE_SHIFT },
+#endif
 #if defined PWM_MEASUREMENT_DEVELOPMENT
     { "test",             "Temp test",                             DO_HARDWARE,      75 },
 #endif
@@ -1217,10 +1221,10 @@ static const DEBUG_COMMAND tFlexioCommand[] = {
 #elif defined CMSIS_DSP_CFFT || defined CRYPTOGRAPHY || defined MMDVSQ_AVAILABLE
 static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP },
-#if defined TEST_CMSIS_CFFT
+    #if defined TEST_CMSIS_CFFT
     {"fft",               "Test CFFT [len (16|32|...|2048|4096)]", DO_HARDWARE,      DO_FFT},
-#endif
-#if defined CRYPTOGRAPHY
+    #endif
+    #if defined CRYPTOGRAPHY
     #if defined CRYPTO_AES
     { "aes128",           "Test aes128",                           DO_HARDWARE,      DO_AES128 },
     { "aes192",           "Test aes192",                           DO_HARDWARE,      DO_AES192 },
@@ -1232,11 +1236,11 @@ static const DEBUG_COMMAND tAdvancedCommand[] = {                        // {84}
     #if defined RNG_AVAILABLE
     { "rnd",              "random nr",                             DO_HARDWARE,      DO_RND },
     #endif
-#endif
-#if defined MMDVSQ_AVAILABLE                                             // {88}
+    #endif
+    #if defined MMDVSQ_AVAILABLE                                             // {88}
     { "sqrt",             "Square root [<0xHEX><dec>]",            DO_HARDWARE,      DO_SQRT },
     { "div",              "Divide (signed) [<0xHEX><dec>] / [<0xHEX><dec>]", DO_HARDWARE, DO_DIV },
-#endif
+    #endif
     {"quit",              "Leave command mode",                    DO_TELNET,        DO_TELNET_QUIT },
 };
 #endif
@@ -4012,6 +4016,44 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg(cUpTime);
         }
         return;
+#if defined SUPPORT_PWM_MODULE && defined _KINETIS
+    case DO_PWM_PHASE_SHIFT:
+        {
+            unsigned long ulBackup;
+            unsigned long ulPeriod = PWM_FREQUENCY(1000, 128);           // this assumes that PWM is in operation and the setting match those in ADC_Timers.h [PHASE_SHIFTED_COMBINED_OUTPUTS]
+            unsigned long ulValues[4];
+            signed short ssShift = (signed short)fnDecStrHex(ptrInput);
+            if (ssShift < -180) {
+                ssShift = -180;
+            }
+            else if (ssShift > 180) {
+                ssShift = 180;
+            }
+            if (ssShift < 0) {                                           // negative shift
+                ssShift = -ssShift;
+                ulValues[2] = 0;
+                ulValues[3] = (ulPeriod / 2);
+                ulValues[0] = (((ulPeriod / 2) * ssShift) / 180);
+                ulValues[1] = (ulValues[0] + (ulPeriod / 2));
+            }
+            else {                                                       // positive shift
+                ulValues[0] = 0;
+                ulValues[1] = (ulPeriod / 2);
+                ulValues[2] = (((ulPeriod / 2) * ssShift) / 180);
+                ulValues[3] = (ulValues[2] + (ulPeriod / 2));
+            }
+            ulBackup = FTM0_SC;                                          // backup the present opertaing settings
+            uDisable_Interrupt();                                        // avoid interrupts making the following freeze longer than necessary
+                FTM0_SC = 0;                                             // temporarily freeze operation so that the new values can be set
+                FTM0_C0V = ulValues[0];                                  // set new phases
+                FTM0_C1V = ulValues[1];
+                FTM0_C2V = ulValues[2];
+                FTM0_C3V = ulValues[3];
+                FTM0_SC = ulBackup;                                      // start again
+            uEnable_Interrupt();
+        }
+        break;
+#endif
 #if !defined REMOVE_PORT_INITIALISATIONS
       case DO_GET_DDR:                                                   // get present ddr setting {2}
           if ((*ptrInput < '1') || (*ptrInput > '4')) {

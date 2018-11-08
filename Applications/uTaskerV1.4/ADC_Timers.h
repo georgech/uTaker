@@ -125,7 +125,7 @@
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
-                #define TEST_CAPTURE                                     // {6} test timer capture mode
+              //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
         #endif
     #endif
@@ -1861,9 +1861,12 @@ static void fnConfigure_Timer(void)
     #if defined PHASE_SHIFTED_COMBINED_OUTPUTS                           // {29}
     // Set up two complimentary output pairs which are phase shifted from each other
     //
-    pwm_setup.pwm_mode = (PWM_EDGE_ALIGNED);
+    // Set up two complimentary output pairs which are phase shifted from each other
+    //
     pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 128);                  // generate 1000Hz on PWM output
     pwm_setup.pwm_value = _PWM_PERCENT(50, pwm_setup.pwm_frequency);     // 50% PWM (high/low)
+    pwm_setup.pwm_mode = (PWM_EDGE_ALIGNED | PWM_COMBINED_PHASE_SHIFT);  // phase shifted mode (only possible in edge aligned mode)
+    pwm_setup.pwm_phase_shift = _PWM_PERCENT(0, pwm_setup.pwm_frequency);// 0° phase shift
     pwm_setup.pwm_reference = (_TIMER_0 | 0);                            // timer module 0, channel 0
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
 
@@ -1872,8 +1875,7 @@ static void fnConfigure_Timer(void)
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
 
     pwm_setup.pwm_mode &= ~(PWM_POLARITY);
-    pwm_setup.pwm_mode |= (PWM_COMBINED_PHASE_SHIFT);                    // the following channel pair are phase shifted (only possible in edge aligned mode)
-    pwm_setup.pwm_phase_shift = _PWM_PERCENT(25, pwm_setup.pwm_frequency); // 45° phase shift
+    pwm_setup.pwm_phase_shift = _PWM_PERCENT(25, pwm_setup.pwm_frequency); // 90° phase shift
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for PWM test
 
