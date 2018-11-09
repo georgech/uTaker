@@ -216,9 +216,6 @@ typedef struct
     #if !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
         static void fnPrintScreen(void);
     #endif
-    #if defined KBOOT_LOADER && defined KBOOT_SECURE_LOADER                          #define USB_MSD_DEVICE_SECURE_LOADER
-        static void fnPrepareDecrypt(void);
-    #endif
 #elif defined I2C_INTERFACE
     #define NEEDS_BLANK_CHECK
     static unsigned char *fnBlankCheck(void);
@@ -247,6 +244,14 @@ typedef struct
 
 #if defined DEVELOPERS_LOADER
     static const CHAR cProcessorName[] = TARGET_HW;                      // processor/board name for reporting/display use
+#endif
+
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER
+    static const CHAR decrypt_key[] = "aes256 secret key";
+    #define PRIME_AES256_INITIAL_VECTOR
+    #if defined PRIME_AES256_INITIAL_VECTOR
+    static const CHAR initial_vector[] = "initial vector";
+    #endif
 #endif
 
 
@@ -370,7 +375,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             fnDriver(SerialPortID, (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE), 0); // configure RTS pin for control use
     #endif
         }
+    #if !defined KBOOT_LOADER
         DebugHandle = SerialPortID;                                      // assign our serial interface as debug port
+    #endif
     #if defined MEMORY_SWAP
         fnHandleSwap(1);                                                 // check that no previous swap had aborted before completion
     #endif
@@ -1508,19 +1515,13 @@ static void fnPrepareGenericResponse(KBOOT_PACKET *ptrKBOOT_response, int iInter
 }
 
 #if defined KBOOT_SECURE_LOADER                                          // {34}
-#define SECURE_BLOCK_LENGTH 1024
+#define SECURE_BLOCK_LENGTH 512
 typedef struct stALIGNED_DATA_BUFFER
 {
     unsigned char *ptrDestinationAddress;
     unsigned long  ulLength;                                             // long word to ensure following data alignment
     unsigned char  ucDataInput[SECURE_BLOCK_LENGTH];                     // data aligned
 } ALIGNED_DATA_BUFFER;
-
-static const CHAR decrypt_key[] = "aes256 secret key";
-#define PRIME_AES256_INITIAL_VECTOR
-#if defined PRIME_AES256_INITIAL_VECTOR
-static const CHAR initial_vector[] = "initial vector";
-#endif
 
 
 typedef struct stALIGNED_KEY
@@ -1529,7 +1530,6 @@ typedef struct stALIGNED_KEY
     unsigned char  ucKey[32];                                            // key aligned
 } ALIGNED_KEY;
 
-static volatile  int iSecond = 0;
 // It is assumed that the content is received in a linear fashion (addresses incrementing with each buffer)
 //
 static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *ptrData, unsigned short usBuff_length)
@@ -1559,10 +1559,6 @@ static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *pt
         usBuff_length -= usThisLength;
         encryptBuffer.ulLength += usThisLength;
         if (encryptBuffer.ulLength >= SECURE_BLOCK_LENGTH) {             // if a complete buffer has been prepared
-            if (iSecond != 0) {
-                fnDebugMsg("HIT");
-            }
-            iSecond++;
             fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)encryptBuffer.ucDataInput, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // decrypt the buffer content
             fnWriteBytesFlash(encryptBuffer.ptrDestinationAddress, encryptBuffer.ucDataInput, SECURE_BLOCK_LENGTH); // program flash
             encryptBuffer.ptrDestinationAddress += SECURE_BLOCK_LENGTH;
@@ -1570,27 +1566,29 @@ static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *pt
         }
     }
 }
+#endif
 
-static void fnPrepareDecrypt(void)
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER  // {34}
+extern void fnPrepareDecrypt(void)
 {
     ALIGNED_KEY decryptKey = {0, {0}};
-#if defined PRIME_AES256_INITIAL_VECTOR
+    #if defined PRIME_AES256_INITIAL_VECTOR
     unsigned char initVector[32];
     int iVectorLength = (sizeof(initial_vector) - 1);
-#endif
+    #endif
     decryptKey.ulLength = (sizeof(decrypt_key) - 1);
     uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
     while (decryptKey.ulLength < 32) {
         decryptKey.ucKey[decryptKey.ulLength++] = 'X';
     }
-    fnAES_Init(AES_COMMAND_AES_SET_KEY_DECRYPT, decryptKey.ucKey, 256);  // register the decryption key
-#if defined PRIME_AES256_INITIAL_VECTOR
+    fnAES_Init((AES_COMMAND_AES_SET_KEY_DECRYPT | AES_COMMAND_AES_RESET_IV), decryptKey.ucKey, 256);  // register the decryption key
+    #if defined PRIME_AES256_INITIAL_VECTOR
     uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
     while (iVectorLength < 16) {
         initVector[iVectorLength++] = 'X';
     }
-    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the vector
-#endif
+    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the initial vector
+    #endif
 }
 #endif
 

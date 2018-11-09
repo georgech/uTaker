@@ -1585,7 +1585,7 @@
     #endif
 #endif
 
-#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
+//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
     #define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K65 || defined KINETIS_K66
@@ -4034,6 +4034,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MOUSE_DOWN()           0                                     // not used
     #define MOUSE_LEFT()           0                                     // not used
     #define MOUSE_RIGHT()          0                                     // not used
+
+  //#define NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS                 // when flash operations are not in the same plane as the code interrupts can be left open when they are performed
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
     #define LED_RED            (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
 

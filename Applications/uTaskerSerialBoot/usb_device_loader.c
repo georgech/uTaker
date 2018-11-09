@@ -51,6 +51,7 @@
     31.01.2018 Reset intermediate buffer length counter when checking valid records {36}
     31.01.2018 Remove validity check of file length when hex or srec loading is possible {37}
     01.10.2018 Add optional parameter file support
+    09.11.2018 Add optional AES-256 decryption to USB device loader      {38}
 
 */
 
@@ -874,7 +875,7 @@ static const USB_DEVICE_DESCRIPTOR device_descriptor = {                 // cons
 // Configuration descriptor
 //
 static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
-    {                                                                    // config descriptor
+    {                                                                    // compulsory config descriptor
     DESCRIPTOR_TYPE_CONFIGURATION_LENGTH,                                // length (0x09)
     DESCRIPTOR_TYPE_CONFIGURATION,                                       // 0x02
     {LITTLE_SHORT_WORD_BYTES(sizeof(USB_CONFIGURATION_DESCRIPTOR_COLLECTION))}, // total length (little-endian)
@@ -990,30 +991,6 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
         BULK_ONLY_TRANSPORT,                                             // interface protocol (0x50)    // number of endpoints in addition to EP0
         0,                                                               // zero when strings are not supported
     },                                                                   // end of interface descriptor
-    {                                                                    // bulk out endpoint descriptor for the second interface
-        DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                 // descriptor size in bytes (0x07)
-        DESCRIPTOR_TYPE_ENDPOINT,                                        // end point descriptor (0x05)
-        (OUT_ENDPOINT | USB_MSD_OUT_ENDPOINT_NUMBER),                    // direction and address of end point
-        ENDPOINT_BULK,                                                   // endpoint attributes
-            #if defined USB_HS_INTERFACE
-        {LITTLE_SHORT_WORD_BYTES(512)},                                  // endpoint FIFO size (little-endian - 512 bytes)
-            #else
-        {LITTLE_SHORT_WORD_BYTES(64)},                                   // endpoint FIFO size (little-endian - 64 bytes)
-            #endif
-        0                                                                // polling interval in ms - ignored for bulk
-    },
-    {                                                                    // bulk in endpoint descriptor for the second interface
-        DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                 // descriptor size in bytes (0x07)
-        DESCRIPTOR_TYPE_ENDPOINT,                                        // end point descriptor (0x05)
-        (IN_ENDPOINT | USB_MSD_IN_ENDPOINT_NUMBER),                      // direction and address of end point
-        ENDPOINT_BULK,                                                   // endpoint attributes
-        #if defined USB_HS_INTERFACE
-        {LITTLE_SHORT_WORD_BYTES(512)},                                  // endpoint FIFO size (little-endian - 512 bytes)
-        #else
-        {LITTLE_SHORT_WORD_BYTES(64)},                                   // endpoint FIFO size (little-endian - 64 bytes)
-        #endif
-        0                                                                // polling interval in ms - ignored for bulk
-    }
         #endif
     #elif defined USE_USB_CDC                                            // {31}
     {                                                                    // function descriptors
@@ -1127,7 +1104,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
         #endif
     #endif
     #if defined USB_MSD_DEVICE_LOADER                                    // USB-MSD
-        {                                                                // bulk out endpoint descriptor for the second interface
+    {                                                                    // bulk out endpoint descriptor for the second interface
         DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                 // descriptor size in bytes (0x07)
         DESCRIPTOR_TYPE_ENDPOINT,                                        // end point descriptor (0x05)
         (OUT_ENDPOINT | USB_MSD_OUT_ENDPOINT_NUMBER),                    // direction and address of end point
@@ -1150,7 +1127,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
         {LITTLE_SHORT_WORD_BYTES(64)},                                   // endpoint FIFO size (little-endian - 64 bytes)
         #endif
         0                                                                // polling interval in ms - ignored for bulk
-        }
+    }
     #endif
 };
 
@@ -1647,20 +1624,21 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #if defined USB_MSD_DEVICE_LOADER                                    // MSD mode of operation
     while (fnMsgs(USBPortID_MSD) != 0) {                                 // reception from MSD OUT endpoint
         if (ulWriteBlock != 0) {                                         // write data expected
-            static unsigned char ucBuffer[BYTES_PER_SECTOR] = {0};       // intermediate buffer to collect each sector content
-            Length = fnRead(USBPortID_MSD, &ucBuffer[iContent], (QUEUE_TRANSFER)(BYTES_PER_SECTOR - iContent)); // read the content directly to the intermediate buffer
+            static unsigned long ulBuffer[BYTES_PER_SECTOR/sizeof(unsigned long)] = {0}; // intermediate buffer to collect each sector content to (long word aligned)
+            unsigned char *ptr_ucBuffer = (unsigned char *)ulBuffer;
+            Length = fnRead(USBPortID_MSD, &ptr_ucBuffer[iContent], (QUEUE_TRANSFER)(BYTES_PER_SECTOR - iContent)); // read the content directly to the intermediate buffer
             ulWriteBlock -= Length;
             iContent += Length;
             if (iContent >= BYTES_PER_SECTOR) {                          // input buffer is complete
         #if defined WINDOWS_8_1_WORKAROUND && !defined MAC_OS_X_WORKAROUND // {15}
                 if (ucAcceptUploads[ucActiveLUN] != 0) {                 // ignore writes until the upload delay has expired
-                    _fnWriteSector(ucActiveLUN, ucBuffer, ulLogicalBlockAdr++); // commit the buffer content to the media
+                    _fnWriteSector(ucActiveLUN, ptr_ucBuffer, ulLogicalBlockAdr++); // commit the buffer content to the media
                 }
         #else
             #if defined DEBUG_MAC
-                fnDebugWrite(ucActiveLUN, ucBuffer, ulLogicalBlockAdr);
+                fnDebugWrite(ucActiveLUN, ptr_ucBuffer, ulLogicalBlockAdr);
             #endif
-                _fnWriteSector(ucActiveLUN, ucBuffer, ulLogicalBlockAdr++); // commit the buffer content to the media
+                _fnWriteSector(ucActiveLUN, ptr_ucBuffer, ulLogicalBlockAdr++); // commit the buffer content to the media
         #endif
                 iContent = 0;                                            // reset intermediate buffer
                 if (ulWriteBlock != 0) {
@@ -2725,7 +2703,7 @@ static int _fnReadSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigne
             unsigned char *ptrSW_limit = (unsigned char *)lun_information[ucDisk].ptr_disk_end[1];
         #else
             unsigned char *ptrSW_source = (unsigned char *)(lun_information[ucDisk].ptr_disk_start[0] + (ROOT_FILE_ENTRIES * sizeof(DIR_ENTRY_STRUCTURE_FAT32)));
-            unsigned char *ptrSW_limit = (unsigned char *)lun_information[ucDisk].ptr_disk_end[1];
+            unsigned char *ptrSW_limit = (unsigned char *)lun_information[ucDisk].ptr_disk_end[0];
         #endif
         #if defined MAC_OS_X_WORKAROUND
             ptrSW_source += ((ulCluster - 7) * BYTES_PER_SECTOR);
@@ -3226,7 +3204,15 @@ static int fnStoreRecord(int iType, unsigned char *ptrBuffer)
 }
     #endif
 
-
+#if defined USB_MSD_DEVICE_SECURE_LOADER                                 // {38}
+static void fnDecryptSector(unsigned char *ptrBuffer, int iInitial)
+{
+    if (iInitial !=  0) {                                                // when starting or restarting decryption of stream
+        fnPrepareDecrypt();                                              // prepare the decrpt key and prime the initial vector
+    }
+    fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)ptrBuffer, ptrBuffer, 512); // decrypt a sector
+}
+#endif
 
 // This function is called to check the content of the first sector written to cluster space in a block write
 // - if the write is to a cluster that is known to belong to a hidden file it is rejected
@@ -3341,6 +3327,9 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
             else if (ucAcceptUploads[ucDisk] == CONTENT_BEING_FILTERED) {// we need to filter data content before we accept data
                 if (ulNewWriteBlock[ucDisk] != 0) {                      // first sector write in a cluster
                     ulNewWriteBlock[ucDisk] = 0;                         // check is only made on first sector of a cluster block write
+        #if defined USB_MSD_DEVICE_SECURE_LOADER                         // {38}
+                    fnDecryptSector(ptrBuffer, 1);                       // decrypt initial sector
+        #endif
                     ucAcceptUploads[ucDisk] = fnCorrolateData(ucDisk, ptrBuffer, ulSectorNumber);
                     if (ucAcceptUploads[ucDisk] > FIRMWARE_START_CONTENT) { // check whether the first sector of this data corresponds to a hidden MAC/Windows file write
                         ucAcceptUploads[ucDisk] = CONTENT_BEING_FILTERED;// continue filtering
@@ -3364,6 +3353,11 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
                     return UTFAT_SUCCESS;                                // ignore all writes
                 }
             }
+        #if defined USB_MSD_DEVICE_SECURE_LOADER                         // {38}
+            else {
+                fnDecryptSector(ptrBuffer, 0);                           // decrypt subsequent sectors block
+            }
+        #endif
     #endif
             if (iSynchronise[ucDisk] == 0) {                             // on first write to cluster area
     #if defined MEMORY_SWAP || defined USB_MSD_PARAMETER_FILE

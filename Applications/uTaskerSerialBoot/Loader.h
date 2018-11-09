@@ -458,4 +458,5 @@ typedef struct stKBOOT_PACKET
 extern int fnHandleKboot(QUEUE_HANDLE USBPortID_coms, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_packet);
     #define KBOOT_UART 0
     #define KBOOT_HID  1
+extern void fnPrepareDecrypt(void);
 

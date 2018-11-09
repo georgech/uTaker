@@ -31,6 +31,7 @@
     13.10.2017 Replace KINETIS_KE dependancy by FLASH_CONTROLLER_FTMRE dependancy
     07.03.2018 Add 25AA160 SPI EEPROM support                            {202}
     20.08.2018 Add use of block erase command when possible              {203}
+    09.11.2018 Add option to not disable interrupts when flash operations are performed [when it is know that this will always be in a different plane to the code] {204}
 
 */
 
@@ -67,8 +68,8 @@
 #if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined SUPPORT_PROGRAM_ONCE
 // This routine runs from SRAM - the reason why the pointer is passed is to avoid the routine taking it from a const value in FLASH, which is then not code location independent
 //
-    #if defined _WINDOWS
-        #if defined USE_SECTION_PROGRAMMING                              // {105}
+    #if defined _WINDOWS || defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS // {204}
+        #if defined _WINDOWS && defined USE_SECTION_PROGRAMMING          // {105}
             static unsigned char ucFlexRam[FLEXRAM_SIZE] = {0};
             #undef FLEXRAM_START_ADDRESS
             #define FLEXRAM_START_ADDRESS  ucFlexRam
@@ -105,10 +106,13 @@ static int fnFlashProtected(unsigned long *ptrWord)
 
 static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned long *ptr_ulWord)
 {
+    #if !defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS
     static void (*fnRAM_code)(volatile unsigned char *) = 0;
+    #endif
     #if defined FLEXFLASH_DATA || (defined FLASH_CONTROLLER_FTMRE && (defined SIZE_OF_EEPROM && SIZE_OF_EEPROM > 0)) // {82}{109}
     int iNoInterruptDisable = 0;                                         // the default is to protect programming from interrupts
     #endif
+    #if !defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS            // {204}
     if (fnRAM_code == 0) {                                               // the first time this is used it will load the program to SRAM
         #define PROG_WORD_SIZE 30                                        // adequate space for the small program
         int i = 0;
@@ -123,6 +127,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         ptrThumb2 = (unsigned char *)usProgSpace;
         ptrThumb2++;                                                     // create a thumb 2 call
         fnRAM_code = (void(*)(volatile unsigned char *))(ptrThumb2);
+    #endif
     #if defined FLASH_CONTROLLER_FTMRE                                   // set the flash programming clock to 1MHz once after a reset [most KE and KEA parts]
         #if BUS_CLOCK < 8000000
         _EXCEPTION("Bus clock must be at least 800kHz to program flash!");
@@ -178,7 +183,9 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
         FTMRH_FCLKDIV = 0x18;
         #endif
     #endif
+    #if !defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS
     }
+    #endif
     while ((FTFL_FSTAT & FTFL_STAT_CCIF) == 0) {}                        // wait for previous commands to complete
 
     #if defined FTFL_STAT_RDCOLERR
@@ -422,11 +429,11 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     if (iNoInterruptDisable == 0) {
         uDisable_Interrupt();                                            // protect this region from interrupts
     }
-    #else
+    #elif !defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS          // {204}
     uDisable_Interrupt();                                                // protect this region from interrupts
     #endif
-    #if defined _WINDOWS
-    fnFlashRoutine((volatile unsigned char *)FLASH_STATUS_REGISTER);
+    #if defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS || defined _WINDOWS // {204}
+    fnFlashRoutine((volatile unsigned char *)FLASH_STATUS_REGISTER);     // execute the command in flash
     #else
     fnRAM_code((volatile unsigned char *)FLASH_STATUS_REGISTER);         // execute the command from SRAM
     #endif
@@ -439,7 +446,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     if (iNoInterruptDisable == 0) {
         uEnable_Interrupt();                                             // safe to accept interrupts again
     }
-    #else
+    #elif !defined NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS          // {204}
     uEnable_Interrupt();                                                 // safe to accept interrupts again
     #endif
 

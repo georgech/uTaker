@@ -991,13 +991,14 @@
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
+        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
             #define NUMBER_SERIAL          0
         #endif
         #if defined USB_MSD_DEVICE_LOADER
+          //#define USB_MSD_DEVICE_SECURE_LOADER
             #define USB_DEVICE_SUPPORT                                   // requires USB device driver support
           //#define USB_MSD_TIMEOUT                                      // if there is no enumeration within a short time the application will be started
           //#define FAT_EMULATION                                        // use fat emulation
@@ -1098,6 +1099,7 @@
         #define SUPPORT_FLUSH
     #endif
     #if defined SDCARD_SUPPORT
+      //#define SDCARD_SECURE_LOADER
         #if !defined DWGB_SDCARD && defined USE_USB_MSD
             #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
             #if !defined SPECIAL_VERSION_SDCARD && !defined DEV5 && !defined DEV6
@@ -1439,7 +1441,7 @@
 
 // Cryptography
 //
-#if defined KBOOT_SECURE_LOADER
+#if defined KBOOT_SECURE_LOADER || defined SDCARD_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER
     #define CRYPTOGRAPHY                                                 // enable cryptography support - details at http://www.utasker.com/docs/uTasker/uTasker_Cryptography.pdf
 #endif
   //#define CRYPTO_OPEN_SSL                                              // use OpenSSL library code (for simulation or HW when native support is not available and enabled)
@@ -1448,9 +1450,9 @@
     #define CRYPTO_AES                                                   // use AES (advanced encryption standard) cypher
       //#define MBEDTLS_AES_ROM_TABLES                                   // mbedTLS uses ROM tables for AES rather than calculating sbox and tables (costs 8k Flash, saves 8.5k RAM, loses about 70% performance)
       //#define OPENSSL_AES_FULL_LOOP_UNROLL                             // unroll loops for improved performance (costs 4k Flash, gains about 20% performance)
-      //#define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
+        #define NATIVE_AES_CAU                                           // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define AES_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
-            #define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
+          //#define AES_DISABLE_LTC                                      // LTC has priority over CAU unless it is disabled (when device supports LTC - Low Power Trusted Cryptography)
   //#define CRYPTO_SHA                                                   // use SHA (secure hash algorithm)
         #define NATIVE_SHA256_CAU                                        // use uTasker mmCAU (LTC) - only possible when the device has mmCAU (LTC) - simulation requires a SW library to be enabled for alternate use
           //#define SHA_DISABLE_CAU                                      // force software implementation by disabling any available crypto accelerator (used mainly for testing CAU efficiency increase)
