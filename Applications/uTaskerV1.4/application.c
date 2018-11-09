@@ -156,6 +156,9 @@
     #define KINETIS_USES_FLEX_TIMER
     #include "../../J1708/j1708c.h"                                      // the driver code is included here
 #endif
+#if defined EXTERNAL_TEST
+    extern void fnExternalTest(void);
+#endif
 
 /* =================================================================== */
 /*                          local definitions                          */
@@ -816,6 +819,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 #if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
         fnConfigureTelnetRFC2217Server();
+#endif
+#if defined EXTERNAL_TEST
+        fnExternalTest();
 #endif
     }
 #if defined SUPPORT_GLCD && (defined MB785_GLCD_MODE || defined AVR32_EVK1105 || defined AVR32_AT32UC3C_EK || defined IDM_L35_B || defined M52259_TOWER || defined TWR_K60N512 || defined TWR_K60D100M || defined TWR_K70F120M || defined OLIMEX_LPC2478_STK || defined K70F150M_12M || (defined OLIMEX_LPC1766_STK && defined NOKIA_GLCD_MODE)) && defined SDCARD_SUPPORT // {58}{68}

@@ -48,6 +48,7 @@
     17.01.2018 Add I2C slave mode                                        {32}
     09.06.2018 Add FREE_RUNNING_RX_DMA_RECEPTION mode for SREC/iHEX loader in order to avoid need for an intermediate programming buffer and XON/XOFF pause operation {33}
     11.06.2018 Update KBOOT to V2.0.0
+    09.11.2018 Add AES-256 decryption option to KBOOT UART/USB loaders   {34}
 
 */
 
@@ -215,7 +216,7 @@ typedef struct
     #if !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
         static void fnPrintScreen(void);
     #endif
-    #if defined KBOOT_LOADER && defined KBOOT_SECURE_LOADER
+    #if defined KBOOT_LOADER && defined KBOOT_SECURE_LOADER                          #define USB_MSD_DEVICE_SECURE_LOADER
         static void fnPrepareDecrypt(void);
     #endif
 #elif defined I2C_INTERFACE
@@ -1506,7 +1507,7 @@ static void fnPrepareGenericResponse(KBOOT_PACKET *ptrKBOOT_response, int iInter
     }
 }
 
-#if defined KBOOT_SECURE_LOADER
+#if defined KBOOT_SECURE_LOADER                                          // {34}
 #define SECURE_BLOCK_LENGTH 1024
 typedef struct stALIGNED_DATA_BUFFER
 {
@@ -1572,7 +1573,7 @@ static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *pt
 
 static void fnPrepareDecrypt(void)
 {
-    static ALIGNED_KEY decryptKey = {0, {0}};
+    ALIGNED_KEY decryptKey = {0, {0}};
 #if defined PRIME_AES256_INITIAL_VECTOR
     unsigned char initVector[32];
     int iVectorLength = (sizeof(initial_vector) - 1);
@@ -1631,8 +1632,8 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                             ulLength = ((unsigned long)UTASKER_APP_END - ulStartAddress);
                         }
                         fnEraseFlashSector((unsigned char *)ulStartAddress, (MAX_FILE_LENGTH)ulLength);
-    #if defined KBOOT_SECURE_LOADER
-                        fnPrepareDecrypt();
+    #if defined KBOOT_SECURE_LOADER                                      // {34}
+                        fnPrepareDecrypt();                              // prepare AES-256 decryption key and initial vector
     #endif
     #if defined ADD_FILE_OBJECT_AFTER_LOADING
                         fileObjInfo.ptrLastAddress = 0;
@@ -1742,7 +1743,7 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                 if (usBuff_length > ulProg_length) {
                     usBuff_length = (unsigned short)ulProg_length;
                 }
-    #if defined KBOOT_SECURE_LOADER
+    #if defined KBOOT_SECURE_LOADER                                      // {34} decrypt buffer and write to flash
                 fnWriteBytesSecure(ptrFlashAddress, ptrKBOOT_packet->ucData, usBuff_length);
     #else
                 fnWriteBytesFlash(ptrFlashAddress, ptrKBOOT_packet->ucData, usBuff_length); // program flash
@@ -1761,8 +1762,8 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                   //    KBOOT_response.ucData[2] = 2;
                   //}
                     KBOOT_response.ucData[8] = KBOOT_COMMAND_TAG_WRITE_MEMORY;
-    #if defined KBOOT_SECURE_LOADER
-                    fnWriteBytesSecure(0, 0, 0);
+    #if defined KBOOT_SECURE_LOADER                                      // {34}
+                    fnWriteBytesSecure(0, 0, 0);                         // decrypt and write any open block to flash
     #elif  defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer
     #endif

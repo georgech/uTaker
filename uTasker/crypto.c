@@ -62,6 +62,9 @@ typedef struct stAES_INSTANCE
         #if !defined LTC_AVAILABLE || defined AES_DISABLE_LTC            // mmCAU
     unsigned char key[60 * 4];                                           // long word aligned
         #endif
+        #if defined NATIVE_AES_CAU && (defined LTC_AVAILABLE && !defined AES_DISABLE_LTC)
+    unsigned long ulInSequence;
+        #endif
     #endif
     #if defined SOFTWARE_BASE_AES                                        // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
         #if defined CRYPTO_OPEN_SSL                                      // uses openSSL method
@@ -95,12 +98,12 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     POWER_UP_LTC_MODULE();                                               // ensure that the module is powered up before use
     WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
     LTC0_CTL = (LTC_CTL_IFS | LTC_CTL_OFS | LTC_CTL_KIS | LTC_CTL_KOS | LTC_CTL_CIS | LTC_CTL_COS); // enable byte swap for registers to be used
-    if (iDecrypt != 0) {
-        LTC0_MD = (/*LTC_MD_ALG_AES | */LTC_MD_AAI_CBC | LTC_MD_AAI_DK); // AES key for decryption (this sets the error interrupt but allow descrypt to operate - setting AES algorithm doesn't trigger error interrupt but causes descrpt to fail)
-    }
-    else {
+  //if (iDecrypt != 0) {
+  //    LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC | LTC_MD_AAI_DK);    // AES key for decryption (this sets the error interrupt but allow descrypt to operate - setting AES algorithm doesn't trigger error interrupt but causes descrpt to fail)
+  //}
+  //else {
         LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC);                     // AES key for encryption
-    }
+  //}
     LTC0_KEY_0 = *_ptr_ulKey++;                                          // key needs to be long word aligned - enter them into the LTC
     LTC0_KEY_1 = *_ptr_ulKey++;
     LTC0_KEY_2 = *_ptr_ulKey++;
@@ -120,10 +123,11 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     else {
         LTC0_KS = 16;                                                    // the key size must be written after setting the key and it locks the register against further writes
     }
+    /*
     LTC0_CTX_0 = 0;                                                      // zero IV
     LTC0_CTX_1 = 0;
     LTC0_CTX_2 = 0;
-    LTC0_CTX_3 = 0;
+    LTC0_CTX_3 = 0;*/
     WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                            // reset the done interrupt
 }
 
@@ -196,7 +200,7 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
     }
     else {
       //WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
-        WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
+        WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
     }
 }
 #endif
@@ -243,6 +247,7 @@ extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKe
     #if defined NATIVE_AES_CAU
         #if defined LTC_AVAILABLE && !defined AES_DISABLE_LTC            // use LTC HW accelerator (has priority over mmCAU when both are available)
         fnInitLTC((const unsigned long *)ptrKey, iKeyLength, 0);
+        aes_instance[iInstance].ulInSequence = 0;
         #else                                                            // use mmCAU HW accelerator
             #if !defined _WINDOWS
         mmcau_aes_set_key(ptrKey, iKeyLength, aes_instance[iInstance].key);
@@ -546,7 +551,8 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
                 }
             }
         #else                                                            // LTC hardware accelerator
-            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, ((LTC_MD_ENC_DECRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC))); // decrypt using LTC
+            fnExecuteLTC((unsigned long *)ptrTextIn, (unsigned long *)ptrTextOut, ulDataLength, ((LTC_MD_ENC_DECRYPT | LTC_MD_AS_UPDATE | LTC_MD_ALG_AES | LTC_MD_AAI_CBC | aes_instance[iInstance].ulInSequence))); // decrypt using LTC
+            aes_instance[iInstance].ulInSequence = LTC_MD_AAI_DK;
         #endif
     #endif
     #if defined SOFTWARE_BASE_AES                                        // software based implemenation to be used (always used by simulation - possibly in parallel with HW code)
