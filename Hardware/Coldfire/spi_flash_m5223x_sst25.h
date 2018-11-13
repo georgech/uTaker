@@ -21,7 +21,7 @@
 
 */ 
 
-#ifdef SPI_FLASH_SST25
+#if defined SPI_FLASH_SST25
 
 #ifdef _SPI_DEFINES
     #ifdef SPI_FLASH_MULTIPLE_CHIPS

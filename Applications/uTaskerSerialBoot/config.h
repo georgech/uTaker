@@ -938,7 +938,7 @@
       //#define MODBUS_CRC_FROM_LOOKUP_TABLE                             // MODBUS RTU cyclic redundancy check performed with help of loop up table (requires 512 bytes FLASH table, but faster than calculation loop)
         #define REMOVE_SREC_LOADING
     #else
-        #define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
+      //#define KBOOT_LOADER                                             // use KBOOT UART interface rather than SREC/iHex interface
           //#define KBOOT_LOADER_MASS_ERASE_TO_UNLOCK
           //#define KBOOT_LOADER_BACKDOOR_KEY_TO_UNLOCK
           //#define KBOOT_SECURE_LOADER                                  // decrypt and accept only encrypted/authenticated firmware
@@ -1042,8 +1042,8 @@
       //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
             #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
           //#define DEBUG_MAC                                            // activate debug output used to monitor the operation of MAC OS X
-        #define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
-            #define KBOOT_HID_LOADER                                     // select KBOOT mode of operation (rather than HIDloader.exe)
+      //#define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
+          //#define KBOOT_HID_LOADER                                     // select KBOOT mode of operation (rather than HIDloader.exe)
           //#define KBOOT_SECURE_LOADER                                  // decrypt and accept only encrypted/authenticated firmware
         #undef _NO_CHECK_QUEUE_INPUT
         #define WAKE_BLOCKED_USB_TX                                      // allow a blocked USB transmitter to continue after an interrupt event

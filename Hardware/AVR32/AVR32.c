@@ -3358,7 +3358,7 @@ static int fnGetSPI_Device(unsigned char **ptrFlash)                     // defi
 }
 #endif
 
-#ifndef SPI_FLASH_SST25
+#if !defined SPI_FLASH_SST25
 // Return the page number and optionally the address offset in the page
 //
     #ifdef SPI_FLASH_MULTIPLE_CHIPS
@@ -3692,7 +3692,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             #if !defined SPI_FLASH_ST
             unsigned char  ucCommand;
             #endif
-            #ifdef SPI_FLASH_SST25
+            #if defined SPI_FLASH_SST25
             unsigned long ulSectorAlign;
             unsigned long ulLocation = (CAST_POINTER_ARITHMETIC)fnGetSPI_FLASH_address(ptrSector EXTENDED_CS);   // convert to virtual SPI Flash memory location
             ulSectorAlign = (ulLocation & ~(SPI_FLASH_SUB_SECTOR_LENGTH - 1));
@@ -4063,7 +4063,7 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
             #ifdef SPI_FLASH_MULTIPLE_CHIPS
         int iChipSelect;
             #endif
-            #ifdef SPI_FLASH_SST25
+            #if defined SPI_FLASH_SST25
         ParLocation = fnGetSPI_FLASH_address(ParLocation EXTENDED_CS);
             #else
         unsigned short usPageNumber;

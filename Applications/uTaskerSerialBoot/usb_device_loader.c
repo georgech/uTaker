@@ -3208,7 +3208,7 @@ static int fnStoreRecord(int iType, unsigned char *ptrBuffer)
 static void fnDecryptSector(unsigned char *ptrBuffer, int iInitial)
 {
     if (iInitial !=  0) {                                                // when starting or restarting decryption of stream
-        fnPrepareDecrypt();                                              // prepare the decrpt key and prime the initial vector
+        fnPrepareDecrypt(0);                                             // prepare the decrpt key and prime the initial vector
     }
     fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)ptrBuffer, ptrBuffer, 512); // decrypt a sector
 }

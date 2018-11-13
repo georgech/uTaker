@@ -68,7 +68,7 @@
 #define E_RECHECK_SW               3
 
 #define COPY_BUFFER_SIZE           256                                   // file processed in blocks of this size from SD card
-#if defined FLEXFLASH_DATA
+#if defined FLEXFLASH_DATA || (defined SDCARD_SUPPORT && defined SDCARD_SECURE_LOADER)
     #define CRC_BLOCK_SIZE         COPY_BUFFER_SIZE                      // use the same (size) buffer for both copy and CRC check
 #else
     #define CRC_BLOCK_SIZE         1024                                  // CRC check in internal flash made in blocks of this size
@@ -133,10 +133,14 @@ static const unsigned char ucSecretKey[] = _SECRET_KEY;
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
-    static unsigned char ucCodeStart[FLASH_ROW_SIZE];
+#if defined SDCARD_SECURE_LOADER
+    static unsigned char ucCodeStart[32] = {0};                          // AES-256 block size
 #else
+    #if defined FLASH_ROW_SIZE && (FLASH_ROW_SIZE > 0)
+    static unsigned char ucCodeStart[FLASH_ROW_SIZE];
+    #else
     static unsigned char ucCodeStart[4] = {0xff, 0xff, 0xff, 0xff};
+    #endif
 #endif
 #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD
     static FILE_OBJECT_INFO fileObjInfo = {0};                           // {6}
@@ -437,11 +441,11 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     static int            iFlashMismatch = 0;
     static unsigned char  *ptrInternalFlash;
     static unsigned long  ulFileLength;
+    unsigned long         ulBuffer[COPY_BUFFER_SIZE / sizeof(unsigned long)]; // aligned buffer for reading SD card content to
     int                   iNextState = iAppState;
     #if defined ENCRYPTED_CARD_CONTENT
     MAX_FILE_LENGTH       toProgram;
     #endif
-    unsigned char         ucBuffer[COPY_BUFFER_SIZE];                    // buffer for reading SD card content to
     #if defined FLEXFLASH_DATA
     unsigned char         ucCheckBuffer[COPY_BUFFER_SIZE];               // buffer for reading internal flash content to
     #endif
@@ -453,7 +457,10 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     #endif
         iFlashMismatch = 0;
         usCRC = 0;
+    #if defined SDCARD_SECURE_LOADER
         ptrInternalFlash = (unsigned char *)_UTASKER_APP_START_;
+        fnPrepareDecrypt(0);                                             // prepare the decrpt key and prime the initial vector
+    #endif
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
         uMemcpy(&utFile_decrypt, ptr_utFile, sizeof(utFile_decrypt));    // copy the file object for decryption use
         ulCodeOffset = CODE_OFFSET;
@@ -467,28 +474,32 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
         // Fall-through intentional
         //
     case STATE_CHECKING:                                                 // check the CRC of the file on the SD card
-        utReadFile(ptr_utFile, ucBuffer, sizeof(ucBuffer));              // read a single buffer from the file on the SD card
-        usCRC = fnCRC16(usCRC, ucBuffer, ptr_utFile->usLastReadWriteLength); // calculate the CRC of complete file content
+        utReadFile(ptr_utFile, ulBuffer, sizeof(ulBuffer));              // read a single buffer from the file on the SD card
+        usCRC = fnCRC16(usCRC, (unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // calculate the CRC of complete file content
         if (iFlashMismatch == 0) {                                       // if the code still matches
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
-            utReadFile(&utFile_decrypt, ucBuffer, sizeof(ucBuffer));     // read a single buffer from the file on the SD card
+            utReadFile(&utFile_decrypt, ulBuffer, sizeof(ulBuffer));     // read a single buffer from the file on the SD card
             if (utFile_decrypt.ulFilePosition >= utFile_decrypt.ulFileSize) { // end of file reached
+                unsigned char *ptrBuffer = (unsigned char *)ulBuffer;
                 unsigned short usRemaining = (ptr_utFile->usLastReadWriteLength - utFile_decrypt.usLastReadWriteLength);
                 utSeek(&utFile_decrypt, SIZE_OF_UPLOAD_HEADER, UTFAT_SEEK_SET); // move back to start of code in file
-                utReadFile(&utFile_decrypt, &ucBuffer[utFile_decrypt.usLastReadWriteLength], usRemaining); // read a single buffer from the file on the SD card
+                utReadFile(&utFile_decrypt, &ptrBuffer[utFile_decrypt.usLastReadWriteLength], usRemaining); // read a single buffer from the file on the SD card
             }
-            fnDecrypt(ucBuffer, ptr_utFile->usLastReadWriteLength);      // decrypt the buffer before comparing
+            fnDecrypt((unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // decrypt the buffer before comparing
     #endif
     #if defined FLEXFLASH_DATA                                           // {16} if there is a possibility of working in data flash we need to collect a buffer first
             fnGetParsFile(ptrInternalFlash, ucCheckBuffer, ptr_utFile->usLastReadWriteLength);
-            if (uMemcmp(ucCheckBuffer, ucBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
+            if (uMemcmp(ucCheckBuffer, ulBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
                 iFlashMismatch = 1;                                      // the code is different so needs to be updated
             }
             else {
                 ptrInternalFlash += ptr_utFile->usLastReadWriteLength;
             }
     #else
-            if (uMemcmp(fnGetFlashAdd(ptrInternalFlash), ucBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
+        #if defined SDCARD_SECURE_LOADER
+            fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)ulBuffer, (unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // decrypt the buffer content
+        #endif
+            if (uMemcmp(fnGetFlashAdd(ptrInternalFlash), ulBuffer, ptr_utFile->usLastReadWriteLength) != 0) { // check whether the code is different
                 iFlashMismatch = 1;                                      // the code is different so needs to be updated
             }
             else {
@@ -496,7 +507,7 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
             }
     #endif
         }
-        if (ptr_utFile->usLastReadWriteLength != sizeof(ucBuffer)) {     // end of file reached
+        if (ptr_utFile->usLastReadWriteLength != sizeof(ulBuffer)) {     // end of file reached
             iNextState = STATE_CHECK_SECRET_KEY;
         }
         fnInterruptMessage(OWN_TASK, E_DO_NEXT);                         // schedule next
@@ -571,16 +582,25 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
         fnDecrypt(ucCodeStart, sizeof(ucCodeStart));
     #else
         utSeek(ptr_utFile, SIZE_OF_UPLOAD_HEADER, UTFAT_SEEK_SET);       // return to the start of the file after the header
+        #if defined SDCARD_SECURE_LOADER
+        utReadFile(ptr_utFile, ulBuffer, sizeof(ucCodeStart));           // store code start for programming as final step
+        #else
         utReadFile(ptr_utFile, ucCodeStart, sizeof(ucCodeStart));        // store code start for programming as final step
+        #endif
     #endif
         ptrInternalFlash += sizeof(ucCodeStart);
         iNextState = STATE_PROGRAMMING;
+    #if defined SDCARD_SECURE_LOADER
+        fnPrepareDecrypt(0);                                             // prepare the decrpt key and prime the initial vector
+        fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)ulBuffer, (unsigned char *)ulBuffer, sizeof(ucCodeStart)); // decrypt the buffer content
+        uMemcpy(ucCodeStart, ulBuffer, sizeof(ucCodeStart));
+    #endif
         // Fall-through intentional
         //
     case STATE_PROGRAMMING:                                              // programming from SD card file to internal application space
-        utReadFile(ptr_utFile, ucBuffer, sizeof(ucBuffer));              // read buffer from file
+        utReadFile(ptr_utFile, ulBuffer, sizeof(ulBuffer));              // read buffer from file
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
-        fnDecrypt(ucBuffer, ptr_utFile->usLastReadWriteLength);          // decrypt the buffer before programming
+        fnDecrypt((unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // decrypt the buffer before programming
         ulProgrammed += ptr_utFile->usLastReadWriteLength;
         if (ulProgrammed > ptrFile_header->ulCodeLength) {
             toProgram = (ptr_utFile->usLastReadWriteLength - (ulProgrammed - ptrFile_header->ulCodeLength)); // final content length
@@ -588,20 +608,23 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
         else {
             toProgram = ptr_utFile->usLastReadWriteLength;
         }
-        fnWriteBytesFlash(ptrInternalFlash, ucBuffer, toProgram);        // program to Flash
+        fnWriteBytesFlash(ptrInternalFlash, (unsigned char *)ulBuffer, toProgram); // program to flash
         ptrInternalFlash += ptr_utFile->usLastReadWriteLength;
         if (ptr_utFile->ulFilePosition >= ptr_utFile->ulFileSize) {      // end of file reached
             utSeek(ptr_utFile, SIZE_OF_UPLOAD_HEADER, UTFAT_SEEK_SET);   // move back to start of code in file
-            ptr_utFile->usLastReadWriteLength = sizeof(ucBuffer);        // avoid terminating
+            ptr_utFile->usLastReadWriteLength = sizeof(ulBuffer);        // avoid terminating
         }
         if (ulProgrammed >= ptrFile_header->ulCodeLength) {
             ptr_utFile->usLastReadWriteLength = 0;
         }
     #else
-        fnWriteBytesFlash(ptrInternalFlash, ucBuffer, ptr_utFile->usLastReadWriteLength); // program to Flash
+        #if defined SDCARD_SECURE_LOADER
+        fnAES_Cipher(AES_COMMAND_AES_DECRYPT, (const unsigned char *)ulBuffer, (unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // decrypt the buffer content
+        #endif
+        fnWriteBytesFlash(ptrInternalFlash, (unsigned char *)ulBuffer, ptr_utFile->usLastReadWriteLength); // program to Flash
         ptrInternalFlash += ptr_utFile->usLastReadWriteLength;
     #endif
-        if (ptr_utFile->usLastReadWriteLength != sizeof(ucBuffer)) {     // end of file reached
+        if (ptr_utFile->usLastReadWriteLength != sizeof(ulBuffer)) {     // end of file reached
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                     // {2}
             fnWriteBytesFlash(ptrInternalFlash, 0, 0);                   // close any outstanding FLASH buffer from end of the file
     #endif
@@ -622,6 +645,9 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
             usCRC = 0;
             iNextState = STATE_VERIFYING;
             ulFileLength = (ptr_utFile->ulFileSize - SIZE_OF_UPLOAD_HEADER);
+    #if defined SDCARD_SECURE_LOADER
+            fnPrepareDecrypt(1);                                         // prepare the encrypt key and prime the initial vector
+    #endif
         }
         fnInterruptMessage(OWN_TASK, E_DO_NEXT);                         // schedule next
         break;
@@ -632,7 +658,12 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
             fnGetParsFile(ptrInternalFlash, ucCheckBuffer, CRC_BLOCK_SIZE);
             usCRC = fnCRC16(usCRC, ucCheckBuffer, CRC_BLOCK_SIZE);
     #else
+        #if defined SDCARD_SECURE_LOADER
+            fnAES_Cipher(AES_COMMAND_AES_ENCRYPT, (const unsigned char *)fnGetFlashAdd(ptrInternalFlash), (unsigned char *)ulBuffer, CRC_BLOCK_SIZE); // encrypt the flash content
+            usCRC = fnCRC16(usCRC, (unsigned char *)ulBuffer, CRC_BLOCK_SIZE);
+        #else
             usCRC = fnCRC16(usCRC, fnGetFlashAdd(ptrInternalFlash), CRC_BLOCK_SIZE);
+        #endif
     #endif
             ulFileLength -= CRC_BLOCK_SIZE;
             ptrInternalFlash += CRC_BLOCK_SIZE;
@@ -643,7 +674,12 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
             fnGetParsFile(ptrInternalFlash, ucCheckBuffer, ulFileLength);
             usCRC = fnCRC16(usCRC, ucCheckBuffer, ulFileLength);
     #else
+        #if defined SDCARD_SECURE_LOADER
+            fnAES_Cipher(AES_COMMAND_AES_ENCRYPT, (const unsigned char *)fnGetFlashAdd(ptrInternalFlash), (unsigned char *)ulBuffer, ulFileLength); // encrypt the flash content
+            usCRC = fnCRC16(usCRC, (unsigned char *)ulBuffer, ulFileLength);
+        #else
             usCRC = fnCRC16(usCRC, fnGetFlashAdd(ptrInternalFlash), ulFileLength); // last block
+        #endif
     #endif
             usCRC = fnCRC16(usCRC, (unsigned char *)ucSecretKey, sizeof(ucSecretKey)); // add the secret key
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}

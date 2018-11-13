@@ -18,12 +18,16 @@
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
     Its goal is to improve overall readability of the hardware interface.
     19.08.2017 Correct chip select control of multiple SPI devices       {1}
+    12.11.2018 Added FIFO depth control                                  {2}
 
 */
 
 #if defined SPI_FLASH_SST25
 
 #if defined _SPI_DEFINES
+    #if !defined SPI_FLASH_FIFO_DEPTH                                    // {2}
+        #define SPI_FLASH_FIFO_DEPTH     1                               // if no fifo depth is specified we assume that it is 1
+    #endif
     #if defined SPI_FLASH_MULTIPLE_CHIPS
         #define __EXTENDED_CS     iChipSelect,                           // {1}
         static unsigned char fnCheckSST25xxx(int iChipSelect);
@@ -160,7 +164,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SET_SPI_FLASH_MODE();
 
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
@@ -179,7 +183,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -188,7 +192,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
     #endif
@@ -196,7 +200,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
     #endif
@@ -223,7 +227,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
         #endif
-        #if defined KINETIS_KL
+        #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
         #endif
@@ -241,7 +245,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -255,7 +259,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -279,7 +283,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-    #if defined KINETIS_KL
+    #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
     #endif
@@ -335,12 +339,12 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
         discardCount--;
     }
-    #if defined KINETIS_KL || defined MANUAL_FLASH_CS_CONTROL
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL
     NEGATE_CS_LINE(ulChipSelectLine);                                    // negate the chip select line
     #endif
     #if defined _WINDOWS
-        #if !defined KINETIS_KL
-    if (SPI_TX_BYTE & SPI_PUSHR_EOQ) {                                   // check that the CS has been negated
+        #if defined DSPI_SPI
+    if ((SPI_TX_BYTE & SPI_PUSHR_EOQ) != 0) {                            // check that the CS has been negated
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }
         #endif

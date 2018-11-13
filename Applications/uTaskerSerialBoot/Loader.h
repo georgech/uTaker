@@ -229,7 +229,11 @@
             #define VALID_VERSION_MAGIC_NUMBER   0x0002
             #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x26}
         #else
-            #define NEW_SOFTWARE_FILE "software.bin"
+            #if defined SDCARD_SECURE_LOADER
+                #define NEW_SOFTWARE_FILE "sd_card_aes256_coded.bin"
+            #else
+                #define NEW_SOFTWARE_FILE "software.bin"
+            #endif
             #define VALID_VERSION_MAGIC_NUMBER   0x1234
             #define _SECRET_KEY       {0xa7, 0x48, 0xb6, 0x53, 0x11, 0x24}
         #endif
@@ -458,5 +462,5 @@ typedef struct stKBOOT_PACKET
 extern int fnHandleKboot(QUEUE_HANDLE USBPortID_coms, int iInterfaceType, KBOOT_PACKET *ptrKBOOT_packet);
     #define KBOOT_UART 0
     #define KBOOT_HID  1
-extern void fnPrepareDecrypt(void);
+extern void fnPrepareDecrypt(int iEncrypt);
 

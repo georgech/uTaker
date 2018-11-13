@@ -1067,6 +1067,44 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 }
 
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER  // {34}
+
+typedef struct stALIGNED_KEY
+{
+    unsigned long  ulLength;                                             // long word to ensure following key alignment
+    unsigned char  ucKey[32];                                            // key aligned
+} ALIGNED_KEY;
+
+
+extern void fnPrepareDecrypt(int iEncrypt)
+{
+    ALIGNED_KEY decryptKey = {0, {0}};
+    int iInitKey = (AES_COMMAND_AES_SET_KEY_DECRYPT | AES_COMMAND_AES_RESET_IV); // assume decrypt key initiaisation with IV set to zero
+    #if defined PRIME_AES256_INITIAL_VECTOR
+    unsigned char initVector[32];
+    int iVectorLength = (sizeof(initial_vector) - 1);
+    #endif
+    decryptKey.ulLength = (sizeof(decrypt_key) - 1);
+    uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
+    while (decryptKey.ulLength < 32) {
+        decryptKey.ucKey[decryptKey.ulLength++] = 'X';
+    }
+    #if defined SDCARD_SUPPORT && defined SDCARD_SECURE_LOADER           // the SD card loader also encrypts flash content to see whether it matches the encyrpted card content
+    if (iEncrypt != 0) {                                                 // set encyrpt key iinstead of decrypt key
+        iInitKey = (AES_COMMAND_AES_SET_KEY_ENCRYPT | AES_COMMAND_AES_RESET_IV);
+    }
+    #endif
+    fnAES_Init(iInitKey, decryptKey.ucKey, 256);                         // register the key
+    #if defined PRIME_AES256_INITIAL_VECTOR
+    uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
+    while (iVectorLength < 16) {
+        initVector[iVectorLength++] = 'X';
+    }
+    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the initial vector
+    #endif
+}
+#endif
+
 #if defined BLAZE_K22
 static void fnLoaderForced(int iNoFirmware)
 {
@@ -1524,12 +1562,6 @@ typedef struct stALIGNED_DATA_BUFFER
 } ALIGNED_DATA_BUFFER;
 
 
-typedef struct stALIGNED_KEY
-{
-    unsigned long  ulLength;                                             // long word to ensure following key alignment
-    unsigned char  ucKey[32];                                            // key aligned
-} ALIGNED_KEY;
-
 // It is assumed that the content is received in a linear fashion (addresses incrementing with each buffer)
 //
 static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *ptrData, unsigned short usBuff_length)
@@ -1565,30 +1597,6 @@ static void fnWriteBytesSecure(unsigned char *ptrFlashAddress, unsigned char *pt
             encryptBuffer.ulLength = 0;
         }
     }
-}
-#endif
-
-#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER  // {34}
-extern void fnPrepareDecrypt(void)
-{
-    ALIGNED_KEY decryptKey = {0, {0}};
-    #if defined PRIME_AES256_INITIAL_VECTOR
-    unsigned char initVector[32];
-    int iVectorLength = (sizeof(initial_vector) - 1);
-    #endif
-    decryptKey.ulLength = (sizeof(decrypt_key) - 1);
-    uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
-    while (decryptKey.ulLength < 32) {
-        decryptKey.ucKey[decryptKey.ulLength++] = 'X';
-    }
-    fnAES_Init((AES_COMMAND_AES_SET_KEY_DECRYPT | AES_COMMAND_AES_RESET_IV), decryptKey.ucKey, 256);  // register the decryption key
-    #if defined PRIME_AES256_INITIAL_VECTOR
-    uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
-    while (iVectorLength < 16) {
-        initVector[iVectorLength++] = 'X';
-    }
-    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the initial vector
-    #endif
 }
 #endif
 
@@ -1631,7 +1639,7 @@ extern int fnHandleKboot(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_PACK
                         }
                         fnEraseFlashSector((unsigned char *)ulStartAddress, (MAX_FILE_LENGTH)ulLength);
     #if defined KBOOT_SECURE_LOADER                                      // {34}
-                        fnPrepareDecrypt();                              // prepare AES-256 decryption key and initial vector
+                        fnPrepareDecrypt(0);                             // prepare AES-256 decryption key and initial vector
     #endif
     #if defined ADD_FILE_OBJECT_AFTER_LOADING
                         fileObjInfo.ptrLastAddress = 0;
