@@ -246,7 +246,7 @@ typedef struct
     static const CHAR cProcessorName[] = TARGET_HW;                      // processor/board name for reporting/display use
 #endif
 
-#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER || defined SDCARD_SECURE_LOADER
     static const CHAR decrypt_key[] = "aes256 secret key";
     #define PRIME_AES256_INITIAL_VECTOR
     #if defined PRIME_AES256_INITIAL_VECTOR
@@ -1067,7 +1067,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 }
 
-#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER  // {34}
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER || defined SDCARD_SECURE_LOADER // {34}
 
 typedef struct stALIGNED_KEY
 {

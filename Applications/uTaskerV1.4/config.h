@@ -30,6 +30,7 @@
 //#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
+//#define EXTERNAL_TEST
 //#define QUICK_DEV_TASKS                                                // add 4 additional tasks for simple and quick development use (located at the end of appication.c)
 
 //#define RUN_IN_FREE_RTOS                                               // use uTasker in a FreeRTOS task to benefit from both worlds!
