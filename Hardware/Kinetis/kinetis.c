@@ -430,10 +430,6 @@ static void disable_watchdog(void)
 //
 extern int main(void)
 {
-#if defined MULTISTART
-    MULTISTART_TABLE *prtInfo;
-    unsigned char *pucHeapStart;
-#endif
 #if defined (_COMPILE_IAR)
     if (__sfe(".bss") > __sfe(".data")) {                                // set last used SRAM address
         ptrTopOfUsedMemory = __sfe(".bss");
