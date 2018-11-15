@@ -19,6 +19,7 @@
     Its goal is to improve overall readability of the hardware interface.
     19.08.2017 Correct chip select control of multiple SPI devices       {1}
     12.11.2018 Added FIFO depth control                                  {2}
+    14.11.2018 Correct discarded byte counts when no FIFO is available   {3}
 
 */
 
@@ -147,7 +148,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #define ulChipSelectLineSim CS0_LINE
     #define iChipSelect 0
     #endif
-    int iEraseCommand = 0;
+    int iEraseWriteCommand = 0;
     MAX_FILE_LENGTH dummyWrites  = 0;
     MAX_FILE_LENGTH dataWrites   = 0;
     MAX_FILE_LENGTH discardCount = 0;
@@ -159,7 +160,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
             fnSPI_command(READ_STATUS_REGISTER, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
-        } while (ucStatus & STATUS_BUSY);                                // until no longer busy
+        } while ((ucStatus & STATUS_BUSY) != 0);                         // until no longer busy
     }
 
     SET_SPI_FLASH_MODE();
@@ -168,26 +169,32 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
+    WRITE_SPI_CMD0(ucCommand);                                           // write command byte
     switch (ucCommand) {
     case SUB_SECTOR_ERASE:
     case HALF_SECTOR_ERASE:
     case SECTOR_ERASE:
-        iEraseCommand = 1;
+        iEraseWriteCommand = 1;
+        // Fall-through intentionally
+        //
     case BYTE_PROG:
     case AAI_WORD_PROG:
         SPI_FLASH_Danger[iChipSelect] = 1;                               // a write/erase will be started so we need to poll the status before next command
         dataWrites = DataLength;
+        iEraseWriteCommand |= 0x02;
+        // Fall-through intentionally
+        //
     case READ_ID:
     case READ_DATA_BYTES:                                                // 25MHz read - first setting the address and then reading the defined amount of data bytes
-        WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
+        CLEAR_RECEPTION_FLAG();
     #endif
-        if ((DataLength != 0) || (iEraseCommand != 0)) {
+        if ((DataLength != 0) || ((iEraseWriteCommand & 0x1) != 0)) {
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 16));   // write parameters
     #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
@@ -195,15 +202,23 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
+            CLEAR_RECEPTION_FLAG();
     #endif
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));    // send page number offset
     #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
+            discardCount = 1;                                            // {3}
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
+            CLEAR_RECEPTION_FLAG();
+    #else
+            discardCount = 4;
     #endif
+            if (iEraseWriteCommand == 0x02) {
+                discardCount += DataLength;
+            }
             if (DataLength == 0) {
                 WRITE_SPI_CMD0_LAST((unsigned char)(ulPageNumberOffset));// send page number offset
             }
@@ -216,7 +231,6 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             if (dataWrites == 0) {
                 dummyWrites = DataLength;
             }
-            discardCount = 4;
         }
         else {                                                           // no address is required in this case since we are in an AAI sequence
     #if defined SST25_A_VERSION
@@ -228,11 +242,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
         #endif
         #if (SPI_FLASH_FIFO_DEPTH < 2)
+            discardCount = 2;
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
+            CLEAR_RECEPTION_FLAG();
+        #else
+            discardCount = 3;
         #endif
             WRITE_SPI_CMD0_LAST(*ucData);
-            discardCount = 3;
     #endif
     #if defined _WINDOWS
             fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
@@ -241,37 +258,38 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case READ_MANUFACTURER_ID:
-        WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
+        CLEAR_RECEPTION_FLAG();
+    #else
+        discardCount = 1;
     #endif
         WRITE_SPI_CMD0(0xff);                                            // ensure transmit FIFO has more than one byte in it
         dummyWrites = 2;
-        discardCount = 1;
         break;
 
     case READ_STATUS_REGISTER:                                           // read single byte from status register
-        WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
+        CLEAR_RECEPTION_FLAG();
+    #else
+        discardCount = 1;
     #endif
         WRITE_SPI_CMD0_LAST(0xff);                                       // ensure transmit FIFO has more than one byte in it
-        discardCount = 1;
         break;
 
     case BULK_ERASE:                                                     // command without further data
     case WRITE_DISABLE:
     case WRITE_ENABLE:
     case ENABLE_WRITE_STATUS_REG:
-        WRITE_SPI_CMD0_LAST(ucCommand);                                  // write single command byte
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
@@ -279,20 +297,25 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         break;
 
     case WRITE_STATUS_REGISTER:
-        WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
+        CLEAR_RECEPTION_FLAG();
+        discardCount = 1;                                                // {3}
+    #else
+        discardCount = 2;
     #endif
-        WRITE_SPI_CMD0_LAST(ucCommand);                                  // write new value
+        WRITE_SPI_CMD0_LAST(*ucData);                                    // write new value
     #if defined _WINDOWS
         fnSimSST25(SST25_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
-        discardCount = 2;
         DataLength = 0;
+        break;
+    default:
+        _EXCEPTION("Invalid command!");
         break;
     }
 
@@ -366,6 +389,7 @@ static unsigned char fnCheckSST25xxx(void)
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
     fnSPI_command(READ_MANUFACTURER_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
+    ucReturnType = SST25VF040B;
     if ((ucID[0] == MANUFACTURER_ID_SST) && (ucID[1] == SPI_FLASH_DEVICE_TYPE)) { // SST memory part recognised
         switch (ucID[2]) {
         case DEVICE_ID_1_DATA_SST_FLASH_4M:                              // 4Mbit/0.5Meg byte
