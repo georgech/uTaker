@@ -351,6 +351,7 @@
 #define RX_ACTIVE_FIRST_READ        SEND_XON
 #define I2C_SLAVE_TX_BUFFER_MODE    SEND_XOFF
 #define I2C_SLAVE_RX_MESSAGE_MODE   SEND_XOFF                            // {65}
+#define WAIT_FINAL_BYTE_TRANSMISSION ESCAPE_SEQUENCE
 
 // I2C speeds
 //

@@ -129,6 +129,8 @@ extern void fnInitHW(void);
     #else
         #define _PORTS_AVAILABLE (PORTS_AVAILABLE + 1) 
     #endif
+#elif _STM32
+    #define _PORTS_AVAILABLE      PORTS_AVAILABLE
 #else
     #define _PORTS_AVAILABLE      (PORTS_AVAILABLE + 1)                  // add dedicated ADC port
 #endif

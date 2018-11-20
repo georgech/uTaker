@@ -4683,7 +4683,7 @@ typedef struct stUSART_REG
   #define I2C_SR1_AF                    0x0400                                         // acknowledge failure (cleared by writing 0)
   #define I2C_SR1_OVR                   0x0800                                         // overrun/underrun (cleared by writing 0)
   #define I2C_SR1_PECERR                0x1000                                         // PEC error in reception (cleared by writing 0)
-  #define I2C_SR1_TIMEOUT               0x4000                                         // timeout or tlow error (cleared by writing 0)
+  #define I2C_SR1_TIMEOUT               0x4000                                         // timeout or Tlow error (cleared by writing 0)
   #define I2C_SR1_SMBALERT              0x8000                                         // SMBus alert (cleared by writing 0)
 #define I2C1_SR2                        *(volatile unsigned long *)(I2C1_BLOCK + 0x18) // I2C Status Register 2 I2C 1 (read-only))
   #define I2C_SR2_MSL                   0x0001                                         // master mode
@@ -4691,7 +4691,7 @@ typedef struct stUSART_REG
   #define I2C_SR2_TRA                   0x0004                                         // transmitter/receiver
   #define I2C_SR2_GENCALL               0x0010                                         // general call address (slave mode)
   #define I2C_SR2_SMBDEFAULT            0x0020                                         // SMBus device default address (slave mode)
-  #define I2C_SR2_SMBHOST               0x0040                                         // SMBus host heaber (slave mode)
+  #define I2C_SR2_SMBHOST               0x0040                                         // SMBus host header (slave mode)
   #define I2C_SR2_DUALF                 0x0080                                         // dual flag (slave mode)
   #define I2C_SR2_PEC_MASK              0xff00                                         // packet error checking register
 #define I2C1_CCR                        *(volatile unsigned long *)(I2C1_BLOCK + 0x1c) // I2C Clock Control Register I2C 1 (configure only when I2C controller is disabled)
@@ -8099,6 +8099,9 @@ typedef struct stADC_SETUP
     #define CHIP_HAS_LPUARTS     0
     #define CHIP_HAS_I2C         2
 #endif
+
+#define I2C_AVAILABLE            CHIP_HAS_I2C                            // for compatibility
+#define LPI2C_AVAILABLE          0                                       // for compatibility (low power I2C interfaces)
 
 #define PORT_WIDTH       16
 

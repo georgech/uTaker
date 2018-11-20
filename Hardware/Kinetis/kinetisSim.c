@@ -306,7 +306,7 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00000030,                                                          // port C disabled default pins
     0x0000009d,                                                          // port D disabled default pins
     0x03000000                                                           // port E disabled default pins
-#elif defined KINETIS_KV30 || defined KINETIS_KV50
+#elif defined KINETIS_KV30 || defined KINETIS_KV40 || defined KINETIS_KV50
     0x0001f020,                                                          // port A disabled default pins
     0x00ff0200,                                                          // port B disabled default pins
     0x0007f030,                                                          // port C disabled default pins
@@ -379,6 +379,22 @@ static void fnSetDevice(unsigned long *port_inits)
     #endif
 #endif
 
+#if defined FLASH_CONTROLLER_FTMRE
+    FTMRH_FSTAT = FTMRH_STAT_CCIF;
+    FTMRH_FSEC = KINETIS_FLASH_CONFIGURATION_SECURITY;
+    FTMRH_FPROT = KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT;
+    FTMRH_FOPT = KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION;
+#else
+    FTFL_FSTAT = FTFL_STAT_CCIF;                                        // flash controller
+    FTFL_FSEC = KINETIS_FLASH_CONFIGURATION_SECURITY;
+    FTFL_FOPT = KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION;
+    FTFL_FEPROT = KINETIS_FLASH_CONFIGURATION_EEPROM_PROT;
+    FTFL_FDPROT = KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT;
+    FTFL_FPROT0 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 24);
+    FTFL_FPROT1 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 16);
+    FTFL_FPROT2 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 8);
+    FTFL_FPROT3 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION);
+#endif
 #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000) // {26}
     #if defined KINETIS_KL28
     RCM_VERID = 0x03000003;
@@ -584,7 +600,16 @@ static void fnSetDevice(unsigned long *port_inits)
     SIM_SCGC5 = 0x00040180;
     SIM_SCGC6 = SIM_SCGC6_FTFL;
     SIM_SCGC7 = 0x00000100;
+    #if defined KINETIS_KV40
+    if ((FTFL_FOPT & FTFL_FOPT_LPBOOT_CLK_DIV_1) != 0) {
+        SIM_CLKDIV1 = (SIM_CLKDIV1_SYSTEM_1 | SIM_CLKDIV1_FAST_BUS_1 | SIM_CLKDIV1_BUS_2); // fast boot
+    }
+    else {
+        SIM_CLKDIV1 = (SIM_CLKDIV1_SYSTEM_8 | SIM_CLKDIV1_FAST_BUS_8 | SIM_CLKDIV1_BUS_16); // low power boot
+    }
+    #else
     SIM_CLKDIV1 = (SIM_CLKDIV1_BUS_2 | SIM_CLKDIV5_ADC_2);
+    #endif
 #elif !defined KINETIS_WITH_PCC
     SIM_SCGC6 = (0x40000000 | SIM_SCGC6_FTFL);
     #if defined KINETIS_HAS_IRC48M && !defined KINETIS_KL
@@ -733,22 +758,6 @@ static void fnSetDevice(unsigned long *port_inits)
     UART5_RWFIFO = 0x01;
     UART5_WP7816T0 = 0x0a;
     UART5_WF7816 = 0x01;
-#endif
-#if defined FLASH_CONTROLLER_FTMRE
-    FTMRH_FSTAT = FTMRH_STAT_CCIF;
-    FTMRH_FSEC  = KINETIS_FLASH_CONFIGURATION_SECURITY;
-    FTMRH_FPROT = KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT;
-    FTMRH_FOPT  = KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION;
-#else
-    FTFL_FSTAT  = FTFL_STAT_CCIF;                                        // flash controller
-    FTFL_FSEC   = KINETIS_FLASH_CONFIGURATION_SECURITY;
-    FTFL_FOPT   = KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION;
-    FTFL_FEPROT = KINETIS_FLASH_CONFIGURATION_EEPROM_PROT;
-    FTFL_FDPROT = KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT;
-    FTFL_FPROT0 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 24);
-    FTFL_FPROT1 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 16);
-    FTFL_FPROT2 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION >> 8);
-    FTFL_FPROT3 = (unsigned char)(KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION);
 #endif
 #if defined LPSPI_SPI
     LPSPI0_VERID = 0x01000004;
@@ -8918,10 +8927,17 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
                     fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC0, 0);  // handle DMA triggered on ADC0 conversion
     #endif
                     if ((ADC0_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
+    #if defined irq_ADCA_ID
+                        if (fnGenInt(irq_ADCA_ID) != 0) {                // if ADCA interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_ADCA();    // call the interrupt handler
+                        }
+    #else
                         if (fnGenInt(irq_ADC0_ID) != 0) {                // if ADC0 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_ADC0();    // call the interrupt handler
                         }
+    #endif
                     }
                 }
             }
@@ -8940,10 +8956,17 @@ static void fnTriggerADC(int iADC, int iHW_trigger)
                 if ((ADC1_SC1A & ADC_SC1A_COCO) != 0) {                  // {40} if conversion has completed
                     fnHandleDMA_triggers(DMAMUX0_CHCFG_SOURCE_ADC1, 0);  // handle DMA triggered on ADC1 conversion
                     if ((ADC1_SC1A & ADC_SC1A_AIEN) != 0) {              // end of conversion interrupt enabled
+        #if defined irq_ADCB_ID
+                        if (fnGenInt(irq_ADCB_ID) != 0) {                // if ADCB interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_ADCB();    // call the interrupt handler
+                        }
+        #else
                         if (fnGenInt(irq_ADC1_ID) != 0) {                // if ADC1 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_ADC1();    // call the interrupt handler
                         }
+        #endif
                     }
                 }
             }
@@ -11645,6 +11668,8 @@ extern void fnUpdateOperatingDetails(void)
     }
     #elif defined KINETIS_KV10
     ulBusClockSpeed = (SYSTEM_CLOCK/(((SIM_CLKDIV1 >> 16) & 0x7) + 1));
+    #elif defined KINETIS_KV40
+    ulBusClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
     #elif defined KINETIS_KE
         #if defined SIM_CLKDIV
 	ulBusClockSpeed = ICSOUT_CLOCK;
@@ -11681,7 +11706,7 @@ extern void fnUpdateOperatingDetails(void)
         ptrBuffer = uStrcpy(ptrBuffer, " [HS-RUN]");
     }
     #endif
-    #if !defined BUS_FLASH_CLOCK_SHARED                                  // in these devices the bus and flash clock are the same
+    #if !defined BUS_FLASH_CLOCK_SHARED                                   // in these devices the bus and flash clock are independent
     ptrBuffer = uStrcpy(ptrBuffer, ", FLASH CLOCK = ");
     ulFlashClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 16) & 0xf) + 1));
     ptrBuffer = fnBufferDec(ulFlashClockSpeed, 0, ptrBuffer);
@@ -11690,6 +11715,10 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = uStrcpy(ptrBuffer, ", FLEXBUS CLOCK = ");
     ulFlashClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 20) & 0xf) + 1));
     ptrBuffer = fnBufferDec(ulFlashClockSpeed, 0, ptrBuffer);
+    #endif
+    #if defined FAST_PERIPHERAL_CLOCK_DIVIDE
+    ptrBuffer = uStrcpy(ptrBuffer, ", FAST PERIPHERAL CLOCK = ");
+    ptrBuffer = fnBufferDec((MCGOUTCLK/(((SIM_CLKDIV1 >> 24) & 0xf) + 1)), 0, ptrBuffer);
     #endif
     fnPostOperatingDetails(cOperatingDetails);
 #endif

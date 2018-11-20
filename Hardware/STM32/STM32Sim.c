@@ -673,7 +673,7 @@ extern unsigned long fnSimInts(char *argv[])
             else {
 #if defined I2C_INTERFACE
 		        iInts &= ~I2C_INT0;
-                if (I2C1_CR2 |= (I2C_CR2_ITBUFEN)) {                     // if tx interrupts enabled
+                if ((I2C1_CR2 & (I2C_CR2_ITBUFEN)) != 0) {               // if tx interrupts enabled
                     if (IRQ0_31_SER & (1 << irq_I2C1_EV_ID)) {           // if I2C1 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_I2C1_EV();     // call the interrupt handler
                     }
@@ -691,7 +691,7 @@ extern unsigned long fnSimInts(char *argv[])
             else {
 #if defined I2C_INTERFACE
 		        iInts &= ~I2C_INT1;
-                if (I2C2_CR2 |= (I2C_CR2_ITBUFEN)) {                     // if tx interrupts enabled
+                if ((I2C2_CR2 & (I2C_CR2_ITBUFEN)) != 0) {               // if tx interrupts enabled
                     if (IRQ32_63_SER & (1 << (irq_I2C2_EV_ID - 32))) {   // if I2C2 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_I2C2_EV();     // call the interrupt handler
                     }
@@ -710,12 +710,21 @@ extern unsigned long fnSimInts(char *argv[])
             else {
 #if defined I2C_INTERFACE
 		        iInts &= ~I2C_INT2;
-                if (I2C3_CR2 |= (I2C_CR2_ITBUFEN)) {                     // if tx interrupts enabled
+                I2C3_SR1 |= I2C_SR1_TxE;                                 // transmitter buffer empty
+                I2C3_SR1 &= ~(I2C_SR1_BTF);                              // transfer not yet complete
+                if ((I2C3_CR2 & (I2C_CR2_ITBUFEN)) != 0) {               // if tx interrupts enabled
                     if (IRQ64_95_SER & (1 << (irq_I2C3_EV_ID - 64))) {   // if I2C3 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_I2C3_EV();     // call the interrupt handler
                     }
                 }
-
+                if ((iInts & I2C_INT2) == 0) {
+                    I2C3_SR1 |= (I2C_SR1_BTF | I2C_SR1_SB);              // transfer complete or start complete
+                    if ((I2C3_CR2 & (I2C_CR2_ITEVTEN)) != 0) {           // if event interrupts enabled
+                        if (IRQ64_95_SER & (1 << (irq_I2C3_EV_ID - 64))) { // if I2C3 interrupt is not disabled
+                            ptrVect->processor_interrupts.irq_I2C3_EV(); // call the interrupt handler
+                        }
+                    }
+                }
 #endif
             }
         }

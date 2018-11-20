@@ -32,18 +32,25 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-    #define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
+  //#define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
       //#define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_FM24CL16B                                               // test 2k FRAM (add #define FM24CL16B_PRESENT to app_hw_xxx.h for simulation support)
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
   //#define TEST_SENSIRION                                               // test reading temperature and humidity 
   //#define TEST_MMA8451Q                                                // test monitoring the 3-axis accelerometer
+    #define TEST_DS1621                                                  // temperature sensor
     #if defined TEST_MMA8451Q
         #define MMA8451Q_14BIT_RES
       //#define INTERRUPT_ON_READY                                       // enable tap detection and interrupt
     #endif
   //#define TEST_MMA7660F                                                // test monitoring the 3-axis accelerometer
+
+    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 || defined TEST_DS1621
+        #define I2C_TEST_CODE_ENABLED                                    // enable general I2C test code
+    #endif
+
+
     #if RX_BUFFER_SIZE >= 112                                            // avoid using FXOS870 if the application task's input buffer is not adequately large
       //#define TEST_FXOS8700                                            // test monitoring the 6-axis sensor
         #if defined TEST_FXOS8700
@@ -74,6 +81,14 @@
 
         #define STATE_INIT_RTC            0x01                           // in the process of initialising the RTC
         #define STATE_GET_RTC             0x02                           // in the process of retrieving the present time
+    #endif
+    #if defined TEST_DS1621
+        #define ADD_TEMPERATURE_WRITE     0x90
+        #define ADD_TEMPERATURE_READ      0x91
+        #define GETTEMP                   0xaa
+        #define CMDTEMP                   0xac
+        #define FREERUNT                  0x00
+        #define STARTCONV                 0xee
     #endif
     #if defined TEST_SENSIRION
         #define ADDSHT21_READ             0x81                           // read address of SHT21
@@ -197,6 +212,7 @@
     #define ACC_TRIGGERED                 3                              // accelerometer has interrupted so we should read data
     #define ACC_MAGNETOMETER              4                              // reading magnetic data
 
+
 /* =================================================================== */
 /*                      local structure definitions                    */
 /* =================================================================== */
@@ -219,7 +235,7 @@
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B ||defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
+    #if defined I2C_TEST_CODE_ENABLED
         static void fnConfigI2C_Interface(void);
     #endif
     #if defined TEST_MMA8451Q && defined INTERRUPT_ON_READY
@@ -231,7 +247,7 @@
         static void fnSetTimeStruct(unsigned char *ucInputMessage);
         static void seconds_interrupt(void);
     #endif
-    #if defined TEST_SENSIRION
+    #if defined TEST_SENSIRION || defined TEST_DS1621
         static void fnNextSensorRequest(void);
     #endif
 
@@ -239,7 +255,7 @@
 /*                     global variable definitions                     */
 /* =================================================================== */
 
-    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700
+    #if defined I2C_TEST_CODE_ENABLED
         QUEUE_HANDLE I2CPortID = NO_ID_ALLOCATED;                        // handle of I2C interface (global so that the debug task can access it)
     #endif
 
@@ -320,7 +336,7 @@
 #endif
 
 
-#if defined _I2C_INIT_CODE && (defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_I2C_SLAVE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700)
+#if defined _I2C_INIT_CODE && defined I2C_TEST_CODE_ENABLED
 
     #if defined TEST_I2C_SLAVE
     #define I2C_RAM_IDLE              0                                  // RAM pointer states
@@ -415,6 +431,12 @@ static void fnConfigI2C_Interface(void)
         iRTC_state = STATE_INIT_RTC;                                     // mark that we are initialising
         #elif defined TEST_SENSIRION
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(4.0 * SEC), E_NEXT_SENSOR_REQUEST); // start reading sequence after a delay
+        #elif defined TEST_DS1621
+        static const unsigned char ucStartTemperature[] = { ADD_TEMPERATURE_WRITE, CMDTEMP, FREERUNT };
+        static const unsigned char ucStartConversion[] = { ADD_TEMPERATURE_WRITE, STARTCONV };
+        fnWrite(I2CPortID, (unsigned char *)ucStartTemperature, sizeof(ucStartTemperature)); // initialise temperature sensor in free running mode
+        fnWrite(I2CPortID, (unsigned char *)ucStartConversion, sizeof(ucStartConversion)); // atart free-running conversions
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(1.0 * SEC), E_NEXT_SENSOR_REQUEST); // start reading sequence after a delay
         #elif (defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700) // {1}
         fnWrite(I2CPortID, (unsigned char *)ucSetAccelerometerAddress, sizeof(ucSetAccelerometerAddress)); // write the register address to read from
         fnRead(I2CPortID, (unsigned char *)ucReadAccelerometerRegisters, 0); // start the read process of the required amount of bytes
@@ -718,6 +740,23 @@ static void acc_data_ready(void)
             break;
         }
     }
+#elif defined _I2C_READ_CODE && defined TEST_DS1621
+    if (fnRead(I2CPortID, ucInputMessage, 2) != 0) {                     // one result at a time, always 2 bytes in length
+        if ((ucInputMessage[1] == 0x00) || (ucInputMessage[1] == 0x80)) { // by checking whether the half °C value is valid it is possible to check whether the chip read was OK
+            fnDebugMsg("Temp. = ");
+            fnDebugDec((signed long)ucInputMessage[0], DISPLAY_NEGATIVE);
+            if (ucInputMessage[1] == 0x80) {
+                fnDebugMsg(".5 C\r\n");
+            }
+            else {
+                fnDebugMsg(".0 C\r\n");
+            }
+            uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(5 * SEC), E_NEXT_SENSOR_REQUEST); // measure again in 5 second - the sensor is in free run mode to will always be ready
+        }
+        else {
+            fnDebugMsg("DS1621 not detected!\r\n");
+        }
+    }
 #elif defined _I2C_READ_CODE && (defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700) // {1}
     switch (iAccelerometerState) {
     case ACC_INITIALISING:
@@ -886,16 +925,23 @@ static void acc_data_ready(void)
 #endif
 
 
-#if defined _I2C_SENSOR_CODE && defined TEST_SENSIRION
+#if defined _I2C_SENSOR_CODE && (defined TEST_SENSIRION || defined TEST_DS1621)
 // This routine is called at a periodic rate to start next sensor value requests
 //
 static void fnNextSensorRequest(void)
 {
+    #if defined TEST_DS1621
+    static const unsigned char ucGetTemp[] = { ADD_TEMPERATURE_WRITE, GETTEMP };
+    static const unsigned char ucRead_temperature[] = { 2, ADD_TEMPERATURE_READ, OWN_TASK };
+    fnWrite(I2CPortID, (unsigned char *)ucGetTemp, sizeof(ucGetTemp));
+    fnRead(I2CPortID, (unsigned char *)&ucRead_temperature, 0);          // start the read process of 2 bytes
+    #else
     static const unsigned char ucTriggerTemperatur[] = {ADDSHT21_WRITE, TRIGGER_TEMPERATURE_HOLD_MASTER};
     static const unsigned char ucReadTemperature[] = {3, ADDSHT21_READ, OWN_TASK};
     fnWrite(I2CPortID, (unsigned char *)ucTriggerTemperatur, sizeof(ucTriggerTemperatur));
     fnRead(I2CPortID, (unsigned char *)ucReadTemperature, 0);            // start the read process of temperature
     iSensor_state = STATE_READING_TEMPERATURE;                           // mark that we expect the temperature result
+    #endif
 }
 #endif
 

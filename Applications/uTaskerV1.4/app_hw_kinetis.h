@@ -204,7 +204,7 @@
         #endif
         #define OSC_LOW_GAIN_MODE
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
         #if defined USE_HIGH_SPEED_RUN_MODE                              // high speed run mode allow faster operation but can't program/erase flash
             #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
@@ -308,7 +308,7 @@
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
     #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
     #if defined USE_HIGH_SPEED_RUN_MODE
         #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
         #define FLEX_CLOCK_DIVIDE    11                                  // 220/11 to give 20MHz
@@ -345,9 +345,9 @@
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
     #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #if defined USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+    #if defined USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
         #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
         #define FLEX_CLOCK_DIVIDE    2                                   // 150/2 to give 75MHz
         #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
@@ -395,7 +395,7 @@
         #endif
         #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
     #endif
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined FRDM_KV31F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
@@ -409,6 +409,30 @@
         #define FLEX_CLOCK_DIVIDE    1                                   // 
         #define FLASH_CLOCK_DIVIDE   1                                   // 
         #define BUS_CLOCK_DIVIDE     1                                   // 
+    #endif
+#elif defined TWR_KV46F150M
+  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
+    #if !defined RUN_FROM_DEFAULT_CLOCK
+        #define OSC_LOW_GAIN_MODE
+        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
+        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+        #define CLOCK_DIV            1                                   // input must be divided to 8MHz..16MHz range (/1 to /8)
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
+        #if defined USE_HIGH_SPEED_RUN_MODE                              // 150MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
+            #define CLOCK_MUL            37                              // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible) - VCO must be between 180MHz and 360MHz
+            #define SYSTEM_CLOCK_DIVIDE  1                               // 148MHz/1 (1..16)
+            #define FAST_PERIPHERAL_CLOCK_DIVIDE  1                      // 148MHz/1 (1..16)
+            #define FLASH_CLOCK_DIVIDE   6                               // 148/6 to give 24.667MHz (bus adn flash clock) (1..16)
+        #else
+            #define CLOCK_MUL            25                              // the PLL multiplication factor to achieve operating frequency of 100MHz (x16 to x47 possible) - VCO must be between 180MHz and 360MHz
+            #define SYSTEM_CLOCK_DIVIDE  1                               // 100MHz/1 (1..16)
+            #define FAST_PERIPHERAL_CLOCK_DIVIDE  1                      // 100MHz/1 (1..16)
+            #define FLASH_CLOCK_DIVIDE   4                               // 100MHz/4 to give 25MHz (bus and flash clock) (1..16)
+        #endif
+    #else
+        #define SYSTEM_CLOCK_DIVIDE  1
+        #define FAST_PERIPHERAL_CLOCK_DIVIDE  1
+        #define FLASH_CLOCK_DIVIDE   4
     #endif
 #elif defined TWR_K24F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
@@ -459,7 +483,7 @@
     #elif !defined RUN_FROM_DEFAULT_CLOCK
         #define OSC_LOW_GAIN_MODE
         #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal on board
-      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be disabled in config.h
+      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
         #if defined USE_HIGH_SPEED_RUN_MODE                              // 120 MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
             #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
             #define CLOCK_DIV            2                               // input must be divided to 2MHz..4MHz range (/1 to /24)
@@ -1094,11 +1118,19 @@
   //#define PACKAGE_TYPE        PACKAGE_QFN
     #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
     #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined FRDM_KV31F
   //#define PIN_COUNT           PIN_COUNT_64_PIN
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
     #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
+#elif defined TWR_KV46F150M
+  //#define PIN_COUNT           PIN_COUNT_48_PIN
+  //#define PIN_COUNT           PIN_COUNT_64_PIN
+    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
+    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
+  //#define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
+    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
+  //#define SIZE_OF_RAM         (24 * 1024)                              // 24k SRAM
 #elif defined TWR_KV58F220M
     #define PIN_COUNT           PIN_COUNT_144_PIN
   //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
@@ -1813,7 +1845,7 @@
     #define WRITE_SPI_CMD0_LAST(byte)       SPI1_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
     #define READ_SPI_FLASH_DATA()           (unsigned char)(SPI1_POPR)
     #define WAIT_SPI_RECEPTION_END()        while ((SPI1_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          OR_ONE_TO_CLEAR(SPI1_SR, SPI_SR_RFDF)
+    #define CLEAR_RECEPTION_FLAG()          SPI1_SR |= SPI_SR_RFDF
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #elif defined FRDM_KL46Z
@@ -2265,7 +2297,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #endif
     #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
     #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= SPI_SR_RFDF
+    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= (SPI_SR_RFDF)
             
     #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
     #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
@@ -2579,7 +2611,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #else
                 #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_ENABLED)
             #endif
-        #elif defined KINETIS_KV50
+        #elif defined KINETIS_KV40 || defined KINETIS_KV50
             #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_NMI_DISABLED)
         #else
             #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_8 | FTFL_FOPT_RESET_PIN_ENABLED)
@@ -2633,7 +2665,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M ||defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined tinyK22 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 || defined FRDM_KE15Z // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 || defined TWR_KV58F220M // {21}{22}{24}{25}
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 || defined TWR_KV46F150M || defined TWR_KV58F220M // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
         #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}

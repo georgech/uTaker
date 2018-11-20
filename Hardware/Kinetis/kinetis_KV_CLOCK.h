@@ -133,7 +133,11 @@
         MCG_S |= MCG_S_LOCK;
             #endif
     }
+            #if defined KINETIS_KV40
+    SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((FAST_PERIPHERAL_CLOCK_DIVIDE - 1) << 24) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus/flash clock divides
+            #else
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((BUS_CLOCK_DIVIDE - 1) << 24) | ((FLEX_CLOCK_DIVIDE - 1) << 20) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare bus clock divides
+            #endif
             #if defined HIGH_SPEED_RUN_MODE_AVAILABLE && defined HIGH_SPEED_RUN_MODE_REQUIRED
     SMC_PMCTRL = SMC_PMCTRL_RUNM_HSRUN;                                  // {118} set high speed run mode (restrictions apply) so that the clock speeds can be obtained  
             #endif

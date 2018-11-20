@@ -744,7 +744,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #if defined FREEMASTER_UART
         FreemasterPortID = fnOpenFreeMasterUART();                       // enable UART for FreeMaster use
 #endif
-#if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 // {56}
+#if defined I2C_TEST_CODE_ENABLED                                        // {56}
         fnConfigI2C_Interface();
 #endif
 #if defined USE_DHCP_CLIENT || defined USE_DHCP_SERVER || defined USE_ZERO_CONFIG
@@ -856,7 +856,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 }
                 break;
 #endif
-#if defined TEST_SENSIRION                                               // {56}
+#if defined TEST_SENSIRION || defined TEST_DS1621                        // {56}
             case E_NEXT_SENSOR_REQUEST:
                 fnNextSensorRequest();
                 break;

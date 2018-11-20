@@ -320,12 +320,20 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
                 return;
             }
             if (ptrADC_settings->int_adc_controller == 0) {
+    #if defined irq_ADCA_ID
+                irq_ADC_ID = irq_ADCA_ID;
+    #else
                 irq_ADC_ID = irq_ADC0_ID;
+    #endif
                 ptrADC = (KINETIS_ADC_REGS *)ADC0_BLOCK;
             }
     #if ADC_CONTROLLERS > 1
             else if (ptrADC_settings->int_adc_controller == 1) {
+    #if defined irq_ADCB_ID
+                irq_ADC_ID = irq_ADCB_ID;
+    #else
                 irq_ADC_ID = irq_ADC1_ID;
+    #endif
                 ptrADC = (KINETIS_ADC_REGS *)ADC1_BLOCK;
             }
     #endif

@@ -862,8 +862,6 @@
     #else
         #define OUR_I2_I2C_INIT_CODEC_CHANNEL     0                      // use I2C0 for demo (I2C1)
     #endif
-    #define NUMBER_I2C              CHIP_HAS_I2C                         // I2C channels available
-
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // {5} add alternative I2C multiplexing options
       //#define I2C1_ALT_PINS                                            // I2C1 on PB7 and PB8 rather than on PB6 and PB9
       //#define I2C2_ALT_PINS_1                                          // I2C2 on PF0 and PF1 rather than on PB10 and PB11
