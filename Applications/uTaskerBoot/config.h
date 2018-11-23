@@ -1007,7 +1007,9 @@
     #define ACTIVE_FILE_SYSTEM
 #endif
 
-#define SUPPORT_MIME_IDENTIFIER                                          // if the file type is to be handled (eg. when mixing HTML with JPGs etc.) this should be set - note that the file system header will be adjusted
+#if !defined PT_427
+    #define SUPPORT_MIME_IDENTIFIER                                      // if the file type is to be handled (eg. when mixing HTML with JPGs etc.) this should be set - note that the file system header will be adjusted
+#endif
 
 #if defined SPI_FILE_SYSTEM
     #define uFILE_START 0                                                // SPI starts at 0 offset

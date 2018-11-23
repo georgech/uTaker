@@ -3859,7 +3859,7 @@ typedef struct stVECTOR_TABLE
     #define CHECK_VECTOR_SIZE                268                         // (16 + 31 + 19 + 1) = 67) * 4 - adequate for this processor [0x10c]
 #elif defined KINETIS_KL82
     #define LAST_PROCESSOR_IRQ     irq_DMA0_7
-    #define CHECK_VECTOR_SIZE                304                         // (16 + 31 + 28) = 76) * 4 - adequate for this processor [0x130]
+    #define CHECK_VECTOR_SIZE                304                         // (16 + 32 + 28) = 76) * 4 - adequate for this processor [0x130]
 #elif defined KINETIS_KM
     #define LAST_PROCESSOR_IRQ     irq_XBAR
     #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]

@@ -1260,7 +1260,9 @@ static void fnConfigureUSB(void);                                        // rout
     static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsigned long ulSectorNumber);
     static unsigned long fnGetFileSize(const LFN_ENTRY_STRUCTURE_FAT32 *ptrLFN_entry);
     static int mass_storage_callback(unsigned char *ptrData, unsigned short length, int iType);
+    #if !defined FAT_EMULATION
     static void fnWriteFileObject(int iDisk);
+    #endif
     #if defined DEBUG_MAC
         static void fnDebugWrite(int iDisk, unsigned char *ptr_ucBuffer, unsigned long ulLogicalBlockAdr);
     #endif
@@ -1334,9 +1336,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #endif
         #if EMULATED_FAT_LUNS > 1
             #if defined MEMORY_SWAP
-        lun_information[[DISK_D]].ptr_disk_start[0] = (const unsigned char *)(FLASH_START_ADDRESS);
-        lun_information[[DISK_D]].ptr_root_location = (const unsigned char *)(((SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)));
-        lun_information[[DISK_D]].ptr_disk_end[0] = (const unsigned char *)(FLASH_START_ADDRESS + (UTASKER_APP_END - UTASKER_APP_START));
+        lun_information[DISK_D].ptr_disk_start[0] = (const unsigned char *)(FLASH_START_ADDRESS);
+        lun_information[DISK_D].ptr_root_location = (const unsigned char *)(((SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)));
+        lun_information[DISK_D].ptr_disk_end[0] = (const unsigned char *)(FLASH_START_ADDRESS + (UTASKER_APP_END - UTASKER_APP_START));
             #else
         lun_information[[DISK_D]].ptr_disk_start[0] = (const unsigned char *)(UTASKER_APP_START);
         lun_information[[DISK_D]].ptr_root_location = (const unsigned char *)(UTASKER_APP_START);
@@ -1568,7 +1570,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
                     fnWriteBytesFlash(0, 0, 0);                          // close any outstanding FLASH buffer from end of the file
         #endif
+        #if !defined FAT_EMULATION
                     fnWriteFileObject(iDisk);                            // update the file object that is saved before the firmware
+        #endif
                     iSoftwareState[iDisk] = SW_AVAILABLE;                // software upload completed
         #if !defined RESET_ON_EJECT && !defined MEMORY_SWAP
                     fnResetBoard();                                      // reset to start the new application

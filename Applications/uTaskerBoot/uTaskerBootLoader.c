@@ -376,8 +376,8 @@
         #define UTASKER_APP_START  (FLASH_START_ADDRESS + FLASH_GRANULARITY) // F1 devices reserve first sector in flash for boot loader and start the application after it
     #endif
     #if defined PT_427
-        #define uFILE_START        (unsigned char *)(0x081a0000)         // the address where the new application is located when present
-        #define FILE_SYSTEM_SIZE   (3 * FLASH_GRANULARITY)               // maximum size of new application (384k)
+        #define uFILE_START        (unsigned char *)(0x08140000)         // the address where the new application is located when present
+        #define FILE_SYSTEM_SIZE   (4 * FLASH_GRANULARITY)               // maximum size of new application (384k)
         #define NO_SECRET_KEY
         #define VALID_VERSION_MAGIC_NUMBER  0x56ab                       // magic number
     #else
@@ -578,7 +578,7 @@ extern MAIN_FUNCTION_TYPE uTaskerBoot(void)
     #if !defined _WINDOWS
     main_call();                                                         // call code
     #endif
-#elif defined _HW_AVR32 || defined _RX6XX || defined _KINETIS || defined _LM3SXXXX || defined _LPC17XX || (defined _M5223X && (defined _GNU || defined _COMPILE_IAR)) // {14}{17}{19}{20}{21}
+#elif defined STM32 || defined _HW_AVR32 || defined _RX6XX || defined _KINETIS || defined _LM3SXXXX || defined _LPC17XX || (defined _M5223X && (defined _GNU || defined _COMPILE_IAR)) // {14}{17}{19}{20}{21}
     start_application(UTASKER_CODE_START);                               // jump to the application
 #endif
 #if defined _COMPILE_KEIL || ((defined _LPC23XX || defined _LPC17XX || defined _HW_AVR32 || defined _HW_SAM7X) && defined _GNU)

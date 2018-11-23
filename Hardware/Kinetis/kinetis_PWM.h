@@ -687,7 +687,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
             if ((ulMode & FTM_SC_CPWMS) != 0) {                          // if center-aligned
                 ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency/2); // set the PWM period - valid for all channels of a single timer
-                ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = (ptrPWM_settings->pwm_value / 2); // set the duty cycle for the particular channel
+                ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = (ptrPWM_settings->pwm_value/2); // set the duty cycle for the particular channel
     #if defined _WINDOWS && defined FTM_MODE_FTMEN
                 if ((ulMode & PWM_COMBINED_PHASE_SHIFT) != 0) {          // {14}
                     _EXCEPTION("Combined channels are not possible in center-aligned mode!");

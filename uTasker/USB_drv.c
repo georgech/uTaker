@@ -176,7 +176,7 @@ static unsigned char  ucActiveConfiguration = 0;                         // pres
     static unsigned char config_descriptor[255] = {0};
     static unsigned char ucConfigDescriptorLength = 0;
     #if defined USB_STRING_OPTION
-        static unsigned char ucStringList[USB_MAX_STRINGS + 1][(USB_MAX_STRING_LENGTH + 1) * 2] = {{0}}; // unicode string space (first is language ID)
+        static unsigned char ucStringList[USB_MAX_STRINGS + 1][(USB_MAX_STRING_LENGTH + 1) * 2] = {{0}}; // uni-code string space (first is language ID)
         static int iStringReference = 0;
     #endif
 #endif
@@ -706,7 +706,7 @@ static int fnControlEndpoint(int iEndpoint, unsigned char ucCheck)       // {11}
         }
         if (fnGetUSB_HW(iEndpoint, &ptrUSB_HW) != ENDPOINT_FREE) {       // {28} get the next free buffer if possible
             //return tx_queue->usCompleteMessage;
-            break;                                                       // {6} no further buffer ready to accet data
+            break;                                                       // {6} no further buffer ready to accept data
         }
         usLength -= usAdditionalLength;                                  // remaining length to be queued
         ptrData += usAdditionalLength;
@@ -808,7 +808,7 @@ static void fnWakeBlockedTx(USBQUE *ptrUsbQueue, QUEUE_TRANSFER low_water)
 
 #if defined USB_HOST_SUPPORT                                             // {29}
     #if defined USB_STRING_OPTION                                        // requests strings if required
-// Search for next string in the device descriptor (it is assumed that they count from 1..max but the order is not important)
+// Search for next string in the device descriptor (it is assumed that they count from 1..max. but the order is not important)
 //
 static int fnNeedString(int iStringReference)
 {
@@ -930,7 +930,7 @@ static int fnHostEmumeration(int iEndpoint, int iEvent, USB_HW *ptrUSB_HW)
                 get_string.wIndex[0] = ucStringList[0][2];
                 get_string.wIndex[1] = ucStringList[0][3];
             }
-            get_string.wLength[0] = (unsigned char)((USB_MAX_STRING_LENGTH * 2) + 1); // length and unicode string
+            get_string.wLength[0] = (unsigned char)((USB_MAX_STRING_LENGTH * 2) + 1); // length and uni-code string
             get_string.wLength[1] = 0;
 
             ucRequestLengthRemaining = (unsigned char)(USB_MAX_STRING_LENGTH * 2); // up to maximum string length
@@ -1185,7 +1185,6 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
 #endif
 #if defined USB_DEVICE_SUPPORT                                           // {29}
                     if ((tx_queue->usCompleteMessage % tx_queue->usMax_frame_length) == 0) { // if the transmitted data length was divisible by the frame length
-                      //if ((tx_queue->usLimitLength != tx_queue->usCompleteMessage) || (fnControlEndpoint(iEndpoint, USB_CONTROL_ENDPOINT) == 0))
                         if ((tx_queue->usLimitLength != tx_queue->usCompleteMessage) || (fnControlEndpoint(iEndpoint, (USB_ENDPOINT_TERMINATES)) != 0)) // {26}
                         {
                             FNSEND_ZERO_DATA(ptrUSB_HW, iEndpoint);      // send a zero frame to terminate status stage
@@ -1219,7 +1218,7 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
                     if (ptrUsbQueue->endpoint_control->messageQueue != 0) { // {32} if in message mode
                         if ((tx_queue->ptrStart + tx_queue->usSent) > (ptrUsbQueue->USB_queue.buffer_end - tx_queue->usMax_frame_length)) { // if there is less that a complete endpoint size in the circular buffer
                             if (usRemaining > (ptrUsbQueue->USB_queue.buffer_end - (tx_queue->ptrStart + tx_queue->usSent))) { // if the remaining message required a message wrap-around
-                                tx_queue->ptrStart = (ptrUsbQueue->USB_queue.QUEbuffer - tx_queue->usSent); // set the start porinter to compenate for the message wrap-around
+                                tx_queue->ptrStart = (ptrUsbQueue->USB_queue.QUEbuffer - tx_queue->usSent); // set the start pointer to compensate for the message wrap-around
                             }
                         }
                     }
@@ -1915,7 +1914,7 @@ extern int fnSetUSBConfigState(int iCommand, unsigned char ucConfig)
     #endif
     uMemset(EndpointList, 0x00, sizeof(EndpointList));
 
-#if defined USE_USB_AUDIO && defined USE_USB_CDC // test (count all endpoints - also when they don't match the interface
+#if defined USE_USB_AUDIO && defined USE_USB_CDC                         // test (count all endpoints - also when they don't match the interface
     if (fnConfigInformation(ucConfig, 0xff, 0xff, EndpointList) == 0) {  // collect a list of endpoints belonging to all default interfaces of this configuration
         return 1;                                                        // not a valid configuration
     }
@@ -2022,5 +2021,4 @@ extern int fnGetPairedIN(int iEndpoint_OUT)                              // {16}
     usb_endpoint_queue += iEndpoint_OUT;
     return usb_endpoint_queue->ucPaired_IN;
 }
-
 #endif
