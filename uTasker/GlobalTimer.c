@@ -24,6 +24,7 @@
     24.05.2011 Make use of the uTaskerRemainingTime() routine            {8}
     24.06.2011 Code optimisations                                        {9}
     24.06.2011 Replace CLOCK_LIMIT with DELAY_LIMIT                      {10}
+    26.11.2018 Change uTaskerGlobalStopTimer() to return the remaining time when a timer is stopped (longest time remaining when stopping all timers) {11}
 
  */
 
@@ -329,13 +330,15 @@ extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsi
 
 // Stop a mono-stable timer belonging to calling task, with defined event number
 //
-extern void uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event)
+extern DELAY_LIMIT uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event)
 {
     TIMER_BLOCK *ptrTimer;
+    DELAY_LIMIT remaining_time = 0;                                      // {11}
 
-    if (time_out_event == 0) {                                           // {4} kill all timers belonging to the task
+    if (time_out_event == 0) {                                           // {4} kill all timers belonging to the task when a zero event is called with
         int iTimers = 0;
         TIMER_BLOCK *ptrTim = stTimer;
+        DELAY_LIMIT longest_remaining_time = 0;                          // {11}
 
         while (iTimers++ < TIMER_QUANTITY) {                             // search all timers belonging to the owner task
 #if defined GLOBAL_HARDWARE_TIMER
@@ -344,28 +347,33 @@ extern void uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_
             if (ptrTim->OwnerTask == OwnerTask)
 #endif
             {
-                if (ptrTim->ucEvent != 0) {                              // safety check before recursive call
-                    uTaskerGlobalStopTimer(ptrTim->OwnerTask, ptrTim->ucEvent);
+                if (ptrTim->ucEvent != 0) {                              // safety check before recursive call to stop the individual timer
+                    remaining_time = uTaskerGlobalStopTimer(ptrTim->OwnerTask, ptrTim->ucEvent);
+                    if (remaining_time > longest_remaining_time) {       // {11}
+                        longest_remaining_time = remaining_time;
+                    }
                 }
             }
             ptrTim++;
         }
-        return;
+        return longest_remaining_time;                                   // {11}
     }
 
     ptrTimer = fnGetOwnerTimer(OwnerTask, time_out_event);               // get the timer block
-    if (ptrTimer) {
+    if (ptrTimer != 0) {                                                 // if the timer was found
+        remaining_time = ptrTimer->TimerDelay;                           // {11} the time that is remaining until the timer would have fired
 #if defined GLOBAL_HARDWARE_TIMER
-        if (ptrTimer->OwnerTask & HARDWARE_TIMER) {                      // we need to stop a hardware timer
+        if ((ptrTimer->OwnerTask & HARDWARE_TIMER) != 0) {               // we need to stop a hardware timer
             ptrTimer->OwnerTask = (UTASK_TASK)HARDWARE_TIMER;            // we let the hardware timer continue since it is costing us nothing and will just be ignored when it fires
-            return;
+            return remaining_time;
         }
 #endif
-        ptrTimer->OwnerTask = 0;
-        if (!fnGetNotTimer(ptrTimer)) {
+        ptrTimer->OwnerTask = 0;                                         // remove the timer event
+        if (fnGetNotTimer(ptrTimer) == 0) {
             uTaskerStopTimer(OWN_TASK);                                  // since there are no other timers being used, simply stop the monostable timer
         }
     }
+    return remaining_time;                                               // {11}
 }
 
 // The global timer task's timer has fired

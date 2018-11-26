@@ -102,6 +102,7 @@
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {83}
     01.06.2018 Add optional interrupt callbacks receptionHandler(), receiveBreakHandler() and frameCompleteHandler() {84}
     10.08.2018 Add uStrstr() and uStrstrCaseInsensitive()                {85}
+    26.11.2018 Change uTaskerGlobalStopTimer() return parameter          {86}
 
 */
 
@@ -1084,7 +1085,7 @@ extern CHAR *uStrstr(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch);
 extern CHAR *uStrstrCaseInsensitive(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // 85}
 
 extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event);
-extern void uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event);
+extern DELAY_LIMIT uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event); // {86}
 #define HARDWARE_TIMER 0x80
 extern void fnSetFuncTask(void (*function)(unsigned char ucEvent));
 
