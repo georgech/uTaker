@@ -1228,7 +1228,7 @@ static void fnINTMUX3(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {73}
-#if defined ARM_MATH_CM0PLUS                                             // only long word acesses are possible to the priority registers
+#if defined ARM_MATH_CM0PLUS                                             // only long word accesses are possible to the priority registers
     volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
     int iShift;
 #else

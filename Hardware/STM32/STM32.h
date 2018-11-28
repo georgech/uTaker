@@ -37,6 +37,7 @@
     31.08.2017 Add ADC                                                   {22}
     16.10.2017 Modify the timer frequency value to give the frequency for a square wave cycle rather than a period {23}
     17.10.2017 Timer calculations changed to reference PCLK1 rather than PCLK2 {24}
+    28.11.2018 Add fnSetFlashOption() prototype                          {25}
 
 */
 
@@ -83,6 +84,8 @@ extern unsigned short _fnMIIread(unsigned char _mradr);
 extern void _fnMIIwrite(unsigned char _mradr, unsigned short _mwdata);
 
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
+
+extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1); // {25}
 
 #define _MALLOC_ALIGN                                                    // support malloc with align option since LAN memory should be on specific boundary
 #define _ALIGN_HEAP_4                                                    // all heap blocks are aligned
@@ -4189,10 +4192,10 @@ typedef struct stSTM32_ADC_REGS
     #else
         #define FLASH_ACR_HLFCYA             0x00000008                  // half-cycle enabled
     #endif
-    #define FLASH_KEYR                       *(volatile unsigned long *)(FMI_BLOCK + 0x04)
+    #define FLASH_KEYR                       *(volatile unsigned long *)(FMI_BLOCK + 0x04) // key register to allow access to the flash control register (and thus program and erase operations)
         #define FLASH_KEYR_KEY1                0x45670123
         #define FLASH_KEYR_KEY2                0xcdef89ab
-    #define FLASH_OPTKEYR                    *(unsigned long *)(FMI_BLOCK + 0x08)
+    #define FLASH_OPTKEYR                    *(unsigned long *)(FMI_BLOCK + 0x08) // option key register to alow programming and erase operations in the user configuration sector
         #define FLASH_OPTKEYR_KEY1             0x08192a3b
         #define FLASH_OPTKEYR_KEY2             0x4c5d6e7f
     #define FLASH_SR                         *(volatile unsigned long *)(FMI_BLOCK + 0x0c)
@@ -4256,7 +4259,42 @@ typedef struct stSTM32_ADC_REGS
         #define FLASH_CR_EOPIE           0x00001000                      // end of operation interrupt enable
     #endif
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-        #define FLASH_OPTCR              *(volatile unsigned long *)(FMI_BLOCK + 0x14) // FLASH Option Control Register
+        #define FLASH_OPTCR              *(volatile unsigned long *)(FMI_BLOCK + 0x14) // FLASH Option Control Register (loaded from flash options at reset)
+            #define FLASH_OPTCR_OPTLOCK  0x00000001                      // FLASH_OPTCR register is locked (write to '1' only)
+            #define FLASH_OPTCR_OPTSTRT  0x00000002                      // option start (write to '1' only)
+            #define FLASH_OPTCR_BOR_LEV_3       0x00000000               // brown-out reset level 3
+            #define FLASH_OPTCR_BOR_LEV_2       0x00000004               // brown-out reset level 2
+            #define FLASH_OPTCR_BOR_LEV_1       0x00000008               // brown-out reset level 1
+            #define FLASH_OPTCR_BOR_LEV_OFF     0x0000000c               // brown-out reset off
+            #if defined _STM32F42X || defined _STM32F43X
+                #define FLASH_OPTCR_BFB2 0x00000010                      // dual-bank boot option (this must be kept cleared when DB1M is 0)
+            #endif
+            #define FLASH_OPTCR_USER_WDG_SW     0x00000020               // user option bytes - watchdog software mode
+            #define FLASH_OPTCR_USER_nRST_STOP  0x00000040               // user option bytes
+            #define FLASH_OPTCR_USER_nRST_STDBY 0x00000080               // user option bytes
+            #define FLASH_OPTCR_RDP_LEVEL_0     0x0000aa00               // read protect level 0
+            #define FLASH_OPTCR_RDP_LEVEL_1     0x00000000               // read protect level 1
+            #define FLASH_OPTCR_RDP_LEVEL_2     0x0000cc00               // read protect level 2
+            #define FLASH_OPTCR_nWRP0    0x00010000                      // sector 0 not write protected
+            #define FLASH_OPTCR_nWRP1    0x00020000                      // sector 1 not write protected
+            #define FLASH_OPTCR_nWRP2    0x00040000                      // sector 2 not write protected
+            #define FLASH_OPTCR_nWRP3    0x00080000                      // sector 3 not write protected
+            #define FLASH_OPTCR_nWRP4    0x00100000                      // sector 4 not write protected
+            #define FLASH_OPTCR_nWRP5    0x00200000                      // sector 5 not write protected
+            #define FLASH_OPTCR_nWRP6    0x00400000                      // sector 6 not write protected
+            #define FLASH_OPTCR_nWRP7    0x00800000                      // sector 7 not write protected
+            #define FLASH_OPTCR_nWRP8    0x01000000                      // sector 8 not write protected
+            #define FLASH_OPTCR_nWRP9    0x02000000                      // sector 9 not write protected
+            #define FLASH_OPTCR_nWRP10   0x04000000                      // sector 10 not write protected
+            #define FLASH_OPTCR_nWRP11   0x08000000                      // sector 11 not write protected
+        #if defined _STM32F42X || defined _STM32F43X
+            #define FLASH_OPTCR_DB1M     0x40000000                      // dual bank on 1Mbyte flash memory devices
+            #define FLASH_OPTCR_SPRMOD   0x80000000                      // nWPRi used for PCROP (read-out) protection instead of write protection
+            #define FLASH_OPTCR_SETTING_MASK    (0xcffffffc)
+        #else
+            #define FLASH_OPTCR_SETTING_MASK    (0x0fffffec)
+        #endif
+            #define DEFAULT_FLASH_OPTION_SETTING (FLASH_OPTCR_OPTLOCK | FLASH_OPTCR_BOR_LEV_OFF | FLASH_OPTCR_USER_nRST_STDBY | FLASH_OPTCR_USER_nRST_STOP | FLASH_OPTCR_USER_WDG_SW | FLASH_OPTCR_RDP_LEVEL_0 | FLASH_OPTCR_nWRP0 | FLASH_OPTCR_nWRP1 | FLASH_OPTCR_nWRP2 | FLASH_OPTCR_nWRP3 | FLASH_OPTCR_nWRP4 | FLASH_OPTCR_nWRP5 | FLASH_OPTCR_nWRP6 | FLASH_OPTCR_nWRP7 | FLASH_OPTCR_nWRP8 | FLASH_OPTCR_nWRP9 | FLASH_OPTCR_nWRP10 | FLASH_OPTCR_nWRP11)
     #else
         #define FLASH_AR                 *(volatile unsigned long *)(FMI_BLOCK + 0x14) // FLASH Address Register (write-only) - no access when FLASH busy bit is set
         #define FLASH_OBR                *(volatile unsigned long *)(FMI_BLOCK + 0x1c) // Option Byte Register
@@ -4267,6 +4305,23 @@ typedef struct stSTM32_ADC_REGS
             #define FLASH_CR2            *(unsigned long *)(FMI_BLOCK + 0x50)
             #define FLASH_AR2            *(unsigned long *)(FMI_BLOCK + 0x54)
         #endif
+    #endif
+    #if defined _STM32F42X || defined _STM32F43X
+        #define FLASH_OPTCR1             *(volatile unsigned long *)(FMI_BLOCK + 0x18) // FLASH Option Control Register 1 (loaded from flash options at reset)
+            #define FLASH_OPTCR1_nWRP0   0x00010000                      // sector 12 not write protected
+            #define FLASH_OPTCR1_nWRP1   0x00020000                      // sector 13 not write protected
+            #define FLASH_OPTCR1_nWRP2   0x00040000                      // sector 14 not write protected
+            #define FLASH_OPTCR1_nWRP3   0x00080000                      // sector 15 not write protected
+            #define FLASH_OPTCR1_nWRP4   0x00100000                      // sector 16 not write protected
+            #define FLASH_OPTCR1_nWRP5   0x00200000                      // sector 17 not write protected
+            #define FLASH_OPTCR1_nWRP6   0x00400000                      // sector 18 not write protected
+            #define FLASH_OPTCR1_nWRP7   0x00800000                      // sector 19 not write protected
+            #define FLASH_OPTCR1_nWRP8   0x01000000                      // sector 20 not write protected
+            #define FLASH_OPTCR1_nWRP9   0x02000000                      // sector 21 not write protected
+            #define FLASH_OPTCR1_nWRP10  0x04000000                      // sector 22 not write protected
+            #define FLASH_OPTCR1_nWRP11  0x08000000                      // sector 23 not write protected
+            #define DEFAULT_FLASH_OPTION_SETTING_1     (FLASH_OPTCR1_nWRP0 | FLASH_OPTCR1_nWRP1 | FLASH_OPTCR1_nWRP2 | FLASH_OPTCR1_nWRP3 | FLASH_OPTCR1_nWRP4 | FLASH_OPTCR1_nWRP5 | FLASH_OPTCR1_nWRP6 | FLASH_OPTCR1_nWRP7 | FLASH_OPTCR1_nWRP8 | FLASH_OPTCR1_nWRP9 | FLASH_OPTCR1_nWRP10 | FLASH_OPTCR1_nWRP11)
+            #define FLASH_OPTCR1_SETTING_MASK          (DEFAULT_FLASH_OPTION_SETTING_1)
     #endif
 #endif
 

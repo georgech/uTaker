@@ -4028,7 +4028,7 @@ static void fnConfigureDeviceApplicationEndpoints(void)
     tInterfaceParameters.queue_sizes.RxQueueSize = 256;                  // optional input queue (used only when no call-back defined)
     tInterfaceParameters.queue_sizes.TxQueueSize = 1024;                 // additional tx buffer
             #endif
-    tInterfaceParameters.usConfig = USB_TERMINATING_ENDPOINT;            // {13} configure the IN endpoint to terminate messages with a zero length frame is a block transmission equals the endpoint size
+    tInterfaceParameters.usConfig = USB_TERMINATING_ENDPOINT;            // {13} configure the IN endpoint to terminate messages with a zero length frame if a block transmission equals the endpoint size
         #endif
         #if defined WAKE_BLOCKED_USB_TX
     tInterfaceParameters.low_water_level = (tInterfaceParameters.queue_sizes.TxQueueSize/2); // TX_FREE event on half buffer empty

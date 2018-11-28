@@ -488,7 +488,7 @@ static __interrupt void _flexTimerInterrupt_5(void)
         #endif
                 fnConfigTimerPin(iTimerReference, ptrTimerSetup->capture_channel, ulCharacteristics); // configure the channel's input capture pin
                 ptrFlexTimer->FTM_channel[ptrTimerSetup->capture_channel].FTM_CSC = ulEdge; // program the edge sensitivity of the capture input
-        #if defined KINETIS_KL                                           // flextimers default to their external channel interrupts
+        #if defined KINETIS_KL                                           // flextimers default to their external channel inputs
                 ptrFlexTimer->FTM_CONF |= (FTM_CONF_TRGSEL0 << ptrTimerSetup->capture_channel); // enable trigger source
         #endif
             }

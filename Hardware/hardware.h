@@ -304,9 +304,10 @@ extern int  fnWriteBytesFlash(MEMORY_RANGE_POINTER ucDestination, unsigned char 
 extern int  fnReadBytesFlashNonBlocking(unsigned char *ParLocation, unsigned char *ptrValue, MAX_FILE_LENGTH Size); // {35} only available when using MANAGED_FILE_READ - non-blocking read that can return MEDIA_BUSY
 extern int  fnWriteBytesFlashNonBlocking(unsigned char *ucDestination, unsigned char *ucData, MAX_FILE_LENGTH Length); // {35} only available when using MANAGED_FILE_WRITE - non-blocking write that can return MEDIA_BUSY
 extern void fnProtectFlash(unsigned char *ptrSector, unsigned char ucProtection);
-  #define PROTECT_SECTOR   1
-  #define UNPROTECT_SECTOR 0
-extern int  fnUnprotectEraseProtectFlashSector(unsigned char *ptrSector);
+    #define PROTECT_SECTOR   1
+    #define UNPROTECT_SECTOR 0
+    #define FLASH_SECTOR_NOT_PROTECTED  0
+    #define FLASH_SECTOR_PROTECTED      1
 extern int  fnMassEraseFlash(void);                                      // {14}
 
 #if defined _WINDOWS

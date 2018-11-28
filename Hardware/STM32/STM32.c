@@ -52,6 +52,7 @@
     11.04.2018 Change uMemset() to match memset() parameters             {37}
     01.05.2018 Write to SYSTICK_CURRENT to synchronise the Systick counter after configuration {38}
     01.11.2018 Use an include file for the clock configuration           {39}
+    28.11.2018 Add automatic flash option configuration option           {40}
 
 */
 
@@ -439,7 +440,7 @@ extern void uEnable_Interrupt(void)
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void))
 {
     volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {25}
-#if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0                     // only long word acesses are possible to the priority registers
+#if defined ARM_MATH_CM0PLUS || defined ARM_MATH_CM0                     // only long word accesses are possible to the priority registers
     volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
     int iShift;
 #else
@@ -3183,6 +3184,15 @@ static void STM32_LowLevelInit(void)
     VECTOR_TABLE *ptrVect;
 #endif
 #include "stm32_CLOCK.h"                                                 // {39} clock configuration
+#if defined FLASH_OPTION_SETTING && defined FLASH_OPTCR                  // {40} program a flash configuration option (this is only performed when the setting causes a change to that already programmed)
+    #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
+    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1);
+    #elif defined FLASH_OPTCR1
+    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+    #else
+    fnSetFlashOption(FLASH_OPTION_SETTING, 0);
+    #endif
+#endif
 #if defined INTERRUPT_VECTORS_IN_FLASH                                   // {111}
     VECTOR_TABLE_OFFSET_REG = ((unsigned long)&__vector_table);
 #else

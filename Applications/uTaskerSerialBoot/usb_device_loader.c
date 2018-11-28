@@ -1340,9 +1340,9 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         lun_information[DISK_D].ptr_root_location = (const unsigned char *)(((SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)));
         lun_information[DISK_D].ptr_disk_end[0] = (const unsigned char *)(FLASH_START_ADDRESS + (UTASKER_APP_END - UTASKER_APP_START));
             #else
-        lun_information[[DISK_D]].ptr_disk_start[0] = (const unsigned char *)(UTASKER_APP_START);
-        lun_information[[DISK_D]].ptr_root_location = (const unsigned char *)(UTASKER_APP_START);
-        lun_information[[DISK_D]].ptr_disk_end[0] = (const unsigned char *)UTASKER_APP_END;
+        lun_information[DISK_D].ptr_disk_start[0] = (const unsigned char *)(UTASKER_APP_START);
+        lun_information[DISK_D].ptr_root_location = (const unsigned char *)(UTASKER_APP_START);
+        lun_information[DISK_D].ptr_disk_end[0] = (const unsigned char *)UTASKER_APP_END;
             #endif
         #endif
         iDeviceMode = 1;                                                 // device mode is active (not host mode)

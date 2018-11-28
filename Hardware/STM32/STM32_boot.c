@@ -19,6 +19,8 @@
     20.01.2017 Add 2MByte Flash support                                  {4}
     18.06.2018 Change uMemset() to match memset() parameters             {5}
     01.11.2018 User flash driver instead of local code                   {6}
+    01.11.2018 Use an include file for the clock configuration           {7}
+    28.11.2018 Add automatic flash option configuration option           {8}
 
 
 */
@@ -395,8 +397,17 @@ extern int STM32_LowLevelInit(void)
     void ( **processor_ints )( void );
 #endif
     VECTOR_TABLE *ptrVect;
-#include "stm32_CLOCK.h"                                                 // {39} clock configuration
-#ifdef _WINDOWS
+#include "stm32_CLOCK.h"                                                 // {7} clock configuration
+#if defined FLASH_OPTION_SETTING && defined FLASH_OPTCR                  // {8} program a flash configuration option (this is only performed when the setting causes a change to that already programmed)
+    #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
+    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1);
+    #elif defined FLASH_OPTCR1
+    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+    #else
+    fnSetFlashOption(FLASH_OPTION_SETTING, 0);
+    #endif
+#endif
+#if defined _WINDOWS
     ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
 #else
     ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);
@@ -600,7 +611,7 @@ extern void uTaskerSchedule( void )
 {
     static int iDone = 0;
 
-    if (!iDone) {
+    if (iDone == 0) {
         iDone = 1;
         uTaskerBoot();
     }

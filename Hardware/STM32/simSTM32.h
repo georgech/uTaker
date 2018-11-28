@@ -448,15 +448,22 @@ typedef struct stSTM32_FMI
     unsigned long FLASH_OPTKEYR;
     unsigned long FLASH_SR;
     unsigned long FLASH_CR;
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    unsigned long FLASH_OPTCR;
+        #if defined _STM32F42X || defined _STM32F43X
+    unsigned long FLASH_OPTC1;
+        #endif
+    #else
     unsigned long FLASH_AR;
     unsigned long ulRes0;
     unsigned long FLASH_OBR;
     unsigned long FLASH_WRPR;
-    #ifdef XL_DENSITY
+        #if defined XL_DENSITY
         unsigned long FLASH_KEYR2;
         unsigned long FLASH_SR2;
         unsigned long FLASH_CR2;
         unsigned long FLASH_AR2;
+        #endif
     #endif
 #endif
 } STM32_FMI;

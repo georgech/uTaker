@@ -214,6 +214,9 @@
     #define HCLK_DIVIDE         1                                        // HCLK is divided by 1 (1, 2, 4, 8, 16, 64, 128 or 512 are possible) - max. 168MHz
     #define PCLK1_DIVIDE        4                                        // PCLK1 is HCLK divided by 4 (1, 2, 4, 8, or 16 are possible) - max. 42MHz
     #define PCLK2_DIVIDE        2                                        // PCLK2 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+
+    #define FLASH_OPTION_SETTING    (FLASH_OPTCR_nWRP0 | FLASH_OPTCR_nWRP1 | FLASH_OPTCR_nWRP2 | FLASH_OPTCR_nWRP3 | FLASH_OPTCR_nWRP4 | FLASH_OPTCR_nWRP5 | FLASH_OPTCR_nWRP6 | FLASH_OPTCR_nWRP7 | FLASH_OPTCR_nWRP8 | FLASH_OPTCR_nWRP9 | FLASH_OPTCR_nWRP10 | FLASH_OPTCR_nWRP11 | FLASH_OPTCR_BOR_LEV_1 | FLASH_OPTCR_RDP_LEVEL_0 | FLASH_OPTCR_USER_nRST_STDBY | FLASH_OPTCR_USER_nRST_STOP | FLASH_OPTCR_USER_WDG_SW)
+    #define FLASH_OPTION_SETTING_1  (FLASH_OPTCR1_nWRP0 | FLASH_OPTCR1_nWRP1 | FLASH_OPTCR1_nWRP2 | FLASH_OPTCR1_nWRP3 | FLASH_OPTCR1_nWRP4 | FLASH_OPTCR1_nWRP5 | FLASH_OPTCR1_nWRP6 | FLASH_OPTCR1_nWRP7 | FLASH_OPTCR1_nWRP8 | FLASH_OPTCR1_nWRP9 | FLASH_OPTCR1_nWRP10 | FLASH_OPTCR1_nWRP11)
 #elif defined NUCLEO_L476RG
     #define SYSTICK_DIVIDE_8                                             // use HCLK/8 as SYSTICK clock
     #define CRYSTAL_FREQ        32768                                    // when there is a 32kHz crystal it can be used for the RTC, LSCO or MCO (optionally divided)

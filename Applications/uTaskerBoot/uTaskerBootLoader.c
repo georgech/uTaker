@@ -128,7 +128,7 @@
             #define BOOT_LOADER_LENGTH     UTASKER_APP_START             // this boot loader must fit within this size
             #define UTASK_APP_LENGTH       (MAX_FILE_LENGTH)(UTASKER_APP2_START - BOOT_LOADER_LENGTH) // the maximum length of the secondary loader
         #else
-            #define UTASKER_APP_START      0x1000                        // internal FLASH solution requires two FLASH block for the boot code (slightly larger than 2k)
+            #define UTASKER_APP_START      0x1000                        // internal FLASH solution requires two FLASH blocks for the boot code (slightly larger than 2k)
             #define UPLOAD_FILE_LOCATION   (unsigned char *)uFILE_START  // location in internal FLASH
             #define UTASK_APP_LENGTH       FILE_SYSTEM_SIZE              // 128k
         #endif
@@ -545,6 +545,15 @@ extern MAIN_FUNCTION_TYPE uTaskerBoot(void)
                 uFileErase((unsigned char *)UTASKER_APP_START, UTASK_APP_LENGTH); // valid code is waiting to be loaded so first delete the old code
             }
 #else
+    #if defined _STM32 && defined FLASH_PROGRAMMING_OPTION_SETTING
+        #if defined FLASH_PROGRAMMING_OPTION_SETTING_1 && defined FLASH_OPTCR1
+            fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_PROGRAMMING_OPTION_SETTING_1);
+        #elif defined FLASH_OPTCR1
+            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+        #else
+            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, 0);
+        #endif
+    #endif
             uFileErase((unsigned char *)UTASKER_APP_START, UTASK_APP_LENGTH); // valid code is waiting to be loaded so first delete the old code
 #endif
             fnCopyNewCode(&file_header);                                 // now copy the new code to the uTasker application position

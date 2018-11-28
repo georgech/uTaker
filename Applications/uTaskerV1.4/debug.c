@@ -315,6 +315,7 @@
     #define DO_RESET_BOOT          62                                    // specific hardware command to reset target to boot loader (when boot loader available and uses mailbox)
     #define DO_RND                 63                                    // specific hardware command to generate a block of random numbers
     #define DO_PWM_PHASE_SHIFT     64                                    // specific hardware command to phase shift a PWM output with respect to another
+    #define DO_FLASH_OPTIONS       65
 
 #define DO_TELNET                 2                                      // reference to Telnet group
     #define DO_TELNET_QUIT              0                                // specific Telnet comand to quit the session
@@ -863,6 +864,9 @@ static const DEBUG_COMMAND tIOCommand[] = {
 #endif
 #if defined SUPPORT_PWM_MODULE && defined _KINETIS
     {"shift",             "-180..180",                             DO_HARDWARE,      DO_PWM_PHASE_SHIFT },
+#endif
+#if defined _STM32 && defined FLASH_OPTCR
+    {"F_opt",             "Change Flash Options [val]",            DO_HARDWARE,      DO_FLASH_OPTIONS },
 #endif
 #if defined PWM_MEASUREMENT_DEVELOPMENT
     { "test",             "Temp test",                             DO_HARDWARE,      75 },
@@ -4016,6 +4020,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg(cUpTime);
         }
         return;
+#if defined _STM32 && defined FLASH_OPTCR
+    case DO_FLASH_OPTIONS:
+        fnSetFlashOption(fnHexStrHex(ptrInput), DEFAULT_FLASH_OPTION_SETTING_1);
+        break;
+#endif
 #if defined SUPPORT_PWM_MODULE && defined _KINETIS
     case DO_PWM_PHASE_SHIFT:
         {
@@ -4861,6 +4870,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
                     }
                     if (iResult != 0) {
                         fnDebugMsg(" - Failed\r\n");
+                        return;
                     }
                     ptrMemory += iType;
                 }

@@ -14,6 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
     20.01.2017 Add 2MByte Flash support                                  {1}
+    28.11.2018 Add fnSetFlashOption()                                    {2}
 
 */
 
@@ -58,11 +59,41 @@
 /* =================================================================== */
 
 #if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
-
 static void fnConfigSPIFileSystem(void)
 {
     POWER_UP_SPI_FLASH_INTERFACE();
     CONFIGURE_SPI_FLASH_INTERFACE();
+}
+#endif
+
+#if defined FLASH_OPTCR
+// Routine to set new flash options (write protections, brown-out reset level, etc.)
+//
+extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1) // {2}
+{
+    ulOption &= FLASH_OPTCR_SETTING_MASK;
+    ulOption1 &= FLASH_OPTCR1_SETTING_MASK;
+    if (
+        ((FLASH_OPTCR & FLASH_OPTCR_SETTING_MASK) != ulOption)
+    #if defined FLASH_OPTCR
+        || ((FLASH_OPTCR1 & FLASH_OPTCR1_SETTING_MASK) != ulOption1)
+    #endif
+        )
+    {                                                                    // only save new setting when it is not already valid
+        FLASH_OPTKEYR = FLASH_OPTKEYR_KEY1;                              // unlock option register(s)
+        FLASH_OPTKEYR = FLASH_OPTKEYR_KEY2;
+    #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
+        FLASH_OPTCR1 = ulOption1;
+    #endif
+        FLASH_OPTCR = ulOption;                                          // set the desired options
+        FLASH_OPTCR = (ulOption | FLASH_OPTCR_OPTSTRT);                  // command the change
+        while ((FLASH_SR & FLASH_SR_BSY) != 0) {                         // wait until the change has been committed
+    #if defined _WINDOWS
+            FLASH_SR &= ~(FLASH_SR_BSY);
+    #endif
+        }
+        FLASH_OPTCR = (ulOption | FLASH_OPTCR_OPTLOCK);                  // lock the options register
+    }
 }
 #endif
 
@@ -240,16 +271,76 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     #endif  
 #endif
 
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+// The STM32F2xx and STM32F4xx have variable flash granularity - this routine determines the size of the flash sector that the access is in as well as the sector's number
+//
+static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned long *ulSectorNumber, int *iProtected)
+{
+    unsigned long ulSectorSize;
+    #if SIZE_OF_FLASH >= (2 * 1024 * 1024)                               // {1}
+    if (ptrSector < (unsigned char *)(FLASH_START_ADDRESS + (1 * 1024 * 1024))) {
+        *ulSectorNumber = 0;                                             // access in first bank
+    }
+    else {
+        ptrSector -= (1 * 1024 * 1024);
+        *ulSectorNumber = 16;                                            // access in second bank (note that the first sector in the second bank is named as sector 1 but it has to be addressed as sector 16!)
+    }
+    #else
+    *ulSectorNumber = 0;
+    #endif
+    *iProtected = FLASH_SECTOR_NOT_PROTECTED;
+    if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER))) { // {22}
+        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER));
+        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS + NUMBER_OF_PARAMETER_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY));
+        ulSectorSize = FLASH_GRANULARITY;                                // access in code area
+    }
+    else if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT))) {
+        #if NUMBER_OF_PARAMETER_SECTORS > 1
+        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT));
+        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_PARAMETER));
+        #else
+        *ulSectorNumber += (NUMBER_OF_BOOT_SECTORS);
+        #endif
+        ulSectorSize = FLASH_GRANULARITY_PARAMETER;                      // access in parameter area
+    }
+    else {
+        ptrSector -= (FLASH_START_ADDRESS);
+        *ulSectorNumber += (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_BOOT);
+        ulSectorSize = FLASH_GRANULARITY_BOOT;                           // access in boot area
+    }
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    if (*ulSectorNumber < 16) {
+        if ((FLASH_OPTCR & (FLASH_OPTCR_nWRP0 << *ulSectorNumber)) == 0) {
+            *iProtected = FLASH_SECTOR_PROTECTED;                        // sector is write protected
+        }
+    }
+        #if defined FLASH_OPTCR1
+    else {
+        if ((FLASH_OPTCR1 & (FLASH_OPTCR1_nWRP0 << (*ulSectorNumber - 16))) == 0) {
+            *iProtected = FLASH_SECTOR_PROTECTED;                        // sector is write protected
+        }
+    }
+        #endif
+    #endif
+    return ulSectorSize;
+}
+    #endif
+
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
 static int fnSingleByteFlashWrite(unsigned char *ucDestination, unsigned char ucData)
 {
+    #if defined _WINDOWS
+    unsigned long ulSectorNumber;
+    int iProtectedState;
+    #endif
     if (*(unsigned char *)fnGetFlashAdd((unsigned char *)ucDestination) == ucData) {
         return 0;                                                        // if the value is already programmed in flash there is no need to write
     }
     FLASH_CR = FLASH_CR_PG;                                              // select byte programming
     #if defined _WINDOWS
+    fnGetFlashSectorSize(ucDestination, &ulSectorNumber, &iProtectedState);
     FLASH_CR |= ulFlashLockState;
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if lock bit set don't program
+    if (((FLASH_CR & FLASH_CR_LOCK) != 0) || (iProtectedState != 0)) {   // if lock bit is set or the sector is write protected don't program
         FLASH_SR |= FLASH_ERROR_FLAGS;
     }
     else {
@@ -268,13 +359,18 @@ static int fnSingleByteFlashWrite(unsigned char *ucDestination, unsigned char uc
     #if SUPPLY_VOLTAGE > SUPPLY_1_8__2_1                                 // short word writes are only possible when the supply voltage is greater than 2.1V
 static int fnSingleWordFlashWrite(unsigned short *usDestination, unsigned short usData)
 {
+    #if defined _WINDOWS
+    unsigned long ulSectorNumber;
+    int iProtectedState;
+    #endif
     if (*(unsigned short *)fnGetFlashAdd((unsigned char *)usDestination) == usData) {
         return 0;                                                        // if the value is already programmed in flash there is no need to write
     }
     FLASH_CR = (FLASH_CR_PG | FLASH_CR_PSIZE_16);                        // select short word programming
     #if defined _WINDOWS
+    fnGetFlashSectorSize((unsigned char *)usDestination, &ulSectorNumber, &iProtectedState);
     FLASH_CR |= ulFlashLockState;
-    if (FLASH_CR & FLASH_CR_LOCK) {                                      // if lock bit set don't program
+    if (((FLASH_CR & FLASH_CR_LOCK) != 0) || (iProtectedState != 0)) {   // if lock bit is set or the sector is write protected don't program
         FLASH_SR |= FLASH_ERROR_FLAGS;
     }
     else {
@@ -283,7 +379,7 @@ static int fnSingleWordFlashWrite(unsigned short *usDestination, unsigned short 
     #if defined _WINDOWS
     }
     #endif
-    while (FLASH_SR & FLASH_SR_BSY) {}                                   // wait until write operation completes
+    while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                            // wait until write operation completes
     if ((FLASH_SR & (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR)) != 0) { // check for errors
         return -1;                                                       // write error
     }
@@ -294,13 +390,18 @@ static int fnSingleWordFlashWrite(unsigned short *usDestination, unsigned short 
     #if SUPPLY_VOLTAGE >= SUPPLY_2_7__3_6                                 // long word writes are only possible when the supply voltage is greater than 2.7V
 static int fnSingleLongWordFlashWrite(unsigned long *ulDestination, unsigned long ulData)
 {
+    #if defined _WINDOWS
+    unsigned long ulSectorNumber;
+    int iProtectedState;
+    #endif
     if (*(unsigned long *)fnGetFlashAdd((unsigned char *)ulDestination) == ulData) {
         return 0;                                                        // if the value is already programmed in flash there is no need to write
     }
     FLASH_CR = (FLASH_CR_PG | FLASH_CR_PSIZE_32);                        // select long short word programming
     #if defined _WINDOWS
+    fnGetFlashSectorSize((unsigned char *)ulDestination, &ulSectorNumber, &iProtectedState);
     FLASH_CR |= ulFlashLockState;
-    if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                               // if lock bit set don't program
+    if (((FLASH_CR & FLASH_CR_LOCK) != 0) || (iProtectedState != 0)) {   // if lock bit is set or the sector is write protected don't program
         FLASH_SR |= FLASH_ERROR_FLAGS;                                   // set the error flag
     }
     else {
@@ -318,10 +419,19 @@ static int fnSingleLongWordFlashWrite(unsigned long *ulDestination, unsigned lon
     #endif
 #endif
 
+
 static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ucData)
 {
+    int iError = 0;
     MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
     unsigned char *ucDestination = (unsigned char *)ptrAccessDetails->ulOffset;
+#if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    unsigned char *ptrSector = ucDestination;
+    unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
+    unsigned long ulSectorNumber;
+    int iProtectedSector;
+    unsigned long ulProtectedSectors = 0;
+#endif
 #if !defined _STM32L0x1                                                  // temporary
     if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                               // if the flash has not been unlocked, unlock it before programming
         FLASH_KEYR = FLASH_KEYR_KEY1;
@@ -331,7 +441,17 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         ulFlashLockState = 0;
     #endif
     }
-
+    #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    do {
+        _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
+        ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // align to sector start boundary
+        ptrSector += _ulSectorSize;                                      // following flash sector
+        if (iProtectedSector != 0) {                                     // if the sector is write protected
+            fnProtectFlash(ucDestination, UNPROTECT_SECTOR);             // unprotect the sectors we will be writing to
+            ulProtectedSectors |= (1 << ulSectorNumber);                 // mark the sectors that have been unprotected
+        }
+    } while ((ucDestination + Length) >= ptrSector);                     // repeat for all sectors that will be written to
+    #endif
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // depending on the power supply range it is possible to write bytes, short- and long words (with external Vpp 64 bits but this is not supported in this implementation)
     FLASH_SR = (FLASH_STATUS_FLAGS);                                     // reset status flags
         #if defined _WINDOWS
@@ -340,7 +460,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         #if SUPPLY_VOLTAGE == SUPPLY_1_8__2_1                            // only byte wise programming is possible
     while (Length-- != 0) {        
         if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) {
-            return 1;                                                    // write error
+            iError = 1;                                                  // write error
+            break;
         }
         ucDestination++;
         ucData++;
@@ -353,7 +474,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
             if (iCollected == 0) {
                 if ((Length == 1) || (((CAST_POINTER_ARITHMETIC)ucDestination) & 0x1)) { // single byte write (or final byte write) or misaligned half-word
                     if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) { // perform single byte programming
-                        return 1;                                        // write error
+                        iError = 1;                                      // write error
+                        break;
                     }
                     ucDestination++;
                 }
@@ -365,7 +487,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
             else {
                 usWord |= (*ucData << 8);
                 if (fnSingleWordFlashWrite((unsigned short *)ucDestination, usWord) != 0) { // perform a short word write
-                    return 1;
+                    iError = 1;                                          // write error
+                    break;
                 }
                 ucDestination += 2;
                 iCollected = 0;
@@ -383,7 +506,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
             if (iCollected == 0) {
                 if ((Length == 1) || (((CAST_POINTER_ARITHMETIC)ucDestination) & 0x1)) { // single byte write (or final byte write) or misaligned half-word
                     if (fnSingleByteFlashWrite(ucDestination, *ucData) != 0) { // perform single byte programming
-                        return 1;                                        // write error
+                        iError = 1;                                      // write error
+                        break;
                     }
                     ucDestination++;
                 }
@@ -397,7 +521,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
                 iCollected++;
                 if ((Length <= 2) || ((((CAST_POINTER_ARITHMETIC)(ucDestination + 2)) & 0x3) == 0)) { // last short word or ending on a 128 bit line boundary
                     if (fnSingleWordFlashWrite((unsigned short *)ucDestination, usWord) != 0) { // perform a short word write
-                        return 1;
+                        iError = 1;                                      // write error
+                        break;
                     }
                     ucDestination += 2;
                     iCollected = 0;
@@ -410,7 +535,8 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
             else {
                 ulLongWord |= (*ucData << 24);
                 if (fnSingleLongWordFlashWrite((unsigned long *)ucDestination, ulLongWord) != 0) { // perform a long word write
-                    return 1;
+                    iError = 1;                                          // write error
+                    break;
                 }
                 ucDestination += 4;
                 iCollected = 0;
@@ -435,9 +561,10 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
                 FLASH_SR = 0;
                 #endif
                 *(volatile unsigned short *)fnGetFlashAdd((unsigned char *)ucDestination) = usValue; // write the value to the flash location
-                while (FLASH_SR & FLASH_SR_BSY) {}                       // wait until write operation completes
+                while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                // wait until write operation completes
                 if (FLASH_SR & (FLASH_SR_WRPRTERR | FLASH_SR_PGERR)) {   // check for errors
-                    return 1;                                            // write error
+                    iError = 1;                                          // write error
+                    break;
                 }
             }
             if (Length <= 2) {
@@ -448,31 +575,86 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         }
     }
     #endif
+    #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    ptrSector = (unsigned char *)FLASH_START_ADDRESS;
+    do {
+        _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
+        if ((ulProtectedSectors & 1) != 0) {
+            fnProtectFlash(ptrSector, PROTECT_SECTOR);                   // protect the un-protected sectors after completing the write
+        }
+        ptrSector += _ulSectorSize;                                      // following flash sector
+        ulProtectedSectors >>= 1;
+    } while (ulProtectedSectors != 0);                                   // repeat for all sectors that need to be re-protected
+    #endif
     #if !defined _STM32F7XX                                              // workaround: re-locking the Flash causes the previous write to be cancelled (to be investigated)
     FLASH_CR = FLASH_CR_LOCK;                                            // lock flash when complete
-    #if defined _WINDOWS
+        #if defined _WINDOWS
     ulFlashLockState = FLASH_CR_LOCK;
-    #endif
+        #endif
     #endif
 #endif
-    return 0;
+    return iError;
 }
 
 extern void fnProtectFlash(unsigned char *ptrSector, unsigned char ucProtection)
 {
+#if 0
+    unsigned long ulSectorNumber;
+    int iProtected;
+    unsigned long ulRegister = FLASH_OPTCR;
+    #if defined FLASH_OPTCR1
+    unsigned long ulRegister1 = FLASH_OPTCR1;
+    #endif
+    fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtected);
     if (UNPROTECT_SECTOR == ucProtection) {                              // unprotect flash
+        if (iProtected == 0) {
+            return;
+        }
+        if (ulSectorNumber < 16) {
+            ulRegister |= (FLASH_OPTCR_nWRP0 << ulSectorNumber);
+        }
+        else {
+            ulRegister1 |= (FLASH_OPTCR1_nWRP0 << (ulSectorNumber - 16));
+        }
     }
     else {                                                               // protect flash
+        if (iProtected != 0) {
+            return;
+        }
+        if (ulSectorNumber < 16) {
+            ulRegister &= ~(FLASH_OPTCR_nWRP0 << ulSectorNumber);
+        }
+        else {
+            ulRegister1 &= ~(FLASH_OPTCR1_nWRP0 << (ulSectorNumber - 16));
+        }
     }
-  //_EXCEPTION("To do!!");
-}
-
-extern int fnUnprotectEraseProtectFlashSector(unsigned char *ptrSector)
-{
-    fnProtectFlash(ptrSector, UNPROTECT_SECTOR);
-    fnEraseFlashSector(ptrSector, 0);
-    fnProtectFlash(ptrSector, PROTECT_SECTOR);
-    return 0;
+    ulRegister &= ~(FLASH_OPTCR_OPTLOCK | FLASH_OPTCR_OPTSTRT);
+    FLASH_OPTKEYR = FLASH_OPTKEYR_KEY1;                                  // unlock option register(s)
+    FLASH_OPTKEYR = FLASH_OPTKEYR_KEY2;
+    #if defined _WINDOWS
+    FLASH_OPTCR &= ~(FLASH_OPTCR_OPTLOCK);                               // register is unlocked
+    #endif
+    #if defined FLASH_OPTCR1
+    FLASH_OPTCR1 = ulRegister1;
+    #endif
+    FLASH_OPTCR = ulRegister;                                            // write new setting and relock the register
+    FLASH_OPTCR |= (FLASH_OPTCR_OPTSTRT);
+    while ((FLASH_SR & FLASH_SR_BSY) != 0) {
+    }
+    FLASH_OPTCR |= (FLASH_OPTCR_OPTLOCK);
+    /*
+    ulRegister |= FLASH_OPTCR_OPTLOCK;
+    FLASH_OPTKEYR = FLASH_OPTKEYR_KEY1;                                  // unlock option register(s)
+    FLASH_OPTKEYR = FLASH_OPTKEYR_KEY2;
+    #if defined _WINDOWS
+    FLASH_OPTCR &= ~(FLASH_OPTCR_OPTLOCK);                               // register is unlocked
+    #endif
+    #if defined FLASH_OPTCR1
+    FLASH_OPTCR1 = ulRegister1;
+    #endif
+    FLASH_OPTCR = ulRegister;                                            // write new setting and relock the register
+    */
+#endif
 }
 
         #if !defined ONLY_INTERNAL_FLASH_STORAGE
@@ -525,44 +707,6 @@ extern unsigned char fnGetStorageType(unsigned char *memory_pointer, ACCESS_DETA
     #endif
 
 
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-// The STM32F2xx and STM32F4xx have variable flash granularity - this routine determines the size of the flash sector that the access is in as well as the sector's number
-//
-static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned long *ulSectorNumber)
-{
-    #if SIZE_OF_FLASH >= (2 * 1024 * 1024)                               // {1}
-    if (ptrSector < (unsigned char *)(FLASH_START_ADDRESS + (1 * 1024 * 1024))) {
-        *ulSectorNumber = 0;                                             // access in first bank
-    }
-    else {
-        ptrSector -= (1 * 1024 * 1024);
-        *ulSectorNumber = 16;                                            // access in second bank (note that the first sector in the second bank is named as sector 1 but it has to be addressed as sector 16!)
-    }
-    #else
-    *ulSectorNumber = 0;
-    #endif
-    if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER))) { // {22}
-        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER));
-        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS + NUMBER_OF_PARAMETER_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY));
-        return FLASH_GRANULARITY;                                        // access in code area
-    }
-    else if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT))) {
-        #if NUMBER_OF_PARAMETER_SECTORS > 1
-        ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT));
-        *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_PARAMETER));
-        #else
-        *ulSectorNumber += (NUMBER_OF_BOOT_SECTORS);
-        #endif
-        return FLASH_GRANULARITY_PARAMETER;                              // access in parameter area
-    }
-    else {
-        ptrSector -= (FLASH_START_ADDRESS);
-        *ulSectorNumber += (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_BOOT);
-        return FLASH_GRANULARITY_BOOT;                                   // access in boot area
-    }
-}
-    #endif
-
 // Erase FLASH sector(s). The pointer can be anywhere in the sector to be erased.
 // If the length signifies multiple sectors, each one necessary is erased.
 //
@@ -572,6 +716,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
     unsigned long ulSectorNumber;
+    int iProtectedSector;
     #else
     #define _ulSectorSize FLASH_GRANULARITY                              // F1 has uniform flash granularity
     #endif
@@ -585,11 +730,11 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         switch (fnGetStorageType(ptrSector, &AccessDetails)) {           // get the storage type based on the memory location and also return the largest amount of data that can be read from a single device
         case _STORAGE_INTERNAL_FLASH:
             #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-            _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber);
+            _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
             #endif
             Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
             ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // set to sector boundary
-            if (FLASH_CR & FLASH_CR_LOCK) {                              // if the flash has not been unlocked, unlock it before erasing
+            if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                       // if the flash has not been unlocked, unlock it before erasing
                 FLASH_KEYR = FLASH_KEYR_KEY1;
                 FLASH_KEYR = FLASH_KEYR_KEY2;
             #if defined _WINDOWS
@@ -612,7 +757,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             #endif
             #if defined _WINDOWS
             FLASH_CR |= ulFlashLockState;
-            if (FLASH_CR & FLASH_CR_LOCK) {                              // if lock bit set don't erase
+            if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                       // if lock bit set don't erase
                 FLASH_SR |= FLASH_ERROR_FLAGS;
             }
             else {
@@ -677,7 +822,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     #else                                                                // case when only internal Flash is available
     do {
         #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-        _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber);
+        _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
         #endif
         Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
         ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // set to sector boundary
@@ -689,6 +834,11 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             ulFlashLockState = 0;
         #endif
         }
+        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+        if (iProtectedSector != 0) {
+            fnProtectFlash(ptrSector, UNPROTECT_SECTOR);                 // unprotect the write-protected sector so that we can erase it
+        }
+        #endif
         #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
         FLASH_CR = (FLASH_CR_SER | MAXIMUM_PARALLELISM | (ulSectorNumber << FLASH_CR_SNB_SHIFT)); // prepare the section to be deleted
         FLASH_CR |= (FLASH_CR_STRT);                                     // start the erase operation
@@ -704,22 +854,29 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         #endif
         #if defined _WINDOWS
         FLASH_CR |= ulFlashLockState;
-        if ((FLASH_CR & FLASH_CR_LOCK) != 0) {                           // if lock bit set don't erase
-            FLASH_SR |= FLASH_ERROR_FLAGS;
-        }
-        else {
-            uMemset(fnGetFlashAdd(ptrSector), 0xff, _ulSectorSize);      // delete the page content
+        {
+            int iProtectedState;
+            fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedState);
+            if (((FLASH_CR & FLASH_CR_LOCK) == 0) && (iProtectedState == 0)) {
+                uMemset(fnGetFlashAdd(ptrSector), 0xff, _ulSectorSize);  // delete the sector content
+            }
+            else {
+                FLASH_SR |= FLASH_ERROR_FLAGS;
+            }
         }
         #endif
         while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                        // wait until delete operation completes
+        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+        if (iProtectedSector != 0) {
+            fnProtectFlash(ptrSector, PROTECT_SECTOR);                   // set protection again
+        }
+        #endif
         if ((FLASH_SR & FLASH_ERROR_FLAGS) != 0) {
+            FLASH_CR = FLASH_CR_LOCK;                                    // lock flash when complete
             return -1;                                                   // erase error
         }
-        if (Length <= _ulSectorSize) {
+        if (Length <= _ulSectorSize) {                                   // last sector has been deleted
             FLASH_CR = FLASH_CR_LOCK;                                    // lock flash when complete
-        #if defined _WINDOWS
-            ulFlashLockState = FLASH_CR_LOCK;
-        #endif
         #if defined MANAGED_FILES
             if (OriginalLength == 0) {                                   // if a single page erase was called, return the page size
 	            return (int)_ulSectorSize;

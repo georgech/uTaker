@@ -150,7 +150,10 @@ static void fnSetDevice(unsigned short *port_inits)
 #else
     FLASH_CR = FLASH_CR_LOCK;                                            // FLASH controller
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    FLASH_OPTCR = 0x0fffaaed;
+    FLASH_OPTCR = DEFAULT_FLASH_OPTION_SETTING;
+        #if defined FLASH_OPTCR1
+    FLASH_OPTCR1 = DEFAULT_FLASH_OPTION_SETTING_1;
+        #endif
     #else
     FLASH_WRPR = 0xffffffff;
     FLASH_OBR = 0x03fffffc;

@@ -330,7 +330,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && ((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15 || defined KINETIS_KS
+#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && (((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)) && !defined KINETIS_FLEX))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15 || defined KINETIS_KS
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 

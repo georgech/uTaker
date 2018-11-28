@@ -32,14 +32,14 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-  //#define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
+    #define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
       //#define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_FM24CL16B                                               // test 2k FRAM (add #define FM24CL16B_PRESENT to app_hw_xxx.h for simulation support)
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
   //#define TEST_SENSIRION                                               // test reading temperature and humidity 
   //#define TEST_MMA8451Q                                                // test monitoring the 3-axis accelerometer
-    #define TEST_DS1621                                                  // temperature sensor
+  //#define TEST_DS1621                                                  // temperature sensor
     #if defined TEST_MMA8451Q
         #define MMA8451Q_14BIT_RES
       //#define INTERRUPT_ON_READY                                       // enable tap detection and interrupt
