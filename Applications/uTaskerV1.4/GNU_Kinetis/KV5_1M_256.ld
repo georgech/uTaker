@@ -6,7 +6,7 @@
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x10000000, LENGTH = 0x00100000          /* 1M Flash */
-    SRAM (wx)  : ORIGIN = 0x20000000, LENGTH = 0x00020000-0x170    /* 128k RAM with vector size 0x230 (560 bytes - maximum for all processors) */
+    SRAM (wx)  : ORIGIN = 0x20000230, LENGTH = 0x00040000-0x170    /* 256k RAM with vector size 0x230 (560 bytes - maximum for all processors) */
     ITCM (wx)  : ORIGIN = 0x00000000, LENGTH = 0x00010000          /* 64k ITCM */
     OCRAM (wx) : ORIGIN = 0x2f000000, LENGTH = 0x00010000          /* 64k OCRAM */
 }
@@ -14,7 +14,7 @@ MEMORY
 SECTIONS
 {
   __SRAM_segment_start__    = 0x20000230;
-  __SRAM_segment_end__      = 0x2001ffff;
+  __SRAM_segment_end__      = 0x2003ffff;
   __Vector_segment_start__  = 0x10000000;
   __Vector_segment_end__    = 0x10000008;
   __Fconfig_segment_start__ = 0x10000400;

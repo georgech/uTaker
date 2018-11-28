@@ -315,7 +315,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define FLEXBUS_AVAILABLE
 #endif
 
-#if defined KINETIS_KE || defined KINETIS_KV10 || defined KINETIS_KV40 || defined KINETIS_KM || (defined KINETIS_KL && !defined KINETIS_KL82)
+#if defined KINETIS_KE || defined KINETIS_KV10 || defined KINETIS_KV40 || defined KINETIS_KV50 || defined KINETIS_KM || (defined KINETIS_KL && !defined KINETIS_KL82)
     #define BUS_FLASH_CLOCK_SHARED                                       // bus and flash clocks are shared and so have the same speed
 #endif
 
@@ -594,8 +594,12 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #define MCGOUTCLK          48000000
         #else
             #define MCGOUTCLK          (((_EXTERNAL_CLOCK/CLOCK_DIV) * CLOCK_MUL)/2) // up to 120MHz/150MHz/168MHz (PLL0 clock output)
-            #if defined KINETIS_KV40
-                #if (KINETIS_MAX_SPEED == 150000000)
+            #if defined KINETIS_KV40 || defined KINETIS_KV50
+                #if (KINETIS_MAX_SPEED == 220000000)
+                    #if (MCGOUTCLK > 220000000) || (MCGOUTCLK < 90000000)
+                        #error "PLL VCO out of specification!"
+                    #endif
+                #elif (KINETIS_MAX_SPEED == 150000000)
                     #if (MCGOUTCLK > 180000000) || (MCGOUTCLK < 90000000)
                         #error "PLL VCO out of specification!"
                     #endif
@@ -679,9 +683,16 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #define FLASH_CLOCK    (MCGOUTCLK/BUS_CLOCK_DIVIDE)          // up to 25MHz but must not be faster than the bus clock
         #endif
     #else
-        #define BUS_CLOCK      (MCGOUTCLK/BUS_CLOCK_DIVIDE)              // up to 50MHz/60MHz but must not be faster than the core clock {75}
+        #if defined KINETIS_KV40 || defined KINETIS_KV50
+            #define FAST_PERIPHERAL_CLOCK   (MCGOUTCLK/FAST_PERIPHERAL_CLOCK_DIVIDE)
+        #endif
         #define FLEXBUS_CLOCK  (MCGOUTCLK/FLEX_CLOCK_DIVIDE)             // up to 50MHz but must not be faster than the bus clock {75}
         #define FLASH_CLOCK    (MCGOUTCLK/FLASH_CLOCK_DIVIDE)            // up to 25MHz but must not be faster than the bus clock {75}
+        #if defined BUS_FLASH_CLOCK_SHARED
+            #define BUS_CLOCK  (FLASH_CLOCK)
+        #else
+            #define BUS_CLOCK  (MCGOUTCLK/BUS_CLOCK_DIVIDE)              // up to 50MHz/60MHz but must not be faster than the core clock {75}
+        #endif
     #endif
     #if defined KINETIS_WITH_MCG_LITE                                    // {68}
         #define FAST_ICR       8000000
@@ -739,26 +750,23 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
                 #error Flash writes/erase are not possible in high speed run mode!
             #endif
         #endif
+        #if FAST_PERIPHERAL_CLOCK > 110000000
+            #error fast peripheral frequency out of range: maximum 110MHz
+        #endif
         #if CORE_CLOCK > 220000000
             #error PLL frequency out of range: maximum 220MHz
+        #endif
+        #if FLEXBUS_CLOCK > 55000000
+            #error flex bus clock frequency out of range: maximum 55MHz
+        #endif
+        #if FLASH_CLOCK > 27500000
+            #error flash clock frequency out of range: maximum 27.5MHz
         #endif
         #if BUS_CLOCK > 27500000
             #error bus clock frequency out of range: maximum 27.5MHz
         #endif
         #if BUS_CLOCK > CORE_CLOCK
             #error bus clock may not be faster than the system clock!
-        #endif
-        #if FLEXBUS_CLOCK > 55000000
-            #error flex bus clock frequency out of range: maximum 55MHz
-        #endif
-        #if FLEXBUS_CLOCK > BUS_CLOCK
-            #error flex bus clock may not be faster than the bus clock!
-        #endif
-        #if FLASH_CLOCK > 27500000
-            #error flash clock frequency out of range: maximum 27.5MHz
-        #endif
-        #if FLASH_CLOCK > BUS_CLOCK
-            #error flash clock may not be faster than the bus clock!
         #endif
     #elif KINETIS_MAX_SPEED == 180000000                                 // 180MHz part (high-speed run mode)
         #define KINETIS_MAX_DDR_SPEED  180000000
@@ -1660,9 +1668,7 @@ typedef struct stRESET_VECTOR
 
 // Comparator configuration
 //
-#if defined KINETIS_KE18
-    #define NUMBER_OF_COMPARATORS 3
-#elif defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
+#if defined KINETIS_KE18 || defined KINETIS_K64 || defined KINETIS_KV50 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))
     #define NUMBER_OF_COMPARATORS 3
 #else
     #define NUMBER_OF_COMPARATORS 2
@@ -1804,6 +1810,10 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #elif defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03 // devices that don't support DMA
     #define DEVICE_WITHOUT_DMA
+#elif defined KINETIS_KV50
+    #define DEVICE_WITH_TWO_DMA_GROUPS
+    #define eDMA_SHARES_INTERRUPTS                                       // DMA channel 16 shares an interrupt vector with channel 0, 17 with 1, 18 with 2 and 19 with 3, etc.
+    #define DMA_CHANNEL_COUNT        32
 #elif defined KINETIS_K_FPU && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_K64 && !defined KINETIS_KV30
     #define DEVICE_WITH_TWO_DMA_GROUPS
     #define DMA_CHANNEL_COUNT        16
@@ -1830,10 +1840,10 @@ typedef struct stRESET_VECTOR
 typedef struct stPROCESSOR_IRQ
 {
 #if defined KINETIS_KE15
-    void  (*irq_DMA0_0_4)(void);                                         // 0
-    void  (*irq_DMA0_1_5)(void);                                         // 1
-    void  (*irq_DMA0_2_6)(void);                                         // 2
-    void  (*irq_DMA0_3_7)(void);                                         // 3
+    void  (*irq_DMA0)(void);                                             // 0 (shared with DMA channel 4)
+    void  (*irq_DMA1)(void);                                             // 1 (shared with DMA channel 5)
+    void  (*irq_DMA2)(void);                                             // 2 (shared with DMA channel 6)
+    void  (*irq_DMA3)(void);                                             // 3 (shared with DMA channel 7)
     void  (*irq_DMA0_ERROR)(void);                                       // 4
     void  (*irq_Flash)(void);                                            // 5
     void  (*irq_PMC)(void);                                              // 6
@@ -2053,10 +2063,10 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_PORTB_C_D_E)(void);                                      // 31 single interrupt vector for ports B, C, D and E
 #elif defined KINETIS_KL                                                 // {42}
     #if defined KINETIS_KL28
-        void  (*irq_DMA0_0_4)(void);                                     // 0
-        void  (*irq_DMA0_1_5)(void);                                     // 1
-        void  (*irq_DMA0_2_6)(void);                                     // 2
-        void  (*irq_DMA0_3_7)(void);                                     // 3
+        void  (*irq_DMA0)(void);                                         // 0 (shared with DMA channel 4)
+        void  (*irq_DMA1)(void);                                         // 1 (shared with DMA channel 5)
+        void  (*irq_DMA2)(void);                                         // 2 (shared with DMA channel 6)
+        void  (*irq_DMA3)(void);                                         // 3 (shared with DMA channel 7)
         void  (*irq_DMA0_ERROR)(void);                                   // 4
         void  (*irq_FLEXIO)(void);                                       // 5
         void  (*irq_TPM0)(void);                                         // 6
@@ -2105,10 +2115,10 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_CMP1)(void);                                         // 49
         void  (*irq_RTC_Alarm)(void);                                    // 50
     #elif defined KINETIS_KL82
-        void  (*irq_DMA0_0_4)(void);                                     // 0
-        void  (*irq_DMA0_1_5)(void);                                     // 1
-        void  (*irq_DMA0_2_6)(void);                                     // 2
-        void  (*irq_DMA0_3_7)(void);                                     // 3
+        void  (*irq_DMA0)(void);                                         // 0 (shared with DMA channel 4)
+        void  (*irq_DMA1)(void);                                         // 1 (shared with DMA channel 5)
+        void  (*irq_DMA2)(void);                                         // 2 (shared with DMA channel 6)
+        void  (*irq_DMA2)(void);                                         // 3 (shared with DMA channel 7)
         void  (*irq_DMA0_ERROR)(void);                                   // 4
         void  (*irq_FLEXIO)(void);                                       // 5
         void  (*irq_TPM0)(void);                                         // 6
@@ -2921,10 +2931,10 @@ typedef struct stVECTOR_TABLE
 // Interrupt sources
 //
 #if defined KINETIS_KE15
-    #define irq_DMA0_0_4_ID               0                              // 0
-    #define irq_DMA0_1_5_ID               1                              // 1
-    #define irq_DMA0_2_6_ID               2                              // 2
-    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
+    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
+    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
+    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
     #define irq_DMA0_ERROR_ID             4                              // 4
     #define irq_FLASH_ID                  5                              // 5
     #define irq_PMC_ID                    6                              // 6
@@ -3129,10 +3139,10 @@ typedef struct stVECTOR_TABLE
     #define irq_PORTA_ID                  30                             // 30
     #define irq_PORTB_C_D_E_ID            31                             // 31 (ports B, C, D and E share an interrupt)
 #elif defined KINETIS_KL28
-    #define irq_DMA0_0_4_ID               0                              // 0
-    #define irq_DMA0_1_5_ID               1                              // 1
-    #define irq_DMA0_2_6_ID               2                              // 2
-    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
+    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
+    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
+    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
     #define irq_DMA0_ERROR_ID             4                              // 4
     #define irq_FLEXIO_ID                 5                              // 5
     #define irq_TPM0_ID                   6                              // 6
@@ -3178,10 +3188,10 @@ typedef struct stVECTOR_TABLE
     #define irq_CMP1_EXTENDED_ID          49                             // 49
     #define irq_RTC_Alarm_EXTENDED_ID     50                             // 50
 #elif defined KINETIS_KL82
-    #define irq_DMA0_0_4_ID               0                              // 0
-    #define irq_DMA0_1_5_ID               1                              // 1
-    #define irq_DMA0_2_6_ID               2                              // 2
-    #define irq_DMA0_3_7_ID               3                              // 3
+    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
+    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
+    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
+    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
     #define irq_DMA0_ERROR_ID             4                              // 4
     #define irq_FLEXIO_ID                 5                              // 5
     #define irq_TPM0_ID                   6                              // 6
@@ -6619,7 +6629,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     //
     #define DMAMUX0_CHCFG_ADD   (unsigned char *)(DMAMUX0_BLOCK + 0x00)
     #define DMAMUX0_CHCFG0     *(unsigned char *)(DMAMUX0_BLOCK + 0x00)  // channel 0 configuration register
-      #define DMAMUX0_CHCFG_SOURCE_DISABLED          0                   // 0x00
+      #define DMAMUX0_CHCFG_SOURCE_DISABLED          0                   // 0x00 - valid for Kinetis KV50 on channel s 0..15
     #if defined KINETIS_KL82 || defined KINETIS_KL28
         #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT0  1                   // 0x01 FlexIO shifter 0
         #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT1  2                   // 0x02 FlexIO shifter 1
@@ -6756,7 +6766,25 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_UART1_RX      4                   // 0x04 UART1 RX
           #define DMAMUX0_CHCFG_SOURCE_UART1_TX      5                   // 0x05 UART1 TX
         #endif
-        #if  defined KINETIS_KE15 || defined KINETIS_KE18
+        #if defined KINETIS_KV50
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_WR0  6                   // 0x06 flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_WR1  7                   // 0x07 flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_WR2  8                   // 0x08 flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_WR3  9                   // 0x09 flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_CP0  10                  // 0x0a flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_CP1  11                  // 0x0b flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_CP2  12                  // 0x0c flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_flexPWM0_CP3  13                  // 0x0d flexPWM0
+          #define DMAMUX0_CHCFG_SOURCE_FlexCAN0      14                  // 0x0e FlexCAN0
+          #define DMAMUX0_CHCFG_SOURCE_FlexCAN1      15                  // 0x0f FlexCAN1
+          #define DMAMUX0_CHCFG_SOURCE_SPI0_RX       16                  // 0x10 SPI0 RX
+          #define DMAMUX0_CHCFG_SOURCE_SPI0_TX       17                  // 0x11 SPI0 TX
+          #define DMAMUX0_CHCFG_SOURCE_XBARA_OUT0    18                  // 0x12 XBARA
+          #define DMAMUX0_CHCFG_SOURCE_XBARA_OUT1    19                  // 0x13 XBARA
+          #define DMAMUX0_CHCFG_SOURCE_XBARA_OUT2    20                  // 0x14 XBARA
+          #define DMAMUX0_CHCFG_SOURCE_XBARA_OUT3    21                  // 0x15 XBARA
+          #define DMAMUX0_CHCFG_SOURCE_I2C0          22                  // 0x16 I2C0
+        #elif  defined KINETIS_KE15 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    6                   // 0x06 LPUART2 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    7                   // 0x07 LPUART2 TX
         #else
@@ -6866,20 +6894,22 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_FTM3_C7   39                  // 0x27 FTM3 channel 7
           #endif
         #else
-          #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX
-          #define DMAMUX0_CHCFG_SOURCE_UART4_TX      11                  // 0x0b UART4 TX
-          #define DMAMUX0_CHCFG_SOURCE_UART5_RX      12                  // 0x0c UART5 RX
-          #define DMAMUX0_CHCFG_SOURCE_UART5_TX      13                  // 0x0d UART5 TX
-          #define DMAMUX0_CHCFG_SOURCE_I2S0_RX       14                  // 0x0e I2S0 RX
-          #define DMAMUX0_CHCFG_SOURCE_I2S0_TX       15                  // 0x0f I2S0 TX
-          #define DMAMUX0_CHCFG_SOURCE_SPI0_RX       16                  // 0x10 SPI0 RX
-          #define DMAMUX0_CHCFG_SOURCE_SPI0_TX       17                  // 0x11 SPI0 TX
-          #define DMAMUX0_CHCFG_SOURCE_SPI1_RX       18                  // 0x12 SPI1 RX
-          #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       19                  // 0x13 SPI1 TX
-          #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       20                  // 0x14 SPI2 RX
-          #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       21                  // 0x15 SPI2 TX
-          #define DMAMUX0_CHCFG_SOURCE_I2C0          22                  // 0x16 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
-          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        23                  // 0x17 I2C1 (or I2C2)
+          #if !defined KINETIS_KV50
+              #define DMAMUX0_CHCFG_SOURCE_UART4_RX  10                  // 0x0a UART4 RX
+              #define DMAMUX0_CHCFG_SOURCE_UART4_TX  11                  // 0x0b UART4 TX
+              #define DMAMUX0_CHCFG_SOURCE_UART5_RX  12                  // 0x0c UART5 RX
+              #define DMAMUX0_CHCFG_SOURCE_UART5_TX  13                  // 0x0d UART5 TX
+              #define DMAMUX0_CHCFG_SOURCE_I2S0_RX   14                  // 0x0e I2S0 RX
+              #define DMAMUX0_CHCFG_SOURCE_I2S0_TX   15                  // 0x0f I2S0 TX
+              #define DMAMUX0_CHCFG_SOURCE_SPI0_RX   16                  // 0x10 SPI0 RX
+              #define DMAMUX0_CHCFG_SOURCE_SPI0_TX   17                  // 0x11 SPI0 TX
+              #define DMAMUX0_CHCFG_SOURCE_SPI1_RX   18                  // 0x12 SPI1 RX
+              #define DMAMUX0_CHCFG_SOURCE_SPI1_TX   19                  // 0x13 SPI1 TX
+              #define DMAMUX0_CHCFG_SOURCE_SPI2_RX   20                  // 0x14 SPI2 RX
+              #define DMAMUX0_CHCFG_SOURCE_SPI2_TX   21                  // 0x15 SPI2 TX
+              #define DMAMUX0_CHCFG_SOURCE_I2C0      22                  // 0x16 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
+              #define DMAMUX0_CHCFG_SOURCE_I2C1_2    23                  // 0x17 I2C1 (or I2C2)
+          #endif
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C0       24                  // 0x18 FTM0/TPM0 channel 0
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C1       25                  // 0x19 FTM0/TPM0 channel 1
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C2       26                  // 0x1a FTM0/TPM0 channel 2
@@ -6890,17 +6920,30 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C7       31                  // 0x1f FTM0/TPM0 channel 7
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C0       32                  // 0x20 FTM1/TPM1 channel 0
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C1       33                  // 0x21 FTM1/TPM1 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       34                  // 0x22 FTM2/TPM2 channel 0
-          #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       35                  // 0x23 FTM2/TPM2 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   36                  // 0x24 IEEE 1588 timer 0 (alternative)
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       36                  // 0x24 FTM3 channel 1
-          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   37                  // 0x25 IEEE 1588 timer 1 (alternative)
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       37                  // 0x25 FTM3 channel 2
-          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T2   38                  // 0x26 IEEE 1588 timer 2 (alternative)
-          #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       38                  // 0x26 FTM3 channel 3
-          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39                  // 0x27 IEEE 1588 timer 3 (alternative)
-         #endif
+          #if defined KINETIS_KV50
+              #define DMAMUX0_CHCFG_SOURCE_CMP3          34              // 0x22 CMP3
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C0       36              // 0x24 FTM3 channel 0
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       37              // 0x25 FTM3 channel 1
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       38              // 0x26 FTM3 channel 2
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       39              // 0x27 FTM3 channel 3
+          #else
+              #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       34              // 0x22 FTM2/TPM2 channel 0
+              #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       35              // 0x23 FTM2/TPM2 channel 1
+              #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   36              // 0x24 IEEE 1588 timer 0 (alternative)
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C1       36              // 0x24 FTM3 channel 1
+              #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   37              // 0x25 IEEE 1588 timer 1 (alternative)
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C2       37              // 0x25 FTM3 channel 2
+              #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T2   38              // 0x26 IEEE 1588 timer 2 (alternative)
+              #define DMAMUX0_CHCFG_SOURCE_FTM3_C3       38              // 0x26 FTM3 channel 3
+              #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39              // 0x27 IEEE 1588 timer 3 (alternative)
+          #endif
+        #endif
+        #if defined KINETIS_KV50
+              #define DMAMUX0_CHCFG_SOURCE_HSADC0A       40              // 0x28 HSADC0A
+              #define DMAMUX0_CHCFG_SOURCE_HSADC0B       41              // 0x29 HSADC0B
+        #else
           #define DMAMUX0_CHCFG_SOURCE_ADC0          40                  // 0x28 ADC0
+        #endif
           #if defined KINETIS_KE15 || defined KINETIS_KE18
               #define DMAMUX0_CHCFG_SOURCE_ADC1      41                  // 0x29 ADC1
               #if ADC_CONTROLLERS > 2
@@ -6934,7 +6977,11 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #if DAC_CONTROLLERS > 1
                   #define DMAMUX0_CHCFG_SOURCE_DAC1  46                  // 0x2e DAC1
               #endif
-              #define DMAMUX0_CHCFG_SOURCE_CMT       47                  // 0x2f CMT
+              #if defined KINETIS_KV50
+                  #define DMAMUX0_CHCFG_SOURCE_PDB1  47                  // 0x2f PDB1
+              #else
+                  #define DMAMUX0_CHCFG_SOURCE_CMT   47                  // 0x2f CMT
+              #endif
               #define DMAMUX0_CHCFG_SOURCE_PDB0      48                  // 0x30 PDB 0
           #endif
           #define DMAMUX0_CHCFG_SOURCE_PORTA         49                  // 0x31 port A
@@ -7006,12 +7053,19 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
         #else
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX0       (58 | DMAMUX_CHCFG_TRIG) // 0x3a DMA MUX - always enabled
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (59 | DMAMUX_CHCFG_TRIG) // 0x3b DMA MUX - always enabled
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX4       (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
-          #define DMAMUX0_CHCFG_SOURCE_DMAMUX5       (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
+          #if defined KINETIS_KV50
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX0   (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX1   (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX2   (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX3   (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
+          #else
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX0   (58 | DMAMUX_CHCFG_TRIG) // 0x3a DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX1   (59 | DMAMUX_CHCFG_TRIG) // 0x3b DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX2   (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX3   (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX4   (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+              #define DMAMUX0_CHCFG_SOURCE_DMAMUX5   (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
+          #endif
         #endif
     #endif
       #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT0     (DMAMUX0_CHCFG_SOURCE_DMAMUX0)
@@ -7026,6 +7080,45 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
       #endif
       #define DMAMUX_CHCFG_TRIG                  0x40                    // DMA channel trigger enable
       #define DMAMUX_CHCFG_ENBL                  0x80                    // DMA channel enable
+
+    #if defined KINETIS_KV50                                             // valid for channels 16..31
+        #define DMAMUX0_CHCFG_SOURCE_UART2_RX      2                     // 0x02 UART2 RX
+        #define DMAMUX0_CHCFG_SOURCE_UART2_TX      3                     // 0x03 UART2 TX
+        #define DMAMUX0_CHCFG_SOURCE_UART3_RX      4                     // 0x04 UART3 RX
+        #define DMAMUX0_CHCFG_SOURCE_UART3_TX      5                     // 0x05 UART3 TX
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_WR0  6                     // 0x06 flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_WR1  7                     // 0x07 flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_WR2  8                     // 0x08 flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_WR3  9                     // 0x09 flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_CP0  10                    // 0x0a flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_CP1  11                    // 0x0b flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_CP2  12                    // 0x0c flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_flexPWM1_CP3  13                    // 0x0d flexPWM1
+        #define DMAMUX0_CHCFG_SOURCE_FlexCAN2      14                    // 0x0e FlexCAN1
+        #define DMAMUX0_CHCFG_SOURCE_SPI1_RX       16                    // 0x10 SPI1 RX
+        #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       17                    // 0x11 SPI1 TX
+        #define DMAMUX0_CHCFG_SOURCE_I2C1          22                    // 0x16 I2C1
+        #define DMAMUX0_CHCFG_SOURCE_FTM2_C0       32                    // 0x20 FTM2 channel 0
+        #define DMAMUX0_CHCFG_SOURCE_FTM2_C1       33                    // 0x21 FTM2 channel 1
+        #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       34                    // 0x22 SPI1 RX
+        #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       35                    // 0x23 SPI1 TX
+        #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   36                    // 0x24 IEEE 1588 timer 0
+        #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   37                    // 0x25 IEEE 1588 timer 1
+        #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T2   38                    // 0x26 IEEE 1588 timer 2
+        #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   39                    // 0x27 IEEE 1588 timer 3
+        #define DMAMUX0_CHCFG_SOURCE_HSADC1A       40                    // 0x28 HSADC1A scan complete
+        #define DMAMUX0_CHCFG_SOURCE_HSADC1B       41                    // 0x29 HSADC1B scan complete
+        #define DMAMUX0_CHCFG_SOURCE_ADC0          45                    // 0x2d ADC0
+        #define DMAMUX0_CHCFG_SOURCE_UART4_RX      54                    // 0x36 UART4 RX
+        #define DMAMUX0_CHCFG_SOURCE_UART4_TX      55                    // 0x37 UART4 TX
+        #define DMAMUX0_CHCFG_SOURCE_UART5_RX      56                    // 0x38 UART5 RX
+        #define DMAMUX0_CHCFG_SOURCE_UART5_TX      57                    // 0x39 UART5 TX
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX0_16   (60 | DMAMUX_CHCFG_TRIG) // 0x3c DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX1_16   (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX2_16   (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
+        #define DMAMUX0_CHCFG_SOURCE_DMAMUX3_16   (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
+    #endif
+
     #if !defined KINETIS_KM
         #define DMAMUX0_CHCFG1     *(unsigned char *)(DMAMUX0_BLOCK + 0x01) // Channel 1 Configuration Register
         #define DMAMUX0_CHCFG2     *(unsigned char *)(DMAMUX0_BLOCK + 0x02) // Channel 2 Configuration Register
@@ -7045,6 +7138,24 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
             #define DMAMUX0_CHCFG13    *(unsigned char *)(DMAMUX0_BLOCK + 0x0d) // Channel 13 Configuration Register
             #define DMAMUX0_CHCFG14    *(unsigned char *)(DMAMUX0_BLOCK + 0x0e) // Channel 14 Configuration Register
             #define DMAMUX0_CHCFG15    *(unsigned char *)(DMAMUX0_BLOCK + 0x0f) // Channel 15 Configuration Register
+        #endif
+        #if DMA_CHANNEL_COUNT > 16
+            #define DMAMUX0_CHCFG16    *(unsigned char *)(DMAMUX0_BLOCK + 0x10) // Channel 16 Configuration Register
+            #define DMAMUX0_CHCFG17    *(unsigned char *)(DMAMUX0_BLOCK + 0x11) // Channel 17 Configuration Register
+            #define DMAMUX0_CHCFG18    *(unsigned char *)(DMAMUX0_BLOCK + 0x12) // Channel 18 Configuration Register
+            #define DMAMUX0_CHCFG19    *(unsigned char *)(DMAMUX0_BLOCK + 0x13) // Channel 19 Configuration Register
+            #define DMAMUX0_CHCFG20    *(unsigned char *)(DMAMUX0_BLOCK + 0x14) // Channel 20 Configuration Register
+            #define DMAMUX0_CHCFG21    *(unsigned char *)(DMAMUX0_BLOCK + 0x15) // Channel 21 Configuration Register
+            #define DMAMUX0_CHCFG22    *(unsigned char *)(DMAMUX0_BLOCK + 0x16) // Channel 22 Configuration Register
+            #define DMAMUX0_CHCFG23    *(unsigned char *)(DMAMUX0_BLOCK + 0x17) // Channel 23 Configuration Register
+            #define DMAMUX0_CHCFG24    *(unsigned char *)(DMAMUX0_BLOCK + 0x18) // Channel 24 Configuration Register
+            #define DMAMUX0_CHCFG25    *(unsigned char *)(DMAMUX0_BLOCK + 0x19) // Channel 25 Configuration Register
+            #define DMAMUX0_CHCFG26    *(unsigned char *)(DMAMUX0_BLOCK + 0x1a) // Channel 26 Configuration Register
+            #define DMAMUX0_CHCFG27    *(unsigned char *)(DMAMUX0_BLOCK + 0x1b) // Channel 27 Configuration Register
+            #define DMAMUX0_CHCFG28    *(unsigned char *)(DMAMUX0_BLOCK + 0x1c) // Channel 28 Configuration Register
+            #define DMAMUX0_CHCFG29    *(unsigned char *)(DMAMUX0_BLOCK + 0x1d) // Channel 29 Configuration Register
+            #define DMAMUX0_CHCFG30    *(unsigned char *)(DMAMUX0_BLOCK + 0x1e) // Channel 30 Configuration Register
+            #define DMAMUX0_CHCFG31    *(unsigned char *)(DMAMUX0_BLOCK + 0x1f) // Channel 31 Configuration Register
         #endif
     #endif
 
@@ -14729,6 +14840,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define MCG_C1_CLKS_LIRC           0x40                        // MCGOUTCLK selected from LIRC (LIRC2M or LIRC8M mode)
           #define MCG_C1_CLKS_EXTERN_CLK     0x80                        // MCGOUTCLK selected from external reference clock (EXT mode)
       #else
+          #define MCG_C1_IREFS_EXTERNAL_REF  0x00                        // select external reference as source for FLL (rather than slow internal reference)
           #define MCG_C1_IREFS               0x04                        // select slow internal reference clock as source for FLL (rather than external reference clock)
           #define MCG_C1_FRDIV_RANGE0_1      0x00                        // when RANGE is 0 the external reference is divided by 1
           #define MCG_C1_FRDIV_RANGE0_2      0x08                        // when RANGE is 0 the external reference is divided by 2
@@ -14922,7 +15034,9 @@ typedef struct stKINETIS_LPTMR_CTL
          #define MCG_ATCVL               *(unsigned char *)(MCG_BLOCK + 0x0b) // MSG Auto Trim Compare Value Low Register
         #endif
       #endif
-      #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X || defined KINETIS_KM
+      #if defined KINETIS_KV50
+         #define MCG_C8                   *(volatile unsigned char *)(MCG_BLOCK + 0x0d) // MSG Control 8 Register
+      #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000) || defined KINETIS_REVISION_2 || defined KINETIS_KW2X || defined KINETIS_KM
         #define MCG_C7                   *(unsigned char *)(MCG_BLOCK + 0x0c) // MSG Control 7 Register
           #define MCG_C7_OSCSEL_OSCCLK   0x00                            // MCG FLL external reference clock is OSCCLK (OSCCLK0)
           #if defined KINETIS_KM

@@ -2316,7 +2316,7 @@
     #define DEL_USB_SYMBOL()                                             // control display of USB enumeration - clear
     #define SET_USB_SYMBOL()                                             // control display of USB enumeration - set
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
-  //#define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
+    #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
     #if defined SD_CONTROLLER_AVAILABLE
         #define LED_RED        (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #else

@@ -1552,11 +1552,13 @@ unsigned char DMAMUX_CHCFG0;
     unsigned char DMAMUX_CHCFG1;
     unsigned char DMAMUX_CHCFG2;
     unsigned char DMAMUX_CHCFG3;
-        #if !defined KINETIS_KL
+        #if DMA_CHANNEL_COUNT > 4
         unsigned char DMAMUX_CHCFG4;
         unsigned char DMAMUX_CHCFG5;
         unsigned char DMAMUX_CHCFG6;
         unsigned char DMAMUX_CHCFG7;
+        #endif
+        #if DMA_CHANNEL_COUNT > 8
         unsigned char DMAMUX_CHCFG8;
         unsigned char DMAMUX_CHCFG9;
         unsigned char DMAMUX_CHCFG10;
@@ -1565,6 +1567,24 @@ unsigned char DMAMUX_CHCFG0;
         unsigned char DMAMUX_CHCFG13;
         unsigned char DMAMUX_CHCFG14;
         unsigned char DMAMUX_CHCFG15;
+        #endif
+        #if DMA_CHANNEL_COUNT > 16
+        unsigned char DMAMUX_CHCFG16;
+        unsigned char DMAMUX_CHCFG17;
+        unsigned char DMAMUX_CHCFG18;
+        unsigned char DMAMUX_CHCFG19;
+        unsigned char DMAMUX_CHCFG20;
+        unsigned char DMAMUX_CHCFG21;
+        unsigned char DMAMUX_CHCFG22;
+        unsigned char DMAMUX_CHCFG23;
+        unsigned char DMAMUX_CHCFG24;
+        unsigned char DMAMUX_CHCFG25;
+        unsigned char DMAMUX_CHCFG26;
+        unsigned char DMAMUX_CHCFG27;
+        unsigned char DMAMUX_CHCFG28;
+        unsigned char DMAMUX_CHCFG29;
+        unsigned char DMAMUX_CHCFG30;
+        unsigned char DMAMUX_CHCFG31;
         #endif
     #endif
 } KINETIS_DMAMUX;
@@ -2498,14 +2518,19 @@ typedef struct stKINETIS_PCC2
         unsigned char ucRes2;
         unsigned char MCG_ATCVH;
         unsigned char MCG_ATCVL;
-        unsigned char MCG_C7;
-        unsigned char MCG_C8;
-        unsigned char MCG_C9;
-        unsigned char MCG_C10;
-            #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
-            unsigned char MCG_C11;
-            unsigned char MCG_C12;
-            unsigned char MCG_S2;
+            #if defined KINETIS_KV50
+                unsigned char ucRes3;
+                unsigned char MCG_C8;
+            #else
+            unsigned char MCG_C7;
+            unsigned char MCG_C8;
+            unsigned char MCG_C9;
+            unsigned char MCG_C10;
+                #if defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
+                unsigned char MCG_C11;
+                unsigned char MCG_C12;
+                unsigned char MCG_S2;
+                #endif
             #endif
         #elif defined KINETIS_KL82
         unsigned char MCG_SC;

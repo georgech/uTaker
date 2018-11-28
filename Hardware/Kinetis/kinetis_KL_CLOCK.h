@@ -33,29 +33,6 @@
 #endif
 
 
-#if !defined MCG_C1_FRDIV_VALUE && (!defined RUN_FROM_DEFAULT_CLOCK && !defined EXTERNAL_CLOCK) // no configuration performed - remain in default clocked mode (local method phased out)
-/*
-    #if CRYSTAL_FREQUENCY == 8000000
-        #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
-    #elif CRYSTAL_FREQUENCY == 16000000
-        #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_512
-    #elif CRYSTAL_FREQUENCY == 24000000
-        #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_1024
-    #elif CRYSTAL_FREQUENCY >= 10000000 && CRYSTAL_FREQUENCY <= 12000000
-        #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_256
-    #elif CRYSTAL_FREQUENCY == 4000000
-        #define MCG_C1_FRDIV_VALUE    MCG_C1_FRDIV_128
-    #elif CRYSTAL_FREQUENCY == 32768
-      //#if !defined FLL_FACTOR
-           #define MCG_C1_FRDIV_VALUE MCG_C1_FRDIV_RANGE0_1
-      //#endif
-    #else
-        #error crystal speed support needs to be added!
-    #endif
-    */
-#endif
-
-
 #if defined RUN_FROM_DEFAULT_CLOCK                                       // no configuration performed - remain in default clocked mode
     SIM_CLKDIV1 = (((SYSTEM_CLOCK_DIVIDE - 1) << 28) | ((FLASH_CLOCK_DIVIDE - 1) << 16)); // prepare system and flash clock divides (valid also as bus clock divider)
     #if defined FLL_FACTOR

@@ -618,7 +618,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
             ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);            // interrupt when the transmit/receive buffer is full
         }
         #if defined eDMA_SHARES_INTERRUPTS                               // interrupts are shared between channel 0 and _DMA_CHANNEL_COUNT, 1 and _DMA_CHANNEL_COUNT + 1, etc.
-        fnEnterInterrupt((irq_DMA0_0_4_ID + (ucDMA_channel%_DMA_CHANNEL_COUNT)), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel%_DMA_CHANNEL_COUNT]); // enter DMA interrupt handler on full/half buffer completion
+        fnEnterInterrupt((irq_DMA0_ID + (ucDMA_channel%_DMA_CHANNEL_COUNT)), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel%_DMA_CHANNEL_COUNT]); // enter DMA interrupt handler on full/half buffer completion
         #else
         fnEnterInterrupt((irq_DMA0_ID + ucDMA_channel), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on full/half buffer completion
         #endif

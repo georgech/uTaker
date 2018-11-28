@@ -251,6 +251,45 @@ static const unsigned char UART_DMA_RX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILAB
     #endif
 };
 
+#if defined KINETIS_KV50
+    #if (DMA_UART0_RX_CHANNEL > 15)
+        #error "UART0 Rx DMA channel must be in range 0..15!"
+    #endif
+    #if (DMA_UART0_TX_CHANNEL > 15)
+        #error "UART0 Tx DMA channel must be in range 0..15!"
+    #endif
+    #if (DMA_UART1_RX_CHANNEL > 15)
+        #error "UART1 Rx DMA channel must be in range 0..15!"
+    #endif
+    #if (DMA_UART1_TX_CHANNEL > 15)
+        #error "UART1 Tx DMA channel must be in range 0..15!"
+    #endif
+    #if (DMA_UART2_RX_CHANNEL < 16)
+        #error "UART2 Rx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART2_TX_CHANNEL < 16)
+        #error "UART2 Tx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART3_RX_CHANNEL < 16)
+        #error "UART3 Rx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART3_TX_CHANNEL < 16)
+        #error "UART3 Tx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART4_RX_CHANNEL < 16)
+        #error "UART4 Rx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART4_TX_CHANNEL < 16)
+        #error "UART4 Tx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART5_RX_CHANNEL < 16)
+        #error "UART5 Rx DMA channel must be in range 16..31!"
+    #endif
+    #if (DMA_UART5_TX_CHANNEL < 16)
+        #error "UART5 Tx DMA channel must be in range 16..31!"
+    #endif
+#endif
+
 // DMA channel interrupt priority assignments for each UART/LPUART receiver
 //
 static const unsigned char UART_DMA_RX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {

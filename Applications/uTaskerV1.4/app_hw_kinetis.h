@@ -310,15 +310,15 @@
     #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
   //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
     #if defined USE_HIGH_SPEED_RUN_MODE
-        #define CLOCK_MUL            44                                  // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE    11                                  // 220/11 to give 20MHz
-        #define BUS_CLOCK_DIVIDE     8                                   // 220/6 to give 27.5MHz
-        #define FLASH_CLOCK_DIVIDE   8                                   // 220/6 to give 27.5MHz
+        #define CLOCK_MUL                        44                      // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define FLEX_CLOCK_DIVIDE                4                       // 220/4 to give 55MHz
+        #define FAST_PERIPHERAL_CLOCK_DIVIDE     2                       // 220/2 to give 110MHz
+        #define FLASH_CLOCK_DIVIDE               8                       // 220/6 to give 27.5MHz
     #else
-        #define CLOCK_MUL            32                                  // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE    8                                   // 160/8 to give 20MHz
-        #define BUS_CLOCK_DIVIDE     6                                   // 160/6 to give 26.667MHz
-        #define FLASH_CLOCK_DIVIDE   6                                   // 160/6 to give 26.667MHz
+        #define CLOCK_MUL                        32                      // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
+        #define FLEX_CLOCK_DIVIDE                3                       // 160/3 to give 53.333MHz
+        #define FAST_PERIPHERAL_CLOCK_DIVIDE     2                       // 160/2 to give 80MHz
+        #define FLASH_CLOCK_DIVIDE               6                       // 160/6 to give 26.667MHz
     #endif
 #elif defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined TWR_VF65GS10 // {9}
     #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
@@ -1617,7 +1617,7 @@
     #endif
 #endif
 
-//#define SUPPORT_TIMER                                                  // support hardware timer interrupt configuration (FlexTimer or TPM)
+#define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
     #define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K65 || defined KINETIS_K66
@@ -1674,17 +1674,17 @@
     #endif
 #endif
 
-  #define SUPPORT_PORT_INTERRUPTS                                        // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
+#define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
   //#define PORT_INTERRUPT_USER_DISPATCHER                               // use a single port interrupt callback since the user dispatches according to interrupted input (valid also for low-leakage wakeup interrupts)
     #if defined FRDM_KL03Z
         #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
         #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
     #else
-      //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-      //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
-      //#define NO_PORT_INTERRUPTS_PORTC                                 // remove port interrupt support from port C
-      //#define NO_PORT_INTERRUPTS_PORTD                                 // remove port interrupt support from port D
-      //#define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
+        //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
+        //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
+        //#define NO_PORT_INTERRUPTS_PORTC                                 // remove port interrupt support from port C
+        //#define NO_PORT_INTERRUPTS_PORTD                                 // remove port interrupt support from port D
+        //#define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
     #endif
 
 // Include the Kinetis hardware header here
@@ -3021,8 +3021,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //#define SUPPORT_I2S_SAI                                                // support I2S/SAI
 
 #if !defined KINETIS_WITHOUT_PIT
-  //#define SUPPORT_PITS                                                 // support PITs
-  //#define SUPPORT_PIT_DMA_PORT_TOGGLE                                  // PIT driver supports triggering port toggles
+    #define SUPPORT_PITS                                                 // support PITs
+      //#define SUPPORT_PIT_DMA_PORT_TOGGLE                              // PIT driver supports triggering port toggles
     // Define behavior of low power PIT (when available) in debug and doze mode
     #if defined SUPPORT_LOW_POWER
         #define LPIT_CHARACTERISTICS   (LPIT_MCR_DOZE_EN | LPIT_MCR_DBG_EN) // allow the LPIT to continue running in doze modes since it will otherwise freeze whenever the processor uses WAIT 
@@ -3272,81 +3272,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 //#define RUN_LOOPS_IN_RAM                                               // allow certain routines with tight loops to run from SRAM where it is generally faster than from FLASH - uses slightly more SRAM
 
-// Define DMA channel use (channels and priorities must be unique for used peripherals) - {4}
-//
-#if defined irq_DMA4_ID
-    #define DMA_UART0_TX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_TX_CHANNEL   3                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_TX_CHANNEL   4                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-    #define DMA_UART3_TX_CHANNEL   5                                     // use this DMA channel when using UART 3 for transmission driven by DMA
-    #define DMA_UART4_TX_CHANNEL   6                                     // use this DMA channel when using UART 4 for transmission driven by DMA
-    #define DMA_UART5_TX_CHANNEL   7                                     // use this DMA channel when using UART 5 for transmission driven by DMA
-
-    #define DMA_UART0_RX_CHANNEL   8                                     // use this DMA channel when using UART 0 for reception driven by DMA
-    #define DMA_UART1_RX_CHANNEL   9                                     // use this DMA channel when using UART 1 for reception driven by DMA
-    #define DMA_UART2_RX_CHANNEL   10                                    // use this DMA channel when using UART 2 for reception driven by DMA
-    #define DMA_UART3_RX_CHANNEL   11                                    // use this DMA channel when using UART 3 for reception driven by DMA
-    #define DMA_UART4_RX_CHANNEL   12                                    // use this DMA channel when using UART 4 for reception driven by DMA
-    #define DMA_UART5_RX_CHANNEL   13                                    // use this DMA channel when using UART 5 for reception driven by DMA
-
-    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA4)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA5)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA6)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART4_TX_INT_PRIORITY  (PRIORITY_DMA7)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART5_TX_INT_PRIORITY  (PRIORITY_DMA8)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-
-    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA9)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA10)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA11)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA12)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART4_RX_INT_PRIORITY  (PRIORITY_DMA13)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART5_RX_INT_PRIORITY  (PRIORITY_DMA14)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-
-    #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
-    #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
-#elif defined KINETIS_KL                                                 // limited DMA channels available - select to not have conflicts between used channels!
-    #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-
-    #define DMA_UART0_RX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_RX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-
-    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-
-    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-
-    #define DMA_MEMCPY_CHANNEL     3                                     // use lowest priority DMA channel
-#else                                                                    // parts with 4 DMA channels
-    #define DMA_UART0_TX_CHANNEL   1                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_TX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_TX_CHANNEL   3                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-    #define DMA_UART3_TX_CHANNEL   0
-
-    #define DMA_UART0_RX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
-    #define DMA_UART1_RX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
-    #define DMA_UART3_RX_CHANNEL   0
-
-    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA0)
-
-    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
-    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA0)
-
-    #define DMA_MEMCPY_CHANNEL     0
-#endif
-
 #if defined ARM_MATH_CM0PLUS
     // Define interrupt priorities in the system (kinetis KE and KL support 0..3 - 0 is highest priority and 3 is lowest priority)
     //
@@ -3451,6 +3376,22 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_LPUART2           7
     #define PRIORITY_LPUART3           7
     #define PRIORITY_LPUART4           7
+    #define PRIORITY_DMA31             7
+    #define PRIORITY_DMA30             7
+    #define PRIORITY_DMA29             7
+    #define PRIORITY_DMA28             7
+    #define PRIORITY_DMA27             7
+    #define PRIORITY_DMA26             7
+    #define PRIORITY_DMA25             7
+    #define PRIORITY_DMA24             7
+    #define PRIORITY_DMA23             7
+    #define PRIORITY_DMA22             7
+    #define PRIORITY_DMA21             7
+    #define PRIORITY_DMA20             7
+    #define PRIORITY_DMA19             7
+    #define PRIORITY_DMA18             7
+    #define PRIORITY_DMA17             7
+    #define PRIORITY_DMA16             7
     #define PRIORITY_DMA15             7
     #define PRIORITY_DMA14             7
     #define PRIORITY_DMA13             7
@@ -3523,6 +3464,110 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 
 #define ADC_ERR_PRIORITY           PRIORITY_ADC
+
+// Define DMA channel use (channels and priorities must be unique for used peripherals) - {4}
+//
+#if DMA_CHANNEL_COUNT == 32
+    #define DMA_UART0_TX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA (must be 0..15)
+    #define DMA_UART1_TX_CHANNEL   3                                     // use this DMA channel when using UART 1 for transmission driven by DMA (must be 0..15)
+    #define DMA_UART2_TX_CHANNEL   20                                    // use this DMA channel when using UART 2 for transmission driven by DMA (must be 16..31)
+    #define DMA_UART3_TX_CHANNEL   21                                    // use this DMA channel when using UART 3 for transmission driven by DMA (must be 16..31)
+    #define DMA_UART4_TX_CHANNEL   22                                    // use this DMA channel when using UART 4 for transmission driven by DMA (must be 16..31)
+    #define DMA_UART5_TX_CHANNEL   23                                    // use this DMA channel when using UART 5 for transmission driven by DMA (must be 16..31)
+
+    #define DMA_UART0_RX_CHANNEL   8                                     // use this DMA channel when using UART 0 for reception driven by DMA (must be 0..15)
+    #define DMA_UART1_RX_CHANNEL   9                                     // use this DMA channel when using UART 1 for reception driven by DMA (must be 0..15)
+    #define DMA_UART2_RX_CHANNEL   16                                    // use this DMA channel when using UART 2 for reception driven by DMA (must be 16..31)
+    #define DMA_UART3_RX_CHANNEL   17                                    // use this DMA channel when using UART 3 for reception driven by DMA (must be 16..31)
+    #define DMA_UART4_RX_CHANNEL   18                                    // use this DMA channel when using UART 4 for reception driven by DMA (must be 16..31)
+    #define DMA_UART5_RX_CHANNEL   19                                    // use this DMA channel when using UART 5 for reception driven by DMA (must be 16..31)
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA20)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA21)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_TX_INT_PRIORITY  (PRIORITY_DMA22)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_TX_INT_PRIORITY  (PRIORITY_DMA23)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA8)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA9)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA16)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA17)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_RX_INT_PRIORITY  (PRIORITY_DMA18)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_RX_INT_PRIORITY  (PRIORITY_DMA19)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL_ALT 30                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
+    #define DMA_MEMCPY_CHANNEL     31                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
+#elif DMA_CHANNEL_COUNT == 16
+    #define DMA_UART0_TX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   3                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   4                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART3_TX_CHANNEL   5                                     // use this DMA channel when using UART 3 for transmission driven by DMA
+    #define DMA_UART4_TX_CHANNEL   6                                     // use this DMA channel when using UART 4 for transmission driven by DMA
+    #define DMA_UART5_TX_CHANNEL   7                                     // use this DMA channel when using UART 5 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   8                                     // use this DMA channel when using UART 0 for reception driven by DMA
+    #define DMA_UART1_RX_CHANNEL   9                                     // use this DMA channel when using UART 1 for reception driven by DMA
+    #define DMA_UART2_RX_CHANNEL   10                                    // use this DMA channel when using UART 2 for reception driven by DMA
+    #define DMA_UART3_RX_CHANNEL   11                                    // use this DMA channel when using UART 3 for reception driven by DMA
+    #define DMA_UART4_RX_CHANNEL   12                                    // use this DMA channel when using UART 4 for reception driven by DMA
+    #define DMA_UART5_RX_CHANNEL   13                                    // use this DMA channel when using UART 5 for reception driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA3)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA4)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_TX_INT_PRIORITY  (PRIORITY_DMA5)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_TX_INT_PRIORITY  (PRIORITY_DMA6)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_TX_INT_PRIORITY  (PRIORITY_DMA7)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA8)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA9)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA10)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART3_RX_INT_PRIORITY  (PRIORITY_DMA11)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART4_RX_INT_PRIORITY  (PRIORITY_DMA12)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART5_RX_INT_PRIORITY  (PRIORITY_DMA13)                  // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
+    #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
+#elif DMA_CHANNEL_COUNT == 8
+    #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_RX_CHANNEL   4                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   5                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA4)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA5)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA6)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL_ALT 6                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
+    #define DMA_MEMCPY_CHANNEL     7                                     // use lowest priority DMA channel
+#elif DMA_CHANNEL_COUNT == 4                                             // limited DMA channels available - select to not have conflicts between used channels!
+    #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_RX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART1_RX_CHANNEL   2                                     // use this DMA channel when using UART 1 for transmission driven by DMA
+    #define DMA_UART2_RX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+
+    #define DMA_UART0_TX_INT_PRIORITY  (PRIORITY_DMA0)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_TX_INT_PRIORITY  (PRIORITY_DMA1)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_TX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_UART0_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART1_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+    #define DMA_UART2_RX_INT_PRIORITY  (PRIORITY_DMA2)                   // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+
+    #define DMA_MEMCPY_CHANNEL     3                                     // use lowest priority DMA channel
+#endif
+
 
 // PCC clock matrix
 //

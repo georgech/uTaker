@@ -914,7 +914,7 @@
 
 
 #if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22 && !(defined FRDM_KL27Z && defined _DEV2)
-  //#define SERIAL_INTERFACE                                             // enable serial interface driver
+    #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS
@@ -990,8 +990,8 @@
 #else
     #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
-        #define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
+      //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
+        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface
@@ -1040,7 +1040,7 @@
             #endif
         #endif
       //#define USE_USB_MSD                                              // full USB-MSD to SD card interface on USB (no emulated loader function) - requires SDCARD_SUPPORT (USB_MSD_DEVICE_LOADER can be disabled)
-            #define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
+          //#define DISK_COUNT         1                                 // single upload disk (set to 2 for two upload disks)
           //#define DEBUG_MAC                                            // activate debug output used to monitor the operation of MAC OS X
       //#define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
           //#define KBOOT_HID_LOADER                                     // select KBOOT mode of operation (rather than HIDloader.exe)

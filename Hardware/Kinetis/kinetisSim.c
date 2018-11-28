@@ -5274,15 +5274,9 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     ptrDMA_TCD += channel;
 
-    #if defined irq_DMA4_ID
-    if (channel > 15) {
-        _EXCEPTION("Warning - the simulator doesn't simulate DMA channels above 15 at the moment!!");
-    }
-    #else
     if (channel >= DMA_CHANNEL_COUNT) {
         _EXCEPTION("Warning - invalid DMA channel being used!!");
     }
-    #endif
     if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
         if (ucTriggerSource != 0) {
             unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
@@ -5359,7 +5353,7 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
                 }
                 ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DONE;
                 ptrDMA_TCD->DMA_TCD_DADDR += ptrDMA_TCD->DMA_TCD_DLASTSGA;
-                ptrDMA_TCD->DMA_TCD_SADDR += ptrDMA_TCD->DMA_TCD_SLAST; // ???
+                ptrDMA_TCD->DMA_TCD_SADDR += ptrDMA_TCD->DMA_TCD_SLAST;
             }
             else if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == (ptrDMA_TCD->DMA_TCD_BITER_ELINK/2)) { // half complete
                 if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_INTHALF) != 0) { // check whether half-buffer interrupt has been configured
@@ -5370,7 +5364,7 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
             if (interrupt != 0) {                                        // if possible interrupt to generate
                 DMA_INT |= (DMA_INT_INT0 << channel);
     #if defined eDMA_SHARES_INTERRUPTS
-                if (fnGenInt(irq_DMA0_0_4_ID + (channel%(DMA_CHANNEL_COUNT/2))) != 0)
+                if (fnGenInt(irq_DMA0_ID + (channel%(DMA_CHANNEL_COUNT/2))) != 0)
     #else
                 if (fnGenInt(irq_DMA0_ID + channel) != 0)
     #endif
@@ -5379,72 +5373,102 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
                     switch (channel) {
                     case 0:
     #if defined eDMA_SHARES_INTERRUPTS
-                    case 4:
-                        ptrVect->processor_interrupts.irq_DMA0_0_4();    // call the interrupt handler for DMA channel 0/4
-    #else
-                        ptrVect->processor_interrupts.irq_DMA0();        // call the interrupt handler for DMA channel 0
+                    case (0 + (DMA_CHANNEL_COUNT / 2)):
     #endif
+                        ptrVect->processor_interrupts.irq_DMA0();    // call the interrupt handler for DMA channel 0 (and possibly shared channel)
                         break;
                     case 1:
     #if defined eDMA_SHARES_INTERRUPTS
-                    case 5:
-                        ptrVect->processor_interrupts.irq_DMA0_1_5();    // call the interrupt handler for DMA channel 1/5
-    #else
-                        ptrVect->processor_interrupts.irq_DMA1();        // call the interrupt handler for DMA channel 1
+                    case (1 + (DMA_CHANNEL_COUNT / 2)):
     #endif
+                        ptrVect->processor_interrupts.irq_DMA1();        // call the interrupt handler for DMA channel 1 (and possibly shared channel)
                         break;
                     case 2:
     #if defined eDMA_SHARES_INTERRUPTS
-                    case 6:
-                        ptrVect->processor_interrupts.irq_DMA0_2_6();    // call the interrupt handler for DMA channel 2/6
-    #else
-                        ptrVect->processor_interrupts.irq_DMA2();        // call the interrupt handler for DMA channel 2
+                    case (2 + (DMA_CHANNEL_COUNT / 2)):
     #endif
+                        ptrVect->processor_interrupts.irq_DMA2();        // call the interrupt handler for DMA channel 2 (and possibly shared channel)
                         break;
                     case 3:
     #if defined eDMA_SHARES_INTERRUPTS
-                    case 7:
-                        ptrVect->processor_interrupts.irq_DMA0_3_7();    // call the interrupt handler for DMA channel 3/7
-    #else
-                        ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3
+                    case (3 + (DMA_CHANNEL_COUNT / 2)):
     #endif
+                        ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3 (and possibly shared channel)
                         break;
-    #if defined irq_DMA4_ID
+    #if DMA_CHANNEL_COUNT > 4
                     case 4:
-                        ptrVect->processor_interrupts.irq_DMA4();        // call the interrupt handler for DMA channel 4
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (4 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA4();        // call the interrupt handler for DMA channel 4 (and possibly shared channel)
                         break;
                     case 5:
-                        ptrVect->processor_interrupts.irq_DMA5();        // call the interrupt handler for DMA channel 5
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (5 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA5();        // call the interrupt handler for DMA channel 5 (and possibly shared channel)
                         break;
                     case 6:
-                        ptrVect->processor_interrupts.irq_DMA6();        // call the interrupt handler for DMA channel 6
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (6 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA6();        // call the interrupt handler for DMA channel 6 (and possibly shared channel)
                         break;
                     case 7:
-                        ptrVect->processor_interrupts.irq_DMA7();        // call the interrupt handler for DMA channel 7
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (7 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA7();        // call the interrupt handler for DMA channel 7 (and possibly shared channel)
                         break;
+    #endif
+    #if DMA_CHANNEL_COUNT > 8
                     case 8:
-                        ptrVect->processor_interrupts.irq_DMA8();        // call the interrupt handler for DMA channel 8
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (8 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA8();        // call the interrupt handler for DMA channel 8 (and possibly shared channel)
                         break;
                     case 9:
-                        ptrVect->processor_interrupts.irq_DMA9();        // call the interrupt handler for DMA channel 9
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (9 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA9();        // call the interrupt handler for DMA channel 9 (and possibly shared channel)
                         break;
                     case 10:
-                        ptrVect->processor_interrupts.irq_DMA10();       // call the interrupt handler for DMA channel 10
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (10 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA10();       // call the interrupt handler for DMA channel 10 (and possibly shared channel)
                         break;
                     case 11:
-                        ptrVect->processor_interrupts.irq_DMA11();       // call the interrupt handler for DMA channel 11
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (11 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA11();       // call the interrupt handler for DMA channel 11 (and possibly shared channel)
                         break;
                     case 12:
-                        ptrVect->processor_interrupts.irq_DMA12();       // call the interrupt handler for DMA channel 12
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (12 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA12();       // call the interrupt handler for DMA channel 12 (and possibly shared channel)
                         break;
                     case 13:
-                        ptrVect->processor_interrupts.irq_DMA13();       // call the interrupt handler for DMA channel 13
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (13 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA13();       // call the interrupt handler for DMA channel 13 (and possibly shared channel)
                         break;
                     case 14:
-                        ptrVect->processor_interrupts.irq_DMA14();       // call the interrupt handler for DMA channel 14
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (14 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA14();       // call the interrupt handler for DMA channel 14 (and possibly shared channel)
                         break;
                     case 15:
-                        ptrVect->processor_interrupts.irq_DMA15();       // call the interrupt handler for DMA channel 15
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (15 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA15();       // call the interrupt handler for DMA channel 15 (and possibly shared channel)
                         break;
     #endif
                     }
@@ -6645,7 +6669,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
                 #else
-                        if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART2_RX_CHANNEL)) { // if source enabled
+                        if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART2_RX_CHANNEL)) != 0) { // if source enabled
                             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
                             ptrDMA_TCD += DMA_UART2_RX_CHANNEL;
                             ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
@@ -11628,6 +11652,9 @@ extern void fnUpdateOperatingDetails(void)
 #if !defined NO_STATUS_BAR
     extern void fnPostOperatingDetails(char *ptrDetails);
     unsigned long ulBusClockSpeed;
+    #if defined FLEXBUS_AVAILABLE && defined MCGOUTCLK && defined SIM_CLKDIV1
+    unsigned long ulFlexbusClockSpeed;
+    #endif
     #if !defined BUS_FLASH_CLOCK_SHARED
     unsigned long ulFlashClockSpeed;
     #endif
@@ -11713,8 +11740,8 @@ extern void fnUpdateOperatingDetails(void)
     #endif
     #if defined FLEXBUS_AVAILABLE && defined MCGOUTCLK && defined SIM_CLKDIV1
     ptrBuffer = uStrcpy(ptrBuffer, ", FLEXBUS CLOCK = ");
-    ulFlashClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 20) & 0xf) + 1));
-    ptrBuffer = fnBufferDec(ulFlashClockSpeed, 0, ptrBuffer);
+    ulFlexbusClockSpeed = (MCGOUTCLK/(((SIM_CLKDIV1 >> 20) & 0xf) + 1));
+    ptrBuffer = fnBufferDec(ulFlexbusClockSpeed, 0, ptrBuffer);
     #endif
     #if defined FAST_PERIPHERAL_CLOCK_DIVIDE
     ptrBuffer = uStrcpy(ptrBuffer, ", FAST PERIPHERAL CLOCK = ");
