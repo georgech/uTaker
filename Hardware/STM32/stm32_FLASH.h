@@ -67,10 +67,30 @@ static void fnConfigSPIFileSystem(void)
 #endif
 
 #if defined FLASH_OPTCR
+// This routine operates in RAM
+//
+static void fnExecuteCommand(_STM32_FMI *ptrFMI, _STM32_IWDG *ptrIWDG, unsigned long ulOption)
+{
+    ptrFMI->_FLASH_OPTCR = ulOption;                                 // command the change
+    while ((ptrFMI->_FLASH_SR & FLASH_SR_BSY) != 0) {                // wait until the change has been committed
+      //TOGGLE_WATCHDOG_LED();                                       // indicate that it is waiting for the flash to be erased and the command to complete
+        ptrIWDG->_IWDG_KR = IWDG_KR_RETRIGGER;                       // ensure that the watchdog doesn't fire while waiting
+    #if defined _WINDOWS
+        ptrFMI->_FLASH_SR &= ~(FLASH_SR_BSY);
+    #endif
+    }
+}
+
 // Routine to set new flash options (write protections, brown-out reset level, etc.)
 //
 extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1) // {2}
 {
+#if !defined ALLOW_SECURING_DEBUG_ACCESS
+    if ((ulOption & FLASH_OPTCR_RDP_MASK) == FLASH_OPTCR_RDP_LEVEL_2) {  // if the option would set read protection level 2 (cannot be lowered again and loses debug control forever)
+        ulOption &= ~(FLASH_OPTCR_RDP_MASK);
+        ulOption |= (FLASH_OPTCR & FLASH_OPTCR_RDP_MASK);                // keep present read protection level setting
+    }
+#endif
     ulOption &= FLASH_OPTCR_SETTING_MASK;
     ulOption1 &= FLASH_OPTCR1_SETTING_MASK;
     if (
@@ -85,6 +105,33 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1) //
     #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
         FLASH_OPTCR1 = ulOption1;
     #endif
+        if (((FLASH_OPTCR & FLASH_OPTCR_RDP_MASK) != FLASH_OPTCR_RDP_LEVEL_2) && ((FLASH_OPTCR & FLASH_OPTCR_RDP_MASK) != FLASH_OPTCR_RDP_LEVEL_0)) {
+            if ((ulOption & FLASH_OPTCR_RDP_MASK) == FLASH_OPTCR_RDP_LEVEL_0) {
+                // Special case where we are in read protection level 1 and want to move back to level 0
+                // This triggers a mass erase of the flash before the command is accepted so we must run in SRAM and retrigger the watchdog so that we don't reset before it completes
+                //
+                #define PROG_WORD_SIZE 30                                // adequate space for the small program
+                unsigned short usProgSpace[PROG_WORD_SIZE];              // make space for the routine in static memory (this will have an even boundary)
+                int i = 0;
+                unsigned char *ptrThumb2 = (unsigned char *)fnExecuteCommand;
+                void (*fnRAM_code)(_STM32_FMI *, _STM32_IWDG *, unsigned long);
+                FLASH_OPTCR = ulOption;                                  // set the desired options
+                ptrThumb2 = (unsigned char *)(((CAST_POINTER_ARITHMETIC)ptrThumb2) & ~0x1); // thumb 2 address
+                while (i < PROG_WORD_SIZE) {                             // copy program to SRAM
+                    usProgSpace[i++] = *(unsigned short *)ptrThumb2;
+                    ptrThumb2 += sizeof(unsigned short);
+                }
+                ptrThumb2 = (unsigned char *)usProgSpace;
+                ptrThumb2++;                                             // create a thumb 2 call
+                fnRAM_code = (void(*)(_STM32_FMI *, _STM32_IWDG *, unsigned long))(ptrThumb2);
+                uDisable_Interrupt();
+    #if defined _WINDOWS
+                fnExecuteCommand((_STM32_FMI *)FMI_BLOCK, (_STM32_IWDG *)IWDG_BLOCK, (ulOption | FLASH_OPTCR_OPTSTRT));
+    #else
+                fnRAM_code((_STM32_FMI *)FMI_BLOCK, (_STM32_IWDG *)IWDG_BLOCK, (ulOption | FLASH_OPTCR_OPTSTRT)); // this will never return
+    #endif
+            }
+        }
         FLASH_OPTCR = ulOption;                                          // set the desired options
         FLASH_OPTCR = (ulOption | FLASH_OPTCR_OPTSTRT);                  // command the change
         while ((FLASH_SR & FLASH_SR_BSY) != 0) {                         // wait until the change has been committed

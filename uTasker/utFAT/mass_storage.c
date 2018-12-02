@@ -806,7 +806,7 @@ static void fnManagedMediaCheck(void)
 static int utReadPartialSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber, void *ptrBuf, unsigned short usOffset, unsigned short usLength)
 {
     static unsigned long ulSector;
-    static int iActionResult;
+    static int iActionResult = UTFAT_SUCCESS;
     switch (iMemoryOperation[DISK_SDCARD] & _READING_MEMORY) {
     case _IDLE_MEMORY:
         if ((ptr_utDisk->usDiskFlags & HIGH_CAPACITY_SD_CARD) == 0) {
@@ -825,14 +825,14 @@ static int utReadPartialSector(UTDISK *ptr_utDisk, unsigned long ulSectorNumber,
                 return iActionResult;
             }
             if (ucResult == 0) {
-                fnReadPartialSector(ptrBuf, usOffset, (unsigned short)(usOffset + usLength)); // start reading a sector direct to buffer
+                iActionResult = fnReadPartialSector(ptrBuf, usOffset, (unsigned short)(usOffset + usLength)); // start reading a sector direct to buffer
             }
             SET_SD_CS_HIGH();
             iMemoryOperation[DISK_SDCARD] &= ~_READING_MEMORY;           // read operation has completed
         }
         break;
     }
-    return UTFAT_SUCCESS;
+    return iActionResult;
 }
 #endif
 
@@ -3267,20 +3267,21 @@ static int fnGetSector(unsigned char *ptrBuf)
     return UTFAT_SUCCESS;                                                // read successfully terminated
 }
 
-// Read a specified amount of data from present SD card sector into the specified data buffer (usStart and usStop are offset from start of sector and avoid other data outside of this range being overwritted)
+// Read a specified amount of data from present SD card sector into the specified data buffer (usStart and usStop are offset from start of sector and avoid other data outside of this range being overwritten)
 //
 static int fnReadPartialSector(unsigned char *ptrBuf, unsigned short usStart, unsigned short usStop)
 {
     unsigned char ucResponse;
     unsigned short usLoopCounter = 0;
-    // this may block so a timer may be required to protect it (100ms?)
+    // This may block so a timer may be required to protect it (100ms?)
+    //
     do {
         WRITE_SPI_CMD(0xff);
         WAIT_TRANSMISSON_END();                                          // wait until transmission complete
     } while ((ucResponse = READ_SPI_DATA()) == 0xff);
     if (ucResponse != 0xfe) {
         fnMemoryDebugMsg("ERR-1!!!\r\n");
-        return 0;                                                        // error
+        return UTFAT_DISK_READ_ERROR;                                    // error
     }
     while (usLoopCounter < usStart) {
         WRITE_SPI_CMD(0xff);

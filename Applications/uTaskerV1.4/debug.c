@@ -117,6 +117,7 @@
     04.05.2018 Change interface to fnSetNewSerialMode()                  {92}
     30.09.2018 Allow "sect" display with small output buffer (<= 256 bytes) {93}
     15.10.2018 Add command to command restart in boot loader             {94}
+    29.11.2018 Remove "disk" command - replaced by "cd D:", "cd E:"      {95}
 
 */
 
@@ -195,6 +196,8 @@
     #define OWN_TASK                TASK_DEBUG
 
     #define TCP_SERVER_TEST         5
+    #define UTFAT_COPY_NEXT         6
+    #define UTFAT_COMPARE_NEXT      7
 
     #define STALL_CRITICAL          (TX_BUFFER_SIZE/2)                   // when the Windows TCP implementation sees that the window is less than half the maximum windows size we have advertised it will perform a delay of about 5s.
 
@@ -460,7 +463,7 @@
     #define DO_NEW_DIR              3                                    // specific command to create a directory
     #define DO_WRITE_FILE           4                                    // specific command to add file content
     #define DO_PRINT_FILE           5                                    // specific command to print the content of a file
-    #define DO_ROOT                 6                                    // specific command to set root directory
+  //#define DO_ROOT                 6                                    // specific command to set root directory
     #define DO_DELETE               7                                    // specific command to delete a file or directory
     #define DO_DISPLAY_SECTOR       8                                    // specific command to display a sector of the SD card
     #define DO_FORMAT               9                                    // specific command to format a disk
@@ -485,13 +488,14 @@
     #define DO_INFO_DELETED         28                                   // specific command to display details of a deleted file or directory on the disk
     #define DO_WRITE_MULTI_SECTOR   29                                   // specific command to write a test pattern to multiple contiguous SD card sectors
     #define DO_WRITE_MULTI_SECTOR_PRE 30                                 // specific command to write a test pattern to multiple contiguous SD card sectors with pre-delete
-    #define DO_DISK_NUMBER          31                                   // specific command to select the disk
-    #define DO_DIR_HIDDEN           32                                   // specific command to list of all directory content, including invisible items
-    #define DO_WRITE_HIDE           33                                   // specific command to set a file/directory as hidden
-    #define DO_WRITE_UNHIDE         34                                   // specific command to remove hidden file/director property
-    #define DO_SET_PROTECT          35                                   // specific command to set file/directory write-protection
-    #define DO_REMOVE_PROTECT       36                                   // specific command to remove file/directory write-protection
-    #define DO_DISPLAY_MULTI_SECTOR 37                                   // specific command to display multiple sectors of the SD card
+    #define DO_DIR_HIDDEN           31                                   // specific command to list of all directory content, including invisible items
+    #define DO_WRITE_HIDE           32                                   // specific command to set a file/directory as hidden
+    #define DO_WRITE_UNHIDE         33                                   // specific command to remove hidden file/director property
+    #define DO_SET_PROTECT          34                                   // specific command to set file/directory write-protection
+    #define DO_REMOVE_PROTECT       35                                   // specific command to remove file/directory write-protection
+    #define DO_DISPLAY_MULTI_SECTOR 36                                   // specific command to display multiple sectors of the SD card
+    #define DO_COPY_FILE            37                                   // specific command to copy an existing file to another (new) file
+    #define DO_COMPARE_FILES        38                                   // specific command to compare two files
 
 #define DO_FTP_TELNET_MQTT        12
     #define DO_SHOW_FTP_CONFIG      0                                    // specific ftp client command to show settings
@@ -672,6 +676,10 @@ typedef struct stCLONER_SKIP_REGION
             static int  fnDoDisk(unsigned char ucType, CHAR *ptrInput);
             static void fnSendPrompt(void);
             static void fnDisplayDiskSize(unsigned long ulSectors, unsigned short usBytesPerSector); // {43}
+            static int  fnCopyFiles(void);
+            #if defined UTFAT_WRITE
+            static int  fnCompareFiles(int iStart);
+            #endif
         #endif
     #endif
     #if defined USE_TELNET_CLIENT
@@ -1018,9 +1026,6 @@ static const DEBUG_COMMAND tI2CCommand[] = {
 static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     {"up",                "go to main menu",                       DO_HELP,          DO_HELP_UP},
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {81}
-    #if DISK_COUNT > 1
-    {"disk",              "select disk [C/D/E]",                   DO_DISK,          DO_DISK_NUMBER},
-    #endif
     {"info",              "utFAT/card info",                       DO_DISK,          DO_INFO},
     {"dir",               "[path] show directory content",         DO_DISK,          DO_DIR},
     #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS         // {60}
@@ -1033,12 +1038,14 @@ static const DEBUG_COMMAND tDiskCommand[] = {                            // {17}
     {"infod",             "[path] show deleted info",              DO_DISK,          DO_INFO_DELETED},
     #endif
     {"cd",                "[path] change dir. (.. for up)",        DO_DISK,          DO_CHANGE_DIR},
+    {"comp" ,             "compare [file1] with [file2]",          DO_DISK,          DO_COMPARE_FILES},
     #if defined UTFAT_WRITE                                              // {45}
     {"file" ,             "[path] new empty file",                 DO_DISK,          DO_NEW_FILE},
     {"write",             "[path] test write to file",             DO_DISK,          DO_WRITE_FILE},
     {"mkdir" ,            "new empty dir",                         DO_DISK,          DO_NEW_DIR},
     {"rename" ,           "[from] [to] rename",                    DO_DISK,          DO_RENAME},
     {"trunc" ,            "truncate to [length] [path]",           DO_DISK,          DO_TEST_TRUNCATE}, // {59}
+    {"copy" ,             "[file1] to [file2]",                    DO_DISK,          DO_COPY_FILE},
         #if defined UTFAT_EXPERT_FUNCTIONS                               // {83}
     {"hide",              "[path] file/dir to hide",               DO_DISK,          DO_WRITE_HIDE},
     {"unhide",            "[path] file/dir to un-hide",            DO_DISK,          DO_WRITE_UNHIDE},
@@ -1288,6 +1295,20 @@ static const MENUS ucMenus[] = {
     };
 #endif
 
+#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined DISK_COUNT && DISK_COUNT > 1)
+static const CHAR cDiskName[] = {
+    #if defined DISK_C
+    'C',
+    #endif
+    #if defined DISK_D
+    'D',
+    #endif
+    #if defined DISK_E
+    'E',
+    #endif
+};
+#endif
+
 /* =================================================================== */
 /*                     global variable definitions                     */
 /* =================================================================== */
@@ -1362,6 +1383,7 @@ static unsigned char   ucDebugCnt = 0;
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
     static UTDIRECTORY *ptr_utDirectory[DISK_COUNT] = {0};               // pointer to a directory object
+    static UTLISTDIRECTORY utListDirectory[DISK_COUNT] = {0};            // list directory object for a single user
     static int iFATstalled = 0;                                          // stall flags when listing large directories and printing content
 #endif
 #if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
@@ -1371,10 +1393,11 @@ static unsigned char   ucDebugCnt = 0;
 #if defined I2C_INTERFACE && (defined TEST_I2C_INTERFACE || defined I2C_MASTER_LOADER)
     extern QUEUE_HANDLE I2CPortID;
 #endif
-#if defined DISK_COUNT && DISK_COUNT > 1                                 // if multiple disks are present
-    static unsigned char ucPresentDisk = 0;
-#else
-    #define ucPresentDisk                0
+#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined DISK_COUNT && DISK_COUNT > 1)
+    static unsigned char ucActionPresentDisk = 0;
+    static unsigned char ucUserDisk = 0;
+    static UTFILE utFile1 = {0};
+    static UTFILE utFile2 = {0};
 #endif
 #if defined EZPORT_CLONER
     static int iCloningActive = 0;
@@ -1580,6 +1603,18 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
                 }
 #endif
             }
+#if defined USE_MAINTENANCE && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+            else if (UTFAT_COMPARE_NEXT == ucInputMessage[MSG_INTERRUPT_EVENT]) {
+                fnCompareFiles(0);
+                return;
+            }
+    #if defined UTFAT_WRITE
+            else if (UTFAT_COPY_NEXT == ucInputMessage[MSG_INTERRUPT_EVENT]) {
+                fnCopyFiles();
+                return;
+            }
+    #endif
+#endif
 #if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC && defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
             else if (E_USB_TX_CONTINUE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (fnUSB_CDC_TX(0) != 0) {                              // continue transmission of data to USB-CDC interface(s)
@@ -1590,7 +1625,7 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {81}
             else if (UTFAT_OPERATION_COMPLETED == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (iFATstalled == STALL_COUNTING_CLUSTERS) {
-                    const UTDISK *ptrDiskInfo = fnGetDiskInfo(ucPresentDisk);
+                    const UTDISK *ptrDiskInfo = fnGetDiskInfo(ucActionPresentDisk);
                     if (ptrDiskInfo->utFileInfo.ulFreeClusterCount != 0xffffffff) {
                         fnDisplayDiskSize((ptrDiskInfo->utFileInfo.ulFreeClusterCount * ptrDiskInfo->utFAT.ucSectorsPerCluster), ptrDiskInfo->utFAT.usBytesPerSector); // {43}
                         fnDebugMsg(" free\r\n");
@@ -5604,7 +5639,6 @@ static void fnDoI2C(unsigned char ucType, CHAR *ptrInput)                // I2C 
 #endif
 
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST // {17}{81}
-
 static void fnDisplayDiskSize(unsigned long ulSectors, unsigned short usBytesPerSector) // {43}
 {
     if (ulSectors >= 0x800000) {                                         // note that 512 byte sectors are assumed
@@ -5618,25 +5652,25 @@ static void fnDisplayDiskSize(unsigned long ulSectors, unsigned short usBytesPer
 }
 
 
-#if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
+    #if !defined LOW_MEMORY && (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
 // Display the sector content - allowing stalling when there is not adequate output buffer space
 //
 static int fnDisplaySectorContent(unsigned char ucType)                  // {93}
 {
     static unsigned char ucLine = 0;
     unsigned char ucRow = 0;
-    #if defined NAND_FLASH_FAT
+        #if defined NAND_FLASH_FAT
     unsigned long ulBuffer[528/sizeof(unsigned long)];                   // temporary long word aligned buffer
-    #else
+        #else
     unsigned long ulBuffer[512/sizeof(unsigned long)];                   // temporary long word aligned buffer for efficiency
-    #endif
-    #if defined UTFAT_MULTIPLE_BLOCK_READ
+        #endif
+        #if defined UTFAT_MULTIPLE_BLOCK_READ
     if (DO_DISPLAY_MULTI_SECTOR == ucType) {
-        fnPrepareBlockRead(ucPresentDisk, 20);                           // prepare for a block read of 20 sectors
+        fnPrepareBlockRead(ucActionPresentDisk, 20);                     // prepare for a block read of 20 sectors
     }
     for (ucLine = 0; ucLine < 20; ucLine++) {                            // read 20 consecutive sectors (block read)
         TOGGLE_TEST_OUTPUT();                                            // output to measure the read time
-        if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber++) != 0) { // read the sector content to a buffer
+        if (fnReadSector(ucActionPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber++) != 0) { // read the sector content to a buffer
             fnDebugMsg(" FAILED!!\r\n");
             return 0;
         }
@@ -5645,14 +5679,14 @@ static int fnDisplaySectorContent(unsigned char ucType)                  // {93}
             break;
         }
     }
-    #else
-    if (fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber) != 0) { // read the sector content to a temporary buffer
+        #else
+    if (fnReadSector(ucActionPresentDisk, (unsigned char *)ulBuffer, ulLastSectorNumber) != 0) { // read the sector content to a temporary buffer
         fnDebugMsg(" FAILED!!\r\n");
         ucSectorType = 0;
         ucLine = 0;
         return 0;
     }
-    #endif
+        #endif
     for ( ; ucLine < 8; ucLine++) {                                      // display the read data a line at a time
         if (fnWrite(DebugHandle, 0, (180)) == 0) {                       // check whether there is enough space in the output buffer to add a complete line
             fnDriver(DebugHandle, MODIFY_WAKEUP, (MODIFY_TX | OWN_TASK));// we want to be woken when the queue is free again
@@ -5660,17 +5694,17 @@ static int fnDisplaySectorContent(unsigned char ucType)                  // {93}
             return 1;                                                    // stall
         }
         for (ucRow = 0; ucRow < 16; ucRow++) {                           // display 16 long words per line
-    #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
+        #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
             fnDebugHex(BIG_LONG_WORD(ulBuffer[(ucLine * 16) + ucRow]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
+        #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
             fnDebugHex(LITTLE_LONG_WORD(ulBuffer[(ucLine * 16) + ucRow]), (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #else
+        #else
             fnDebugHex(ulBuffer[(ucLine * 16) + ucRow], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
-    #endif
+        #endif
         }
         fnDebugMsg("\r\n");                                              // end of line
     }
-    #if defined NAND_FLASH_FAT
+        #if defined NAND_FLASH_FAT
     if (DO_DISPLAY_PAGE == ucType) {
         for (ucRow = 0; j < ucRow; j++) {
             fnDebugHex(ulBuffer[(8 * 16) + ucRow], (WITH_LEADIN | WITH_SPACE | sizeof(ulBuffer[0])));
@@ -5678,25 +5712,154 @@ static int fnDisplaySectorContent(unsigned char ucType)                  // {93}
         fnDebugMsg("\r\n");
         ptrDiskInfo->usDiskFlags &= ~DISK_TEST_MODE;                     // remove test mode
     }
-    #endif
+        #endif
     ucSectorType = 0;
     ucLine = 0;
     return 0;
 }
-#endif
+    #endif
 
+    #if defined DISK_COUNT && DISK_COUNT > 1
+static int fnSetDisk(CHAR cDiskRef)
+{
+    int i = 0;
+    while (i < sizeof(cDiskName)) {
+        if ((cDiskName[i] == cDiskRef) || ((cDiskName[i] + ('a' - 'A')) == cDiskRef)) { // match small or large letters
+            return i;
+        }
+        i++;
+    }
+    return -1;
+}
 
+static CHAR *fnChangeDisk(CHAR *ptrInput, unsigned char *ptr_ucPresentDisk)
+{
+    if (ptrInput != 0) {
+        if (*(ptrInput + 1) == ':') {
+            int iDifferentDisk = fnSetDisk(*ptrInput);
+            if (iDifferentDisk >= 0) {
+                *ptr_ucPresentDisk = (unsigned char)iDifferentDisk;
+                ptrInput += 2;
+            }
+        }
+    }
+    return ptrInput;
+}
+    #endif
+
+static CHAR *fnTerminateName(CHAR *ptrReadFileName)
+{
+    fnJumpWhiteSpace(&ptrReadFileName);                                  // jump over input and white space
+    *(ptrReadFileName - 1) = 0;
+    return ptrReadFileName;
+}
+
+    #if defined UTFAT_WRITE
+static int fnCopyFiles(void)
+{
+    unsigned char ucTemp[512];
+    fnDebugMsg(".");
+    if (utReadFile(&utFile1, ucTemp, sizeof(ucTemp)) != UTFAT_SUCCESS) {
+        fnDebugMsg("\r\nREAD ERROR occurred");
+        return 0;
+    }
+    else {
+        if (utWriteFile(&utFile2, ucTemp, utFile1.usLastReadWriteLength) != UTFAT_SUCCESS) {
+            fnDebugMsg("write failed");
+            return 0;;
+        }
+    }
+    if (utFile2.ulFileSize < utFile1.ulFileSize) {
+        fnInterruptMessage(OWN_TASK, UTFAT_COPY_NEXT);
+        return 1;
+    }
+    fnDebugMsg("Copy completed\r\n");
+    return 0;
+}
+    #endif
+
+static int fnCompareFiles(int iStart)
+{
+    static unsigned long ulFileChecked = 0;
+    unsigned char ucTemp1[512];
+    unsigned char ucTemp2[512];
+    if (iStart != 0) {
+        ulFileChecked = 0;
+    }
+    fnDebugMsg(".");
+    if (utReadFile(&utFile1, ucTemp1, sizeof(ucTemp1)) != UTFAT_SUCCESS) {
+        fnDebugMsg("\r\nREAD ERROR occurred");
+        return 0;
+    }
+    if (utReadFile(&utFile2, ucTemp2, sizeof(ucTemp2)) != UTFAT_SUCCESS) {
+        fnDebugMsg("\r\nREAD ERROR occurred");
+        return 0;
+    }
+    if (uMemcmp(ucTemp1, ucTemp2, utFile1.usLastReadWriteLength) != 0) {
+        int iErrorLocation = 0;
+        fnDebugMsg("Compare failed: Difference at offset");
+        while (iErrorLocation < sizeof(ucTemp2)) {
+            if (ucTemp1[iErrorLocation] != ucTemp2[iErrorLocation]) {
+                break;
+            }
+            iErrorLocation++;
+        }
+        fnDebugDec(ulFileChecked, (WITH_SPACE | WITH_CR_LF));
+        fnDebugMsg("File 1 =");
+        fnDebugHex(ucTemp1[iErrorLocation], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(unsigned char)));
+        fnDebugMsg("File 2 =");
+        fnDebugHex(ucTemp2[iErrorLocation], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(unsigned char)));
+        return 0;
+    }
+    else {
+        ulFileChecked += utFile1.usLastReadWriteLength;                  // count the length found to be good
+    }
+    if (utFile1.ulFilePosition >= utFile1.ulFileSize) {                   // if the complete file has been checked
+        fnDebugMsg("Files are identical!\r\n");
+        return 0;
+    }
+    else {
+        fnInterruptMessage(OWN_TASK, UTFAT_COMPARE_NEXT);                // schedule next sector check
+        return 1;                                                        // not yet complete
+    }
+}
+
+static int fnPrepareApplicationDirectory(unsigned char ucThisDisk, int iFileRef)
+{
+    if (ptr_utDirectory[ucThisDisk] == 0) {                              // if we haven't yet allocated a director for this disk
+        ptr_utDirectory[ucThisDisk] = utAllocateDirectory(ucThisDisk, UT_PATH_LENGTH); // allocate a directory for use by this module associated with D: and reserve its path name string length
+    }
+    if ((ptr_utDirectory[ucThisDisk]->usDirectoryFlags & UTDIR_VALID) == 0) { // directory not yet valid
+        if (utOpenDirectory(0, ptr_utDirectory[ucThisDisk]) != UTFAT_SUCCESS) { // open the root directory of teh disk
+        #if defined DISK_COUNT && DISK_COUNT > 1 || !defined SDCARD_SUPPORT
+            fnDebugMsg("No Disk ready\r\n");
+        #else
+            fnDebugMsg("No SD-Card ready\r\n");
+        #endif
+            return -1;                                                   // media not yet ready for use
+        }
+        utListDirectory[ucThisDisk].ptr_utDirObject = ptr_utDirectory[ucThisDisk]; // the list directory is always referenced to the main directory object
+    }
+    return 0;
+}
 
 
 // Handle SD-card disk commands
 //
 static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
 {
-    static UTLISTDIRECTORY utListDirectory[DISK_COUNT];                  // list directory object for a single user
-#if defined UTFAT_UNDELETE                                               // {60}
+    #if defined UTFAT_UNDELETE                                           // {60}
     CHAR *ptrUndelInput = 0;
-#endif
-#if defined VERIFY_NAND && defined UTFAT_WRITE                           // {45}
+    #endif
+    #if defined DISK_COUNT && DISK_COUNT > 1
+    unsigned char ucPresentDisk = ucUserDisk;
+    if (ptrInput == 0) {
+        ucPresentDisk = ucActionPresentDisk;
+    }
+    #else
+    unsigned char ucPresentDisk = 0;
+    #endif
+    #if defined VERIFY_NAND && defined UTFAT_WRITE                       // {45}
     if (DO_TEST_NAND == ucType) {                                        // write pattern to NAND Flash for low-level test purposes
         unsigned long ulBuffer[512/4];
         int iUserBlock;
@@ -5704,7 +5867,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         uMemset(ulBuffer, 0, sizeof(ulBuffer));                          // blank sector content
         for (iUserBlock = 0; iUserBlock < 1807; iUserBlock++) {          // write a value to the first sector of each user block (valid for 32M NAND with 90% block utilisation)
             ulBuffer[0] = iUserBlock;                                    // mark the sector with the block number
-            if ((iError = fnWriteSector(ucPresentDisk, (unsigned char *)ulBuffer, (iUserBlock * 32))) != UTFAT_SUCCESS) { // 32 sectors in a block assumed - write the pattern
+            if ((iError = fnWriteSector(ucActionPresentDisk, (unsigned char *)ulBuffer, (iUserBlock * 32))) != UTFAT_SUCCESS) { // 32 sectors in a block assumed - write the pattern
                 fnDebugMsg("Write error: ");
                 fnDebugHex(iUserBlock, sizeof(iUserBlock));
                 fnDebugDec(iError, (WITH_SPACE | DISPLAY_NEGATIVE | WITH_CR_LF));
@@ -5719,7 +5882,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         unsigned long ulUserBlock;
         int iError;
         for (ulUserBlock = 0; ulUserBlock < 1807; ulUserBlock++) {       // read back the first sector of each user block and check that the content is correct - report first error found
-            if ((iError = fnReadSector(ucPresentDisk, (unsigned char *)ulBuffer, (ulUserBlock * 32)))) { // 32 sectors in a block assumed - write the pattern
+            if ((iError = fnReadSector(ucActionPresentDisk, (unsigned char *)ulBuffer, (ulUserBlock * 32)))) { // 32 sectors in a block assumed - write the pattern
                 fnDebugMsg("Read error: ");
                 fnDebugHex(ulUserBlock, sizeof(ulUserBlock));
                 fnDebugDec(iError, (WITH_SPACE | DISPLAY_NEGATIVE | WITH_CR_LF));
@@ -5734,70 +5897,34 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         fnDebugMsg("Check successful\r\n");
         return 0;
     }
-#endif
-#if DISK_COUNT > 1
-    if (DO_DISK_NUMBER == ucType) {
-        fnDebugMsg("Disk ");
-    #if defined DISK_C
-        if ((*ptrInput == 'C') || (*ptrInput == 'c')) {
-            fnDebugMsg("C\r\n");
-            ucPresentDisk = DISK_C;
-            return 0;
-        }
     #endif
-    #if defined DISK_D
-        if ((*ptrInput == 'D') || (*ptrInput == 'd')) {
-            fnDebugMsg("D\r\n");
-            ucPresentDisk = DISK_D;
-            return 0;
-        }
-    #endif
-    #if defined DISK_E
-        if ((*ptrInput == 'E') || (*ptrInput == 'e')) {
-            fnDebugMsg("E\r\n");
-            ucPresentDisk = DISK_E;
-            return 0;
-        }
-    #endif
-        fnDebugMsg("not avaiable\r\n");
-        return 0;
-    }
-#endif
     if ((DO_FORMAT != ucType) && (DO_FORMAT_FULL != ucType) && (DO_DISPLAY_SECTOR != ucType)
-#if defined TEST_SDCARD_SECTOR_WRITE                                     // {52}
+    #if defined TEST_SDCARD_SECTOR_WRITE                                 // {52}
         && (DO_WRITE_SECTOR != ucType) && (DO_WRITE_MULTI_SECTOR != ucType) && (DO_WRITE_MULTI_SECTOR_PRE != ucType)
-#endif
-#if defined NAND_FLASH_FAT
+    #endif
+    #if defined NAND_FLASH_FAT
         && (DO_DISPLAY_SECTOR_INFO != ucType) && (DO_DELETE_REMAP_INFO != ucType) && (DO_DISPLAY_PAGE != ucType) && (DO_DELETE_FAT != ucType)
-#endif
+    #endif
         && (DO_INFO != ucType)) {
-        if (ptr_utDirectory[ucPresentDisk] == 0) {
-            ptr_utDirectory[ucPresentDisk] = utAllocateDirectory(ucPresentDisk, UT_PATH_LENGTH); // allocate a directory for use by this module associated with D: and reserve its path name string length
-        }
-        if ((ptr_utDirectory[ucPresentDisk]->usDirectoryFlags & UTDIR_VALID) == 0) { // directory not valid
-            if (utOpenDirectory(0, ptr_utDirectory[ucPresentDisk]) != UTFAT_SUCCESS) { // open the root directory
-#if DISK_COUNT > 1 || !defined SDCARD_SUPPORT
-                fnDebugMsg("No Disk ready\r\n");
-#else
-                fnDebugMsg("No SD-Card ready\r\n");
-#endif
-                return 0;
-            }
-            utListDirectory[ucPresentDisk].ptr_utDirObject = ptr_utDirectory[ucPresentDisk]; // the list directory is always referenced to the main directory object
+    #if defined DISK_COUNT && DISK_COUNT > 1
+        ptrInput = fnChangeDisk(ptrInput, &ucPresentDisk);
+    #endif
+        if (fnPrepareApplicationDirectory(ucPresentDisk, 0) < 0) {       // allocate a director for use by the application if not yet done
+            return 0;                                                    // media not yet ready
         }
     }
     switch (ucType) {
-#if defined UTFAT_UNDELETE && defined UTFAT_WRITE                        // {60}
+    #if defined UTFAT_UNDELETE && defined UTFAT_WRITE                    // {60}
     case DO_UNDELETE:
         ptrUndelInput = ptrInput;                                        // save pointer to the file to be modified and its new name
         ptrInput = 0;                                                    // search only in present directory
-#endif
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS             // {60}
+    #endif
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS         // {60}
     case DO_DIR_DELETED:                                                 // display just deleted entries in a directory
-#endif
-#if defined UTFAT_EXPERT_FUNCTIONS
+    #endif
+    #if defined UTFAT_EXPERT_FUNCTIONS
     case DO_DIR_HIDDEN:                                                  // display just hidden entries in a directory
-#endif
+    #endif
     case DO_DIR:                                                         // display present directory
         if ((iFATstalled == 0) && (utLocateDirectory(ptrInput, &utListDirectory[ucPresentDisk]) < UTFAT_SUCCESS)) { // open a list referenced to the main directory
             fnDebugMsg("Invalid directory\r\n");
@@ -5811,21 +5938,21 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             fileList.ptrBuffer = cBuffer;
             fileList.usBufferLength = sizeof(cBuffer);
             fileList.ucStyle = DOS_TYPE_LISTING;                         // DOS style listing requested
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS             // {60}
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS         // {60}
             if (DO_DIR_DELETED == ucType) {
                 fileList.ucStyle |= DELETED_TYPE_LISTING;                // list deleted entries and not normal entries
             }
-    #if defined UTFAT_UNDELETE
+        #if defined UTFAT_UNDELETE
             else if (DO_UNDELETE == ucType) {
                 fileList.ucStyle |= (DELETED_TYPE_LISTING | INVISIBLE_TYPE_LISTING);
             }
-    #endif
-    #if defined UTFAT_EXPERT_FUNCTIONS
+        #endif
+        #if defined UTFAT_EXPERT_FUNCTIONS
             else if (DO_DIR_HIDDEN == ucType) {
                 fileList.ucStyle |= (HIDDEN_TYPE_LISTING);
             }
+        #endif
     #endif
-#endif
             if (iFATstalled == 0) {
                 fnDebugMsg("Directory ");
                 fnDebugMsg(ptr_utDirectory[ucPresentDisk]->ptrDirectoryPath);
@@ -5841,38 +5968,42 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 iFATstalled = 0;
             }
             FOREVER_LOOP() {
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
                 if (fnWrite(DebugHandle, 0, (sizeof(cBuffer) + 3)) == 0) // check whether there is enough space in the output buffer to accept the next entry 
-#else
+    #else
                 if (fnWrite(DebugHandle, 0, sizeof(cBuffer)) == 0)       // check whether there is enough space in the output buffer to accept the next entry 
-#endif
+    #endif
                 {
                     fnDriver(DebugHandle, MODIFY_WAKEUP, (MODIFY_TX | OWN_TASK)); // we want to be woken when the queue is free again
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
                     if (DO_DIR_DELETED == ucType) {
+                        ucActionPresentDisk = ucPresentDisk;
                         iFATstalled = STALL_DIRD_LISTING;
                     }
-    #if defined UTFAT_EXPERT_FUNCTIONS
+        #if defined UTFAT_EXPERT_FUNCTIONS
                     else if (DO_DIR_HIDDEN == ucType) {
+                        ucActionPresentDisk = ucPresentDisk;
                         iFATstalled = STALL_DIRH_LISTING;
                     }
-    #endif
+        #endif
                     else {
+                        ucActionPresentDisk = ucPresentDisk;
                         iFATstalled = STALL_DIR_LISTING;
                     }
-#else
+    #else
+                    ucActionPresentDisk = ucPresentDisk;
                     iFATstalled = STALL_DIR_LISTING;
-#endif
+    #endif
                     return 1;
                 }
                 iResult = utListDir(&utListDirectory[ucPresentDisk], &fileList);
                 if (fileList.usStringLength != 0) {
-#if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
+    #if defined UTFAT_UNDELETE || defined UTFAT_EXPERT_FUNCTIONS
                     if (DO_DIR_DELETED == ucType) {
                         fnDebugMsg("[D]");
                     }
-#endif
-#if defined UTFAT_UNDELETE && defined UTFAT_WRITE                        // {60}
+    #endif
+    #if defined UTFAT_UNDELETE && defined UTFAT_WRITE                    // {60}
                     if (DO_UNDELETE == ucType) {
                         int iTestName = (fileList.usStringLength - 2);
                         int iTestLength = 0;
@@ -5896,7 +6027,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                             ptrUndelInput = 0;                           // only first file that matches is undeleted
                         }
                     }
-#endif
+    #endif
                     fnWrite(DebugHandle, (unsigned char *)cBuffer, (QUEUE_TRANSFER)fileList.usStringLength);
                 }
                 if (iResult == UTFAT_NO_MORE_LISTING_ITEMS_FOUND) {
@@ -5916,19 +6047,19 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 fnDebugMsg(" free\r\n");
             }
             else {
+                ucActionPresentDisk = ucPresentDisk;
                 iFATstalled = STALL_COUNTING_CLUSTERS;
                 utFreeClusters(ucPresentDisk, OWN_TASK);                 // start count of free clusters - the result will be displayed on completion
                 return 1;
             }
         }
         break;
-#if defined UTFAT_EXPERT_FUNCTIONS                                       // {60}
+    #if defined UTFAT_EXPERT_FUNCTIONS                                   // {60}
     case DO_INFO_DELETED:
     case DO_INFO_FILE:
         {
             unsigned long ulAccessMode;
             UTFILE utTempFile;                                           // temporary file object
-          //utTempFile.ptr_utDirObject = ptr_utDirectory[ucPresentDisk]; // set in utOpenFile() from utFAT2.0
             if (DO_INFO_DELETED == ucType) {
                 ulAccessMode = (UTFAT_OPEN_FOR_READ | UTFAT_DISPLAY_INFO | UTFAT_OPEN_DELETED);
             }
@@ -5941,27 +6072,26 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             utCloseFile(&utTempFile);
         }
         break;
-#endif
-
-#if !defined LOW_MEMORY
-    #if defined UTFAT_WRITE                                              // {45}
-    case DO_WRITE_FILE:                                                  // write extra content to file
     #endif
+
+    #if !defined LOW_MEMORY
+        #if defined UTFAT_WRITE                                          // {45}
+    case DO_WRITE_FILE:                                                  // write extra content to file
+        #endif
     case DO_PRINT_FILE:                                                  // print the content of a file (ASCII)
         {
             static UTFILE utFile;                                        // local file object
             unsigned short usOpenAttributes = (UTFAT_OPEN_FOR_READ | UTFAT_MANAGED_MODE);
             unsigned char ucTemp[256];                                   // temp buffer to retrieve a block of data from the file
-          //utFile.ptr_utDirObject = ptr_utDirectory[ucPresentDisk];
             utFile.ownerTask = OWN_TASK;
-    #if defined UTFAT_WRITE                                              // {45}
+        #if defined UTFAT_WRITE                                          // {45}
             if (DO_WRITE_FILE == ucType) {
                 usOpenAttributes = (UTFAT_OPEN_FOR_WRITE | UTFAT_APPEND | UTFAT_MANAGED_MODE); // {39}
             }
-    #endif
+        #endif
             if ((iFATstalled == STALL_PRINTING_FILE) || (utOpenFile(ptrInput, &utFile, ptr_utDirectory[ucPresentDisk], usOpenAttributes) == UTFAT_PATH_IS_FILE)) { // {62} open a file referenced to the directory object
                 int iLoop;
-    #if defined UTFAT_WRITE                                              // {45}
+        #if defined UTFAT_WRITE                                          // {45}
                 if (DO_WRITE_FILE == ucType) {                           // add input to file
                     static unsigned char ucContent = 0x55;
                     uMemset(ucTemp, ucContent, sizeof(ucTemp));          // fill with a pattern
@@ -5978,10 +6108,11 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                     utCloseFile(&utFile);
                     break;
                 }
-    #endif
+        #endif
                 do {
                     if (fnWrite(DebugHandle, 0, sizeof(ucTemp)) == 0) {  // check whether there is enough space in the output buffer to accept the next block
                         fnDriver(DebugHandle, MODIFY_WAKEUP, (MODIFY_TX | OWN_TASK)); // we want to be woken when the queue is free again
+                        ucActionPresentDisk = ucPresentDisk;
                         iFATstalled = STALL_PRINTING_FILE;
                         return 1;
                     }
@@ -6008,8 +6139,8 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
-#endif
-#if defined NAND_FLASH_FAT
+    #endif
+    #if defined NAND_FLASH_FAT
     case DO_DISPLAY_SECTOR_INFO:
         {
             extern void fnPrintSectorDetails(unsigned long ulUserSector);
@@ -6029,15 +6160,15 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         }
         break;
     case DO_DISPLAY_PAGE:
-#endif
-#if !defined LOW_MEMORY
-    #if defined UTFAT_MULTIPLE_BLOCK_READ
-    case DO_DISPLAY_MULTI_SECTOR:                                        // multiple sector (to test faster reading)
     #endif
+    #if !defined LOW_MEMORY
+        #if defined UTFAT_MULTIPLE_BLOCK_READ
+    case DO_DISPLAY_MULTI_SECTOR:                                        // multiple sector (to test faster reading)
+        #endif
     case DO_DISPLAY_SECTOR:
         {
             unsigned long ulSectorNumber = fnHexStrHex(ptrInput);        // the sector number
-    #if defined NAND_FLASH_FAT
+        #if defined NAND_FLASH_FAT
             UTDISK *ptrDiskInfo = (UTDISK *)fnGetDiskInfo(ucPresentDisk);
             if (DO_DISPLAY_PAGE == ucType) {
                 fnDebugMsg("Reading page ");
@@ -6046,28 +6177,28 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             else {
                 fnDebugMsg("Reading sector ");
             }
-    #else
+        #else
             fnDebugMsg("Reading sector ");
-    #endif
+        #endif
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
-    #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
+        #if (defined _WINDOWS || defined _LITTLE_ENDIAN) && defined UTFAT_SECT_BIG_ENDIAN // {61}
             fnDebugMsg(" (big-endian view)");
-    #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
+        #elif (!defined _LITTLE_ENDIAN) && defined UTFAT_SECT_LITTLE_ENDIAN
             fnDebugMsg(" (little-endian view)");
-    #endif
+        #endif
             fnDebugMsg("\r\n");
             ulLastSectorNumber = ulSectorNumber;
             return (fnDisplaySectorContent(ucType));                     // {93}
         }
         break;
-#endif
-#if defined TEST_SDCARD_SECTOR_WRITE && defined UTFAT_WRITE              // {44}{45}
-    #if defined UTFAT_MULTIPLE_BLOCK_WRITE
-    case DO_WRITE_MULTI_SECTOR:
-        #if defined UTFAT_PRE_ERASE
-    case DO_WRITE_MULTI_SECTOR_PRE:
-        #endif
     #endif
+    #if defined TEST_SDCARD_SECTOR_WRITE && defined UTFAT_WRITE          // {44}{45}
+        #if defined UTFAT_MULTIPLE_BLOCK_WRITE
+    case DO_WRITE_MULTI_SECTOR:
+            #if defined UTFAT_PRE_ERASE
+    case DO_WRITE_MULTI_SECTOR_PRE:
+            #endif
+        #endif
     case DO_WRITE_SECTOR:                                                // {86} write a number of bytes to a sector at a specified offset in the sector
         {
             unsigned long ulSectorNumber = fnHexStrHex(ptrInput);        // the sector number
@@ -6103,17 +6234,17 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg("Writing sector ");
             fnDebugHex(ulSectorNumber, (WITH_LEADIN | sizeof(ulSectorNumber)));
             TOGGLE_TEST_OUTPUT();                                        // enable measurement of the write time
-    #if defined UTFAT_MULTIPLE_BLOCK_WRITE
+        #if defined UTFAT_MULTIPLE_BLOCK_WRITE
             if (ucType == DO_WRITE_MULTI_SECTOR) {
                 fnPrepareBlockWrite(ucPresentDisk, ucSectorCount, 0);    // multiple sector write but without pre-delete
               //fnPrepareBlockWrite(ucPresentDisk, (ucSectorCount + 1), 0); // multiple sector write but without pre-delete
             }
-        #if defined UTFAT_PRE_ERASE
+            #if defined UTFAT_PRE_ERASE
             else if (ucType == DO_WRITE_MULTI_SECTOR_PRE) {              // multiple sector write with pre-delete
                 fnPrepareBlockWrite(ucPresentDisk, ucSectorCount, 1);
             }
+            #endif
         #endif
-    #endif
           //fnPrepareBlockWrite(ucPresentDisk, 0, 0); // test abort
             if (fnWriteSector(ucPresentDisk, (unsigned char *)ulBuffer, ulSectorNumber) != UTFAT_SUCCESS) { // write the modified sector back
                 fnDebugMsg(" Sector write error!\n\r");
@@ -6124,46 +6255,46 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             TOGGLE_TEST_OUTPUT();
         }
         break;
-#endif
-#if defined UTFAT_FORMATTING && defined UTFAT_WRITE                      // {45}
-    #if defined UTFAT_FULL_FORMATTING
+    #endif
+    #if defined UTFAT_FORMATTING && defined UTFAT_WRITE                  // {45}
+        #if defined UTFAT_FULL_FORMATTING
     case DO_FORMAT_FULL:                                                 // {26}
     case DO_REFORMAT_FULL:
-    #endif
+        #endif
     case DO_REFORMAT:
     case DO_FORMAT:
         {
             unsigned char ucFlags = UTFAT_FORMAT_32;                     // default
             fnDebugMsg("Formatting FAT");
-    #if defined UTFAT16 || defined UTFAT12
+        #if defined UTFAT16 || defined UTFAT12
             if ((*ptrInput == '-') && (*(ptrInput + 1) == '1') && ((*(ptrInput + 2) == '2') || (*(ptrInput + 2) == '6'))) {
                 if (*(ptrInput + 2) == '2') {
-        #if defined UTFAT12
+            #if defined UTFAT12
                     fnDebugMsg("12 ");
                     ucFlags = UTFAT_FORMAT_12;
-        #endif
+            #endif
                 }
-        #if defined UTFAT16 
+            #if defined UTFAT16 
                 else {
                     fnDebugMsg("16 ");
                     ucFlags = UTFAT_FORMAT_16;
                 }
-        #endif
+            #endif
                 ptrInput += 4;
             }
             else {
                 fnDebugMsg("32 ");
             }
-    #endif
+        #endif
             if ((DO_REFORMAT == ucType) || (DO_REFORMAT_FULL == ucType)) {
               //utReFormat(ucPresentDisk, ptrInput, ucFlags);              // {26} utReFormat() no longer used - controlled by utFormat() flags instead
                 ucFlags |= UTFAT_REFORMAT;
             }
-    #if defined UTFAT_FULL_FORMATTING
+        #if defined UTFAT_FULL_FORMATTING
             if ((DO_FORMAT_FULL == ucType) || (DO_REFORMAT_FULL == ucType)) {
                 ucFlags |= UTFAT_FULL_FORMAT;
             }
-    #endif
+        #endif
             if (utFormat(ucPresentDisk, ptrInput, ucFlags) != UTFAT_SUCCESS) {
                 fnDebugMsg("not possible\r\n");
                 break;
@@ -6171,20 +6302,36 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg("in progress - please wait...\r\n");
         }
         break;
-#endif
-#if defined UTFAT_WRITE                                                  // {45}
+    #endif
+    #if defined UTFAT_WRITE                                              // {45}
     case DO_NEW_DIR:
         if (utMakeDirectory(ptrInput, ptr_utDirectory[ucPresentDisk]) != UTFAT_SUCCESS) {
             fnDebugMsg("Make dir failed\r\n");
         }
         break;
 
+    case DO_COPY_FILE:
     case DO_NEW_FILE:
         {
-            UTFILE utFile;                                               // temporary file object for creation
-          //utFile.ptr_utDirObject = ptr_utDirectory[ucPresentDisk];
-            if (utOpenFile(ptrInput, &utFile, ptr_utDirectory[ucPresentDisk], (UTFAT_OPEN_FOR_WRITE | UTFAT_CREATE | UTFAT_TRUNCATE)) != UTFAT_PATH_IS_FILE) { // {62} open and truncate file or create it if not existing
+            if (DO_COPY_FILE == ucType) {
+                CHAR *ptrReadFileName = ptrInput;
+                ptrInput = fnTerminateName(ptrReadFileName);
+                if (utOpenFile(ptrReadFileName, &utFile1, ptr_utDirectory[ucPresentDisk], (UTFAT_OPEN_FOR_READ)) != UTFAT_PATH_IS_FILE) { // open file for read
+                    fnDebugMsg("Input file not found\r\n");
+                    break;
+                }
+        #if defined DISK_COUNT && DISK_COUNT > 1
+                ucPresentDisk = ucUserDisk;
+                ptrInput = fnChangeDisk(ptrInput, &ucPresentDisk);
+                fnPrepareApplicationDirectory(ucPresentDisk, 1);         // allocate a director for use by the application if not yet done (for second disk)
+        #endif
+            }
+            if (utOpenFile(ptrInput, &utFile2, ptr_utDirectory[ucPresentDisk], (UTFAT_OPEN_FOR_WRITE | UTFAT_CREATE | UTFAT_TRUNCATE)) != UTFAT_PATH_IS_FILE) { // {62} open and truncate file or create it if not existing
                 fnDebugMsg("Create file failed\r\n");
+                break;
+            }
+            if (DO_COPY_FILE == ucType) {
+                fnCopyFiles();                                           // if long files are compared it will retrun and then continue in the main task (see interrupt event UTFAT_COPY_NEXT)
             }
         }
         break;
@@ -6199,7 +6346,6 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 }
             }
             *ptrNewName++ = 0;                                           // intermediate terminator
-          //utFile.ptr_utDirObject = ptr_utDirectory[ucPresentDisk];
             if (utOpenFile(ptrInput, &utFile, ptr_utDirectory[ucPresentDisk], UTFAT_OPEN_FOR_RENAME) < UTFAT_SUCCESS) { // {20}{62}
                 fnDebugMsg("Not found\r\n");
             }
@@ -6211,22 +6357,22 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         }
         break;
 
-    #if defined UTFAT_SAFE_DELETE                                        // {60}
+        #if defined UTFAT_SAFE_DELETE                                    // {60}
     case DO_DELETE_SAFE:
-    #endif
+        #endif
     case DO_DELETE:
         {
             int iResult;
-    #if defined UTFAT_SAFE_DELETE                                        // {60}
+        #if defined UTFAT_SAFE_DELETE                                    // {60}
             if (DO_DELETE_SAFE == ucType) {
                 iResult = utSafeDeleteFile(ptrInput, ptr_utDirectory[ucPresentDisk]);
             }
             else {
                 iResult = utDeleteFile(ptrInput, ptr_utDirectory[ucPresentDisk]);
             }
-    #else
+        #else
             iResult = utDeleteFile(ptrInput, ptr_utDirectory[ucPresentDisk]);
-    #endif
+        #endif
             if (iResult == UTFAT_DIR_NOT_EMPTY) {
                 fnDebugMsg("Dir NOT empty\r\n");
             }
@@ -6236,7 +6382,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
         }
         break;
 
-    #if defined UTFAT_EXPERT_FUNCTIONS
+        #if defined UTFAT_EXPERT_FUNCTIONS
     case DO_WRITE_HIDE:                                                  // {83}
     case DO_WRITE_UNHIDE:
     case DO_SET_PROTECT:
@@ -6277,7 +6423,7 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
-    #endif
+        #endif
     case DO_TEST_TRUNCATE:                                               // {59}
         {
             UTFILE utFile;                                               // temporary file object
@@ -6305,10 +6451,42 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
-#endif
+    #endif
     case DO_CHANGE_DIR:
-        if (utChangeDirectory(ptrInput, ptr_utDirectory[ucPresentDisk]) != UTFAT_SUCCESS) { // change the directory location
-            fnDebugMsg("Invalid path\r\n");
+        if (ptrInput != 0) {
+            if (*ptrInput != 0) {
+                if (utChangeDirectory(ptrInput, ptr_utDirectory[ucPresentDisk]) != UTFAT_SUCCESS) { // change the directory location
+                    fnDebugMsg("Invalid path\r\n");
+                }
+            }
+    #if defined DISK_COUNT && DISK_COUNT > 1
+            ucUserDisk = ucPresentDisk;                                  // {95}
+    #endif
+        }
+        break;
+    case DO_COMPARE_FILES:
+        {
+            CHAR *ptrReadFileName = ptrInput;
+            ptrInput = fnTerminateName(ptrReadFileName);
+            if (utOpenFile(ptrReadFileName, &utFile1, ptr_utDirectory[ucPresentDisk], (UTFAT_OPEN_FOR_READ)) != UTFAT_PATH_IS_FILE) { // open file for read
+                fnDebugMsg("Input file 1 not found\r\n");
+                break;
+            }
+    #if defined DISK_COUNT && DISK_COUNT > 1
+            ucPresentDisk = ucUserDisk;
+            ptrInput = fnChangeDisk(ptrInput, &ucPresentDisk);
+            fnPrepareApplicationDirectory(ucPresentDisk, 1);             // allocate a director for use by the application if not yet done (for second disk)
+    #endif
+            if (utOpenFile(ptrInput, &utFile2, ptr_utDirectory[ucPresentDisk], (UTFAT_OPEN_FOR_READ)) != UTFAT_PATH_IS_FILE) { // open file for readg
+                fnDebugMsg("Input file 2 not found\r\n");
+                break;
+            }
+            if (utFile1.ulFileSize != utFile2.ulFileSize) {
+                fnDebugMsg("Files are of different size!\r\n");
+            }
+            else {
+                fnCompareFiles(1);                                       // if long files are compared it will retrun and then continue in the main task (see interrupt event UTFAT_COMPARE_NEXT)
+            }
         }
         break;
     case DO_INFO:
@@ -6341,32 +6519,32 @@ static int fnDoDisk(unsigned char ucType, CHAR *ptrInput)
                 if (ptrDiskInfo->usDiskFlags & HIGH_CAPACITY_SD_CARD) {
                     fnDebugMsg(" SDHC");
                 }
-#if defined FAT_EMULATION
+    #if defined FAT_EMULATION
                 if (ptrDiskInfo->usDiskFlags & DISK_FAT_EMULATION) {
                     fnDebugMsg(" EM");                                   // emulated disk
                 }
-#endif
-#if defined UTFAT16 || defined UTFAT12                                   // {42}
+    #endif
+    #if defined UTFAT16 || defined UTFAT12                               // {42}
                 fnDebugMsg(" FAT");
                 if (ptrDiskInfo->usDiskFlags & DISK_FORMATTED) {
                     if (ptrDiskInfo->usDiskFlags & (DISK_FORMAT_FAT16 | DISK_FORMAT_FAT12)) {
-    #if defined UTFAT16
+        #if defined UTFAT16
                         if (ptrDiskInfo->usDiskFlags & DISK_FORMAT_FAT16) {
                             fnDebugMsg("16");
                         }
-    #endif
-    #if defined UTFAT12
+        #endif
+        #if defined UTFAT12
                         if (ptrDiskInfo->usDiskFlags & DISK_FORMAT_FAT12) {
                             fnDebugMsg("12");
                         }
-    #endif
+        #endif
                     }
                     else {
                         fnDebugMsg("32");
                     }
                 }
-#endif
-                if (ptrDiskInfo->usDiskFlags & WRITE_PROTECTED_SD_CARD) {
+    #endif
+                if ((ptrDiskInfo->usDiskFlags & WRITE_PROTECTED_SD_CARD) != 0) {
                     fnDebugMsg(" write-protected");
                 }
                 fnDebugMsg("\r\n");
@@ -7315,8 +7493,8 @@ static int fnDoCommand(unsigned char ucFunction, unsigned char ucType, CHAR *ptr
 static void fnSendPrompt(void)
 {
     if (ucMenu == MENU_HELP_DISK) {
-        if ((ptr_utDirectory[ucPresentDisk] != 0) && (ptr_utDirectory[ucPresentDisk]->ptrDirectoryPath != 0)) {
-            fnDebugMsg(ptr_utDirectory[ucPresentDisk]->ptrDirectoryPath);
+        if ((ptr_utDirectory[ucUserDisk] != 0) && (ptr_utDirectory[ucUserDisk]->ptrDirectoryPath != 0)) {
+            fnDebugMsg(ptr_utDirectory[ucUserDisk]->ptrDirectoryPath);
         }
         fnDebugMsg(">");
     }
@@ -7684,7 +7862,7 @@ static unsigned char fnCheckUserPass(CHAR *ptrData, unsigned char ucInputLength)
 
 extern int fnCommandInput(unsigned char *ptrData, unsigned short usLen, int iSource)
 {
-    #define MAX_DEBUG_IN 39
+    #define MAX_DEBUG_IN 255 //39
     int iReturn = 0;
 #if defined PREVIOUS_COMMAND_BUFFERS                                     // {35}
     static CHAR cDebugIn[PREVIOUS_COMMAND_BUFFERS][MAX_DEBUG_IN + 1] = {{0}}; // list of previous commands

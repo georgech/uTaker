@@ -844,13 +844,6 @@
     #endif
 #elif defined K20FX512_120
     #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-  //#define PIN_COUNT           PIN_COUNT_80_PIN                         // LQFP80
-  //#define PIN_COUNT           PIN_COUNT_81_PIN                         // MAPBGA81
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
     #define PIN_COUNT           PIN_COUNT_144_PIN
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_FLASH       (512 * 1024)                             // only consider program flash because flex flash is at 0x10000000
@@ -1605,7 +1598,7 @@
             #define RTC_CLOCK_PRESCALER_2  100                           // 128, 256, 512, 1024, 2048, 100 or 1000 (valid for bus clock or 1kHz LPO clock)
     #endif
 #else
-    #if !defined KINETIS_KM                                              // KM's iRTC not yet supported
+    #if !defined KINETIS_KM && !defined K20FX512_120                     // KM's iRTC not yet supported
         #define SUPPORT_RTC                                              // support real time clock
     #endif
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
@@ -2729,7 +2722,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
     #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                  // the size of RS232 input and output buffers
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support
@@ -5536,6 +5529,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(255, 0,   0), RGB(60,60,60),  1, {11, 259, 25, 267 }, _PORTA, LED_RED}
 
     #define KEYPAD "KeyPads/Landungsbruecke.bmp"
+    #define FTM0_7_ON_D
 #elif defined TEENSY_3_1
     #define DEMO_LED_1             (PORTC_BIT5)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTC_BIT6)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -5715,6 +5709,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define KEYPAD_LED_DEFINITIONS  {RGB(160,160,200),RGB(0,255,0), 0,  {164, 229, 0, 13 }, _PORTA, GREEN_LED}
 
     #define KEYPAD "KeyPads/K20FX512_120.bmp"
+    #define FTM0_7_ON_D
 #elif defined TWR_K20D50M || defined TWR_K20D72M                         // {2}
     #if defined DEV1                                                     // temporary development configuration
         #if defined CAN_INTERFACE
@@ -9486,10 +9481,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                     #define POWER_UP_SD_CARD()     _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; while (SDHC_SYSCTL & SDHC_SYSCTL_INITA) {}; // apply power to the SD card if appropriate (we use this to send 80 clocks)
                 #endif
             #endif
-            #if defined FRDM_K64F
-              //#define CLOCK_SDHC_FROM_OSCERCLK
-                #define CLOCK_SDHC_FROM_IRC48M
-                #if defined CLOCK_SHDC_FROM_OSCERCLK || defined CLOCK_SDHC_FROM_IRC48M // undivided OSCCLK
+            #if defined FRDM_K64F                                        // SDHC controller clocked from system clock when no alternative is selected
+                #define CLOCK_SDHC_FROM_OSCERCLK
+              //#define CLOCK_SDHC_FROM_IRC48M
+                #if defined CLOCK_SDHC_FROM_OSCERCLK || defined CLOCK_SDHC_FROM_IRC48M // undivided OSCCLK
                     #define SDHC_SYSCTL_SPEED_SLOW     (SDHC_SYSCTL_SDCLKFS_128 | SDHC_SYSCTL_DVS_1)  // 390kHz when 50MHz clock
                     #define SDHC_SYSCTL_SPEED_FAST     (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_1)    // 25MHz when 50MHz clock
                 #else

@@ -38,6 +38,7 @@
     16.10.2017 Modify the timer frequency value to give the frequency for a square wave cycle rather than a period {23}
     17.10.2017 Timer calculations changed to reference PCLK1 rather than PCLK2 {24}
     28.11.2018 Add fnSetFlashOption() prototype                          {25}
+    30.11.2018 Add cortex debug and trace registers                      {26}
 
 */
 
@@ -1067,348 +1068,352 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1); /
     #endif
     #define USB_OTG_FS_BLOCK            ((unsigned char *)(&STM32.USB_OTG_FS)) // {10} USB OTG FS
     #define CORTEX_M3_BLOCK             ((unsigned char *)(&STM32.CORTEX_M3))
+    #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
+        #define CORTEX_M4_DEBUG         ((unsigned char *)(&STM32.CORTEX_M4_DEBUG))
+        #define CORTEX_M4_DWT           ((unsigned char *)(&STM32.CORTEX_M4_TRACE)) // data watch and trace unit
+    #endif
     #define DBG_BLOCK                   ((unsigned char *)(&STM32.DBG))
-#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
-    // APB1 peripherals
-    //
-    #define TIM2_BLOCK                  0x40000000
-    #define TIM3_BLOCK                  0x40000400
-    #define TIM4_BLOCK                  0x40000800
-    #define TIM5_BLOCK                  0x40000c00
-    #define TIM6_BLOCK                  0x40001000
-    #define TIM7_BLOCK                  0x40001400
-    #define TIM12_BLOCK                 0x40001800
-    #define TIM13_BLOCK                 0x40001c00
-    #define TIM14_BLOCK                 0x40002000
-    #define RTC_BLOCK                   0x40002800
-    #define WWDG_BLOCK                  0x40002c00
-    #define IWDG_BLOCK                  0x40003000
-    #define I2S2ext_BLOCK               0x40003400
-    #define SPI2_I2S_BLOCK              0x40003800
-    #define SPI3_I2S_BLOCK              0x40003c00
-    #define I2S3ext_BLOCK               0x40004000
-    #define USART2_BLOCK                0x40004400
-    #define USART3_BLOCK                0x40004800
-    #define UART4_BLOCK                 0x40004c00
-    #define UART5_BLOCK                 0x40005000
-    #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427
-        #define UART7_BLOCK             0x40007800
-        #define UART8_BLOCK             0x40007c00
-    #endif
-    #define I2C1_BLOCK                  0x40005400
-    #define I2C2_BLOCK                  0x40005800
-    #define I2C3_BLOCK                  0x40005c00
-    #define CAN1_BLOCK                  0x40006400
-    #define CAN2_BLOCK                  0x40006800
-    #define PWR_BLOCK                   0x40007000
-    #define DAC_BLOCK                   0x40007400
+#else
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+        // APB1 peripherals
+        //
+        #define TIM2_BLOCK                  0x40000000
+        #define TIM3_BLOCK                  0x40000400
+        #define TIM4_BLOCK                  0x40000800
+        #define TIM5_BLOCK                  0x40000c00
+        #define TIM6_BLOCK                  0x40001000
+        #define TIM7_BLOCK                  0x40001400
+        #define TIM12_BLOCK                 0x40001800
+        #define TIM13_BLOCK                 0x40001c00
+        #define TIM14_BLOCK                 0x40002000
+        #define RTC_BLOCK                   0x40002800
+        #define WWDG_BLOCK                  0x40002c00
+        #define IWDG_BLOCK                  0x40003000
+        #define I2S2ext_BLOCK               0x40003400
+        #define SPI2_I2S_BLOCK              0x40003800
+        #define SPI3_I2S_BLOCK              0x40003c00
+        #define I2S3ext_BLOCK               0x40004000
+        #define USART2_BLOCK                0x40004400
+        #define USART3_BLOCK                0x40004800
+        #define UART4_BLOCK                 0x40004c00
+        #define UART5_BLOCK                 0x40005000
+        #if defined _STM32F7XX || defined _STM32F429 || defined _STM32F427
+            #define UART7_BLOCK             0x40007800
+            #define UART8_BLOCK             0x40007c00
+        #endif
+        #define I2C1_BLOCK                  0x40005400
+        #define I2C2_BLOCK                  0x40005800
+        #define I2C3_BLOCK                  0x40005c00
+        #define CAN1_BLOCK                  0x40006400
+        #define CAN2_BLOCK                  0x40006800
+        #define PWR_BLOCK                   0x40007000
+        #define DAC_BLOCK                   0x40007400
 
-    // APB2 peripherals
-    //
-    #define TIM1_BLOCK                  0x40010000
-    #define TIM8_BLOCK                  0x40010400
-    #define USART1_BLOCK                0x40011000
-    #define USART6_BLOCK                0x40011400
-    #define ADC_BLOCK                   0x40012000
-    #define SDIO_BLOCK                  0x40012c00
-    #define SPI1_BLOCK                  0x40013000
-    #define SYSCFG_BLOCK                0x40013800
-    #define EXTI_BLOCK                  0x40013c00
-    #define TIM9_BLOCK                  0x40014000
-    #define TIM10_BLOCK                 0x40014400
-    #define TIM11_BLOCK                 0x40014800
+        // APB2 peripherals
+        //
+        #define TIM1_BLOCK                  0x40010000
+        #define TIM8_BLOCK                  0x40010400
+        #define USART1_BLOCK                0x40011000
+        #define USART6_BLOCK                0x40011400
+        #define ADC_BLOCK                   0x40012000
+        #define SDIO_BLOCK                  0x40012c00
+        #define SPI1_BLOCK                  0x40013000
+        #define SYSCFG_BLOCK                0x40013800
+        #define EXTI_BLOCK                  0x40013c00
+        #define TIM9_BLOCK                  0x40014000
+        #define TIM10_BLOCK                 0x40014400
+        #define TIM11_BLOCK                 0x40014800
 
-    // AHB1 peripherals
-    //
-    #define GPIO_PORTA_BLOCK            0x40020000
-    #define GPIO_PORTB_BLOCK            0x40020400
-    #define GPIO_PORTC_BLOCK            0x40020800
-    #define GPIO_PORTD_BLOCK            0x40020c00
-    #define GPIO_PORTE_BLOCK            0x40021000
-    #define GPIO_PORTF_BLOCK            0x40021400
-    #define GPIO_PORTG_BLOCK            0x40021800
-    #define GPIO_PORTH_BLOCK            0x40021c00
-    #define GPIO_PORTI_BLOCK            0x40022000
-  #if defined _STM32F7XX
-    #define GPIO_PORTJ_BLOCK            0x40024000
-    #define GPIO_PORTK_BLOCK            0x40028000
-  #endif
-    #define CRC_BLOCK                   0x40023000
-    #define RCC_BLOCK                   0x40023800
-    #define FMI_BLOCK                   0x40023c00
-    #define BKPSRAM_BLOCK               0x40024000
-    #define DMA1_BLOCK                  0x40026000
-    #define DMA2_BLOCK                  0x40026400
-    #define ENET_BLOCK                  0x40028000
-    #define USB_OTG_HS_BLOCK            0x40040000
+        // AHB1 peripherals
+        //
+        #define GPIO_PORTA_BLOCK            0x40020000
+        #define GPIO_PORTB_BLOCK            0x40020400
+        #define GPIO_PORTC_BLOCK            0x40020800
+        #define GPIO_PORTD_BLOCK            0x40020c00
+        #define GPIO_PORTE_BLOCK            0x40021000
+        #define GPIO_PORTF_BLOCK            0x40021400
+        #define GPIO_PORTG_BLOCK            0x40021800
+        #define GPIO_PORTH_BLOCK            0x40021c00
+        #define GPIO_PORTI_BLOCK            0x40022000
+      #if defined _STM32F7XX
+        #define GPIO_PORTJ_BLOCK            0x40024000
+        #define GPIO_PORTK_BLOCK            0x40028000
+      #endif
+        #define CRC_BLOCK                   0x40023000
+        #define RCC_BLOCK                   0x40023800
+        #define FMI_BLOCK                   0x40023c00
+        #define BKPSRAM_BLOCK               0x40024000
+        #define DMA1_BLOCK                  0x40026000
+        #define DMA2_BLOCK                  0x40026400
+        #define ENET_BLOCK                  0x40028000
+        #define USB_OTG_HS_BLOCK            0x40040000
 
-    // AHB2 peripherals
-    //
-    #define USB_OTG_FS_BLOCK            0x50000000
-    #define DCMI_BLOCK                  0x50050000
-    #define CRYP_BLOCK                  0x50060000
-    #define HASH_BLOCK                  0x50060400
-    #define RNG_BLOCK                   0x50060800
+        // AHB2 peripherals
+        //
+        #define USB_OTG_FS_BLOCK            0x50000000
+        #define DCMI_BLOCK                  0x50050000
+        #define CRYP_BLOCK                  0x50060000
+        #define HASH_BLOCK                  0x50060400
+        #define RNG_BLOCK                   0x50060800
 
-    // AHB3 peripherals
-    //
-    #define FSMC_BLOCK                  0xa0000000
-    #define QUADSPI_BLOCK               0xa0001000
+        // AHB3 peripherals
+        //
+        #define FSMC_BLOCK                  0xa0000000
+        #define QUADSPI_BLOCK               0xa0001000
 
-    #define CORTEX_M3_BLOCK             0xe000e000
-    #define DBG_BLOCK                   0xe0042000
-#elif defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
-    // APB1 peripherals
-    //
-    #define TIM2_BLOCK                  0x40000000
-    #define TIM3_BLOCK                  0x40000400
-  //#define TIM4_BLOCK                  0x40000800
-  //#define TIM5_BLOCK                  0x40000c00
-    #define TIM6_BLOCK                  0x40001000
-    #define TIM7_BLOCK                  0x40001400
-  //#define TIM12_BLOCK                 0x40001800
-  //#define TIM13_BLOCK                 0x40001c00
-  //#define TIM14_BLOCK                 0x40002000
-    #define LCD_BLOCK                   0x40002400                       // only STM32L4x3xx
-    #define RTC_BLOCK                   0x40002800
-    #define WWDG_BLOCK                  0x40002c00
-    #define IWDG_BLOCK                  0x40003000
-    #define SPI2_I2S_BLOCK              0x40003800
-    #define SPI3_I2S_BLOCK              0x40003c00
-    #define USART2_BLOCK                0x40004400
-    #define USART3_BLOCK                0x40004800
-    #define UART4_BLOCK                 0x40004c00
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define UART5_BLOCK             0x40005000
-    #endif
-    #define I2C1_BLOCK                  0x40005400
-    #define I2C2_BLOCK                  0x40005800
-    #define I2C3_BLOCK                  0x40005c00
-    #if !defined _STM32L4X5 && !defined _STM32L4X6
-        #define CRS_BLOCK               0x40006000
-    #endif
-    #define CAN1_BLOCK                  0x40006400
-    #if !defined _STM32L4X5 && !defined _STM32L4X6
-        #define USB_FS_BLOCK            0x40006800
-        #define USB_SRAM_BLOCK          0x40006c00
-    #endif
-    #define PWR_BLOCK                   0x40007000
-    #define DAC1_BLOCK                  0x40007400
-    #define OPAMP_BLOCK                 0x40007800
-    #define LPTIM1_BLOCK                0x40007c00
-    #define LPUART1_BLOCK               0x40008000
-    #if !defined _STM32L4X5 && !defined _STM32L4X6
-        #define I2C4_BLOCK              0x40008400
-    #endif
-    #define SWPMI1_BLOCK                0x40008800
-    #define LPTIM2_BLOCK                0x40009400
+        #define DBG_BLOCK                   0xe0042000
+    #elif defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+        // APB1 peripherals
+        //
+        #define TIM2_BLOCK                  0x40000000
+        #define TIM3_BLOCK                  0x40000400
+      //#define TIM4_BLOCK                  0x40000800
+      //#define TIM5_BLOCK                  0x40000c00
+        #define TIM6_BLOCK                  0x40001000
+        #define TIM7_BLOCK                  0x40001400
+      //#define TIM12_BLOCK                 0x40001800
+      //#define TIM13_BLOCK                 0x40001c00
+      //#define TIM14_BLOCK                 0x40002000
+        #define LCD_BLOCK                   0x40002400                   // only STM32L4x3xx
+        #define RTC_BLOCK                   0x40002800
+        #define WWDG_BLOCK                  0x40002c00
+        #define IWDG_BLOCK                  0x40003000
+        #define SPI2_I2S_BLOCK              0x40003800
+        #define SPI3_I2S_BLOCK              0x40003c00
+        #define USART2_BLOCK                0x40004400
+        #define USART3_BLOCK                0x40004800
+        #define UART4_BLOCK                 0x40004c00
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define UART5_BLOCK             0x40005000
+        #endif
+        #define I2C1_BLOCK                  0x40005400
+        #define I2C2_BLOCK                  0x40005800
+        #define I2C3_BLOCK                  0x40005c00
+        #if !defined _STM32L4X5 && !defined _STM32L4X6
+            #define CRS_BLOCK               0x40006000
+        #endif
+        #define CAN1_BLOCK                  0x40006400
+        #if !defined _STM32L4X5 && !defined _STM32L4X6
+            #define USB_FS_BLOCK            0x40006800
+            #define USB_SRAM_BLOCK          0x40006c00
+        #endif
+        #define PWR_BLOCK                   0x40007000
+        #define DAC1_BLOCK                  0x40007400
+        #define OPAMP_BLOCK                 0x40007800
+        #define LPTIM1_BLOCK                0x40007c00
+        #define LPUART1_BLOCK               0x40008000
+        #if !defined _STM32L4X5 && !defined _STM32L4X6
+            #define I2C4_BLOCK              0x40008400
+        #endif
+        #define SWPMI1_BLOCK                0x40008800
+        #define LPTIM2_BLOCK                0x40009400
 
-    // APB2 peripherals
-    //
-    #define SYSCFG_BLOCK                0x40010000
-    #define VREFBUF_BLOCK               0x40010030
-    #define COMP_BLOCK                  0x40010200
-    #define EXTI_BLOCK                  0x40010400
-    #define FIREWALL_BLOCK              0x4001c000
-    #if defined _STM32F031
-        #define ADC_BLOCK               0x40012400
-    #endif
-    #define SDMMC_BLOCK                 0x40012800
-    #define TIM1_BLOCK                  0x40012c00
-    #define SPI1_BLOCK                  0x40013000
-    #if defined _STM32F031
-        #define SPI1_I2S1_BLOCK         0x40013000
-    #endif
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define TIM8_BLOCK              0x40013400
-    #endif
-    #define USART1_BLOCK                0x40013800
-    #define TIM15_BLOCK                 0x40014000
-    #define TIM16_BLOCK                 0x40014400
-    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
-        #define TIM17_BLOCK             0x40014800
-    #endif
-    #define SAI1_BLOCK                  0x40015400
-    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
-        #define SAI2_BLOCK              0x40015800
-    #endif
-    #if defined _STM32F031
-        #define DBG_BLOCK               0x40015800
-    #endif
-    #define DFSDM1_BLOCK                0x40016000
+        // APB2 peripherals
+        //
+        #define SYSCFG_BLOCK                0x40010000
+        #define VREFBUF_BLOCK               0x40010030
+        #define COMP_BLOCK                  0x40010200
+        #define EXTI_BLOCK                  0x40010400
+        #define FIREWALL_BLOCK              0x4001c000
+        #if defined _STM32F031
+            #define ADC_BLOCK               0x40012400
+        #endif
+        #define SDMMC_BLOCK                 0x40012800
+        #define TIM1_BLOCK                  0x40012c00
+        #define SPI1_BLOCK                  0x40013000
+        #if defined _STM32F031
+            #define SPI1_I2S1_BLOCK         0x40013000
+        #endif
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define TIM8_BLOCK              0x40013400
+        #endif
+        #define USART1_BLOCK                0x40013800
+        #define TIM15_BLOCK                 0x40014000
+        #define TIM16_BLOCK                 0x40014400
+        #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+            #define TIM17_BLOCK             0x40014800
+        #endif
+        #define SAI1_BLOCK                  0x40015400
+        #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+            #define SAI2_BLOCK              0x40015800
+        #endif
+        #if defined _STM32F031
+            #define DBG_BLOCK               0x40015800
+        #endif
+        #define DFSDM1_BLOCK                0x40016000
 
-    // AHB1 peripherals
-    //
-    #define DMA1_BLOCK                  0x40020000
-    #define DMA2_BLOCK                  0x40020400
-    #define RCC_BLOCK                   0x40021000
-    #define FMI_BLOCK                   0x40022000
-    #define CRC_BLOCK                   0x40023000
-    #define TSC_BLOCK                   0x40024000
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define DMA2D_BLOCK             0x4002B000
+        // AHB1 peripherals
+        //
+        #define DMA1_BLOCK                  0x40020000
+        #define DMA2_BLOCK                  0x40020400
+        #define RCC_BLOCK                   0x40021000
+        #define FMI_BLOCK                   0x40022000
+        #define CRC_BLOCK                   0x40023000
+        #define TSC_BLOCK                   0x40024000
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define DMA2D_BLOCK             0x4002B000
+        #endif
+
+        // AHB2 peripherals
+        //
+        #define GPIO_PORTA_BLOCK            0x48000000
+        #define GPIO_PORTB_BLOCK            0x48000400
+        #define GPIO_PORTC_BLOCK            0x48000800
+        #define GPIO_PORTD_BLOCK            0x48000c00
+        #define GPIO_PORTE_BLOCK            0x48001000
+        #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+            #define GPIO_PORTF_BLOCK        0x48001400
+        #endif
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define GPIO_PORTG_BLOCK        0x48001800
+        #endif
+        #define GPIO_PORTH_BLOCK            0x48001c00
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define GPIO_PORTI_BLOCK        0x48002000
+            #define OTG_FS__BLOCK           0x50000000
+        #endif
+        #define ADC_BLOCK                   0x50040000
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define DCMI_BLOCK              0x50050000
+        #endif
+        #define AES_BLOCK                   0x50060000
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define HASH_BLOCK              0x50060400
+        #endif
+        #define RNG_BLOCK                   0x50060800
+
+        // AHB3 peripherals
+        //
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define FMC_BLOCK               0xa0000000
+        #endif
+
+        // AHB4 peripherals
+        //
+        #if defined _STM32L4X5 || defined _STM32L4X6
+            #define QUADSPI_BLOCK           0xa0001000
+        #endif
+
+        #define DBG_BLOCK                   0xe0042000
+    #elif defined _STM32L0x1
+        // APB1 peripherals
+        //
+        #define TIM2_BLOCK                  0x40000000
+        #define TIM3_BLOCK                  0x40000400
+        #define TIM6_BLOCK                  0x40001000
+        #define TIM7_BLOCK                  0x40001400
+        #define RTC_BLOCK                   0x40002800
+        #define WWDG_BLOCK                  0x40002c00
+        #define IWDG_BLOCK                  0x40003000
+        #define SPI2_I2S_BLOCK              0x40003800
+        #define USART2_BLOCK                0x40004400
+        #define LPUART1_BLOCK               0x40004800
+        #define USART4_BLOCK                0x40004c00
+        #define USART5_BLOCK                0x40005000
+        #define I2C1_BLOCK                  0x40005400
+        #define I2C2_BLOCK                  0x40005800
+        #define PWR_BLOCK                   0x40007000
+        #define I2C3_BLOCK                  0x40007800
+        #define LPTIM2_BLOCK                0x40007c00
+
+        // APB2 peripherals
+        //
+        #define SYSCFG_BLOCK                0x40010000
+        #define EXTI_BLOCK                  0x40010400
+        #define TIM21_BLOCK                 0x40010800
+        #define TIM22_BLOCK                 0x40011400
+        #define FIREWALL_BLOCK              0x40011c00
+        #define ADC1_BLOCK                  0x40012400
+        #define SPI1_BLOCK                  0x40013000
+        #define USART1_BLOCK                0x40013800
+        #define DBG_BLOCK                   0x40015800
+
+        // AHB peripherals
+        //
+        #define DMA1_BLOCK                  0x40020000
+        #define RCC_BLOCK                   0x40021000
+        #define FMI_BLOCK                   0x40022000
+        #define CRC_BLOCK                   0x40023000
+        #define AES_BLOCK                   0x40026000
+
+        // IOPORT peripherals
+        //
+        #define GPIO_PORTA_BLOCK            0x50000000
+        #define GPIO_PORTB_BLOCK            0x50000400
+        #define GPIO_PORTC_BLOCK            0x50000800
+        #define GPIO_PORTD_BLOCK            0x50000c00
+        #define GPIO_PORTE_BLOCK            0x50001000
+        #define GPIO_PORTH_BLOCK            0x50001c00
+    #else                                                                // F1
+        // APB1 peripherals
+        //
+        #define TIM2_BLOCK                  0x40000000
+        #define TIM3_BLOCK                  0x40000400
+        #define TIM4_BLOCK                  0x40000800
+        #define TIM5_BLOCK                  0x40000c00
+        #define TIM6_BLOCK                  0x40001000
+        #define TIM7_BLOCK                  0x40001400
+        #define TIM12_BLOCK                 0x40001800
+        #define TIM13_BLOCK                 0x40001c00
+        #define TIM14_BLOCK                 0x40002000
+        #define RTC_BLOCK                   0x40002800
+        #define WWDG_BLOCK                  0x40002c00
+        #define IWDG_BLOCK                  0x40003000
+        #define SPI2_I2S_BLOCK              0x40003800
+        #define SPI3_I2S_BLOCK              0x40003c00
+        #define USART2_BLOCK                0x40004400
+        #define USART3_BLOCK                0x40004800
+        #define UART4_BLOCK                 0x40004c00
+        #define UART5_BLOCK                 0x40005000
+        #define I2C1_BLOCK                  0x40005400
+        #define I2C2_BLOCK                  0x40005800
+        #define USB_DEV_FS_BLOCK            0x40005c00
+        #define USB_CAN_MEM_BLOCK           0x40006000                   // not accessible in connectivity line devices
+        #define CAN1_BLOCK                  0x40006400
+        #define CAN2_BLOCK                  0x40006800
+        #define BKP_BLOCK                   0x40006c00
+        #define PWR_BLOCK                   0x40007000
+        #define DAC_BLOCK                   0x40007400
+
+        // APB2 peripherals
+        //
+        #define AFIO_BLOCK                  0x40010000
+        #define EXTI_BLOCK                  0x40010400
+        #define GPIO_PORTA_BLOCK            0x40010800
+        #define GPIO_PORTB_BLOCK            0x40010c00
+        #define GPIO_PORTC_BLOCK            0x40011000
+        #define GPIO_PORTD_BLOCK            0x40011400
+        #define GPIO_PORTE_BLOCK            0x40011800
+        #define GPIO_PORTF_BLOCK            0x40011c00
+        #define GPIO_PORTG_BLOCK            0x40012000
+        #define ADC1_BLOCK                  0x40012400
+        #define ADC2_BLOCK                  0x40012800
+        #define TIM1_BLOCK                  0x40012C00
+        #define SPI1_BLOCK                  0x40013C00
+        #define TIM8_BLOCK                  0x40013400
+        #define USART1_BLOCK                0x40013800
+        #define ADC3_BLOCK                  0x40013c00
+        #define TIM9_BLOCK                  0x40014C00
+        #define TIM10_BLOCK                 0x40015000
+        #define TIM11_BLOCK                 0x40015400
+
+        // AHB peripherals
+        //
+        #define SDIO_BLOCK                  0x40018000
+        #define DMA1_BLOCK                  0x40020000
+        #define DMA2_BLOCK                  0x40020400
+        #define RCC_BLOCK                   0x40021000
+        #define FMI_BLOCK                   0x40022000
+        #define CRC_BLOCK                   0x40023000
+        #define ENET_BLOCK                  0x40028000
+
+        #define USB_OTG_FS_BLOCK            0x50000000                   // {10}
     #endif
-
-    // AHB2 peripherals
-    //
-    #define GPIO_PORTA_BLOCK            0x48000000
-    #define GPIO_PORTB_BLOCK            0x48000400
-    #define GPIO_PORTC_BLOCK            0x48000800
-    #define GPIO_PORTD_BLOCK            0x48000c00
-    #define GPIO_PORTE_BLOCK            0x48001000
-    #if defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
-        #define GPIO_PORTF_BLOCK        0x48001400
+    #define CORTEX_M3_BLOCK                 0xe000e000
+    #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
+        #define CORTEX_M4_DEBUG             0xe000edf0
+        #define CORTEX_M4_DWT               0xe0001000                   // data watch and trace unit
     #endif
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define GPIO_PORTG_BLOCK        0x48001800
-    #endif
-    #define GPIO_PORTH_BLOCK            0x48001c00
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define GPIO_PORTI_BLOCK        0x48002000
-        #define OTG_FS__BLOCK           0x50000000
-    #endif
-    #define ADC_BLOCK                   0x50040000
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define DCMI_BLOCK              0x50050000
-    #endif
-    #define AES_BLOCK                   0x50060000
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define HASH_BLOCK              0x50060400
-    #endif
-    #define RNG_BLOCK                   0x50060800
-
-    // AHB3 peripherals
-    //
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define FMC_BLOCK               0xa0000000
-    #endif
-
-    // AHB4 peripherals
-    //
-    #if defined _STM32L4X5 || defined _STM32L4X6
-        #define QUADSPI_BLOCK           0xa0001000
-    #endif
-
-    #define CORTEX_M3_BLOCK             0xe000e000
-    #define DBG_BLOCK                   0xe0042000
-#elif defined _STM32L0x1
-    // APB1 peripherals
-    //
-    #define TIM2_BLOCK                  0x40000000
-    #define TIM3_BLOCK                  0x40000400
-    #define TIM6_BLOCK                  0x40001000
-    #define TIM7_BLOCK                  0x40001400
-    #define RTC_BLOCK                   0x40002800
-    #define WWDG_BLOCK                  0x40002c00
-    #define IWDG_BLOCK                  0x40003000
-    #define SPI2_I2S_BLOCK              0x40003800
-    #define USART2_BLOCK                0x40004400
-    #define LPUART1_BLOCK               0x40004800
-    #define USART4_BLOCK                0x40004c00
-    #define USART5_BLOCK                0x40005000
-    #define I2C1_BLOCK                  0x40005400
-    #define I2C2_BLOCK                  0x40005800
-    #define PWR_BLOCK                   0x40007000
-    #define I2C3_BLOCK                  0x40007800
-    #define LPTIM2_BLOCK                0x40007c00
-
-    // APB2 peripherals
-    //
-    #define SYSCFG_BLOCK                0x40010000
-    #define EXTI_BLOCK                  0x40010400
-    #define TIM21_BLOCK                 0x40010800
-    #define TIM22_BLOCK                 0x40011400
-    #define FIREWALL_BLOCK              0x40011c00
-    #define ADC1_BLOCK                  0x40012400
-    #define SPI1_BLOCK                  0x40013000
-    #define USART1_BLOCK                0x40013800
-    #define DBG_BLOCK                   0x40015800
-
-    // AHB peripherals
-    //
-    #define DMA1_BLOCK                  0x40020000
-    #define RCC_BLOCK                   0x40021000
-    #define FMI_BLOCK                   0x40022000
-    #define CRC_BLOCK                   0x40023000
-    #define AES_BLOCK                   0x40026000
-
-    // IOPORT peripherals
-    //
-    #define GPIO_PORTA_BLOCK            0x50000000
-    #define GPIO_PORTB_BLOCK            0x50000400
-    #define GPIO_PORTC_BLOCK            0x50000800
-    #define GPIO_PORTD_BLOCK            0x50000c00
-    #define GPIO_PORTE_BLOCK            0x50001000
-    #define GPIO_PORTH_BLOCK            0x50001c00
-
-    #define CORTEX_M3_BLOCK             0xe000e000
-#else                                                                    // F1
-    // APB1 peripherals
-    //
-    #define TIM2_BLOCK                  0x40000000
-    #define TIM3_BLOCK                  0x40000400
-    #define TIM4_BLOCK                  0x40000800
-    #define TIM5_BLOCK                  0x40000c00
-    #define TIM6_BLOCK                  0x40001000
-    #define TIM7_BLOCK                  0x40001400
-    #define TIM12_BLOCK                 0x40001800
-    #define TIM13_BLOCK                 0x40001c00
-    #define TIM14_BLOCK                 0x40002000
-    #define RTC_BLOCK                   0x40002800
-    #define WWDG_BLOCK                  0x40002c00
-    #define IWDG_BLOCK                  0x40003000
-    #define SPI2_I2S_BLOCK              0x40003800
-    #define SPI3_I2S_BLOCK              0x40003c00
-    #define USART2_BLOCK                0x40004400
-    #define USART3_BLOCK                0x40004800
-    #define UART4_BLOCK                 0x40004c00
-    #define UART5_BLOCK                 0x40005000
-    #define I2C1_BLOCK                  0x40005400
-    #define I2C2_BLOCK                  0x40005800
-    #define USB_DEV_FS_BLOCK            0x40005c00
-    #define USB_CAN_MEM_BLOCK           0x40006000                       // not accessible in connectivity line devices
-    #define CAN1_BLOCK                  0x40006400
-    #define CAN2_BLOCK                  0x40006800
-    #define BKP_BLOCK                   0x40006c00
-    #define PWR_BLOCK                   0x40007000
-    #define DAC_BLOCK                   0x40007400
-
-    // APB2 peripherals
-    //
-    #define AFIO_BLOCK                  0x40010000
-    #define EXTI_BLOCK                  0x40010400
-    #define GPIO_PORTA_BLOCK            0x40010800
-    #define GPIO_PORTB_BLOCK            0x40010c00
-    #define GPIO_PORTC_BLOCK            0x40011000
-    #define GPIO_PORTD_BLOCK            0x40011400
-    #define GPIO_PORTE_BLOCK            0x40011800
-    #define GPIO_PORTF_BLOCK            0x40011c00
-    #define GPIO_PORTG_BLOCK            0x40012000
-    #define ADC1_BLOCK                  0x40012400
-    #define ADC2_BLOCK                  0x40012800
-    #define TIM1_BLOCK                  0x40012C00
-    #define SPI1_BLOCK                  0x40013C00
-    #define TIM8_BLOCK                  0x40013400
-    #define USART1_BLOCK                0x40013800
-    #define ADC3_BLOCK                  0x40013c00
-    #define TIM9_BLOCK                  0x40014C00
-    #define TIM10_BLOCK                 0x40015000
-    #define TIM11_BLOCK                 0x40015400
-
-    // AHB peripherals
-    //
-    #define SDIO_BLOCK                  0x40018000
-    #define DMA1_BLOCK                  0x40020000
-    #define DMA2_BLOCK                  0x40020400
-    #define RCC_BLOCK                   0x40021000
-    #define FMI_BLOCK                   0x40022000
-    #define CRC_BLOCK                   0x40023000
-    #define ENET_BLOCK                  0x40028000
-
-    #define USB_OTG_FS_BLOCK            0x50000000                       // {10}
-
-    #define CORTEX_M3_BLOCK             0xe000e000
-    #define DBG_BLOCK                   0xe0042000
 #endif
 
 
@@ -4275,6 +4280,7 @@ typedef struct stSTM32_ADC_REGS
             #define FLASH_OPTCR_RDP_LEVEL_0     0x0000aa00               // read protect level 0
             #define FLASH_OPTCR_RDP_LEVEL_1     0x00000000               // read protect level 1
             #define FLASH_OPTCR_RDP_LEVEL_2     0x0000cc00               // read protect level 2
+            #define FLASH_OPTCR_RDP_MASK        0x0000ff00               // read protect level mask
             #define FLASH_OPTCR_nWRP0    0x00010000                      // sector 0 not write protected
             #define FLASH_OPTCR_nWRP1    0x00020000                      // sector 1 not write protected
             #define FLASH_OPTCR_nWRP2    0x00040000                      // sector 2 not write protected
@@ -4324,6 +4330,47 @@ typedef struct stSTM32_ADC_REGS
             #define FLASH_OPTCR1_SETTING_MASK          (DEFAULT_FLASH_OPTION_SETTING_1)
     #endif
 #endif
+
+typedef struct st_STM32_FMI
+{
+#if defined _STM32L0x1
+    unsigned long _FLASH_ACR;
+    unsigned long _FLASH_PECR;
+    volatile unsigned long _FLASH_PDKEYR;
+    volatile unsigned long _FLASH_PKEYR;
+    volatile unsigned long _FLASH_PRGKEYR;
+    volatile unsigned long _FLASH_OPTKEYR;
+    volatile unsigned long _FLASH_SR;
+    volatile unsigned long _FLASH_OPTR;
+    volatile unsigned long _FLASH_WRPROT1;
+    unsigned long ulRes0[17];
+    volatile unsigned long _FLASH_WRPROT2;
+#else
+    unsigned long _FLASH_ACR;
+    volatile unsigned long _FLASH_KEYR;
+    volatile unsigned long _FLASH_OPTKEYR;
+    volatile unsigned long _FLASH_SR;
+    unsigned long _FLASH_CR;
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    volatile unsigned long _FLASH_OPTCR;
+        #if defined _STM32F42X || defined _STM32F43X
+    volatile unsigned long _FLASH_OPTC1;
+        #endif
+    #else
+    unsigned long _FLASH_AR;
+    unsigned long ulRes0;
+    unsigned long _FLASH_OBR;
+    unsigned long _FLASH_WRPR;
+        #if defined XL_DENSITY
+        volatile unsigned long _FLASH_KEYR2;
+        unsigned long _FLASH_SR2;
+        unsigned long _FLASH_CR2;
+        unsigned long _FLASH_AR2;
+        #endif
+    #endif
+#endif
+} _STM32_FMI;
+
 
 // USARTs
 //
@@ -6510,6 +6557,35 @@ typedef struct stVECTOR_TABLE
 #define SYSTEM_HANDLER_8_11_PRIORITY_REGISTER *(unsigned long*)(CORTEX_M3_BLOCK + 0xd1c) // System Handler Priority Register 8..11
 #define SYSTEM_HANDLER_12_15_PRIORITY_REGISTER *(unsigned long*)(CORTEX_M3_BLOCK + 0xd20) // System Handler Priority Register 12..15
 
+#define CPACR *(unsigned long *)(CORTEX_M3_BLOCK + 0xd88)                // co-processor access control register
+
+#if defined STM32_FPU
+    #define FPCCR *(unsigned long *)(CORTEX_M3_BLOCK + 0xf34)            // floating point context control register
+    #define __FPU_PRESENT  1
+#endif
+
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {26}
+    // Cortex debug registers
+    //
+    #define DHCSR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x0)
+        #define DHCSR_TRCENA          0x01000000                         // trace enable
+    #define DCRSR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x4)
+    #define DCRDR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0x8)
+    #define DEMCR                     *(volatile unsigned long *)(CORTEX_M4_DEBUG + 0xc)
+
+    // Cortex data watch and trace unit
+    //
+    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00)
+        #define DWT_CTRL_CYCCNTENA    0x00000001                         // enable the cycle counter
+    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04)
+    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08)
+    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c)
+    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10)
+    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14)
+    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
+    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
+#endif
+
 // Interrupt sources
 //
 #if defined _STM32L4X5 || defined _STM32L4X6
@@ -7717,6 +7793,17 @@ typedef struct stVECTOR_TABLE
 #if defined _STM32L432 || defined _STM32L0x1
     #define IWDG_WINR                   *(unsigned long *)(IWDG_BLOCK + 0x10)  // IWDG Reload Register
 #endif
+
+typedef struct st_STM32_IWDG
+{
+    volatile unsigned long _IWDG_KR;
+    unsigned long _IWDG_PR;
+    unsigned long _IWDG_RLR;
+    volatile unsigned long _IWDG_SR;
+#if defined _STM32L432 || defined _STM32L0x1
+    unsigned long IWDG_WINR;
+#endif
+} _STM32_IWDG;
 
 #define RETRIGGER_WATCHDOG()            IWDG_KR = IWDG_KR_RETRIGGER
 

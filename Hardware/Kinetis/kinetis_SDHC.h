@@ -25,14 +25,12 @@ extern void fnSetSD_clock(unsigned long ulSpeed)
 {
     SDHC_SYSCTL &= ~SDHC_SYSCTL_SDCLKEN;                                 // stop clock to set frequency
 #if defined CLOCK_SDHC_FROM_OSCERCLK
-    OSC0_CR |= (OSC_CR_ERCLKEN);                                         // ensure that the OSCERCLK is enabled (it is assumed that there is a external clock applied or the oscillatro is operating)
+    OSC0_CR |= (OSC_CR_ERCLKEN);                                         // ensure that the OSCERCLK is enabled (it is assumed that there is a external clock applied or the oscillator is operating)
     SIM_SOPT2 &= ~(SIM_SOPT2_SDHCSRC_EXT_BYPASS);
     SIM_SOPT2 |= (SIM_SOPT2_SDHCSRC_OSCERCLK);                           // select the OSCERCLK input for the SDHC controller
 #elif defined CLOCK_SDHC_FROM_IRC48M
-
     POWER_UP_ATOMIC(4, USBOTG);                                          // power up the USB controller module
     USB_CLK_RECOVER_IRC_EN = (USB_CLK_RECOVER_IRC_EN_REG_EN | USB_CLK_RECOVER_IRC_EN_IRC_EN); // the IRC48M is only usable when enabled via the USB module
-
     SIM_SOPT2 &= ~(SIM_SOPT2_SDHCSRC_EXT_BYPASS);
     SIM_SOPT2 |= (SIM_SOPT2_SDHCSRC_MCG_IRC48M | SIM_SOPT2_PLLFLLSEL_IRC48M); // select the IRC48M input for the SDHC controller
 #endif
@@ -425,7 +423,7 @@ extern int fnReadPartialSector(unsigned char *ptrBuf, unsigned short usStart, un
 {
     int iReadState;
     unsigned long ulTempBuffer[512/sizeof(unsigned long)];               // since the SD controller will always read a complete sector we use an intermediate buffer (it is long word aligned)
-ulPartialSectorReadCount++;
+    ulPartialSectorReadCount++;
     if ((iReadState = fnGetSector((unsigned char *)ulTempBuffer)) == UTFAT_SUCCESS) { // fill the temporary buffer with the sector data
         uMemcpy(ptrBuf, (((unsigned char *)ulTempBuffer) + usStart), (usStop - usStart)); // just copy the part required
     }

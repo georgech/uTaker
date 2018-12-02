@@ -1298,7 +1298,35 @@ typedef struct stSTM32_CORTEX_M3
     unsigned long SYSTEM_HANDLER_4_7_PRIORITY_REGISTER;                  // {2}
     unsigned long SYSTEM_HANDLER_8_11_PRIORITY_REGISTER;
     unsigned long SYSTEM_HANDLER_12_15_PRIORITY_REGISTER;
+    unsigned long ulRes10[25];
+    unsigned long CPACR;
+#if defined STM32_FPU
+    unsigned long ulRes11[106];
+    unsigned long FPCCR;
+#endif
 } STM32_CORTEX_M3;
+
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {40}
+typedef struct stSTM32_CORTEX_M4_DEBUG
+{
+    unsigned long DHCSR;
+    unsigned long DCRSR;
+    unsigned long DCRDR;
+    unsigned long DEMCR;
+} STM32_CORTEX_M4_DEBUG;
+
+typedef struct stSTM32_CORTEX_M4_TRACE
+{
+    unsigned long DWT_CTRL;
+    unsigned long DWT_CYCCNT;
+    unsigned long DWT_CPICNT;
+    unsigned long DWT_EXCCNT;
+    unsigned long DWT_SLEEPVNT;
+    unsigned long DWT_LSUCNT;
+    unsigned long DWT_FOLDCNT;
+    unsigned long DWT_PCSR;
+} STM32_CORTEX_M4_TRACE;
+#endif
 
 typedef struct stSTM32_CORTEX_M3_REGS
 {
@@ -1383,6 +1411,11 @@ typedef struct stSTR32M_PERIPH
     STM32_DBG            DBG;
 
     STM32_CORTEX_M3      CORTEX_M3;
+
+#if defined ARM_MATH_CM4 || defined ARM_MATH_CM7                         // {40}
+    STM32_CORTEX_M4_DEBUG  CORTEX_M4_DEBUG;
+    STM32_CORTEX_M4_TRACE  CORTEX_M4_TRACE;
+#endif
 
     STM32_CORTEX_M3_REGS CORTEX_M3_REGS;                                 // only for simulation use
 } STM32M_PERIPH;
