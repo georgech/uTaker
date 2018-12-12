@@ -25,6 +25,7 @@
     24.06.2011 Code optimisations                                        {9}
     24.06.2011 Replace CLOCK_LIMIT with DELAY_LIMIT                      {10}
     26.11.2018 Change uTaskerGlobalStopTimer() to return the remaining time when a timer is stopped (longest time remaining when stopping all timers) {11}
+    12.12.2018 Add return value to uTaskerGlobalMonoTimer()              {12}
 
  */
 
@@ -300,12 +301,12 @@ static void fnStartNewTimer(TIMER_BLOCK *ptrNewTimer)
 
 // Start/or retrigger a mono-stable timer for the defined event number belonging to the calling task
 //
-extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event) // {10}
+extern int uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event) // {10}{12}
 {
     TIMER_BLOCK *ptrTimer;
 
     ptrTimer = fnGetOwnerTimer(OwnerTask, time_out_event);               // get the timer block
-    if (ptrTimer) {
+    if (ptrTimer != 0) {                                                 // if owner found
         ptrTimer->TimerDelay = delay;                                    // set new timeout (retrigger)
 #if defined GLOBAL_HARDWARE_TIMER
         if (ptrTimer->OwnerTask != OwnerTask) {                          // swapping from hardware to sw timer, or inverse is true
@@ -319,13 +320,17 @@ extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsi
     }
     else {
         ptrTimer = fnGetFreeTimer();                                     // define new timer
-        if (ptrTimer) {
+        if (ptrTimer != 0) {                                             // if a free timer was found
             ptrTimer->OwnerTask = OwnerTask;                             // enter timer details
             ptrTimer->TimerDelay = delay;
             ptrTimer->ucEvent = time_out_event;
             fnStartNewTimer(ptrTimer);                                   // start new timer delay
         }
+        else {
+            return GLOBAL_TIMER_NOT_STARTED;                             // {12} timer could not be started
+        }
     }
+    return 0;                                                            // timer started
 }
 
 // Stop a mono-stable timer belonging to calling task, with defined event number

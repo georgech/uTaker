@@ -103,6 +103,7 @@
     01.06.2018 Add optional interrupt callbacks receptionHandler(), receiveBreakHandler() and frameCompleteHandler() {84}
     10.08.2018 Add uStrstr() and uStrstrCaseInsensitive()                {85}
     26.11.2018 Change uTaskerGlobalStopTimer() return parameter          {86}
+    12.12.2018 Add return value to uTaskerGlobalMonoTimer()              {87}
 
 */
 
@@ -1084,7 +1085,8 @@ extern unsigned short uStrEquiv(const CHAR *ptrTo, const CHAR *ptrFrom);
 extern CHAR *uStrstr(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // {85}
 extern CHAR *uStrstrCaseInsensitive(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // 85}
 
-extern void uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event);
+extern int uTaskerGlobalMonoTimer(UTASK_TASK OwnerTask, DELAY_LIMIT delay, unsigned char time_out_event); // {87}
+    #define GLOBAL_TIMER_NOT_STARTED    (-1)
 extern DELAY_LIMIT uTaskerGlobalStopTimer(UTASK_TASK OwnerTask, unsigned char time_out_event); // {86}
 #define HARDWARE_TIMER 0x80
 extern void fnSetFuncTask(void (*function)(unsigned char ucEvent));
