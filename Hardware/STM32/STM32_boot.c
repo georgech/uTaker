@@ -95,6 +95,16 @@ extern void start_application(unsigned long app_link_location)
 }
 #endif
 
+// The boot loader doesn't use interrupts so these routines are dummy
+//
+extern void uDisable_Interrupt(void)
+{
+}
+
+extern void uEnable_Interrupt(void)
+{
+}
+
 
 // CRC-16 routine
 //
