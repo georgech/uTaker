@@ -95,7 +95,7 @@
         #if defined LPUARTS_PARALLEL
             #define FOURTH_LPUART_CHANNEL    (UARTS_AVAILABLE + 3)
         #else
-            #define ROURTH_LPUART_CHANNEL    3
+            #define FOURTH_LPUART_CHANNEL    3
         #endif
     #endif
     #if LPUARTS_AVAILABLE > 4
@@ -1525,8 +1525,23 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     #endif
 
     if ((usModifications & (CONFIG_RTS_PIN | SET_RS485_MODE)) != 0) {    // if the caller wants to modify the RTS pin configuration
-        if ((usModifications & SET_RS485_NEG) != 0) {
+        if ((usModifications & SET_RS485_NEG) != 0) {                    // negative polarity control
             fnConfigureUARTpin(channel, UART_RTS_PIN_INVERTED);          // configure the LPUART/UART RTS pin in inverted mode
+            if (iLPUART != 0) {
+    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSPOL);
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE); // enable automatic RTS with negative polarity
+    #endif
+            }
+            else {
+    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
+                uart_reg->UART_MODEM &= ~(UART_MODEM_TXRTSPOL);
+                uart_reg->UART_MODEM |= (UART_MODEM_TXRTSE);             // enable automatic RTS control with negative polarity
+    #endif
+            }
+        }
+        else {
+            fnConfigureUARTpin(channel, UART_RTS_PIN);                   // configure the LPUART/UART RTS pin
             if (iLPUART != 0) {
     #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
                 ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL);  // enable automatic RTS with positive polarity
@@ -1535,21 +1550,6 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             else {
     #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
                 uart_reg->UART_MODEM |= (UART_MODEM_TXRTSE | UART_MODEM_TXRTSPOL); // enable automatic RTS control with positive polarity
-    #endif
-            }
-        }
-        else {
-            fnConfigureUARTpin(channel, UART_RTS_PIN);                   // configure the LPUART/UART RTS pin
-            if (iLPUART != 0) {
-    #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSPOL);
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE); // enable automatic RTS with normal polarity
-    #endif
-            }
-            else {
-    #if (UARTS_AVAILABLE > 0) && !defined UART_WITHOUT_MODEM_CONTROL
-                uart_reg->UART_MODEM &= ~(UART_MODEM_TXRTSPOL);
-                uart_reg->UART_MODEM |= (UART_MODEM_TXRTSE);             // enable automatic RTS control with normal polarity
     #endif
             }
         }
@@ -2452,7 +2452,11 @@ static const unsigned char system_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
         #define SPECIAL_LPUART_CLOCK  (MCGIRCLK)
     #endif
 #endif
-#define SPECIAL_UART_CLOCK   (SPECIAL_LPUART_CLOCK)
+#if (UARTS_AVAILABLE == 0)
+    #define SPECIAL_UART_CLOCK    (SPECIAL_LPUART_CLOCK)
+#else
+    #define SPECIAL_UART_CLOCK    (SYSTEM_CLOCK)
+#endif
 
 #if defined LPUART_IRC48M
 static const unsigned short IRC48M_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
