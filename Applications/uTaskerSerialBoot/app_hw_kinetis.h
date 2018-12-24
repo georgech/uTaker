@@ -3827,7 +3827,7 @@
 #endif
 
 #if !defined OWN_SD_CARD_DISPLAY                                         // {3}
-    #if defined SERIAL_INTERFACE                                         // when UART interface is available
+    #if defined SERIAL_INTERFACE || (defined USB_INTERFACE && defined USE_USB_CDC) // when UART or USB-CDC interface is available
         #if defined USB_MSD_HOST_LOADER
             #define _DISPLAY_SD_CARD_NOT_PRESENT() fnDebugMsg("Mem-Stick not present\r\n")
             #define _DISPLAY_SD_CARD_NOT_FORMATTED() fnDebugMsg("Mem-Stick not formatted\r\n")

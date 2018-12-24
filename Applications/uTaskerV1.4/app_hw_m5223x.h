@@ -717,7 +717,6 @@
   //#define I2C_ON_QS                                                    // {15} alternative I2C pin mapping
 
     #if defined _M5221X || defined _M521XX || defined _M5225X            // {45}{48}
-        #define NUMBER_I2C          2                                    // {33} define support for 2 I2C interfaces
         #define OUR_I2C_CHANNEL     0
 
       //#define I2C0_ON_QS                                               // alternative I2C0 pin mapping

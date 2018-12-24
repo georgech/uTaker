@@ -211,6 +211,41 @@ typedef struct stKINETIS_CORTEX_M4_TRACE
     unsigned long DWT_LSUCNT;
     unsigned long DWT_FOLDCNT;
     unsigned long DWT_PCSR;
+    unsigned long DWT_COMP0;
+    unsigned long DWT_MASK0;
+    unsigned long DWT_FUNCTION0;
+    unsigned long ulRes0;
+    unsigned long DWT_COMP1;
+    unsigned long DWT_MASK1;
+    unsigned long DWT_FUNCTION1;
+    unsigned long ulRes1;
+    unsigned long DWT_COMP2;
+    unsigned long DWT_MASK2;
+    unsigned long DWT_FUNCTION2;
+    unsigned long ulRes2;
+    unsigned long DWT_COMP3;
+    unsigned long DWT_MASK3;
+    unsigned long DWT_FUNCTION3;
+#if defined ARM_MATH_CM7
+    unsigned long ulRes3[981];
+    unsigned long DWT_LAR;
+    unsigned long DWT_LSR;
+    unsigned long ulRes4[6];
+#else
+    unsigned long ulRes3[989];
+#endif
+    unsigned long DWT_PID4;
+    unsigned long DWT_PID5;
+    unsigned long DWT_PID6;
+    unsigned long DWT_PID7;
+    unsigned long DWT_PID0;
+    unsigned long DWT_PID1;
+    unsigned long DWT_PID2;
+    unsigned long DWT_PID3;
+    unsigned long DWT_CID0;
+    unsigned long DWT_CID1;
+    unsigned long DWT_CID2;
+    unsigned long DWT_CID3;
 } KINETIS_CORTEX_M4_TRACE;
 #endif
 
@@ -1914,6 +1949,18 @@ typedef struct stKINETIS_RTC
 #endif
 } KINETIS_RTC;
 
+#if defined KINETIS_K80
+typedef struct stKINETIS_RTC_REGISTER_FILE                               // RTC register file
+{
+    unsigned char ucRTC_registers[RTC_REGISTER_FILE_SIZE];
+} KINETIS_RTC_REGISTER_FILE;
+
+typedef struct stKINETIS_SYSTEM_REGISTER_FILE                            // system register file
+{
+    unsigned char ucSystemRegisters[SYSTEM_REGISTER_FILE_SIZE];
+} KINETIS_SYSTEM_REGISTER_FILE;
+#endif
+
 #if LPTMR_AVAILABLE > 0
 typedef struct stKINETIS_LPTMR                                           // {20}
 {
@@ -1977,13 +2024,14 @@ unsigned long AXBS_MGPCR7;
 } KINETIS_AXBS;
 #endif
 
+#if (TSI_AVAILABLE > 0)
 typedef struct stKINETIS_TSI
 {
-#if defined KINETIS_KL
+    #if defined KINETIS_KL
     unsigned long TSI_GENCS;
     unsigned long TSI_DATA;
     unsigned long TSI_TSHD;
-#else
+    #else
     unsigned long TSI_GENCS;
     unsigned long TSI_SCANC;
     unsigned long TSI_PEN;
@@ -1998,7 +2046,7 @@ typedef struct stKINETIS_TSI
     unsigned long TSI_CNTR13;
     unsigned long TSI_CNTR15;
     unsigned long TSI_THRESHLD0;
-    #if KINETIS_MAX_SPEED >= 100000000
+        #if KINETIS_MAX_SPEED >= 100000000
         unsigned long TSI_THRESHLD1;
         unsigned long TSI_THRESHLD2;
         unsigned long TSI_THRESHLD3;
@@ -2014,9 +2062,10 @@ typedef struct stKINETIS_TSI
         unsigned long TSI_THRESHLD13;
         unsigned long TSI_THRESHLD14;
         unsigned long TSI_THRESHLD15;
+        #endif
     #endif
-#endif
 } KINETIS_TSI;
+#endif
 
 typedef struct stKINETIS_SIM
 {
@@ -3822,6 +3871,10 @@ typedef struct stKINETIS_PERIPH
 #endif
 #if !defined KINETIS_WITHOUT_RTC
     KINETIS_RTC        RTC;
+    #if defined KINETIS_K80
+    KINETIS_RTC_REGISTER_FILE     RTC_REGISTER_FILE;                     // RTC register file
+    KINETIS_SYSTEM_REGISTER_FILE  SYSTEM_REGISTER_FILE;                  // system register file
+    #endif
 #endif
 #if LPTMR_AVAILABLE > 0
     KINETIS_LPTMR      LPTMR[LPTMR_AVAILABLE];                           // {20}
@@ -3829,7 +3882,9 @@ typedef struct stKINETIS_PERIPH
 #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM && !defined CROSSBAR_SWITCH_LITE
     KINETIS_AXBS       AXBS;                                             // {19}
 #endif
+#if (TSI_AVAILABLE > 0)
     KINETIS_TSI        TSI;
+#endif
     KINETIS_SIM        SIM;
 #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
     KINETIS_KE_PORT    PORT;

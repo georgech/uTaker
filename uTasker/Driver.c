@@ -48,6 +48,7 @@
     17.12.2017 Change uMemset() to match memset() parameters             {32}
     23.03.2018 Optimise /= 10 used by fnBufferDec() using look-up table  {33}
     10.08.2018 Move uStrEquiv() from ip_utils.c to here and add uStrstr() and uStrstrCaseInsensitive() {34}
+    24.12.2018 Add uStrlenSafe()                                         {35}
 
 */
 
@@ -819,7 +820,7 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
 {
     // Converts the number to ASCII - the result is right aligned in the width given - an additional 0 is added at the end to aid string output
     // range -2^31 .. +2^31
-    // length 1 .. 5                                                    // max possible space, inkl. neg
+    // length 1 .. 5                                                     // max possible space, inkl. neg
     //
     static const unsigned long ulNextDivide[] = {100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1, 0}; // {33} progressive divide by 10 values
     int iNext = 0;
@@ -860,13 +861,27 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
                 *cPtr++ = '0';                                           // insert a zero mid-string
             }
             else {
-                if (ulDiv == 1) {                                        // smallest division unit reached without being able to divide (value < 10)
+                switch (ulDiv) {
+                case 10000:
+                case 1000:
+                case 100:
+                    if (((ucStyle & 3) > 1) && ((ucStyle & LEADING_ZERO) != 0)) { // if a leading zero is required
+                        *cPtr++ = '0';                                   // insert a leading zero
+                    }
+                    break;
+                case 10:
+                    if (((ucStyle & 3) > 0) && ((ucStyle & LEADING_ZERO) != 0)) { // if a leading zero is required
+                        *cPtr++ = '0';                                   // insert a leading zero
+                    }
+                    break;
+                case 1:                                                  // smallest division unit reached without being able to divide (value < 10)
                     if ((ucStyle & LEADING_ZERO) != 0) {                 // if a leading zero is required
                         *cPtr++ = '0';                                   // insert a leading zero
                     }
                     else if ((ucStyle & LEADING_SPACE) != 0) {           // of if a leading space is required
                         *cPtr++ = ' ';                                   // insert a leading space
                     }
+                    break;
                 }
             }
         }
@@ -890,7 +905,17 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
         }
         else {
             if ((ucStyle & LEADING_ZERO) != 0) {
-                *cPtr++ = '0';
+                switch (ucStyle & 0x03) {
+                case 2:
+                    *cPtr++ = '0';
+                    *cPtr++ = '0';
+                    *cPtr++ = '0';
+                case 1:
+                    *cPtr++ = '0';
+                default:
+                    *cPtr++ = '0';
+                    break;
+                }
             }
             *cPtr++ = '0';
         }
@@ -1322,14 +1347,26 @@ static int _uStrlen(const CHAR *ptrStr)
 extern size_t uStrlen(const CHAR *ptrStr)
     #endif
 {
-    size_t iSize = 0;
+    size_t length = 0;
 
     while (*ptrStr++ != 0) {                                             // search for the null-terminator at the end of the string
-        iSize++;
+        length++;
     }
-    return iSize;                                                        // return the number of characters found before the null-terminator
+    return length;                                                       // return the number of characters found before the null-terminator
 }
 #endif
+
+extern size_t uStrlenSafe(const CHAR *ptrStr, size_t MaxStrLength)       // {35}
+{
+    size_t length = 0;
+    while (length < MaxStrLength) {                                      // limit the search to the specified length
+        if (*ptrStr++ == 0) {                                            // search for the null-terminator at the end of the string
+            break;
+        }
+        length++;
+    }
+    return length;
+}
 
 // Tries to match a string, where lower and upper case are treated as equal
 //

@@ -5245,11 +5245,11 @@ static __interrupt__ void _I2C_Interrupt_1(void)                         // I2C1
         if (I2C_tx_control[1]->ucPresentLen == 1) {
             I2CR_1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_TXAK);         // we don't acknowledge last byte
         }
-        else if (!I2C_tx_control[1]->ucPresentLen) {                     // we have completed the read
-            I2CR_1 = (I2C_IEN | I2C_TXAK);                               // send end condition and enable interrupts                                          // 
+        else if (I2C_tx_control[1]->ucPresentLen == 0) {                 // we have completed the read
+            I2CR_1 = (I2C_IEN | I2C_TXAK);                               // send end condition and enable interrupts
             I2C_tx_control[1]->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
             I2C_rx_control[1]->msgs++;
-            if (I2C_rx_control[1]->wake_task ) {                         // wake up the receiver task if desired
+            if (I2C_rx_control[1]->wake_task != 0) {                     // wake up the receiver task if desired
                uTaskerStateChange(I2C_rx_control[1]->wake_task, UTASKER_ACTIVATE); // wake up owner task
             }
         }
@@ -5297,12 +5297,12 @@ static __interrupt__ void _I2C_Interrupt_1(void)                         // I2C1
     #endif
     }
     else {                                                               // last byte in TX_ACTIVE
-        if (!(I2C_tx_control[1]->I2C_queue.chars)) {                     // transmission complete
+        if (I2C_tx_control[1]->I2C_queue.chars == 0) {                   // transmission complete
             I2CR_1 = (I2C_IEN | I2C_MTX);                                // send stop condition and disable interrupts
 
             I2C_tx_control[1]->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
 
-            if (I2C_tx_control[1]->wake_task ) {
+            if (I2C_tx_control[1]->wake_task != 0) {
                uTaskerStateChange(I2C_tx_control[1]->wake_task, UTASKER_ACTIVATE);// wake up owner task since the transmission has terminated
             }
         }
@@ -5338,7 +5338,7 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel)                       // {182
         PASPAR |= (AS_I2C_SCL_0_FUNCTION | AS_I2C_SDA_0_FUNCTION);       // configure the SDA and SCL pins on AS
         #endif
     }
-    #if CHIP_HAS_I2C > 1
+    #if I2C_AVAILABLE > 1
     else {
         #if defined _M5225X && !defined I2C1_ON_UB && !defined I2C1_ON_UC && !defined I2C1_ON_TH
             #define I2C1_ON_QS                                           // {96}
@@ -5548,7 +5548,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)              // {66}
             fnConfigI2C_pins(Channel);                                   // check and configure pins for I2C use
             uDisable_Interrupt();
         }
-        while (*register_ptr & I2C_IBB) {}                               // {116} wait until the stop has actually been sent to avoid a further transmission being started in the mean time
+        while ((*register_ptr & I2C_IBB) != 0) {}                        // {116} wait until the stop has actually been sent to avoid a further transmission being started in the mean time
         register_ptr -= sizeof(unsigned long);                           // {116} move back to CR
         *register_ptr = (I2C_IEN | I2C_IIEN | I2C_MTX);                  // set transmit mode with interrupt enabled
         *register_ptr = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_MTX);       // set master mode to cause start condition to be sent

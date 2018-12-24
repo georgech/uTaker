@@ -142,11 +142,11 @@ static void fnHandleFlexTimer(FLEX_TIMER_MODULE *ptrFlexTimer, int iFlexTimerRef
     }
     else
 #endif
-    if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {                     // flag will always be set but it has to be read at '1' before it can be reset
+    if ((ptrFlexTimer->FTM_SC & FTM_SC_TOF) != 0) {                      // flag will always be set but it has to be read at '1' before it can be reset
         if ((usFlexTimerMode[iFlexTimerReference] & FLEX_TIMER_PERIODIC) != 0) { // if the timer is being used in periodic mode
             ptrFlexTimer->FTM_SC = (usFlexTimerMode[iFlexTimerReference] & FTM_SC_USED_MASK); // reset interrupt and allow the FlexTimer to continue running for periodic interrupts
         }
-        else {
+        else {                                                           // single shot mode
             ptrFlexTimer->FTM_SC = FTM_SC_TOF;                           // stop further activity (single-shot mode)
             switch (iFlexTimerReference) {                               // power down the FlexTimer after single-shot use
             case 0:
@@ -481,14 +481,14 @@ static __interrupt void _flexTimerInterrupt_5(void)
                     ulEdge = FTM_CSC_ELSB;                               // capture on falling edge
                     break;
                 }
-        #if defined KINETIS_KL && defined _WINDOWS
+        #if defined KINETIS_KL_ && defined _WINDOWS
                 if (ptrTimerSetup->capture_channel > 3) {
                     _EXCEPTION("Invalid capture channel");
                 }
         #endif
                 fnConfigTimerPin(iTimerReference, ptrTimerSetup->capture_channel, ulCharacteristics); // configure the channel's input capture pin
                 ptrFlexTimer->FTM_channel[ptrTimerSetup->capture_channel].FTM_CSC = ulEdge; // program the edge sensitivity of the capture input
-        #if defined KINETIS_KL                                           // flextimers default to their external channel inputs
+        #if defined KINETIS_KL_                                          // flextimers default to their external channel inputs
                 ptrFlexTimer->FTM_CONF |= (FTM_CONF_TRGSEL0 << ptrTimerSetup->capture_channel); // enable trigger source
         #endif
             }

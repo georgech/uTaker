@@ -2987,6 +2987,38 @@ extern void fnEnterTimer(int iPortRef, int iPinRef, int iTimer, int iChannel, in
     }
 }
 
+extern int fnGetPWM_sim_channel(int iPort, int iPin, unsigned long *ptr_ulFrequency, unsigned char *ptr_ucMSR)
+{
+    if ((ulTimerPinEnabled[iPort] & (1 << iPin)) != 0) {                 // if this pin has been programmed as a timer function
+        int iTimer = (ucPinTimerDetails[iPort][iPin] >> 4);
+        int iChannel = (ucPinTimerDetails[iPort][iPin] & 0x0f);
+        if (fnFlexTimerPowered(iTimer) != 0) {                           // the timer must be powered
+            FLEX_TIMER_MODULE *ptrTimer = fnGetFlexTimerReg(iTimer);
+            unsigned long ulMOD_value;
+            unsigned long ulMatchValue;
+            if ((ptrTimer->FTM_SC & FTM_SC_CPWMS) != 0) {                // if center-aligned
+                ulMOD_value = (ptrTimer->FTM_MOD * 2);
+                ulMatchValue = (ptrTimer->FTM_channel[iChannel].FTM_CV * 2);
+            }
+            else {
+                ulMOD_value = (ptrTimer->FTM_MOD + 1);
+                ulMatchValue = ptrTimer->FTM_channel[iChannel].FTM_CV;
+            }
+            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_ELSA | FTM_CSC_ELSB | FTM_CSC_MSA | FTM_CSC_MSB)) == FTM_CSC_MS_ELS_PWM_LOW_TRUE_PULSES) { // polarity inverted
+                ulMatchValue = (*ptr_ulFrequency - *ptr_ucMSR);
+            }
+            if (ulMOD_value == 0) {
+                ulMOD_value = 1;
+            }
+            *ptr_ucMSR = (unsigned char)((float)((float)(ulMatchValue * 100) / (float)ulMOD_value) + (float)0.5); // MSR in percent
+            *ptr_ulFrequency = (fnGetFlexTimer_clock(iTimer)/ulMOD_value);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
 // Handle timer capture inputs {50}
 //
 static void fnHandleTimerInput(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
@@ -3009,7 +3041,7 @@ static void fnHandleTimerInput(int iPort, unsigned long ulNewState, unsigned lon
             // The input is attached to a timer so we capture its present input value if the sense matches
             //
             switch (ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_ELSA | FTM_CSC_ELSB)) {
-            case 0:                                                      // not in input capture moe
+            case 0:                                                      // not in input capture mode
                 return;
             case FTM_CSC_ELSA:                                           // rising edge capture
                 if ((ulNewState & ulChangedBit) == 0) {

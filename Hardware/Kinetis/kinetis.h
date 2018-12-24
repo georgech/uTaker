@@ -1562,7 +1562,7 @@ typedef struct stRESET_VECTOR
     #define FLEX_TIMERS_1_CHANNELS    2
     #define FLEX_TIMERS_2_CHANNELS    6
     #define FLEX_TIMERS_CHANNEL_COUNT (FLEX_TIMERS_0_CHANNELS + FLEX_TIMERS_1_CHANNELS + FLEX_TIMERS_2_CHANNELS)
-#elif defined KINETIS_KL28
+#elif defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28
     #define FLEX_TIMERS_0_CHANNELS    6
     #define FLEX_TIMERS_1_CHANNELS    2
     #define FLEX_TIMERS_2_CHANNELS    2
@@ -3928,6 +3928,11 @@ typedef struct stVECTOR_TABLE
     #define PDB_AVAILABLE   0
 #endif
 
+#if defined KINETIS_K80
+    #define RTC_REGISTER_FILE_SIZE       128                             // 128 bytes of data backed up by VBAT
+    #define SYSTEM_REGISTER_FILE_SIZE    32                              // 32 bytes of data backed up in all power modes
+#endif
+
 
 
 #if defined _WINDOWS
@@ -4044,6 +4049,10 @@ typedef struct stVECTOR_TABLE
     #endif
     #if !defined KINETIS_WITHOUT_RTC
         #define RTC_BLOCK                      ((unsigned char *)(&kinetis.RTC)) // RTC
+        #if defined KINETIS_K80
+            #define RTC_REGISTER_BLOCK         ((unsigned char *)(&kinetis.RTC_REGISTER_FILE)) // RTC register file
+            #define SYSTEM_REGISTER_BLOCK      ((unsigned char *)(&kinetis.SYSTEM_REGISTER_FILE)) // system register file
+        #endif
     #endif
     #if LPTMR_AVAILABLE > 0
         #define LPTMR_BLOCK_0                  ((unsigned char *)(&kinetis.LPTMR[0])) // {51} Low Power Timer
@@ -4397,6 +4406,9 @@ typedef struct stVECTOR_TABLE
             #define RTC_BLOCK                  0x40038000                // RTC
         #else
             #define RTC_BLOCK                  0x4003d000                // RTC
+            #if defined KINETIS_K80
+                #define RTC_REGISTER_BLOCK     0x4003e000                // RTC register file
+            #endif
         #endif
     #endif
     #if LPTMR_AVAILABLE > 0
@@ -8807,7 +8819,7 @@ typedef struct st_KINETIS_DSPI
           #define FTM_CONF_TRGSEL1_EXT  0x01000000                           // TRGMUX_TPMx_trigger1 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
           #define FTM_CONF_TRGSEL2_EXT  0x02000000                           // TRGMUX_TPMx_trigger2 (change only when TPM is disabled) when external source is selected (FTM_CONF_TRGSRC_EXTERNAL)
           #define FTM_CONF_TRGSEL_EXT_MASK 0x03000000
-      #elif defined KINETIS_KL27
+      #elif defined KINETIS_KL17 || defined KINETIS_KL27
           #define FTM_CONF_TRGSEL0  0x01000000                               // channel 0 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
           #define FTM_CONF_TRGSEL1  0x02000000                               // channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
           #define FTM_CONF_TRGSEL2  0x03000000                               // channel 0 or channel 1 pin input capture (change only when TPM is disabled) when internal source is selected (FTM_CONF_TRGSRC_INTERNAL)
@@ -10431,6 +10443,7 @@ typedef struct stKINETIS_ADMA2_BD
     #define RTC_TSR             *(volatile unsigned long *)(RTC_BLOCK + 0x000) // RTC Time Seconds Register
     #define RTC_TPR             *(volatile unsigned long *)(RTC_BLOCK + 0x004) // RTC Time Prescaler Register
       #define RTC_TPR_MASK      0x0000ffff
+      #define GET_TIMER_PRESENT_ms_VALUE()        (unsigned short)((RTC_TPR * 1000)/32768)
     #define RTC_TAR             *(unsigned long *)(RTC_BLOCK + 0x008)    // RTC Time Alarm Register
     #define RTC_TCR             *(unsigned long *)(RTC_BLOCK + 0x00c)    // RTC Time Compensation Register
     #define RTC_CR              *(unsigned long *)(RTC_BLOCK + 0x010)    // RTC Control Register
@@ -19915,6 +19928,12 @@ typedef struct stTIMER_INTERRUPT_SETUP
 typedef struct stRTC_SETUP
 {
     void (*int_handler)(void);                                           // interrupt handler to be configured
+#if defined SUPPORT_RTC_us
+    unsigned long    ul_us;
+#endif
+#if defined SUPPORT_RTC_ms
+    unsigned short   us_ms;
+#endif
     unsigned short   usYear;
     unsigned char    ucMonthOfYear;
     unsigned char    ucDayOfMonth;
@@ -20474,13 +20493,42 @@ extern int  fnIsPending(int iInterruptID);                               // {90}
 
     // Cortex data watch and trace unit
     //
-    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00)
+    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00) // control register
         #define DWT_CTRL_CYCCNTENA    0x00000001                         // enable the cycle counter
-    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04)
-    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08)
-    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c)
-    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10)
-    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14)
-    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
-    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
+    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04) // cycle count register
+    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08) // CPI count register
+    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c) // exception overhead count register
+    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10) // sleep count register
+    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14) // LSU count register
+    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18) // folder-instruction count register
+    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c) // program counter sample regster - read-only
+    #define DWT_COMP0                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x20) // compare register 0
+    #define DWT_MASK0                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x24) // mask register 0
+    #define DWT_FUNCTION0             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x28) // function register 0
+    #define DWT_COMP1                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x30) // compare register 1
+    #define DWT_MASK1                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x34) // mask register 1
+    #define DWT_FUNCTION1             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x38) // function register 1
+    #define DWT_COMP2                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x40) // compare register 2
+    #define DWT_MASK2                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x44) // mask register 2
+    #define DWT_FUNCTION2             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x48) // function register 2
+    #define DWT_COMP3                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x50) // compare register 3
+    #define DWT_MASK3                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x54) // mask register 3
+    #define DWT_FUNCTION3             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x58) // function register 3
+    #if defined ARM_MATH_CM7
+        #define DWT_LAR               *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfb0) // lock access register - write-only
+            #define DWT_LAR_UNLOCK    0xc5acce55                         // unlock code
+        #define DWT_LSR               *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfb4) // lock access register - read-only
+    #endif
+    #define DWT_PID4                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd0) // peripheral identification register 4 - read-only
+    #define DWT_PID5                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd4) // peripheral identification register 5 - read-only
+    #define DWT_PID6                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd8) // peripheral identification register 6 - read-only
+    #define DWT_PID7                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfdc) // peripheral identification register 7 - read-only
+    #define DWT_PID0                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe0) // peripheral identification register 0 - read-only
+    #define DWT_PID1                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe4) // peripheral identification register 1 - read-only
+    #define DWT_PID2                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe8) // peripheral identification register 2 - read-only
+    #define DWT_PID3                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfec) // peripheral identification register 3 - read-only
+    #define DWT_CID0                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff0) // component identification register 0 - read-only
+    #define DWT_CID1                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff4) // component identification register 1 - read-only
+    #define DWT_CID2                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff8) // component identification register 2 - read-only
+    #define DWT_CID3                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xffc) // component identification register 3 - read-only
 #endif

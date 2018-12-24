@@ -104,6 +104,7 @@
     10.08.2018 Add uStrstr() and uStrstrCaseInsensitive()                {85}
     26.11.2018 Change uTaskerGlobalStopTimer() return parameter          {86}
     12.12.2018 Add return value to uTaskerGlobalMonoTimer()              {87}
+    24.12.2018 Add uStrlenSafe()                                         {88}
 
 */
 
@@ -1076,6 +1077,7 @@ extern void *uMallocAlign(MAX_MALLOC __size, unsigned short ucAlign);    // {2}
     extern CHAR *uStrcpy(CHAR *ptrTo, const CHAR *ptrFrom);
     extern size_t uStrlen(const CHAR *ptrStr);
 #endif
+extern size_t uStrlenSafe(const CHAR *ptrStr, size_t MaxStrLength); // {88}
 
 extern void uMemset_long(unsigned long *ptrTo, unsigned long ulValue, size_t Size); // {19}
 extern void uMemcpy_long(unsigned long *ptrTo, const unsigned long *ptrFrom, size_t Size); // {19}

@@ -2624,6 +2624,9 @@ static void _LowLevelInit(void)
 #endif
 #if defined DWT_CYCCNT && defined USE_CORTEX_CYCLE_COUNTER
     DEMCR |= DHCSR_TRCENA;                                               // enable trace for DWT features
+    #if defined ARM_MATH_CM7
+    DWT_LAR = DWT_LAR_UNLOCK;                                            // unlock access to DWT registers
+    #endif
     DWT_CYCCNT = 0;                                                      // reset the cycle count value
     DWT_CTRL |= DWT_CTRL_CYCCNTENA;                                      // enable the cycle counter
 #endif

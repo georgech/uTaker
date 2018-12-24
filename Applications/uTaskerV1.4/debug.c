@@ -3071,7 +3071,7 @@ static void fnDoAdmin(unsigned char ucType, CHAR *ptrInput)
     case SHOW_TIME:
         {
             int iType;
-            CHAR cTimeDateBuf[20];
+            CHAR cTimeDateBuf[32];
             if (ucType == SHOW_ALARM) {
                 iType = DISPLAY_RTC_ALARM;
             }

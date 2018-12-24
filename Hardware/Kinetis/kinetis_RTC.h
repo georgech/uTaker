@@ -203,6 +203,7 @@ extern int fnConfigureRTC(void *ptrSettings)
     #if defined SUPPORT_SW_RTC || (defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
             *RTC_SECONDS_LOCATION = fnConvertTimeSeconds(ptr_rtc_setup, 1); // set the present time and date as seconds since 1970 (Unix epoch)
     #else
+            RTC_TPR = 0;                                                 // reset the prescaler 
             RTC_TSR = fnConvertTimeSeconds(ptr_rtc_setup, 1);            // set the present time and date as seconds since 1970 (Unix epoch)
     #endif
         }

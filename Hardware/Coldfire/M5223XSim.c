@@ -1065,9 +1065,9 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 
-	if ((iInts & CHANNEL_2_SERIAL_INT) && (argv)) {                      // {12}
+	if (((iInts & CHANNEL_2_SERIAL_INT) != 0) && (argv != 0)) {          // {12}
         ptrCnt = (int *)argv[THROUGHPUT_UART2];                          // {9}
-        if (*ptrCnt) {
+        if (*ptrCnt != 0) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_2_SERIAL_INT;                          // enough serial interupts handled in this tick period
             }
@@ -1085,9 +1085,9 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 
-    if (iInts & I2C_INT0) {
+    if ((iInts & I2C_INT0) != 0) {
         ptrCnt = (int *)argv[THROUGHPUT_I2C0];                           // {18}
-        if (*ptrCnt) {
+        if (*ptrCnt != 0) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= I2C_INT0;                                      // enough I2C interupts handled in this tick period
             }
@@ -1100,9 +1100,9 @@ extern unsigned long fnSimInts(char *argv[])
         }
     }
                                                        
-    if (iInts & I2C_INT1) {                                              // {4}
+    if ((iInts & I2C_INT1) != 0) {                                       // {4}
         ptrCnt = (int *)argv[THROUGHPUT_I2C1];
-        if (*ptrCnt) {
+        if (*ptrCnt != 0) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= I2C_INT1;                                      // enough I2C interupts handled in this tick period
             }
@@ -2313,8 +2313,8 @@ static void fnCaptureGPT(unsigned char ucBit)
     case 0x08:
         GPTC3 = GPTCNT;                                                  // capture present timer count value
         GPTFLG1 |= 0x08;
-        if (GPTIE & ucBit) {                                             // interrupt enabled
-            if (!(IC_IMRH_0 & GPTC3F_PIF_INT_H)) {                       // not masked
+        if ((GPTIE & ucBit) != 0) {                                      // interrupt enabled
+            if ((IC_IMRH_0 & GPTC3F_PIF_INT_H) == 0) {                   // not masked
 	            __VECTOR_RAM[GPT_C3F_VECTOR]();                          // call the capture interrupt routine
             }
         }
@@ -2330,7 +2330,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     switch (ucPort) {
 #if defined _M52XX_SDRAM                                                // {59}
     case _PORT_A:
-        if (!(ucPortDDR_A & ucBit)) {                                   // if input
+        if ((ucPortDDR_A & ucBit) == 0) {                               // if input
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 ucPort_in_A ^= ucBit;
             }
@@ -2599,7 +2599,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         }
         break;
     case _PORT_CS:
-        if (!(ucPortDDR_CS & ucBit)) {                                   // if input
+        if ((ucPortDDR_CS & ucBit) == 0) {                               // if input
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 ucPort_in_CS ^= ucBit;
             }
@@ -2613,7 +2613,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         }
         break;
     case _PORT_FECI2C:
-        if (!(ucPortDDR_FECI2C & ucBit)) {                               // if input
+        if ((ucPortDDR_FECI2C & ucBit) == 0) {                           // if input
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 ucPort_in_FECI2C ^= ucBit;
             }
@@ -2881,7 +2881,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
 #if !defined _M520X && !defined _M523X                                   // {61}
     case _PORT_QS:
-        if (!(ucPortDDR_QS & ucBit)) {                                   // if input
+        if ((ucPortDDR_QS & ucBit) == 0) {                               // if input
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {
                 ucPort_in_QS ^= ucBit;
             }
@@ -2898,7 +2898,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
 #if !defined _M52XX_SDRAM && !defined _M520X && !defined _M523X          // temp
     case _PORT_AN:
-        if (!(ucPortDDR_AN & ucBit)) {                                   // if input
+        if ((ucPortDDR_AN & ucBit) == 0) {                               // if input
             if (iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG)) {           // {29}
     #if defined SUPPORT_ADC                                              // {29}
                 if (PANPAR & ucBit) {                                    // input is ADC so change the voltage
@@ -2907,8 +2907,8 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
                     do {
                         iAdc++,
                         ucBit >>= 1;
-                    } while (ucBit);
-                    if (TOGGLE_INPUT_NEG & iChange) {
+                    } while (ucBit != 0);
+                    if ((TOGGLE_INPUT_NEG & iChange) != 0) {
                         if (usADC_values[iAdc-1] >= usStepSize) {
                             usADC_values[iAdc-1] -= usStepSize;
                             fnSimADC(iAdc-1);
@@ -3039,7 +3039,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 
             }
         }
-        if (!(ucPortDDR_TC & ucBit)) {                                   // if input
+        if ((ucPortDDR_TC & ucBit) == 0) {                               // if input
             ucPort_in_TC ^= ucBit;
             PORTIN_SETTC = ucPort_in_TC;
         }
@@ -7875,6 +7875,13 @@ extern unsigned short fnGetEndpointInfo(int iEndpoint)
     usBufferSize |= (unsigned short)(ptrBDT->usb_bd_rx_even.ulUSB_BDControl << USB_BYTE_CNT_SHIFT_MSB);
     #endif
     return usBufferSize;
+}
+#endif
+
+#if defined I2C_INTERFACE
+extern void fnSimulateI2C(int iPort, unsigned char *ptrDebugIn, unsigned short usLen, int iRepeatedStart)
+{
+    _EXCEPTION("To do!!!");
 }
 #endif
 

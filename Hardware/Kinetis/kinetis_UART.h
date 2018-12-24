@@ -59,8 +59,8 @@
     #endif
 #endif
 
-#if !defined UART_PULL_UPS
-    #define UART_PULL_UPS 0
+#if !defined UART_PULL_UPS                                               // if the user wishes pull-up/downs on the UART Rx pins this can be set to PORT_PS_UP_ENABLE or PORT_PS_DOWN_ENABLE in app_hw_kinetis.h
+    #define UART_PULL_UPS    (PORT_NO_PULL)                              // if not overridden by the user there are no pull-up/downs on the UART Rx pins
 #endif
 
 #if defined _WINDOWS

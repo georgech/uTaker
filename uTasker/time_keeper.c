@@ -17,6 +17,7 @@
     19.08.2015 Use uMemset() to initialise strcture to avoid GCC using memset() {1}
     15.09.2015 Add dusk and dawn calculations                            {2}
     14.03.2017 Simplify fnDiv2Time()                                     {3}
+    19.12.2018 Add optional ms or  us resolution to RTC                  {4}
 
 */
           
@@ -74,13 +75,13 @@
 // Hardware specific defines
 //
 #if defined _M5223X
-    #define TIMER_PERIOD_FULL_SCALE    1000000                           // timer counts us
-    #define GET_TIMER_PRESENT_VALUE()  DTCN1                             // counter value (0..999999)
-    #define RESET_US_COUNTER()         DTCN1 = 0                         // reset/synchronise the us counter
+    #define TIMER_PERIOD_FULL_SCALE       1000000                        // timer counts us
+    #define GET_TIMER_PRESENT_us_VALUE()  DTCN1                          // counter value (0..999999)
+    #define RESET_US_COUNTER()            DTCN1 = 0                      // reset/synchronise the us counter
 #elif defined _KINETIS
-    #define GET_TIMER_PRESENT_VALUE() 0
+    #define GET_TIMER_PRESENT_us_VALUE() 0
     #define RESET_US_COUNTER()
-    #define TIMER_PERIOD_FULL_SCALE   1
+    #define TIMER_PERIOD_FULL_SCALE      1
 #endif
 
 
@@ -337,7 +338,7 @@ extern void fnSecondsTick(void (*rtc_interrupt_handler[6])(void), int rtc_interr
 {
     #if defined USE_SNTP
     if (ulFractionResync != 0) {                                         // just synchronised so we can synchronise the time base to correct form fractions of a second
-        slFractionOffset = (GET_TIMER_PRESENT_VALUE() - ulFractionResync); // the fraction adjustment
+        slFractionOffset = (GET_TIMER_PRESENT_us_VALUE() - ulFractionResync); // the fraction adjustment
         ulFractionResync = 0;                                            // synchronisation performed
     }
     RESET_US_COUNTER();                                                  // reset the us conter value
@@ -427,8 +428,32 @@ extern void fnSecondsTick(void (*rtc_interrupt_handler[6])(void), int rtc_interr
 
 extern void fnGetRTC(RTC_SETUP *ptrSetup)
 {
-    do {                                                                 // repeat in case seconds increment while copying
-        ptrSetup->ucSeconds = ucSeconds;
+#if defined SUPPORT_RTC_us
+    unsigned long ulStamp;
+#endif
+#if defined SUPPORT_RTC_ms
+    unsigned short usStamp;
+#endif
+    FOREVER_LOOP() {                                                     // repeat in case seconds increment while copying
+#if defined SUPPORT_RTC_us                                               // {4}
+        ulStamp = GET_TIMER_PRESENT_us_VALUE();                          // us
+#endif
+#if defined SUPPORT_RTC_ms                                               // {4}
+        usStamp = GET_TIMER_PRESENT_ms_VALUE();                          // ms
+#endif
+        ptrSetup->ucSeconds = ucSeconds;                                 // this is the time sampling reference
+#if defined SUPPORT_RTC_us                                               // {4}
+        ptrSetup->ul_us = GET_TIMER_PRESENT_us_VALUE();                  // us
+        if (ptrSetup->ul_us < ulStamp) {
+            continue;                                                    // if an overflow took place we repeat to ensure accuracy to the seconds samping point
+        }
+#endif
+#if defined SUPPORT_RTC_ms                                               // {4}
+        ptrSetup->us_ms = GET_TIMER_PRESENT_ms_VALUE();                  // ms
+        if (ptrSetup->us_ms < usStamp) {
+            continue;                                                    // if an overflow took place we repeat to ensure accuracy to the seconds samping point
+        }
+#endif
         ptrSetup->usYear = usYear;
         ptrSetup->ucMonthOfYear = ucMonthOfYear;
         ptrSetup->ucDayOfMonth = ucDayOfMonth;
@@ -436,7 +461,10 @@ extern void fnGetRTC(RTC_SETUP *ptrSetup)
         ptrSetup->ucHours = ucHours;
         ptrSetup->ucMinutes = ucMinutes;
         ptrSetup->ulLocalUTC = ulLocalUTC;
-    } while (ptrSetup->ucSeconds != ucSeconds);
+        if (ptrSetup->ucSeconds == ucSeconds) {                          // if there was a count taking place during the read process we will repeat to avoid overflow inaccuracy
+            break;
+        }
+    }
     ptrSetup->command = RTC_RETURNED_TIME;
 }
 
@@ -480,6 +508,13 @@ extern unsigned char fnSetShowTime(int iSetDisplay, CHAR *ptrInput)
                 ptrTimeBuffer = fnBufferDec(rtc_setup.ucMinutes, (LEADING_ZERO), ptrTimeBuffer);
                 *ptrTimeBuffer++ = ':';
                 ptrTimeBuffer = fnBufferDec(rtc_setup.ucSeconds, (LEADING_ZERO), ptrTimeBuffer);
+    #if defined SUPPORT_RTC_us
+                *ptrTimeBuffer++ = '.';
+                ptrTimeBuffer = fnBufferDec(rtc_setup.ul_us, (LEADING_ZERO | 2), ptrTimeBuffer);
+    #elif defined SUPPORT_RTC_ms
+                *ptrTimeBuffer++ = '.';
+                ptrTimeBuffer = fnBufferDec(rtc_setup.us_ms, (LEADING_ZERO | 1), ptrTimeBuffer);
+    #endif
             }
         }
         return (ptrTimeBuffer - ptrInput);                               // the display length
@@ -840,7 +875,7 @@ static void fnSynchroniseLocalTime(SNTP_TIME *NewTime, unsigned long ulSeconds)
     #if defined USE_SNTP
     if (NewTime != 0) {
         slFractionOffset = (NewTime->ulFraction/TIMER_PERIOD_FULL_SCALE);// the fraction of a second offset to second interrupt and counter value
-        ulFractionResync = GET_TIMER_PRESENT_VALUE();
+        ulFractionResync = GET_TIMER_PRESENT_us_VALUE();
         if (ulFractionResync == 0) {                                     // avoid zero
             ulFractionResync = 1;
         }
@@ -863,7 +898,7 @@ static void fnGetPresentTime(SNTP_TIME *PresentTime)
     signed long slPresentFraction;
     uDisable_Interrupt();                                                // don't allow second interrupt to disturb, but don't stop timer either
     PresentTime->ulSeconds = ulLocalUTC;                                 // present local seconds value (with time zone and daylight saving adjustment)
-    PresentTime->ulFraction = GET_TIMER_PRESENT_VALUE();                 // get fraction from hardware timer count value
+    PresentTime->ulFraction = GET_TIMER_PRESENT_us_VALUE();              // get fraction from hardware timer count value
     if (PresentTime->ulFraction < 100) {                                 // is it possible that the timer overflowed while reading present value?
         uEnable_Interrupt();                                             // if a second overflow occurred during the protected region it will be take place now
             PresentTime->ulSeconds = ulLocalUTC;                         // present seconds value, possibly after interrupt increment

@@ -80,7 +80,7 @@ static void _KBI0_isr(void)                                              // KE k
     int iPin = 0;
     unsigned long ulPin = 0x00000001;
     unsigned long ulFlags = KBI0_SP;                                     // read enabled interrupt flags
-    KBI0_SC |= (KBI_SC_RSTKBSP | KBI_SC_KBACK);                          // clear flags and pending interrupt (note that subsequent edge sensitive interrupts are only accepted by the KBI when all other inputs have retunred to their original state)
+    KBI0_SC |= (KBI_SC_RSTKBSP | KBI_SC_KBACK);                          // clear flags and pending interrupt (note that subsequent edge sensitive interrupts are only accepted by the KBI when all other inputs have returned to their original state)
     #if defined _WINDOWS
     KBI0_SC &= ~(KBI_SC_RSTKBSP | KBI_SC_KBACK);
     KBI0_SP = 0;

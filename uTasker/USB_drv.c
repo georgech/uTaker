@@ -757,7 +757,7 @@ static void fnExtract(unsigned char *ptrData, unsigned char ucFlags, unsigned sh
         ptrData += sizeof(unsigned short);
 #endif
     }
-    if (ucFlags & INDEX_INDEX) {
+    if ((ucFlags & INDEX_INDEX) != 0) {
         *usValues =  GET_USB_DATA();
         *usValues++ |= (GET_USB_DATA() << 8);
     }

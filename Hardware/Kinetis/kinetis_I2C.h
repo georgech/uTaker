@@ -978,7 +978,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
         return;
     }
 
-    // The calculation of the correct divider ratio doesn't follow a formular so is best taken from a table.
+    // The calculation of the correct divider ratio doesn't follow a formula so is best taken from a table.
     // The required divider value is ((BUS_CLOCK/1000)/pars->usSpeed). Various typical speeds are supported here.
     //                                                                   {1}
     // Note that some devices have a MULT field in the divider register which can be used as a prescaler - this is presently not used

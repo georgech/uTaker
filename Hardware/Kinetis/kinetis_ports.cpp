@@ -83,6 +83,9 @@
 #if defined SUPPORT_ADC 
     static void fnAddVoltage(int iPort, char *cPortDetails, int iBit);
 #endif
+#if defined SUPPORT_PWM_MODULE 
+    static void fnAddPWM(int iPort, char *cPortDetails, int iBit);
+#endif
 
 static unsigned char *_ptrPerFunctions;
 #if defined SUPPORT_ADC                                                  // {2}
@@ -282,6 +285,9 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
 #if defined SUPPORT_ADC 
     fnAddVoltage(iPort, cPortDetails, iBit);                             // display the voltage applied to ADC inputs
 #endif
+#if defined SUPPORT_PWM_MODULE 
+    fnAddPWM(iPort, cPortDetails, iBit);                                 // display PWM output details
+#endif
 }
 
 #if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
@@ -358,6 +364,25 @@ static void fnAddVoltage(int iPort, char *cPortDetails, int iBit)
         SPRINTF(cBuf, " [%fV]", (((float)_ptrADC[iAdc]*((float)ADC_REFERENCE_VOLTAGE/(float)1000))/(float)0xffff));
         STRCAT(cPortDetails, cBuf);
     }
+    #endif
+}
+#endif
+#if defined SUPPORT_PWM_MODULE
+extern "C" int fnGetPWM_sim_channel(int iPort, int iPin, unsigned long *ptr_ulFrequency, unsigned char *ptr_ucMSR);
+static void fnAddPWM(int iPort, char *cPortDetails, int iBit)
+{
+    #if defined _PIN_COUNT
+    char cBuf[BUF1SIZE];
+    unsigned long ulFrequency;
+    unsigned char ucMSR;
+    signed int iPWM = fnGetPWM_sim_channel(iPort, iBit, &ulFrequency, &ucMSR);
+    if (iPWM < 0) {
+        return;
+    }
+    SPRINTF(cBuf, " [F=%d Hz", ulFrequency);
+    STRCAT(cPortDetails, cBuf);
+    SPRINTF(cBuf, " MSR=%d %%]", ucMSR);
+    STRCAT(cPortDetails, cBuf);
     #endif
 }
 #endif

@@ -202,6 +202,9 @@ typedef struct stCOLDFIRE_CAN_BUF
     #define NUMBER_SERIAL   (3)                                          // the number of physical queue needed for serial interface(s)
 #endif
 #define UARTS_AVAILABLE     NUMBER_SERIAL
+#define LPI2C_AVAILABLE     0
+#define I2C_AVAILABLE       2
+
 
 
 #if defined _WINDOWS
