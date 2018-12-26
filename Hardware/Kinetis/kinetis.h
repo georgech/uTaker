@@ -1819,14 +1819,14 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #elif defined KINETIS_KM
     #define DMA_CHANNEL_COUNT        4
+#elif defined KINETIS_KL
+    #define DMA_CHANNEL_COUNT        4
+#elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
+    #define DMA_CHANNEL_COUNT        4
+#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X && !defined KINETIS_K12
+    #define DMA_CHANNEL_COUNT        4
 #else
-    #if defined KINETIS_KL
-        #define DMA_CHANNEL_COUNT    4
-    #elif defined KINETIS_K22 && (SIZE_OF_FLASH == (128 * 1024))
-        #define DMA_CHANNEL_COUNT    4
-    #else
-        #define DMA_CHANNEL_COUNT    16
-    #endif
+    #define DMA_CHANNEL_COUNT        16
 #endif
 
 #if defined KINETIS_K70 || ((defined KINETIS_K60 && defined KINETIS_K_FPU) && !defined KINETIS_K64 && !defined KINETIS_K66) || (defined KINETIS_K20 && (KINETIS_MAX_SPEED > 100000000))
