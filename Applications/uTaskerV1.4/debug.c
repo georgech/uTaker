@@ -1393,7 +1393,7 @@ static unsigned char   ucDebugCnt = 0;
 #if defined I2C_INTERFACE && (defined TEST_I2C_INTERFACE || defined I2C_MASTER_LOADER)
     extern QUEUE_HANDLE I2CPortID;
 #endif
-#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (defined DISK_COUNT && DISK_COUNT > 1)
+#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST)
     static unsigned char ucActionPresentDisk = 0;
     static unsigned char ucUserDisk = 0;
     static UTFILE utFile1 = {0};
@@ -8722,6 +8722,8 @@ extern QUEUE_TRANSFER fnNetworkTx(unsigned char *output_buffer, QUEUE_TRANSFER n
 
 #if defined _KINETIS
     #include "debug_hal_kinetis.h"                                       // {53}
+#elif defined _iMX
+    #include "debug_hal_iMX.h"
 #elif defined _M5223X
     #include "debug_hal_m522xx.h"
 #elif defined _STM32

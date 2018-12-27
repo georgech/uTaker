@@ -90,7 +90,7 @@ KINETIS_PERIPH  kinetis = {0};
 
 unsigned char uninitialisedRAM[16];
 
-unsigned long vector_ram[(sizeof(VECTOR_TABLE))/sizeof(unsigned long)]; // long word aligned
+unsigned long vector_ram[(sizeof(VECTOR_TABLE))/sizeof(unsigned long)];  // long word aligned
 
 #if defined _EXTERNAL_PORT_COUNT && _EXTERNAL_PORT_COUNT > 0             // {8}
     extern unsigned long fnGetExtPortFunction(int iExtPortReference);
@@ -8899,7 +8899,7 @@ extern void fnSimulateLinkUp(void)
 extern void fec_txf_isr(void)
 {
     EIR |= (TXF | TXB);                                                  // set frame and buffer interrupt events
-    if (EIMR & TXF) {                                                    // if interrupt is enabled
+    if ((EIMR & TXF) != 0) {                                             // if interrupt is enabled
         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
         ptrVect->processor_interrupts.irq_ETH_TX();                      // call the interrupt handler
 	}

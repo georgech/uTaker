@@ -33,6 +33,7 @@
     06.03.2014 Add USER_INFO_MASK and USER_INFO_SHIFT                    {11}
     13.04.2014 Add USOCKET configuration for two networks                {12}
     04.07.2018 Add package definition includes here                      {13}
+    26.12.2018 Add iMX                                                   {14}
 
 */
 
@@ -228,6 +229,9 @@ typedef unsigned int size_t;
 #endif
 #if defined _KINETIS
     #include "app_hw_kinetis.h"                                          // {9}
+#endif
+#if defined _iMX
+    #include "app_hw_iMX.h"                                              // {14}
 #endif
 #if defined _LPC23XX
     #include "app_hw_lpc23xx.h"

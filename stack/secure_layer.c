@@ -335,6 +335,7 @@ static unsigned char *fnInsertHandshakeExtensions(unsigned char *ptrData)
     return ptrData;
 }
 
+#if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
 // This assumes an X502 formatted certificate in flash memory
 //
 static int fnInsertCertificate(unsigned char **ptrptrData, int iCertificate)
@@ -362,7 +363,7 @@ static int fnInsertCertificate(unsigned char **ptrptrData, int iCertificate)
     }
     return -1;                                                           // certificate doesn't exist
 }
-
+#endif
 
 static unsigned char *fnInsertPublicKey(unsigned char *ptrData)
 {
@@ -680,7 +681,9 @@ static int fnGenerateServerHello(void)
 //
 static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned long ulHandshakeSize, unsigned char ucPresentHandshakeType)
 {
+#if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
     static int iNextState = 0;
+#endif
 #if defined _WINDOWS && defined SUPPORT_SECURE_CLIENT
     unsigned char ucBuffer[4 * 1024];
     MEMORY_RANGE_POINTER file = 0;
@@ -699,7 +702,7 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
         break;
     case SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO_DONE:
         {
-            static const unsigned char server_hello[] = { 0x0e, 0x00, 0x00, 0x00 };
+            static const unsigned char server_hello[] = {0x0e, 0x00, 0x00, 0x00};
             ucPrtData = (unsigned char *)server_hello;
             ucPrtData += 4;
         }
@@ -737,18 +740,20 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             unsigned long ulMinLength;
             unsigned short usExtensionLength;
             unsigned char *ptrExtensionData;
+    #if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
             iNextState = 0;
-#if defined SUPPORT_SECURE_CLIENT
+    #endif
+    #if defined SUPPORT_SECURE_CLIENT
             if (SSL_TLS_HANDSHAKE_TYPE_SERVER_HELLO == ucPresentHandshakeType) {
                 fnDebugMsg("Server hello recognised ");
             }
-#endif
+    #endif
             if (ptrHello->version[0] == (unsigned char)(TLS_VERSION_1_2 >> 8)) { // we only accept TLSv1.2
                 if (ptrHello->version[1] == (unsigned char)(TLS_VERSION_1_2)) {
                     if (ptrHello->session_id_length <= 32) {
                         fnHandshakeStats(ulHandshakeSize, ucPrtData);    // update handshake statistics (calculates handshake check sum)
                         fnEnterRandom(ptrHello->random, 1);              // save the client/server's 32 bytes of random data (the first 4 may contain the UTC time)
-#if defined SUPPORT_SECURE_SERVER
+    #if defined SUPPORT_SECURE_SERVER
                         if (SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO == ucPresentHandshakeType) {
                             unsigned char *ptrCipherSuites = (((unsigned char *)ptrHello) + (32 + 3 - ptrHello->session_id_length));
                             unsigned short usCipherSuitesLength = *ptrCipherSuites++;
@@ -767,8 +772,8 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             ulMinLength = (32 + ptrHello->session_id_length + 1 + 2 + 3 + usCipherSuitesLength); // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields and cipher suites
                         }
                         else {
-#endif
-#if defined SUPPORT_SECURE_CLIENT
+    #endif
+    #if defined SUPPORT_SECURE_CLIENT
                             ptrHello = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_32_ID *)(((unsigned char *)ptrHello) + (32 - ptrHello->session_id_length)); // set the session content pointer accordingly
                             ptrHelloSession = (SSL_TLS_HANDSHAKE_PROTOCOL_HELLO_DETAILS *)&(ptrHello->session_details);
                             session_cipher = ((ptrHelloSession->cipher[0] << 8) | (ptrHelloSession->cipher[1])); // the cipher suite to be used during the session
@@ -776,10 +781,10 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                                 return -1;
                             }
                             ulMinLength = (32 + ptrHello->session_id_length + 1 + 2 + 3); // for there to be valid extensions there must be a length greater that the random number plus the id length and other fixed fields
-#endif
-#if defined SUPPORT_SECURE_SERVER
+    #endif
+    #if defined SUPPORT_SECURE_SERVER
                         }
-#endif
+    #endif
                         // ptrHelloSession->compression_method will be 0 since we always set zero
                         if (ulHandshakeSize <= ulMinLength) {            // check whether there are extensions present
                             break;                                       // finished since there are no extensions
@@ -807,13 +812,13 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
                             usExtensionLength -= usThisExtensionLength;  // remaining length
                         }
                     }
-#if defined SUPPORT_SECURE_SERVER
+    #if defined SUPPORT_SECURE_SERVER
                     if (SSL_TLS_HANDSHAKE_TYPE_CLIENT_HELLO == ucPresentHandshakeType) {
                         // Server responds to client hello with server hello, certificate, certificate request (option) and server hello done
                         //
                         return fnGenerateServerHello();
                     }
-#endif
+    #endif
                 }
             }
             else {
@@ -856,7 +861,9 @@ static int fnHandleHandshake(USOCKET Socket, unsigned char *ucPrtData, unsigned 
             fnDebugMsg("Certificate request recognised ");
             if (fnPrepareCertificate(ucPrtData, usSignatureHashAlgorithmsLength) == 0) {
                 ucPrtData += usSignatureHashAlgorithmsLength;            // the certificate algorithms that are accepted
+    #if defined SUPPORT_CLIENT_SIDE_CERTIFICATE
                 iNextState = 100;                                        // we will respond with our certificate next
+    #endif
             }
         }
         break;

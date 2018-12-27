@@ -108,6 +108,18 @@
     <Filter Include="WinSim\SIMAVR32">
       <UniqueIdentifier>{89c5d190-ed51-4ecf-86a9-d99b5782da2b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Test">
+      <UniqueIdentifier>{6c045efc-1d6e-4d99-abcf-ec5a2c51b4e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Test\LTC_AES">
+      <UniqueIdentifier>{3bb79d38-8d8e-47b1-9f32-011297dd3ae2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\iMX">
+      <UniqueIdentifier>{77f6c67c-bc28-4264-9744-f33e6e90ca52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMiMX">
+      <UniqueIdentifier>{04f5b6f8-e8aa-4f97-86be-87fe03722bdb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -565,6 +577,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\sha256_mbedTLS.c">
       <Filter>TCP/IP\mbedtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\NXP\LTC_TEST\ltc_aes.c">
+      <Filter>Test\LTC_AES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\iMX\iMXSim.c">
+      <Filter>WinSim\SIMiMX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\iMX\iMX.c">
+      <Filter>Hardware\iMX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\iMX\iMX_ports.cpp">
+      <Filter>WinSim\SIMiMX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1453,6 +1477,156 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_uart_pins.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
+    <ClInclude Include="..\app_hw_iMX.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\debug_hal_iMX.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_ADC.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_CAN.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_CMP.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_DAC.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_DMA.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_ENET.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_errata.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_FLASH.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_FLEXTIMER.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_HIRC.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_I2C.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_I2S.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_K_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KBI.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KE_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KL_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KM_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KV_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_KW_CLOCK.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_LLWU.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_low_power.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_LPI2C.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_LPTMR.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_MCG_LITE.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PDB.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PIT.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PWM.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_RTC.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_SDHC.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_SPI.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_timer_pins.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_UART.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_uart_pins.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_USB_Device.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_USB_Host.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_USB_HS_Device.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_USB_OTG.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\sim_iMX.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_eeprom_iMX_25AA160.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_atmel.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_MX25L.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_s25fl1-k.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_sst25.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_stmicro.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_flash_iMX_w25q.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\spi_sc16IS7xx_iMX.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_pinout.h">
+      <Filter>WinSim\SIMiMX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -1518,6 +1692,9 @@
     </None>
     <None Include="..\..\..\Hardware\AVR32\avr32_startup_gcc.x">
       <Filter>Hardware\AVR32</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\iMX\iMX_asm.s">
+      <Filter>Hardware\iMX</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -77,6 +77,8 @@
     //#define FRDM_KEAZ64Q64                                             // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ64Q64.html
     //#define FRDM_KEAZ128Q80                                            // freedom board http://www.utasker.com/kinetis/FRDM-KEAZ128Q80.html
 
+    //#define FRDM_S32K144
+
     //#define FRDM_KE02Z                                                 // E processors Cortex-M0+/M4 (5V robust) - freedom board http://www.utasker.com/kinetis/FRDM-KE02Z.html
     //#define FRDM_KE02Z40M                                              // freedom board http://www.utasker.com/kinetis/FRDM-KE02Z40M.html
     //#define FRDM_KE04Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KE04Z.html
@@ -174,6 +176,11 @@
     //#define FRDM_K82F                                                  // K processors Cortex M4 with USB, encryption, tamper (scalable and secure) - freedom board http://www.utasker.com/kinetis/FRDM-K82F.html
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
+#elif defined _iMX
+    #define MIMXRT1020
+  //#define MIMXRT1050
+  //#define MIMXRT1060
+  //#define MIMXRT1064
 #elif defined _M5223X
     //#define M52110BOARD                                                // board for M52110 (basic CAN MCU)
     //#define M5282EVB                                                   // with SDRAM interface and FEC
@@ -535,11 +542,9 @@
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
     #define DEVICE_WITHOUT_ETHERNET
-#elif defined TWR_KV31F120M || defined TWR_KV46F150M || defined FRDM_KV31F
+#elif defined TWR_KV31F120M || defined FRDM_KV31F
     #if defined FRDM_KV31F
         #define TARGET_HW        "FRDM-KV31F"
-    #elif defined TWR_KV46F150M
-        #define TARGET_HW        "TWR-KV46F150M"
     #else
         #define TARGET_HW        "TWR-KV31F120M"
     #endif
@@ -551,6 +556,17 @@
     #define KINETIS_KV31
     #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_CAN
+    #define DEVICE_WITHOUT_ETHERNET
+    #define KINETIS_REVISION_2
+#elif defined TWR_KV46F150M
+    #define TARGET_HW        "TWR-KV46F150M"
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+    #define KINETIS_MAX_SPEED    150000000                               // 150MNz in high speed RUN mode / 100MHz in RUN mode
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_KV
+    #define KINETIS_KV40                                                 // specify the sub-family type
+    #define KINETIS_KV46
+    #define DEVICE_WITHOUT_USB
     #define DEVICE_WITHOUT_ETHERNET
     #define KINETIS_REVISION_2
 #elif defined TWR_KV58F220M
@@ -645,7 +661,7 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // K20 doesn't have Ethernet controller
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
 #elif defined TWR_K20D50M
-    #define TARGET_HW            "TWR-K20N50M"
+    #define TARGET_HW            "TWR-K20D50M"
     #define DEVICE_WITHOUT_CAN                                           // 50MHz K20 doesn't have CAN controller
     #define KINETIS_MAX_SPEED    50000000
     #define KINETIS_K20                                                  // specify the sub-family
@@ -881,7 +897,7 @@
     #define KINETIS_K64                                                  // extra sub-family type precision
 #elif defined TWR_K64F120M
   //#define TWR_SER                                                      // use TWR-SER serial board instead of OpenSDA virtual COM port
-    #define TWR_SER2                                                     // use TWR-SER2 serial board instead of standard serial board
+  //#define TWR_SER2                                                     // use TWR-SER2 serial board instead of standard serial board
     #define TARGET_HW            "TWR-K64F120M"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((48 * 1024) * MEM_FACTOR) // large SRAM parts
     #define KINETIS_MAX_SPEED    120000000
@@ -976,6 +992,18 @@
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_REVISION_2
     #define DEVICE_WITHOUT_ETHERNET                                      // K82 doesn't have Ethernet controller
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined MIMXRT1020
+    #define iMX_RT102X
+    #define iMX_RT1021
+    #define iMX_MAX_SPEED        500000000
+    #define FRDM_K82F
+    #define KINETIS_MAX_SPEED    150000000
+    #define TARGET_HW            "MIMXRT1020"
+    #define KINETIS_K80                                                  // specify the sub-family
+    #define KINETIS_K82                                                  // specify part
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_REVISION_2
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
 #elif defined M52223EVB
     #define TARGET_HW       "M52223EVB"
@@ -1546,7 +1574,7 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (eg. set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUNS         1                  // the number of logical units on emulated drive
@@ -1727,7 +1755,7 @@
     #endif
 
     #define SD_CARD_RETRY_INTERVAL       5                               // attempt SD card initialisation at 5s intervals
-    #define UT_DIRECTORIES_AVAILABLE     DISK_COUNT                      // this many directories objects are available for allocation (just one per disk for application interface)
+    #define UT_DIRECTORIES_AVAILABLE     3                               // this many directory objects are available for allocation (application interface)
     #define UTMANAGED_FILE_COUNT         10                              // allow this many managed files at one time
     #define UTFAT_LFN_READ                                               // enable long file name read support (remove for no long file name support)
     #define STR_EQUIV_ON                                                 // ensure that this routine is available
@@ -1946,11 +1974,11 @@
 
             #define USE_FTP                                              // enable FTP - needs TCP
           //#define USE_FTP_CLIENT                                       // enable FTP client - needs TCP
-            #define USE_SMTP                                             // enable SMTP - needs TCP
+          //#define USE_SMTP                                             // enable SMTP - needs TCP
           //#define USE_POP3                                             // enable POP3 Email - needs TCP
             #define USE_HTTP                                             // support embedded Web server - needs TCP
             #define USE_TELNET                                           // enable TELNET support
-                #define USE_TELNET_LOGIN
+              //#define USE_TELNET_LOGIN
               //#define TELNET_RFC2217_SUPPORT                           // support TELNET COM port control options
           //#define USE_TELNET_CLIENT                                    // enable TELNET client support
           //#define USE_TIME_SERVER                                      // enable time server support - presently demo started in application
@@ -1968,7 +1996,7 @@
                 #define USER_TCP_SOCKETS      0                          // we use no non-standard TCP sockets
             #endif
             #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST
-                #if UT_DIRECTORIES_AVAILABLE < 5
+                #if !defined UT_DIRECTORIES_AVAILABLE || UT_DIRECTORIES_AVAILABLE < 5
                     #undef UT_DIRECTORIES_AVAILABLE
                     #define UT_DIRECTORIES_AVAILABLE 5                   // this many directories objects are available for allocation (more to allow web server and FTP)
                 #endif
@@ -2169,7 +2197,7 @@
 
             #define WEB_PARAMETER_GENERATION                             // support of parameter generating (eg. manipulating select and adding values)
             #define WEB_PARAMETER_HANDLING                               // support  handling of received web parameters
-            #define WEB_PARSER_START          '£'                        // this symbol is used in Web pages to instruct parsing to begin
+            #define WEB_PARSER_START          '\xa3' //'£'               // this symbol is used in Web pages to instruct parsing to begin
             #define WEB_INSERT_STRING         'v'
             #define WEB_DISABLE_FIELD         'D'
             #define WEB_NOT_DISABLE_FIELD     'd'
@@ -2226,6 +2254,8 @@
           //#define HTTP_SERVE_ONLY_USER_FILES                           // only serve user file - if a defined user file is not found display 404 error rather than a uFileSystem equivalent
         #else
             #define NO_OF_HTTP_SESSIONS        0                         // no TCP sockets are reserved for HTML
+        #endif
+        #if !defined NO_OF_HTTPS_SESSIONS
             #define NO_OF_HTTPS_SESSIONS       0
         #endif
 

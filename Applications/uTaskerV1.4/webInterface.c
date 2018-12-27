@@ -161,7 +161,7 @@ static void           fnDelayResetBoard(void);
 
 static const CHAR cBackgroundColor[] = "background-color:";
 static const CHAR cOffColor[] = "gray";
-#if defined USE_MAINTENANCE                                              // {17}
+#if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS      // {17}
     static const CHAR cOnColor[]  = "red ";                              // note length made same with space...
 #endif
 

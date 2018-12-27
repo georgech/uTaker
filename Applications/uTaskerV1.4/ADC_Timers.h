@@ -113,10 +113,10 @@
         #define GPT_CAPTURES     5                                       // when testing captures, collect this many values
     #endif
     #if defined SUPPORT_TIMER || defined SUPPORT_PWM_MODULE              // standard timers
-        #define TEST_TIMER                                               // enable timer test(s)
+      //#define TEST_TIMER                                               // enable timer test(s)
         #if defined TEST_TIMER
             #if defined SUPPORT_PWM_MODULE                               // {9}
-              //#define TEST_PWM                                         // {1} test generating PWM output from timer
+                #define TEST_PWM                                         // {1} test generating PWM output from timer
                   //#define PHASE_SHIFTED_COMBINED_OUTPUTS               // {29} generate phase shifted outputs
                   //#define MULTIPLE_CHANNEL_INTERRUPTS                  // {30} generate multiple channel interrupts across multiple timers
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
@@ -125,7 +125,7 @@
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
-              //#define TEST_CAPTURE                                     // {6} test timer capture mode
+                #define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
         #endif
     #endif
@@ -322,7 +322,7 @@
             }
             break;
     #endif
-    #if defined TEST_ADC && (defined _LM3SXXXX || defined _KINETIS)      // {11}
+    #if defined TEST_ADC && (defined _LM3SXXXX || defined _KINETIS || defined _iMX) // {11}
         case E_NEXT_SAMPLE:
             fnConfigureADC();                                            // repeat the ADC test
             break;
@@ -371,9 +371,9 @@
                 }
 #endif
 #if defined _ADC_TIMER_INT_EVENTS_2 && (defined TEST_ADC || defined TEST_AD_DA) // interrupt range event handling
-    #if defined _M5223X || defined _KINETIS                              // {11}
+    #if defined _M5223X || defined _KINETIS || defined _iMX              // {11}
                 if ((ADC_LOW_7 >= ucInputMessage[MSG_INTERRUPT_EVENT]) && (ADC_HIGH_0 <= ucInputMessage[MSG_INTERRUPT_EVENT])) {
-        #if !defined _KINETIS
+        #if !defined _KINETIS && !defined _iMX
                     ADC_SETUP adc_setup;                                 // interrupt configuration parameters
                     ADC_RESULTS results;
                     adc_setup.int_type = ADC_INTERRUPT;                  // identifier
@@ -458,7 +458,7 @@
                 }
         #else
                 else if ((ADC_TRIGGER == ucInputMessage[MSG_INTERRUPT_EVENT])
-            #if defined _KINETIS 
+            #if defined _KINETIS || defined _iMX
                     || (ADC_TRIGGER_1 == ucInputMessage[MSG_INTERRUPT_EVENT])
             #endif
                   ) {
@@ -466,7 +466,7 @@
                     ADC_RESULTS results;
                     adc_setup.int_type = ADC_INTERRUPT;                  // identifier
                     adc_setup.int_adc_mode = (ADC_READ_ONLY | ADC_GET_RESULT);
-            #if defined _KINETIS                                             // {11}
+            #if defined _KINETIS || defined _iMX                         // {11}
                 #if defined DEV1
                     adc_setup.int_adc_controller = controller[iAdcCnt];
                 #else
@@ -493,7 +493,7 @@
                     }
 #endif
                     fnDebugHex(results.sADC_value[0], (WITH_SPACE | WITH_LEADIN | WITH_CR_LF | sizeof(results.sADC_value[0]))); // {4}
-            #if defined _KINETIS                                         // {11}
+            #if defined _KINETIS || defined _iMX                         // {11}
                 #if defined ADC_INTERNAL_TEMPERATURE
                     #define VTEMP_25_16BIT               ((VTEMP_25_MV * 0xffff) / ADC_REFERENCE_VOLTAGE)
                     #define VTEMP_25_12BIT               (VTEMP_25_16BIT >> 4)
@@ -781,7 +781,7 @@ static int fnCheckADC(int iChannel)
 //
 static void __callback_interrupt adc_level_change_high(ADC_INTERRUPT_RESULT *adc_result)
 {
-        #if defined _KINETIS
+        #if defined _KINETIS || defined _iMX
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER));
         #else
     if (adc_result == 0) {
@@ -798,13 +798,13 @@ static void __callback_interrupt adc_level_change_high(ADC_INTERRUPT_RESULT *adc
 }
 #endif
 
-#if defined _KINETIS && (ADC_CONTROLLERS > 1)
+#if (defined _KINETIS || defined _iMX) && (ADC_CONTROLLERS > 1)
 static void __callback_interrupt adc_range(ADC_INTERRUPT_RESULT *adc_result)
 {
-    #if defined _KINETIS
+    #if defined _KINETIS || defined _iMX
     fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1));
     #else
-    if (!adc_result) {
+    if (0 == adc_result) {
         fnInterruptMessage(OWN_TASK, (unsigned char)(ADC_TRIGGER_1));
         return;
     }
@@ -917,12 +917,12 @@ static void fnConfigureADC(void)
     static const unsigned char input[3] = { ADC_DP0_SINGLE, ADC_DM0_SINGLE, ADC_DP0_SINGLE };
     static unsigned long ulCalibrate[3] = { ADC_CALIBRATE, ADC_CALIBRATE, ADC_CALIBRATE };
 #endif
-#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18) && !defined DEV1   // {11}
+#if (defined _KINETIS || defined _iMX) && (!defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18) && !defined DEV1   // {11}
     static unsigned long ulCalibrate = ADC_CALIBRATE;
 #endif
     ADC_SETUP adc_setup;                                                 // interrupt configuration parameters
     adc_setup.int_type = ADC_INTERRUPT;                                  // identifier when configuring
-#if defined _KINETIS                                                     // {11}
+#if defined _KINETIS || defined _iMX                                     // {11}
     #if !defined DEVICE_WITHOUT_DMA
     adc_setup.dma_int_priority = 3;                                      // priority of DMA interrupt the user wants to set
     adc_setup.dma_int_handler = 0;                                       // no interrupt so that free-running circular buffer is used (when ADC_FULL_BUFFER_DMA_AUTO_REPEAT is not defined)
@@ -1154,7 +1154,7 @@ static void fnConfigureADC(void)
     }
     #endif
 #endif
-#if defined _KINETIS                                                     // {11}
+#if defined _KINETIS || defined _iMX                                     // {11}
     #if (ADC_CONTROLLERS > 1) && !defined DEV1 && !defined TEST_COMPARATOR
     adc_setup.int_adc_controller = 1;                                    // ADC controller 1
     adc_setup.int_adc_bit = ADC_DM1_SINGLE;                              // ADC DM1 single-ended
@@ -1196,7 +1196,7 @@ static void fnConfigureADC(void)
     adc_setup.int_adc_mode = (ADC_START_OPERATION);
     fnConfigureInterrupt((void *)&adc_setup);                            // start operation now
 #endif
-#if defined _KINETIS && !defined KINETIS_KE && !defined DEV1
+#if (defined _KINETIS || defined _iMX) && !defined KINETIS_KE && !defined DEV1
     ulCalibrate = 0;                                                     // calibrate ADC only once
 #endif
 }
@@ -1467,7 +1467,7 @@ static void fnConfigurePIT(void)
     pit_setup.count_delay = PIT_US_DELAY(3245);                          // 3245us delay
     pit_setup.mode = PIT_SINGLE_SHOT;                                    // one-shot interrupt
     pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
-    #elif defined TEST_PIT_PERIODIC && defined _KINETIS                  // {10}
+    #elif defined TEST_PIT_PERIODIC && (defined _KINETIS || defined _iMX)// {10}
     pit_setup.mode = PIT_PERIODIC;
         #if defined TEST_PIT_DMA_GPIO
     pit_setup.int_handler = 0;                                           // no interrupt due to DMA
@@ -1676,10 +1676,10 @@ static void fnConfigure_GPT(void)
 
 
 #if defined _ADC_TIMER_ROUTINES && defined TEST_TIMER
-    #if !((defined _KINETIS || defined _M5223X) && (defined TEST_PWM && !defined TEST_PERIODIC_TIMER))
+    #if !((defined _KINETIS || defined _M5223X || defined _iMX) && (defined TEST_PWM && !defined TEST_PERIODIC_TIMER))
 static __callback_interrupt void timer_int(void)
 {
-        #if defined TEST_CAPTURE && defined _KINETIS                     // {24}
+        #if defined TEST_CAPTURE && (defined _KINETIS || defined _iMX)   // {24}
     static volatile unsigned long ulLastCapture = 0;
     ulLastCapture = CAPTURE_VALUE(0, 1);                                 // update the last capture value
         #endif
@@ -1851,8 +1851,8 @@ static void __callback_interrupt _channel1_0_irq(void)
 
 static void fnConfigure_Timer(void)
 {
-#if (defined _KINETIS || defined _M5223X) && defined TEST_PWM            // {9} Kinetis and Coldfire PWM
-    #if (defined _KINETIS) && defined TEST_PERIODIC_TIMER                // allow periodic timer together with PWM
+#if (defined _KINETIS || defined _M5223X || defined _iMX) && defined TEST_PWM // {9} Kinetis and Coldfire PWM
+    #if (defined _KINETIS || defined _iMX) && defined TEST_PERIODIC_TIMER// allow periodic timer together with PWM
     static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters
     #endif
     PWM_INTERRUPT_SETUP pwm_setup;
@@ -2053,7 +2053,7 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_reference = (_TIMER_0 | 5);                            // timer module 0, channel 5 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
     #endif
-    #if (defined _KINETIS) && defined TEST_PERIODIC_TIMER                // allow periodic timer together with PWM
+    #if (defined _KINETIS || defined _iMX) && defined TEST_PERIODIC_TIMER// allow periodic timer together with PWM
     timer_setup.int_type = TIMER_INTERRUPT;
     timer_setup.int_priority = PRIORITY_TIMERS;
     timer_setup.int_handler = timer_int;
@@ -2121,7 +2121,7 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_reference = 1;
     timer_setup.timer_value = TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500));// generate 1500Hz on timer output
     timer_setup.pwm_value   = _PWM_PERCENT(50, TIMER_US_DELAY(TIMER_FREQUENCY_VALUE(1500))); // 50% PWM (high/low)
-    #elif defined _KINETIS                                               // {16} Kinetis FlexTimer
+    #elif defined _KINETIS || defined _iMX                               // {16} Kinetis FlexTimer
     timer_setup.timer_reference = 0;                                     // FlexTimer/TPM 0
         #if defined TEST_PERIODIC_TIMER
             #if defined FTM_CLOCKED_FROM_MCGFFLCLK

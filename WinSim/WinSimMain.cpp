@@ -132,6 +132,8 @@
     28.02.2017 Add UARTs 6 and 7                                         {111}
     28.08.2018 Modify multicolour LED handling to allow multiple ones in any order {112}
     06.10.2018 Allow display of mixed port widths for processor and external ports {113}
+    25.12.2018 Only update processor image when its rectangle has been invalidated {114}
+    26.12.2018 Add iMX                                                   {115}
 
     */
 
@@ -301,8 +303,7 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH    8
     static  RECT rect_LAN_LED = {174, 85, 221, 140};
-#endif
-#if defined _HW_SAM3X                                                    // {73}
+#elif defined _HW_SAM3X                                                  // {73}
     #if defined _SAM3X                                                   // {94}
         #if defined _EXE
             #define CHIP_PACKAGE "atsam3x.bmp"
@@ -341,8 +342,7 @@ static int iPrevBit = -1;
     #define USB_TOP    186
     #define USB_RIGHT  276
     #define USB_BOTTOM 206
-#endif
-#if defined _HW_SAM7X
+#elif defined _HW_SAM7X
     #if defined _HW_SAM7S                                                // {48}
         #if defined _EXE
             #define CHIP_PACKAGE "atmelsam7s.bmp"
@@ -402,8 +402,7 @@ static int iPrevBit = -1;
         #define USB_RIGHT  205
         #define USB_BOTTOM 111
     #endif
-#endif
-#if defined _HW_AVR32                                                    // {34}
+#elif defined _HW_AVR32                                                  // {34}
     #if defined _AT32UC3B                                                // {45}
         #if defined _EXE
             #define CHIP_PACKAGE "atmelavr32B.bmp"
@@ -455,8 +454,7 @@ static int iPrevBit = -1;
     #else
         static  RECT rect_LAN_LED = {227, 234, 274, 289};
     #endif
-#endif
-#if defined _M5223X
+#elif defined _M5223X
     #define PORT_TEXT_LENGTH 8
     #if defined _M5222X
         #if defined _EXE
@@ -565,8 +563,7 @@ static int iPrevBit = -1;
         #define PORT_DISPLAY_LEFT 187
     #endif
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
-#endif
-#if defined _FLEXIS32                                                    // {47}
+#elif defined _FLEXIS32                                                  // {47}
     #if defined ETH_INTERFACE
         #if defined _EXE
             #define CHIP_PACKAGE "flexis32eth.bmp"
@@ -585,8 +582,7 @@ static int iPrevBit = -1;
     #define PORT_DISPLAY_LEFT 184
     #define START_PORTS_X (PORT_DISPLAY_LEFT + 9)
     #define PORT_TEXT_LENGTH 8
-#endif
-#if defined _STR91XF
+#elif defined _STR91XF
     #if defined _EXE
         #define CHIP_PACKAGE "str91xf.bmp"
     #else
@@ -597,8 +593,7 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 8
     static  RECT rect_LAN_LED = {301, 85, 348, 140};
-#endif
-#if defined _STM32                                                       // {54}
+#elif defined _STM32                                                     // {54}
     #if defined ST_VALUE                                                 // value line
         #if defined _EXE
             #define CHIP_PACKAGE "stm32f100.bmp"
@@ -665,8 +660,7 @@ static int iPrevBit = -1;
     #define USB_TOP    (159)
     #define USB_RIGHT  (346)
     #define USB_BOTTOM (179)
-#endif
-#if defined _LPC17XX                                                     // {46}
+#elif defined _LPC17XX                                                   // {46}
     #if defined _EXE
         #define CHIP_PACKAGE "LPC17XX.bmp"
     #else
@@ -681,8 +675,7 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 9
     static  RECT rect_LAN_LED = {229, 163, 276, 203};
-#endif
-#if defined _VYBRID
+#elif defined _VYBRID
     #if defined _EXE
         #define CHIP_PACKAGE "vybrid.bmp"
     #else
@@ -712,6 +705,29 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 9
     static  RECT rect_LAN_LED = {(109), (240), (156), (261)};
+#elif defined _iMX                                                       // {115}
+    #if defined ETH_INTERFACE
+        #if defined _EXE
+            #define CHIP_PACKAGE "iMX_lan.bmp"
+        #else
+            #define CHIP_PACKAGE "..//..//..//Hardware//iMX//GUI//iMX_lan.bmp"
+        #endif
+    #else
+        #if defined _EXE
+            #define CHIP_PACKAGE "iMX.bmp"
+        #else
+            #define CHIP_PACKAGE "..//..//..//Hardware//iMX//GUI//iMX.bmp"
+        #endif
+    #endif
+    #define USB_LEFT   334
+    #define USB_TOP    75
+    #define USB_RIGHT  386
+    #define USB_BOTTOM 95
+    #define PORT_FIRST_LINE 290
+    #define PORT_DISPLAY_LEFT 70
+    #define START_PORTS_X (PORT_DISPLAY_LEFT)
+    #define PORT_TEXT_LENGTH 9
+    static  RECT rect_LAN_LED = {(336), (198), (390), (244)};
 #elif defined _KINETIS                                                   // {58}
     #if defined ETH_INTERFACE                                            // {70}
         #if defined _EXE
@@ -792,8 +808,7 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 9
     static  RECT rect_LAN_LED = {228, 160, 275, 200};
-#endif
-#if defined _LM3SXXXX
+#elif defined _LM3SXXXX
     #if defined _EXE
         #if defined _LM3S10X
             #define CHIP_PACKAGE "lm3s10x.bmp"
@@ -835,8 +850,7 @@ static int iPrevBit = -1;
         #define USB_RIGHT  223
         #define USB_BOTTOM 102
     #endif
-#endif
-#if defined _RX6XX
+#elif defined _RX6XX
     #if defined _EXE
         #define CHIP_PACKAGE "atmelavr32.bmp"
     #else
@@ -852,6 +866,7 @@ static int iPrevBit = -1;
     #define PORT_TEXT_LENGTH 8
     static  RECT rect_LAN_LED = {227, 234, 274, 289};
 #endif
+
 #if defined _EXT_PORT_32_BIT && PORT_WIDTH < 32                          // {113}
     #define BLANK_PROCESSOR_PORTS (32 - PORT_WIDTH)
 #elif defined _EXT_PORT_28_BIT && PORT_WIDTH < 28
@@ -1310,16 +1325,16 @@ static void fnDisplayPorts(HDC hdc)
     unsigned long ulMSB = 0x00000080;
     signed char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "PORT PTA ";
     unsigned long ulPortMask = 0x00;
-#else
-    #if defined (_STR91XF)
+#elif defined (_STR91XF)
     char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "GPIO 0   ";
-    #elif defined (_LPC23XX) || defined _LPC17XX
+#elif defined (_LPC23XX) || defined _LPC17XX
     signed char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "P0.31..0 ";
-    #elif defined _HW_AVR32 || defined _VYBRID                           // {34}
+#elif defined _HW_AVR32 || defined _VYBRID                               // {34}
     signed char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "PORT 0   ";
-    #else                                                                // SAM7X
+#elif defined _iMX
+    char cPorts[PORT_WIDTH + PORT_NAME_LENGTH] = "GPIO1    ";
+#else                                                                    // SAM7X and Kinetis
     signed char cPorts[32 + PORT_NAME_LENGTH] = "PORT A   ";
-    #endif
 #endif
     unsigned char ucPortWidth = PORT_WIDTH;
     char cPortDetails[200];
@@ -1337,7 +1352,7 @@ static void fnDisplayPorts(HDC hdc)
         if (fnJumpPort(i)) {
             goto _jump_entry;
         }
-#elif defined _STM32 || defined LPC1788 || defined _HW_SAM3X || defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {72}{73}{74}{82}{92}{96}
+#elif defined _iMX || defined _STM32 || defined LPC1788 || defined _HW_SAM3X || defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {72}{73}{74}{82}{92}{96}
         ulPortMask = fnGetPortMask(i);                                   // {71}
 #elif defined _HW_SAM7X                                                  // {21}
     #if defined _HW_SAM7S                                                // {48}
@@ -2246,6 +2261,8 @@ _jump_entry:
         #endif
     #elif defined (_LPC23XX) || defined _LPC17XX
         cPorts[1]++;
+    #elif defined _iMX
+        cPorts[4]++;                                                     // ports 1,2..
     #else
         cPorts[5]++;                                                     // ports A and B
     #endif
@@ -2275,27 +2292,27 @@ _jump_entry:
 
 // Allow the keypad/inputs to define which port information should be displayed
 //
-extern void fnSetLastPort(int iInputLastPort, int iInputPortBit)
+extern void fnSetLastPort(int iInputLastPort, unsigned long ulInputPortBit)
 {
-    static int iLastBitLocation = -1;
-    int iPortBitCount = (1 << (PORT_WIDTH - 1));
+    static unsigned long ulLastBitLocation = 0;
+    unsigned long ulPortBit = (1 << (PORT_WIDTH - 1));
     int iPortBitRef = 0;
-    if ((iLastPort == iInputLastPort) && (iLastBitLocation == iInputPortBit)) { // filter stable input position
+    if ((iLastPort == iInputLastPort) && (ulLastBitLocation == ulInputPortBit)) { // filter stable input position
         return;
     }
     iLastPort = iInputLastPort;
-    iLastBitLocation = iInputPortBit;
+    ulLastBitLocation = ulInputPortBit;
     if (iInputLastPort == -1) {                                          // mouse moved away from an input so invalidate display
         return;
     }
-    if (iInputPortBit > iPortBitCount) {                                 // ignore references to bits beyond the processor's port width
+    if (ulInputPortBit > ulPortBit) {                                    // ignore references to bits beyond the processor's port width
         return;
     }
-    if (iInputPortBit == 0) {
+    if (ulInputPortBit == 0) {
         _EXCEPTION("Invalid port bit - please correct!!");
     }
-    while ((iInputPortBit & iPortBitCount) == 0) {                       // convert input reference format
-        iPortBitCount >>= 1;
+    while ((ulInputPortBit & ulPortBit) == 0) {                          // convert input reference format
+        ulPortBit >>= 1;
         iPortBitRef++;
     }
     iLastBit = iPortBitRef;
@@ -2451,7 +2468,7 @@ static void fnDisplayLAN_LEDs(HDC hdc, RECT refresh_rect)
     #if defined USER_CHIP_PACKAGE                                        // {95}
     Rectangle(hdc, (rect_LAN_LED.right - ETH_LED_WIDTH), rect_LAN_LED.top, rect_LAN_LED.right, (rect_LAN_LED.bottom));
     #else
-        #if defined _KINETIS
+        #if defined _KINETIS || defined _iMX
     Rectangle(hdc, (rect_LAN_LED.right - 10), (rect_LAN_LED.top + 27 + (18 * (IP_NETWORK_COUNT - 1))), (rect_LAN_LED.right), (rect_LAN_LED.top + 27 + 8 + (18 * (IP_NETWORK_COUNT - 1))));
         #else
     Rectangle(hdc, (rect_LAN_LED.left + 34), (rect_LAN_LED.top + 27 + (18 * (IP_NETWORK_COUNT - 1))), (rect_LAN_LED.left + 34 + 10), (rect_LAN_LED.top + 27 + 8 + (18 * (IP_NETWORK_COUNT - 1))));
@@ -2668,6 +2685,24 @@ static void fnCheckSDCard(int x, int y)
 }
 #endif
 
+static int fnUpdateAreaEnclosed(RECT rt, RECT refresh_rect)
+{
+    if (refresh_rect.left > rt.left) {
+        return 0;
+    }
+    if (refresh_rect.right < rt.right) {
+        return 0;
+    }
+    if (refresh_rect.top > rt.top) {
+        return 0;
+    }
+    /*
+    if (refresh_rect.bottom < rt.bottom) {
+        return 0;
+    }*/
+    return 1;
+}
+
 static char szIPDetails[IP_NETWORK_COUNT][100];                          // {99}
 static char szProjectName[100] = "PROJECT";
 static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
@@ -2683,6 +2718,7 @@ static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
     int iWindowsWidth;
     int i;
     
+    static RECT chip_rect = { 0,0,0,0 };
     RECT rt;
     HGDIOBJ hFont = GetStockObject(SYSTEM_FIXED_FONT);
     GetClientRect(hWnd, &rt);
@@ -2737,12 +2773,15 @@ static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
                 cyDib = abs(pbmi->bmiHeader.biHeight);
             }
         }
-
         nInit = 1;
     }
-    if (pbmfh != 0) {
-        posx = iWindowsWidth - cxDib/2;
-        SetDIBitsToDevice(hdc, posx, (42 + (IP_NETWORK_COUNT * 18)), cxDib, cyDib, 0,0,0, cyDib, pBits, pbmi, DIB_RGB_COLORS);
+    if ((pbmfh != 0) && (fnUpdateAreaEnclosed(chip_rect, rect) != 0)) { // {114}
+        posx = (iWindowsWidth - (cxDib/2));
+        chip_rect.left = posx;
+        chip_rect.top = (42 + (IP_NETWORK_COUNT * 18));
+        chip_rect.right = (chip_rect.left + cxDib);
+        chip_rect.bottom = (chip_rect.top + cyDib);
+        SetDIBitsToDevice(hdc, chip_rect.left, chip_rect.top, cxDib, cyDib, 0, 0, 0, cyDib, pBits, pbmi, DIB_RGB_COLORS);
     }
 #if defined ETH_INTERFACE
     fnDisplayLAN_LEDs(hdc, rect);

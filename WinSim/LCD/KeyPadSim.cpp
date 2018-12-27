@@ -26,6 +26,7 @@
     29.08.2018 Add optional mutually excluding button (automatic release of others when new one is pressed) {10}            
     29.08.2018 Add optional sticky buttons (not released when the ESC key is pressed) {11}
     18.09.2018 Add EXTENDED_USER_BUTTONS option                          {12}
+    25.12.2018 Only update keypad image when its rectangle has been invalidated {13}
 
 */
 
@@ -36,7 +37,7 @@
 #if defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS
 
 extern void fnDisplayKeypadLEDs(HDC hdc);
-extern void fnSetLastPort(int iInputLastPort, int iInputPortBit);        // {9}
+extern void fnSetLastPort(int iInputLastPort, unsigned long ulInputPortBit);        // {9}
 
 #if !defined KEYPAD && defined SUPPORT_KEY_SCAN
     #define KEYPAD "keypad.bmp"
@@ -81,7 +82,7 @@ USER_KEY user_keys[] = {
 #if defined BUTTON_KEY_DEFINITIONS                                       // {3}
     typedef struct stUSER_BUTTON
     {
-        unsigned long  Port_Ref;
+        int        iPort_Ref;
         unsigned long  Port_Bit;
         RECT       button_area;
     #if defined EXTENDED_USER_BUTTONS                                    // {12}
@@ -132,6 +133,23 @@ extern void fnInitKeyPad(RECT &rt, int iOrigWidth, int iMaxTop)
 #endif
 }
 
+static int fnUpdateAreaEnclosed(RECT rt, RECT refresh_rect)
+{
+    if (refresh_rect.left > rt.left) {
+        return 0;
+    }
+    if (refresh_rect.right < rt.right) {
+        return 0;
+    }
+    if (refresh_rect.top > rt.top) {
+        return 0;
+    }
+    /*
+    if (refresh_rect.bottom < rt.bottom) {
+        return 0;
+    }*/
+    return 1;
+}
 
 extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 {
@@ -150,7 +168,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 
     HDC hdc = GetDC(hwnd);                                               // get the devie context
     
-    if (pbmfh != 0) {                                                    // if there is a bit map for a front panel/keypad
+    if ((pbmfh != 0) && (fnUpdateAreaEnclosed(rt, refresh_rect) != 0)) { // {13} if there is a bit map for a front panel/keypad
 #if defined KEYPAD_LED_DEFINITIONS                                       // {5}
         extern void fnConfigureKeypad_leds(RECT kb_rect);
 #endif
@@ -262,24 +280,24 @@ static void fnPressButton(int i)
         return;
     }
     iUserButtonStates[i] = 1;
-    switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
+    switch (user_buttons[i].iPort_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
     case 0:
     #if defined EXTENDED_USER_BUTTONS                                    // {12}
         if (user_buttons[i].iInverted != 0) {
-            fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
+            fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
             break;
         }
     #endif
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // force button to low state
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // force button to low state
         break;
     case ANALOGUE_SWITCH_INPUT:
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // force button to low state (large analog swing)
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // force button to low state (large analog swing)
         break;
     case POSITIVE_SWITCH_INPUT:
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS); // force button to high state
         break;
     case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS_ANALOG); // force button to high state (large analog swing)
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_POS_ANALOG); // force button to high state (large analog swing)
         break;
     }
 }
@@ -290,18 +308,18 @@ static void fnReleaseButton(int i)
         return;
     }
     iUserButtonStates[i] = 0;
-    switch (user_buttons[i].Port_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
+    switch (user_buttons[i].iPort_Ref & (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT)) {
     case 0:
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE); // toggle button state
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE); // toggle button state
         break;
     case POSITIVE_SWITCH_INPUT:
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // toggle button state
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG); // toggle button state
         break;
     case ANALOGUE_SWITCH_INPUT:
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_ANALOG); // toggle button state (large analog swing)
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_ANALOG); // toggle button state (large analog swing)
         break;
     case (ANALOGUE_SWITCH_INPUT | POSITIVE_SWITCH_INPUT):
-        fnInjectInputChange((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // toggle button state (large analog swing)
+        fnInjectInputChange((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit, INPUT_TOGGLE_NEG_ANALOG); // toggle button state (large analog swing)
         break;
     }
 }
@@ -404,7 +422,7 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
                     if (user_buttons[i].button_area.bottom >= y) {
                         extern void fnInjectInputChange(unsigned long ulPortRef, unsigned long ulPortBit, int iAction);
                         if (iPressRelease == 3) {                        // hovering over an input
-                            fnSetLastPort((user_buttons[i].Port_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit); // {9} cause connected port details to be displayed
+                            fnSetLastPort((user_buttons[i].iPort_Ref & SWITCH_PORT_REF_MASK), user_buttons[i].Port_Bit); // {9} cause connected port details to be displayed
                             return 1;
                         }
                         if (iPressRelease != 0) {
@@ -493,7 +511,7 @@ extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
 {
     int i;
     for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
-        if (user_buttons[i].Port_Ref == iPortRef) {
+        if (user_buttons[i].iPort_Ref == iPortRef) {
             if (user_buttons[i].iInitiallyOn != 0) {
                 if (user_buttons[i].iInverted != 0) {
                     ulInitialState |= user_buttons[i].Port_Bit;
@@ -514,7 +532,7 @@ extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff)
 {
     int i;
     for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
-        if (user_buttons[i].Port_Ref == iPortRef) {
+        if (user_buttons[i].iPort_Ref == iPortRef) {
             if ((user_buttons[i].Port_Bit & ulInput) != 0) {
                 iUserButtonStates[i] = iOnOff;
             }

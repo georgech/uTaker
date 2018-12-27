@@ -36,6 +36,7 @@
     06.08.2013 Enable FLASH operations when USE_PARAMETER_BLOCK is used  {21}
     28.04.2014 Allow FLASH_ROUTINES to enable flash simulation           {22}
     03.09.2018 Add FRAM image support                                    {23}
+    26.12.2018 Add iMX                                                   {24}
 
 */
 
@@ -68,70 +69,61 @@
     #else
        #define FLASH_FILE  "FLASH_NE64.ini"
     #endif
-#endif
-#if defined _HW_SAM7X
+#elif defined _HW_SAM7X
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_SAM7X.ini"
     #else
         #define FLASH_FILE  "FLASH_SAM7X.ini"
     #endif
-#endif
-#if defined _HW_SAM3X                                                    // {20}
+#elif defined _HW_SAM3X                                                    // {20}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_SAM3.ini"
     #else
         #define FLASH_FILE  "FLASH_SAM3.ini"
     #endif
-#endif
-#if defined _HW_AVR32                                                    // {9}
+#elif defined _HW_AVR32                                                    // {9}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_AVR32.ini"
     #else
         #define FLASH_FILE  "FLASH_AVR32.ini"
     #endif
-#endif
-#if defined _M5223X || defined _FLEXIS32
+#elif defined _M5223X || defined _FLEXIS32
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_M5223X.ini"
     #else
         #define FLASH_FILE  "FLASH_M5223X.ini"
     #endif
-#endif
-#if defined _STR91XF
+#elif defined _STR91XF
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_STR91XF.ini"
     #else
         #define FLASH_FILE  "FLASH_STR91XF.ini"
     #endif
-#endif
-#if defined _LPC23XX
+#elif defined _LPC23XX
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_LPC23XX.ini"
     #else
         #define FLASH_FILE  "FLASH_LPC23XX.ini"
     #endif
-#endif
-#if defined _LPC17XX                                                     // {12}
-    #define FLASH_FILE  "FLASH_LPC17XX.ini"
-#endif
-#if defined _KINETIS                                                     // {17}
+#elif defined _LPC17XX                                                   // {12}
+    #define FLASH_FILE  "FLASH_LPC17XX.ini"$
+#elif defined _iMX                                                       // {24}
+    #define FLASH_FILE  "FLASH_iMX.ini"
+#elif defined _KINETIS                                                   // {17}
     #define FLASH_FILE  "FLASH_KINETIS.ini"
-#endif
-#if defined _LM3SXXXX                                                    // {4}
+#elif defined _LM3SXXXX                                                  // {4}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM            // {5}
         #define FLASH_FILE  "M95XXX_LM3SXXXX.ini"
     #else
         #define FLASH_FILE  "FLASH_LM3SXXXX.ini"
     #endif
-#endif
-#if defined _STM32                                                       // {14}
+#elif defined _STM32                                                     // {14}
     #if defined SPI_FILE_SYSTEM && !defined FLASH_FILE_SYSTEM
         #define FLASH_FILE  "M95XXX_STM32.ini"
     #else
         #define FLASH_FILE  "FLASH_STM32.ini"
     #endif
-#endif
-#if defined _RX6XX                                                       // {16}
+#elif defined _RX6XX                                                     // {16}
     #define FLASH_FILE  "FLASH_RX6XX.ini"
 #endif
 

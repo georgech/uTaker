@@ -1600,6 +1600,8 @@
 #else
     #if !defined KINETIS_KM && !defined K20FX512_120                     // KM's iRTC not yet supported
         #define SUPPORT_RTC                                              // support real time clock
+            #define SUPPORT_RTC_ms                                       // ms RTC support
+          //#define SUPPORT_RTC_us                                       // us RTC support
     #endif
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
@@ -2721,9 +2723,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined FRDM_KL02Z || defined FRDM_KL05Z || defined FRDM_KE02Z || defined TRK_KEA64 || defined FRDM_KE02Z40M || defined TEENSY_LC // {25}{30} these devices have small RAM size
         #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (32)
-    #else
-        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(512)                   // the size of RS232 input and output buffers
+    #elif SIZE_OF_RAM > (64 * 1024)
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(2 * 1024)              // the size of RS232 input and output buffers
         #define RX_BUFFER_SIZE   (128)
+    #else
+        #define TX_BUFFER_SIZE   (QUEUE_TRANSFER)(256)                   // the size of RS232 input and output buffers
+        #define RX_BUFFER_SIZE   (64)
     #endif
   //#define TRUE_UART_TX_2_STOPS                                         // allow true 2 stop bit transmission timing on devices without this UART controller support
 
@@ -2879,7 +2884,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //
 #if defined DAC_CONTROLLERS && (DAC_CONTROLLERS > 0)                     // if the device has a DAC
     #if !defined KINETIS_KE18_
-        #define SUPPORT_DAC                                              // {15} enable general DAC support
+      //#define SUPPORT_DAC                                              // {15} enable general DAC support
         #if defined SUPPORT_DAC
             #define SUPPORT_DAC0                                         // enable DAC controller 0 support
           //#define SUPPORT_DAC1                                         // enable DAC controller 1 support
@@ -3062,7 +3067,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define FTM0_3_ON_C                                          // FTM0 channel 3 on port C rather than port A
         #endif
       //#define FTM0_6_ON_D                                              // FTM0 channel 6 on port D rather than port A
-      //#define FTM0_7_ON_D                                              // FTM0 channel 7 on port D rather than port A
+        #define FTM0_7_ON_D                                              // FTM0 channel 7 on port D rather than port A
 
       //#define FTM1_0_ALT_A                                             // FTM1 channel 0 on second port A location
       //#define FTM1_0_ON_B                                              // FTM1 channel 0 on port B rather than port A
@@ -6998,7 +7003,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2 [green/red/blue]
 
-
+    #define FTM0_4_ON_D                                                  // FlexTimer 0, channel 4 on PTD4
+    #define FTM0_5_ON_D                                                  // FlexTimer 0, channel 5 on PTD5
 #if defined RD_KL25_AGMP01
     #define KEYPAD "KeyPads/RD-KL25-AGMP01.bmp"
 
@@ -7183,6 +7189,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define CTS_2_PORT                  PORTD
     #define CTS_2_PIN                   PORTD_BIT2
     #define CTS_2_INTERRUPT_PRIORITY    PRIORITY_PORT_D_INT
+
+    #define FTM0_4_ON_D                                                  // FlexTimer 0, channel 4 on PTD4
 #elif defined FRDM_KL28Z
     #define DEMO_LED_1             (PORTC_BIT4)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTE_BIT29)                         // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -10458,7 +10466,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #endif
 
 #elif defined KEY_COLUMNS && KEY_COLUMNS == 0                            // linear keyboard (key connected directly to inputs)
-    #if !defined FRDM_KL82Z && TSI_AVAILABLE > 0
+    #if !defined FRDM_KL82Z && (TSI_AVAILABLE > 0)
         #define TOUCH_SENSOR_INPUTS                                      // {3} use touch sensor inputs
     #endif
     #if defined TOUCH_SENSOR_INPUTS
