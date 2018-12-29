@@ -22,6 +22,8 @@
 /* =================================================================== */
 
 #include "config.h"
+#define _PIN_DEFAULTS
+#include "iMX_pinout.h"
 
 #if defined _iMX                                                         // only on iMX parts
 
@@ -328,6 +330,50 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_GPR_GPR3 = 0x0000fff0;
     IOMUXC_GPR_GPR10 = 0x00000007;
     IOMUXC_GPR_GPR15 = 0xffffffff;
+
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00 = cPinDefaults[_PORT2][0];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_01 = cPinDefaults[_PORT2][1];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_02 = cPinDefaults[_PORT2][2];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_03 = cPinDefaults[_PORT2][3];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_04 = cPinDefaults[_PORT2][4];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_05 = cPinDefaults[_PORT2][5];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_06 = cPinDefaults[_PORT2][6];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_07 = cPinDefaults[_PORT2][7];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_08 = cPinDefaults[_PORT2][8];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_09 = cPinDefaults[_PORT2][9];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_10 = cPinDefaults[_PORT2][10];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_11 = cPinDefaults[_PORT2][11];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_12 = cPinDefaults[_PORT2][12];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_13 = cPinDefaults[_PORT2][13];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_14 = cPinDefaults[_PORT2][14];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_15 = cPinDefaults[_PORT2][15];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_16 = cPinDefaults[_PORT2][16];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_17 = cPinDefaults[_PORT2][17];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_18 = cPinDefaults[_PORT2][18];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_19 = cPinDefaults[_PORT2][19];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_20 = cPinDefaults[_PORT2][20];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_21 = cPinDefaults[_PORT2][21];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_22 = cPinDefaults[_PORT2][22];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_23 = cPinDefaults[_PORT2][23];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_24 = cPinDefaults[_PORT2][24];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_25 = cPinDefaults[_PORT2][25];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_26 = cPinDefaults[_PORT2][26];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_27 = cPinDefaults[_PORT2][27];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_28 = cPinDefaults[_PORT2][28];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_29 = cPinDefaults[_PORT2][29];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_30 = cPinDefaults[_PORT2][30];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_31 = cPinDefaults[_PORT2][31];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32 = cPinDefaults[_PORT3][0];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_33 = cPinDefaults[_PORT3][1];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_34 = cPinDefaults[_PORT3][2];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_35 = cPinDefaults[_PORT3][3];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_36 = cPinDefaults[_PORT3][4];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_37 = cPinDefaults[_PORT3][5];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_38 = cPinDefaults[_PORT3][6];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_39 = cPinDefaults[_PORT3][7];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_40 = cPinDefaults[_PORT3][8];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41 = cPinDefaults[_PORT3][9];
+
 
 
 
@@ -5055,12 +5101,26 @@ extern void fnSimPers(void)
             }
     #endif
 #else
+            switch (iPort) {
+            case _PORT2:
+            case _PORT3:
+                {
+                    unsigned long *ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
+                    ptrGPIO_EMC += iPin;
+                    ucPortFunctions[iPort][iPin] = (unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK);
+                    if ((unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK) != IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO) {
+                        ulPeripherals[iPort] |= ulBit;
+                    }
+                }
+                break;
+            }
+            /*
             ucPortFunctions[iPort][iPin] = (unsigned char)((*ptrPortPin++ & PORT_MUX_MASK) >> 8);
             if (ucPortFunctions[iPort][iPin] != (PORT_MUX_GPIO >> 8)) {
                 if ((ucPortFunctions[iPort][iPin] != 0) || ((ulDisabled[iPort] & ulBit) == 0)) { // not ALT 0 function (usually default) or default peripheral is not disabled
                     ulPeripherals[iPort] |= ulBit;
                 }
-            }
+            }*/
     #if defined ERRATA_ID_3402
             if ((iPort == XTAL0_PORT) && (iPin == XTAL0_PIN)) {
                 if ((OSC0_CR & OSC_CR_ERCLKEN) != 0) {                   // if OSC is enabled the XTAL pin is overridden by the oscillator functions
