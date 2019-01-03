@@ -108,12 +108,6 @@
     <Filter Include="WinSim\SIMAVR32">
       <UniqueIdentifier>{89c5d190-ed51-4ecf-86a9-d99b5782da2b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Test">
-      <UniqueIdentifier>{6c045efc-1d6e-4d99-abcf-ec5a2c51b4e7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Test\LTC_AES">
-      <UniqueIdentifier>{3bb79d38-8d8e-47b1-9f32-011297dd3ae2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Hardware\iMX">
       <UniqueIdentifier>{77f6c67c-bc28-4264-9744-f33e6e90ca52}</UniqueIdentifier>
     </Filter>
@@ -577,9 +571,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\stack\SSL\mbedtls-1.3.10\sha256_mbedTLS.c">
       <Filter>TCP/IP\mbedtls</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\NXP\LTC_TEST\ltc_aes.c">
-      <Filter>Test\LTC_AES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\iMX\iMXSim.c">
       <Filter>WinSim\SIMiMX</Filter>
@@ -1597,9 +1588,6 @@
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_USB_OTG.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\iMX\sim_iMX.h">
-      <Filter>Hardware\iMX</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\spi_eeprom_iMX_25AA160.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
@@ -1625,6 +1613,9 @@
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_pinout.h">
+      <Filter>WinSim\SIMiMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\sim_iMX.h">
       <Filter>WinSim\SIMiMX</Filter>
     </ClInclude>
   </ItemGroup>

@@ -347,27 +347,15 @@ _abort_multi:
 #endif
 
     case TICK_CALL:
-
-
-//EnterCriticalSection(ptrcs); // protect from task switching
-
+      //EnterCriticalSection(ptrcs);                                     // protect from task switching
         if (iReset = fnSimTimers()) {                                    // simulate timers and check for watchdog timer
             iOpSysActive = 0;                                            // {36}
-
-
-//LeaveCriticalSection(ptrcs);
-
-
-
+          //LeaveCriticalSection(ptrcs);
             return iReset;                                               // reset commanded or Watchdog fired
         }
-
-//LeaveCriticalSection(ptrcs);
-
-
-
+      //LeaveCriticalSection(ptrcs);
         RealTimeInterrupt();                                             // simulate a timer tick
-        iRun = 10;                                                       // allow the scheduler to run a few times to handle inter-task events
+        iRun = 9;                                                        // allow the scheduler to run a few times to handle inter-task events
         iSimulate = 1;                                                   // flag that simulation flags should be handled
         break;
 

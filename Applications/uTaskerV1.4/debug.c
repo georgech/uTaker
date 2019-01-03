@@ -7276,6 +7276,7 @@ static unsigned char fnGetID_Data(int iActions, CHAR *ptrInput, unsigned char *u
 //
 static void fnDoCAN(unsigned char ucType, CHAR *ptrInput)
 {
+    #if !defined NO_PERIPHERAL_DEMONSTRATIONS
     int iChannel = 0;                                                    // default CAN controller channel 0
     unsigned char ucMessage[12];                                         // CAN message content (4 bytes for ID plus 8 for maximum data)
     unsigned char ucMessageLength;
@@ -7319,7 +7320,7 @@ static void fnDoCAN(unsigned char ucType, CHAR *ptrInput)
     case DO_CLEAR_REMOTE_BUF:                                            // free a buffer expecting a remote response that doesn't arrive
         fnSendCAN_message(iChannel, (FREE_CAN_RX_REMOTE), 0, 0);
         break;
-    #if defined _DEBUG_CAN
+        #if defined _DEBUG_CAN
     case DO_DEBUG_CAN:
         {
             KINETIS_CAN_BUF *ptrMessageBuffer;
@@ -7347,8 +7348,9 @@ static void fnDoCAN(unsigned char ucType, CHAR *ptrInput)
             }
         }
         break;
-    #endif
+        #endif
     }
+    #endif
 }
 #endif
 

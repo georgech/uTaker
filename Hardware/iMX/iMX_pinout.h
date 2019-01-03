@@ -56,6 +56,7 @@ static const unsigned char cPinDefaults[PORTS_AVAILABLE][PORT_WIDTH] = {
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO
     },
     {                                                                    // GPIO2
@@ -89,9 +90,11 @@ static const unsigned char cPinDefaults[PORTS_AVAILABLE][PORT_WIDTH] = {
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO
     },
     {                                                                    // GPIO3
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
@@ -155,9 +158,11 @@ static const unsigned char cPinDefaults[PORTS_AVAILABLE][PORT_WIDTH] = {
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO
     },
     {                                                                    // GPIO5
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO,
@@ -232,179 +237,179 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "52",       "74",     },                                      // GPIO_AD_B1_15 [GPIO1.IO[31]]
     },
     {
-        //  100LQFP    144 LQFP LCSP                    GPIO_EMC [GPIO2]
-        {  "-",        "18",     },                 // GPIO_EMC_00 [GPIO2.IO[0]]
-        {  "-",        "17",     },                 // GPIO_EMC_01 [GPIO2.IO[1]]
-        {  "-",        "16",     },                 // GPIO_EMC_02 [GPIO2.IO[2]]
-        {  "-",        "15",     },                 // GPIO_EMC_03 [GPIO2.IO[3]]
-        {  "7",        "14",     },                 // GPIO_EMC_04 [GPIO2.IO[4]]
-        {  "6",        "13",     },                 // GPIO_EMC_05 [GPIO2.IO[5]]
-        {  "4",        "12",     },                 // GPIO_EMC_06 [GPIO2.IO[6]]
-        {  "3",        "10",     },                 // GPIO_EMC_07 [GPIO2.IO[7]]
-        {  "2",        "9",    },                 // GPIO_EMC_08 [GPIO2.IO[8]]
-        {  "1",        "8",    },                 // GPIO_EMC_09 [GPIO2.IO[9]]
-        {  "-",        "7",    },                 // GPIO_EMC_10 [GPIO2.IO[10]]
-        {  "-",        "4",    },                 // GPIO_EMC_11 [GPIO2.IO[11]]
-        {  "-",        "3",    },                 // GPIO_EMC_12 [GPIO2.IO[12]]
-        {  "-",        "2",     },                 // GPIO_EMC_13 [GPIO2.IO[13]]
-        {  "-",        "1",     },                 // GPIO_EMC_14 [GPIO2.IO[14]]
-        {  "-",        "143",     },                 // GPIO_EMC_15 [GPIO2.IO[15]]
-        {  "100",      "142",   },                 // GPIO_EMC_16 [GPIO2.IO[16]] src.BOOT_MODE[0]
-        {  "99",       "141",   },                 // GPIO_EMC_17 [GPIO2.IO[17]] src.BOOT_MODE[1]
-        {  "98",       "140",   },                 // GPIO_EMC_18 [GPIO2.IO[18]]
-        {  "97",       "139",   },                 // GPIO_EMC_19 [GPIO2.IO[19]]
-        {  "96",       "138",   },                 // GPIO_EMC_20 [GPIO2.IO[20]]
-        {  "94",       "137",   },                 // GPIO_EMC_21 [GPIO2.IO[21]]
-        {  "93",       "136",   },                 // GPIO_EMC_22 [GPIO2.IO[22]]
-        {  "90",       "133",   },                 // GPIO_EMC_23 [GPIO2.IO[23]]
-        {  "89",       "132", },                 // GPIO_EMC_24 [GPIO2.IO[24]]
-        {  "88",       "131",  },                 // GPIO_EMC_25 [GPIO2.IO[25]]
-        {  "87",       "130",  },                 // GPIO_EMC_26 [GPIO2.IO[26]]
-        {  "86",       "129",  },                 // GPIO_EMC_27 [GPIO2.IO[27]]
-        {  "-",        "128",  },                 // GPIO_EMC_28 [GPIO2.IO[28]]
-        {  "-",        "127",  },                 // GPIO_EMC_29 [GPIO2.IO[29]]
-        {  "-",        "126",  },                 // GPIO_EMC_30 [GPIO2.IO[30]]
-        {  "-",        "125",  },                 // GPIO_EMC_31 [GPIO2.IO[31]]
+        //  100LQFP    144 LQFP LCSP                                     GPIO_EMC [GPIO2]
+        {  "-",        "18",     },                                      // GPIO_EMC_00 [GPIO2.IO[0]]
+        {  "-",        "17",     },                                      // GPIO_EMC_01 [GPIO2.IO[1]]
+        {  "-",        "16",     },                                      // GPIO_EMC_02 [GPIO2.IO[2]]
+        {  "-",        "15",     },                                      // GPIO_EMC_03 [GPIO2.IO[3]]
+        {  "7",        "14",     },                                      // GPIO_EMC_04 [GPIO2.IO[4]]
+        {  "6",        "13",     },                                      // GPIO_EMC_05 [GPIO2.IO[5]]
+        {  "4",        "12",     },                                      // GPIO_EMC_06 [GPIO2.IO[6]]
+        {  "3",        "10",     },                                      // GPIO_EMC_07 [GPIO2.IO[7]]
+        {  "2",        "9",      },                                      // GPIO_EMC_08 [GPIO2.IO[8]]
+        {  "1",        "8",      },                                      // GPIO_EMC_09 [GPIO2.IO[9]]
+        {  "-",        "7",      },                                      // GPIO_EMC_10 [GPIO2.IO[10]]
+        {  "-",        "4",      },                                      // GPIO_EMC_11 [GPIO2.IO[11]]
+        {  "-",        "3",      },                                      // GPIO_EMC_12 [GPIO2.IO[12]]
+        {  "-",        "2",      },                                      // GPIO_EMC_13 [GPIO2.IO[13]]
+        {  "-",        "1",      },                                      // GPIO_EMC_14 [GPIO2.IO[14]]
+        {  "-",        "143",    },                                      // GPIO_EMC_15 [GPIO2.IO[15]]
+        {  "100",      "142",    },                                      // GPIO_EMC_16 [GPIO2.IO[16]] src.BOOT_MODE[0]
+        {  "99",       "141",    },                                      // GPIO_EMC_17 [GPIO2.IO[17]] src.BOOT_MODE[1]
+        {  "98",       "140",    },                                      // GPIO_EMC_18 [GPIO2.IO[18]]
+        {  "97",       "139",    },                                      // GPIO_EMC_19 [GPIO2.IO[19]]
+        {  "96",       "138",    },                                      // GPIO_EMC_20 [GPIO2.IO[20]]
+        {  "94",       "137",    },                                      // GPIO_EMC_21 [GPIO2.IO[21]]
+        {  "93",       "136",    },                                      // GPIO_EMC_22 [GPIO2.IO[22]]
+        {  "90",       "133",    },                                      // GPIO_EMC_23 [GPIO2.IO[23]]
+        {  "89",       "132",    },                                      // GPIO_EMC_24 [GPIO2.IO[24]]
+        {  "88",       "131",    },                                      // GPIO_EMC_25 [GPIO2.IO[25]]
+        {  "87",       "130",    },                                      // GPIO_EMC_26 [GPIO2.IO[26]]
+        {  "86",       "129",    },                                      // GPIO_EMC_27 [GPIO2.IO[27]]
+        {  "-",        "128",    },                                      // GPIO_EMC_28 [GPIO2.IO[28]]
+        {  "-",        "127",    },                                      // GPIO_EMC_29 [GPIO2.IO[29]]
+        {  "-",        "126",    },                                      // GPIO_EMC_30 [GPIO2.IO[30]]
+        {  "-",        "125",    },                                      // GPIO_EMC_31 [GPIO2.IO[31]]
     },
     {
-        //  100LQFP    144 LQFPLCSP                    GPIO_EMC/GPIO_S [GPIO3]
-        {  "85",       "124",      },                 // GPIO_EMC_32 [GPIO3.IO[0]]
-        {  "84",       "123",      },                 // GPIO_EMC_33 [GPIO3.IO[1]]
-        {  "83",       "122",      },                 // GPIO_EMC_34 [GPIO3.IO[2]]
-        {  "82",      "121",      },                 // GPIO_EMC_35 [GPIO3.IO[3]]
-        {  "-",      "120",      },                 // GPIO_EMC_36 [GPIO3.IO[4]]
-        {  "-",      "119",      },                 // GPIO_EMC_37 [GPIO3.IO[5]]
-        {  "-",      "118",      },                 // GPIO_EMC_38 [GPIO3.IO[6]]
-        {  "-",      "117",      },                 // GPIO_EMC_39 [GPIO3.IO[7]]
-        {  "-",      "116",      },                 // GPIO_EMC_40 [GPIO3.IO[8]]
-        {  "-",      "115",  },                 // GPIO_EMC_41 [GPIO3.IO[9]]
-        {  "-",      "-",  },                 //
-        {  "-",      "-",  },                 //
-        {  "-",      "-",  },                 //
-        {  "-",      "48",  },                 // GPIO_SD_B0_00 [GPIO3.IO[13]]
-        {  "-",       "47",  },                 // GPIO_SD_B0_01 [GPIO3.IO[14]]
-        {  "-",       "46",  },                 // GPIO_SD_B0_02 [GPIO3.IO[15]]
-        {  "-",       "45",       },                 // GPIO_SD_B0_03 [GPIO3.IO[16]]
-        {  "-",       "43",       },                 // GPIO_SD_B0_04 [GPIO3.IO[17]]
-        {  "-",       "42",       },                 // GPIO_SD_B0_05 [GPIO3.IO[18]]
-        {  "-",       "41",       },                 // GPIO_SD_B0_06 [GPIO3.IO[19]]
-        {  "22",        "33",  },                 // GPIO_SD_B1_00 [GPIO3.IO[20]]
-        {  "21",        "32",  },                 // GPIO_SD_B1_01 [GPIO3.IO[21]]
-        {  "17",        "30",  },                 // GPIO_SD_B1_02 [GPIO3.IO[22]]
-        {  "16",        "28",  },                 // GPIO_SD_B1_03 [GPIO3.IO[23]]
-        {  "15",        "27",  },                 // GPIO_SD_B1_04 [GPIO3.IO[24]]
-        {  "14",        "26",  },                 // GPIO_SD_B1_05 [GPIO3.IO[25]]
-        {  "13",        "25",  },                 // GPIO_SD_B1_06 [GPIO3.IO[26]]
-        {  "12",        "24",  },                 // GPIO_SD_B1_07 [GPIO3.IO[27]]
-        {  "11",        "23",  },                 // GPIO_SD_B1_08 [GPIO3.IO[28]]
-        {  "10",        "22",  },                 // GPIO_SD_B1_09 [GPIO3.IO[29]]
-        {  "9",        "21",  },                 // GPIO_SD_B1_10 [GPIO3.IO[30]]
-        {  "8",        "19",  },                 // GPIO_SD_B1_11 [GPIO3.IO[31]]
+        //  100LQFP    144 LQFPLCSP                                      GPIO_EMC/GPIO_S [GPIO3]
+        {  "85",       "124",    },                                      // GPIO_EMC_32 [GPIO3.IO[0]]
+        {  "84",       "123",    },                                      // GPIO_EMC_33 [GPIO3.IO[1]]
+        {  "83",       "122",    },                                      // GPIO_EMC_34 [GPIO3.IO[2]]
+        {  "82",       "121",    },                                      // GPIO_EMC_35 [GPIO3.IO[3]]
+        {  "-",        "120",    },                                      // GPIO_EMC_36 [GPIO3.IO[4]]
+        {  "-",        "119",    },                                      // GPIO_EMC_37 [GPIO3.IO[5]]
+        {  "-",        "118",    },                                      // GPIO_EMC_38 [GPIO3.IO[6]]
+        {  "-",        "117",    },                                      // GPIO_EMC_39 [GPIO3.IO[7]]
+        {  "-",        "116",    },                                      // GPIO_EMC_40 [GPIO3.IO[8]]
+        {  "-",        "115",    },                                      // GPIO_EMC_41 [GPIO3.IO[9]]
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "48",     },                                      // GPIO_SD_B0_00 [GPIO3.IO[13]]
+        {  "-",        "47",     },                                      // GPIO_SD_B0_01 [GPIO3.IO[14]]
+        {  "-",        "46",     },                                      // GPIO_SD_B0_02 [GPIO3.IO[15]]
+        {  "-",        "45",     },                                      // GPIO_SD_B0_03 [GPIO3.IO[16]]
+        {  "-",        "43",     },                                      // GPIO_SD_B0_04 [GPIO3.IO[17]]
+        {  "-",        "42",     },                                      // GPIO_SD_B0_05 [GPIO3.IO[18]]
+        {  "-",        "41",     },                                      // GPIO_SD_B0_06 [GPIO3.IO[19]]
+        {  "22",       "33",     },                                      // GPIO_SD_B1_00 [GPIO3.IO[20]]
+        {  "21",       "32",     },                                      // GPIO_SD_B1_01 [GPIO3.IO[21]]
+        {  "17",       "30",     },                                      // GPIO_SD_B1_02 [GPIO3.IO[22]]
+        {  "16",       "28",     },                                      // GPIO_SD_B1_03 [GPIO3.IO[23]]
+        {  "15",       "27",     },                                      // GPIO_SD_B1_04 [GPIO3.IO[24]]
+        {  "14",       "26",     },                                      // GPIO_SD_B1_05 [GPIO3.IO[25]]
+        {  "13",       "25",     },                                      // GPIO_SD_B1_06 [GPIO3.IO[26]]
+        {  "12",       "24",     },                                      // GPIO_SD_B1_07 [GPIO3.IO[27]]
+        {  "11",       "23",     },                                      // GPIO_SD_B1_08 [GPIO3.IO[28]]
+        {  "10",       "22",     },                                      // GPIO_SD_B1_09 [GPIO3.IO[29]]
+        {  "9",        "21",     },                                      // GPIO_SD_B1_10 [GPIO3.IO[30]]
+        {  "8",        "19",     },                                      // GPIO_SD_B1_11 [GPIO3.IO[31]]
     },
     {
-        //  100LQFP   144LQFP                     GPIO D
-        {  "-",       "-",    },                 // PD0
-        {  "-",       "-",    },                 // PD1
-        {  "-",       "-",    },                 // PD2
-        {  "-",       "-",    },                 // PD3
-        {  "-",       "-",    },                 // PD4
-        {  "-",       "-",    },                 // PD5
-        {  "-",       "-",    },                 // PD6
-        {  "-",       "-",    },                 // PD7
-        {  "-",       "-",    },                 // PD8
-        {  "-",       "-",    },                 // PD9
-        {  "-",       "-",    },                 // PD10
-        {  "-",       "-",    },                 // PD11
-        {  "-",       "-",    },                 // PD12
-        {  "-",       "-",    },                 // PD13
-        {  "-",       "-",    },                 // PD14
-        {  "-",       "-",    },                 // PD15
-        {  "-",        "-",     },                 // PD16
-        {  "-",        "-",     },                 // PD17
-        {  "-",        "-",     },                 // PD18
-        {  "-",        "-",     },                 // PD19
-        {  "-",        "-",     },                 // PD20
-        {  "-",        "-",     },                 // PD21
-        {  "-",        "-",     },                 // PD22
-        {  "-",        "-",     },                 // PD23
-        {  "-",        "-",     },                 // PD24
-        {  "-",        "-",     },                 // PD25
-        {  "-",        "-",     },                 // PD26
-        {  "-",        "-",     },                 // PD27
-        {  "-",        "-",     },                 // PD28
-        {  "-",        "-",     },                 // PD29
-        {  "-",        "-",     },                 // PD30
-        {  "-",        "-",     },                 // PD31
+        //  100LQFP   144LQFP                                            GPIO D
+        {  "-",        "-",      },                                      // PD0
+        {  "-",        "-",      },                                      // PD1
+        {  "-",        "-",      },                                      // PD2
+        {  "-",        "-",      },                                      // PD3
+        {  "-",        "-",      },                                      // PD4
+        {  "-",        "-",      },                                      // PD5
+        {  "-",        "-",      },                                      // PD6
+        {  "-",        "-",      },                                      // PD7
+        {  "-",        "-",      },                                      // PD8
+        {  "-",        "-",      },                                      // PD9
+        {  "-",        "-",      },                                      // PD10
+        {  "-",        "-",      },                                      // PD11
+        {  "-",        "-",      },                                      // PD12
+        {  "-",        "-",      },                                      // PD13
+        {  "-",        "-",      },                                      // PD14
+        {  "-",        "-",      },                                      // PD15
+        {  "-",        "-",      },                                      // PD16
+        {  "-",        "-",      },                                      // PD17
+        {  "-",        "-",      },                                      // PD18
+        {  "-",        "-",      },                                      // PD19
+        {  "-",        "-",      },                                      // PD20
+        {  "-",        "-",      },                                      // PD21
+        {  "-",        "-",      },                                      // PD22
+        {  "-",        "-",      },                                      // PD23
+        {  "-",        "-",      },                                      // PD24
+        {  "-",        "-",      },                                      // PD25
+        {  "-",        "-",      },                                      // PD26
+        {  "-",        "-",      },                                      // PD27
+        {  "-",        "-",      },                                      // PD28
+        {  "-",        "-",      },                                      // PD29
+        {  "-",        "-",      },                                      // PD30
+        {  "-",        "-",      },                                      // PD31
     },
     {
-        //  100LQFP   144LQFP                     [GPIO5]
-        {  "-",        "-",     },                 // PE0
-        {  "-",        "-",     },                 // PE1
-        {  "-",        "-",     },                 // PE2
-        {  "-",        "-",     },                 // PE3
-        {  "-",        "-",     },                 // PE4
-        {  "-",        "52",     },                 // PE5
-        {  "-",        "-",     },                 // PE6
-        {  "-",       "-",    },                 // PE7
-        {  "-",       "-",    },                 // PE8
-        {  "-",       "-",    },                 // PE9
-        {  "-",       "-",    },                 // PE10
-        {  "-",       "-",    },                 // PE11
-        {  "-",       "-",     },                 // PE12
-        {  "-",       "-",     },                 // PE13
-        {  "-",        "-",     },                 // PE14
-        {  "-",        "-",     },                 // PE15
-        {  "-",       "-",     },                 // PE16
-        {  "-",       "-",     },                 // PE17
-        {  "-",       "-",     },                 // PE18
-        {  "-",       "-",     },                 // PE19
-        {  "-",        "-",     },                 // PE20
-        {  "-",        "-",     },                 // PE21
-        {  "-",        "-",     },                 // PE22
-        {  "-",        "-",     },                 // PE23
-        {  "-",        "-",     },                 // PE24
-        {  "-",        "-",     },                 // PE25
-        {  "-",        "-",     },                 // PE26
-        {  "-",        "-",     },                 // PE27
-        {  "-",        "-",     },                 // PE28
-        {  "-",        "-",     },                 // PE29
-        {  "-",        "-",     },                 // PE30
-        {  "-",        "-",     },                 // PE31
+        //  100LQFP   144LQFP                                            [GPIO5]
+        {  "-",        "-",      },                                      // PE0
+        {  "-",        "-",      },                                      // PE1
+        {  "-",        "-",      },                                      // PE2
+        {  "-",        "-",      },                                      // PE3
+        {  "-",        "-",      },                                      // PE4
+        {  "-",        "52",     },                                      // PE5
+        {  "-",        "-",      },                                      // PE6
+        {  "-",        "-",      },                                      // PE7
+        {  "-",        "-",      },                                      // PE8
+        {  "-",        "-",      },                                      // PE9
+        {  "-",        "-",      },                                      // PE10
+        {  "-",        "-",      },                                      // PE11
+        {  "-",        "-",      },                                      // PE12
+        {  "-",        "-",      },                                      // PE13
+        {  "-",        "-",      },                                      // PE14
+        {  "-",        "-",      },                                      // PE15
+        {  "-",        "-",      },                                      // PE16
+        {  "-",        "-",      },                                      // PE17
+        {  "-",        "-",      },                                      // PE18
+        {  "-",        "-",      },                                      // PE19
+        {  "-",        "-",      },                                      // PE20
+        {  "-",        "-",      },                                      // PE21
+        {  "-",        "-",      },                                      // PE22
+        {  "-",        "-",      },                                      // PE23
+        {  "-",        "-",      },                                      // PE24
+        {  "-",        "-",      },                                      // PE25
+        {  "-",        "-",      },                                      // PE26
+        {  "-",        "-",      },                                      // PE27
+        {  "-",        "-",      },                                      // PE28
+        {  "-",        "-",      },                                      // PE29
+        {  "-",        "-",      },                                      // PE30
+        {  "-",        "-",      },                                      // PE31
     },
     { 
-        //  100LQFP   144LQFP                      dedicated ADC pins
-        {  "-",      "-",      },                    // ADC0_DP0
-        {  "-",      "-",      },                    // ADC0_DM0
-        {  "-",      "-",      },                    // ADC0_DP3
-        {  "-",      "-",      },                    // ADC0_DM3
-        {  "-",      "-",     },                    // VREFH
-        {  "-",      "-",     },                    // VREFL
-        {  "-",      "-",     },                    // ADC0_DP1
-        {  "-",      "-",     },                    // ADC0_DM1
-        {  "-",      "-",     },                    // VREF_OUT/CMP1_IN5/CMP0_IN5/ADC0_SE22
-        {  "-",      "-",     },                    // DAC0_OUT/CMP1_IN3/ADC0_SE23
-        {  "-",      "-",     },                    // RTC_WAKEUP_B
-        {  "-",      "-",     },                    // XTAL32
-        {  "-",      "-",     },                    // EXTAL32
-        {  "-",      "-",     },                    // VBAT
-        {  "-",      "-",     },                    // RESET_b
-        {  "-",       "-",      },                    // ADC0_SE16
-        {  "-",       "-",      },                    // VDDIO_E
-        {  "-",      "-",     },                    // VDDIO_E
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
-        {  "-",       "-",      },                    //
+        //  100LQFP    144LQFP                                           dedicated ADC pins
+        {  "-",        "-",      },                                      // ADC0_DP0
+        {  "-",        "-",      },                                      // ADC0_DM0
+        {  "-",        "-",      },                                      // ADC0_DP3
+        {  "-",        "-",      },                                      // ADC0_DM3
+        {  "-",        "-",      },                                      // VREFH
+        {  "-",        "-",      },                                      // VREFL
+        {  "-",        "-",      },                                      // ADC0_DP1
+        {  "-",        "-",      },                                      // ADC0_DM1
+        {  "-",        "-",      },                                      // VREF_OUT/CMP1_IN5/CMP0_IN5/ADC0_SE22
+        {  "-",        "-",      },                                      // DAC0_OUT/CMP1_IN3/ADC0_SE23
+        {  "-",        "-",      },                                      // RTC_WAKEUP_B
+        {  "-",        "-",      },                                      // XTAL32
+        {  "-",        "-",      },                                      // EXTAL32
+        {  "-",        "-",      },                                      // VBAT
+        {  "-",        "-",      },                                      // RESET_b
+        {  "-",        "-",      },                                      // ADC0_SE16
+        {  "-",        "-",      },                                      // VDDIO_E
+        {  "-",        "-",      },                                      // VDDIO_E
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
+        {  "-",        "-",      },                                      //
     }
 };
 
@@ -431,38 +436,38 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }, // GPIO1
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
+        {  "JTAG_TMS",     "-",     "-",         "-",          "-",           "GPIO1_IO00","-",        "GPT1_COMPARE1"     }, // pad GPIO_AD_B0_00 [GPIO1-0]
+        {  "JTAG_TCK",     "-",     "-",         "-",          "-",           "GPIO1_IO01","-",        "GPT1_CAPTURE2"     }, // pad GPIO_AD_B0_01 [GPIO1-1]
+        {  "JTAG_MOD",     "-",     "-",         "-",          "-",           "GPIO1_IO02","-",        "GPT1_CAPTURE1"     }, // pad GPIO_AD_B0_02 [GPIO1-2]
+        {  "JTAG_TDI",     "USDHC2_CD_B","WDOG1_B","SAI1_MCLK","USDHC1_WP",   "GPIO1_IO03","USB_OTG1_OC","CCM_PMIC_RDY"    }, // pad GPIO_AD_B0_03 [GPIO1-3]
+        {  "JTAG_TDO",     "FLEXCAN1_TX","USDHC1_WP","QTIMER2_TIMER0","ENET_MDIO","GPIO1_IO04","USB_OTG1_PWR","EWM_OUT_B"  }, // pad GPIO_AD_B0_04 [GPIO1-4]
+        {  "JTAG_TRSTB",   "FLEXCAN1_RX","USDHC1_CD_B","QTIMER2_TIMER1","ENET_MDC","GPIO1_IO05","USB_OTG1_ID","NMI_GLUE_NMI"}, // pad GPIO_AD_B0_05 [GPIO1-5]
+        {  "PIT_TRIGGER00","MQS_RIGHT","LPUART1_TX","QTIMER2_TIMER2","FLEXPWM2_PWMA03","GPIO1_IO06","REF_32K_OUT","-"      }, // pad GPIO_AD_B0_06 [GPIO1-6]
+        {  "PIT_TRIGGER01","MQS_LEFT","LPUART1_RX","QTIMER2_TIMER3","FLEXPWM2_PWMB03","GPIO1_IO07","REF_24M_OUT","-"       }, // pad GPIO_AD_B0_07 [GPIO1-7]
+        {  "ENET_TX_CLK",  "LPI2C3_SCL","LPUART1_CTS_B","KPP_COL00","ENET_REF_CLK1","GPIO1_IO08","ARM_CM7_TXEV","-"        }, // pad GPIO_AD_B0_08 [GPIO1-8]
+        {  "ENET_RDATA01", "LPI2C3_SDA","LPUART1_RTS_B","KPP_ROW00","-",      "GPIO1_IO09","ARM_CM7_RXEV","-"              }, // pad GPIO_AD_B0_09 [GPIO1-9]
+        {  "ENET_RDATA00", "LPSPI1_SCK","LPUART5_TX","KPP_COL01","FLEXPWM2_PWMA02","GPIO1_IO10","ARM_CM7_TRACE_CLK","-"    }, // pad GPIO_AD_B0_10 [GPIO1-10]
+        {  "ENET_RX_EN",   "LPSPI1_PCS0","LPUART5_RX","KPP_ROW01","FLEXPWM2_PWMB02","GPIO1_IO11","ARM_CM7_TRACE_SWO","-"   }, // pad GPIO_AD_B0_11 [GPIO1-11]
+        {  "ENET_RX_ER",   "LPSPI1_SDO","LPUART3_CTS_B","KPP_COL02","FLEXPWM2_PWMA01","GPIO1_IO12","ARM_CM7_TRACE00","SNVS_HP_VIO_5_CTL" }, // pad GPIO_AD_B0_12 [GPIO1-12]
+        {  "ENET_TX_EN",   "LPSPI1_SDI","LPUART3_RTS_B","KPP_ROW02","FLEXPWM2_PWMB01","GPIO1_IO13","ARM_CM7_TRACE01","SNVS_HP_VIO_5_B" }, // pad GPIO_AD_B0_13 [GPIO1-13]
+        {  "ENET_TDATA00", "FLEXCAN2_TX","LPUART3_TX","KPP_COL03","FLEXPWM2_PWMA00","GPIO1_IO14","ARM_CM7_TRACE02","WDOG1_ANY" }, // pad GPIO_AD_B0_14 [GPIO1-14]
+        {  "ENET_TDATA01", "FLEXCAN2_RX","LPUART3_RX","KPP_ROW03","FLEXPWM2_PWMB00","GPIO1_IO15","ARM_CM7_TRACE03","-" }, // pad GPIO_AD_B0_15 [GPIO1-15]
+        {  "SEMC_READY",   "FLEXSPI_A_DATA03","FLEXCAN2_TX","SAI1_MCLK","FLEXIO1_FLEXIO15","GPIO1_IO16","ENET_1588_EVENT2_OUT","KPP_COL04" }, // pad GPIO_AD_B1_00 [GPIO1-16]
+        {  "SEMC_CSX00",   "FLEXSPI_A_SCLK","FLEXCAN2_RX","SAI1_TX_BCLK","FLEXIO1_FLEXIO14","GPIO1_IO17","ENET_1588_EVENT2_IN","KPP_ROW04" }, // pad GPIO_AD_B1_01 [GPIO1-17]
+        {  "SEMC_CSX01",   "FLEXSPI_A_DATA00","LPSPI4_SCK","SAI1_TX_SYNC","FLEXIO1_FLEXIO13","GPIO1_IO18","ENET_1588_EVENT3_OUT","KPP_COL05" }, // pad GPIO_AD_B1_02 [GPIO1-18]
+        {  "SEMC_CSX02",   "FLEXSPI_A_DATA02","LPSPI4_PCS0","SAI1_TX_DATA00","FLEXIO1_FLEXIO12","GPIO1_IO19","ENET_1588_EVENT3_IN","KPP_ROW05" }, // pad GPIO_AD_B1_03 [GPIO1-19]
+        {  "SEMC_CSX03",   "FLEXSPI_A_DATA01","LPSPI4_SDO","SAI1_RX_SYNC","FLEXIO1_FLEXIO11","GPIO1_IO20","LPSPI1_PCS1","KPP_COL06" }, // pad GPIO_AD_B1_04 [GPIO1-20]
+        {  "USDHC1_WP",    "FLEXSPI_A_SS0_B","LPSPI4_SDI","SAI1_RX_DATA00","FLEXIO1_FLEXIO10","GPIO1_IO21","LPSPI1_PCS2","KPP_ROW06" }, // pad GPIO_AD_B1_05 [GPIO1-21]
+        {  "USDHC1_RESET_B","FLEXPWM1_PWMA00","LPUART2_CTS_B","SAI1_RX_BCLK","FLEXIO1_FLEXIO09","GPIO1_IO22","LPSPI1_PCS3","KPP_COL07" }, // pad GPIO_AD_B1_06 [GPIO1-22]
+        {  "USDHC1_VSELECT","FLEXPWM1_PWMB00","LPUART2_RTS_B","SAI1_TX_DATA01","FLEXIO1_FLEXIO08","GPIO1_IO23","LPSPI3_PCS3","KPP_ROW07" }, // pad GPIO_AD_B1_07 [GPIO1-23]
+        {  "LPI2C2_SCL",   "FLEXPWM1_PWMA01","LPUART2_TX","SAI1_TX_DATA02","FLEXIO1_FLEXIO07","GPIO1_IO24","LPSPI3_PCS2","XBAR1_INOUT12" }, // pad GPIO_AD_B1_08 [GPIO1-24]
+        {  "LPI2C2_SDA",   "FLEXPWM1_PWMB01","LPUART2_RX","SAI1_TX_DATA03","FLEXIO1_FLEXIO06","GPIO1_IO25","LPSPI3_PCS1","XBAR1_INOUT13" }, // pad GPIO_AD_B1_09 [GPIO1-25]
+        {  "USB_OTG1_PWR", "FLEXPWM1_PWMA02","LPUART4_TX","USDHC1_CD_B","FLEXIO1_FLEXIO05","GPIO1_IO26","GPT2_CAPTURE1","-"}, // pad GPIO_AD_B1_10 [GPIO1-26]
+        {  "USB_OTG1_ID",  "FLEXPWM1_PWMB02","LPUART4_RX","USDHC1_WP","FLEXIO1_FLEXIO04","GPIO1_IO27","GPT2_COMPARE1","-"  }, // pad GPIO_AD_B1_11 [GPIO1-27]
+        {  "USB_OTG1_OC",  "ACMP1_OUT","LPSPI3_SCK","USDHC2_CD_B","FLEXIO1_FLEXIO03","GPIO1_IO28","FLEXPWM1_PWMA03","-"    }, // pad GPIO_AD_B1_12 [GPIO1-28]
+        {  "LPI2C1_HREQ",  "ACMP2_OUT","LPSPI3_PCS0","USDHC2_WP","FLEXIO1_FLEXIO02","GPIO1_IO29","FLEXPWM1_PWMB03","-"     }, // pad GPIO_AD_B1_13 [GPIO1-29]
+        {  "LPI2C1_SCL",   "ACMP3_OUT","LPSPI3_SDO","ENET_1588_EVENT0_OUT","FLEXIO1_FLEXIO01","GPIO1_IO30","-","-"         }, // pad GPIO_AD_B1_14 [GPIO1-30]
+        {  "LPI2C1_SDA",   "ACMP4_OUT","LPSPI3_SDI","ENET_1588_EVENT0_IN","FLEXIO1_FLEXIO00","GPIO1_IO31","-","-"         }, // pad GPIO_AD_B1_14 [GPIO1-30]
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
@@ -514,25 +519,25 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
+        {  "USDHC1_DATA2", "QTIMER1_TIMER0","SAI1_MCLK","SAI2_MCLK","LPI2C3_SCL","GPIO3_IO13","FLEXSPI_A_SS1_B","XBAR1_INOUT14"}, // pad GPIO_SD_B0_00 [GPIO3-13]
+        {  "USDHC1_DATA3", "QTIMER1_TIMER1","REF_24M_OUT","SAI2_RX_SYNC","LPI2C3_SDA","GPIO3_IO14","FLEXSPI_B_SS1_B","XBAR1_INOUT15"}, // pad GPIO_SD_B0_01 [GPIO3-14]
+        {  "USDHC1_CMD",   "QTIMER1_TIMER2","LPUART7_CTS_B","SAI2_RX_BCLK","LPSPI1_SCK","GPIO3_IO15","ENET_MDIO","XBAR1_INOUT16"}, // pad GPIO_SD_B0_02 [GPIO3-15]
+        {  "USDHC1_CLK",   "QTIMER1_TIMER3","LPUART7_RTS_B","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B0_03 [GPIO3-16]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B0_04 [GPIO3-17]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B0_05 [GPIO3-18]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B0_06 [GPIO3-19]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_00 [GPIO3-20]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_01 [GPIO3-21]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_02 [GPIO3-22]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_03 [GPIO3-23]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_04 [GPIO3-24]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_05 [GPIO3-25]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_06 [GPIO3-26]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_07 [GPIO3-27]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_08 [GPIO3-28]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_09 [GPIO3-29]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_10 [GPIO3-30]
+        {  "XX", "XX","XX","XX","XX","XX","XX","XX" }, // pad GPIO_SD_B1_11 [GPIO3-31]
     },
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7

@@ -280,7 +280,7 @@ static int iPrevBit = -1;
 #if !defined _EXTERNAL_PORT_COUNT                                        // {81} for compatibility
     #define _EXTERNAL_PORT_COUNT   0
 #endif
-#if defined _KINETIS
+#if defined _KINETIS || defined _iMX
     #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define _PORTS_AVAILABLE PORTS_AVAILABLE_8_BIT                   // 8 bit ports
     #else
@@ -1430,13 +1430,16 @@ static void fnDisplayPorts(HDC hdc)
             }
             ulBit >>= 1;
         }
-#if defined _KINETIS && (!defined KINETIS_KE || defined KINETIS_KE15)
+#if defined _KINETIS || defined _iMX && (!defined KINETIS_KE || defined KINETIS_KE15)
         if (i == PORTS_AVAILABLE) {                                      // handle dedicated ADC inputs
             int b;
             cPorts[0] = 'A';
             cPorts[1] = 'D';
             cPorts[2] = 'C';
             cPorts[3] = ' ';
+    #if defined _iMX
+            cPorts[4] = ' ';
+    #endif
             cPorts[5] = ' ';
             for (b = 9; b < (9 + 32); b++) {
                 if (cPorts[b] != '-') {

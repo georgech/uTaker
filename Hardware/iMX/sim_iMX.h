@@ -150,6 +150,7 @@ typedef struct st_iMX_IOMUXC_SW
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_06;

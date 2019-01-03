@@ -1282,7 +1282,6 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\NXP\LTC_TEST\ltc_aes.c" />
     <ClCompile Include="..\..\..\stack\ftp_client.c" />
     <ClCompile Include="..\..\..\stack\igmp.c" />
     <ClCompile Include="..\..\..\stack\mqtt.c" />
