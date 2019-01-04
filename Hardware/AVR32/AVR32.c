@@ -1986,12 +1986,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 //
 static __interrupt void _USART0_Interrupt(void)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulStatus;
 #endif
     while (IRR_UART0 & IR_USART0) {                                      // while interrupts present from UART0
         iInterruptLevel = 1;
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         ulStatus = US_CSR_0;                                             // read and reset the input change states
     #ifdef _WINDOWS
         US_CSR_0 &= ~CTSIC;
@@ -2048,7 +2048,7 @@ static __interrupt void _USART0_Interrupt(void)
         if ((US_IMR_0 & TXRDY) && (US_CSR_0 & TXRDY)) {
             fnSciTxByte(0);                                              // transmit data empty interrupt - write next byte
         }
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         if ((US_IMR_0 & CTSIC) && (ulStatus & CTSIC)) {                  // input change active and CTS changed
             fnRTS_change(0, ((ulStatus & CTS_HIGH) == 0));               // control transmission according to state
         }
@@ -2080,12 +2080,12 @@ static __interrupt void _USART0_Interrupt(void)
 //
 static __interrupt void _USART1_Interrupt(void)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulStatus;
 #endif
     while (IRR_UART1 & IR_USART1) {                                      // while interrupts present from UART1
         iInterruptLevel = 1;
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         ulStatus = US_CSR_1;                                             // read and reset the input change states
     #ifdef _WINDOWS
         US_CSR_1 &= ~CTSIC;
@@ -2142,7 +2142,7 @@ static __interrupt void _USART1_Interrupt(void)
         if ((US_IMR_1 & TXRDY) && (US_CSR_1 & TXRDY)) {
             fnSciTxByte(1);                                              // transmit data empty interrupt - write next byte
         }
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         if ((US_IMR_1 & CTSIC) && (ulStatus & CTSIC)) {                  // input change active and CTS changed
             fnRTS_change(1, ((ulStatus & CTS_HIGH) == 0));               // control transmission according to state
         }
@@ -2174,12 +2174,12 @@ static __interrupt void _USART1_Interrupt(void)
 //
 static __interrupt void _USART2_Interrupt(void)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulStatus;
 #endif
     while (IRR_UART2 & IR_USART2) {                                      // while interrupts present from UART2
         iInterruptLevel = 1;
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         ulStatus = US_CSR_2;                                             // read and reset the input change states
     #ifdef _WINDOWS
         US_CSR_2 &= ~CTSIC;
@@ -2236,7 +2236,7 @@ static __interrupt void _USART2_Interrupt(void)
         if ((US_IMR_2 & TXRDY) && (US_CSR_2 & TXRDY)) {
             fnSciTxByte(2);                                              // transmit data empty interrupt - write next byte
         }
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         if ((US_IMR_2 & CTSIC) && (ulStatus & CTSIC)) {                  // input change active and CTS changed
             fnRTS_change(2, ((ulStatus & CTS_HIGH) == 0));               // control transmission according to state
         }
@@ -2268,12 +2268,12 @@ static __interrupt void _USART2_Interrupt(void)
 //
 static __interrupt void _USART3_Interrupt(void)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulStatus;
 #endif
     while (IRR_UART3 & IR_USART3) {                                      // while interrupts present from UART3
         iInterruptLevel = 1;
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         ulStatus = US_CSR_3;                                             // read and reset the input change states
     #ifdef _WINDOWS
         US_CSR_3 &= ~CTSIC;
@@ -2330,7 +2330,7 @@ static __interrupt void _USART3_Interrupt(void)
         if ((US_IMR_3 & TXRDY) && (US_CSR_3 & TXRDY)) {
             fnSciTxByte(3);                                              // transmit data empty interrupt - write next byte
         }
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         if ((US_IMR_3 & CTSIC) && (ulStatus & CTSIC)) {                  // input change active and CTS changed
             fnRTS_change(3, ((ulStatus & CTS_HIGH) == 0));               // control transmission according to state
         }
@@ -2363,14 +2363,14 @@ static __interrupt void _USART3_Interrupt(void)
 //
 static __interrupt void _USART4_Interrupt(void)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulStatus;
 #endif
     while (IRR_UART4 & IR_USART4) {                                      // while interrupts present from UART4
         iInterruptLevel = 1;
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         ulStatus = US_CSR_4;                                             // read and reset the input change states
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
         US_CSR_4 &= ~CTSIC;
     #endif
 #endif
@@ -2425,12 +2425,12 @@ static __interrupt void _USART4_Interrupt(void)
         if ((US_IMR_4 & TXRDY) && (US_CSR_4 & TXRDY)) {
             fnSciTxByte(4);                                              // transmit data empty interrupt - write next byte
         }
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
         if ((US_IMR_4 & CTSIC) && (ulStatus & CTSIC)) {                  // input change active and CTS changed
             fnRTS_change(4, ((ulStatus & CTS_HIGH) == 0));               // control transmission according to state
         }
 #endif
-#ifdef MODBUS_RTU
+#if defined MODBUS_RTU
         if (((US_IMR_4 & RX_TIMEOUT) & US_CSR_4)) {                      // idle timeout
             int iNext = fnSciRxIdle(4);
             if (iNext > 0) {                                             // new value requested
@@ -3025,7 +3025,7 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     return 1;                                                            // not sent because we're busy
 }
 
-    #ifdef SUPPORT_HW_FLOW
+    #if defined SUPPORT_HW_FLOW
 
 static void fnSetRTS(QUEUE_HANDLE channel, int iState)
 {

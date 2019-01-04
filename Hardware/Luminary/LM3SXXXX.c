@@ -1322,7 +1322,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     default:
     #if NUMBER_EXTERNAL_SERIAL > 0                                       // {29}
         fnConfigExtSCI((QUEUE_HANDLE)(Channel - NUMBER_SERIAL), pars);   // pass on to external UART driver
-        #ifdef SUPPORT_HW_FLOW
+        #if defined SUPPORT_HW_FLOW
         if ((pars->Config & RTS_CTS) != 0) {                             // HW flow control defined so configure RTS/CTS pins
             fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
         }
@@ -1333,7 +1333,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     }
     uart = fnSelectChannel(Channel);
     uart->UARTCTL = 0;                                                   // {21} disable before configuring
-    #ifdef SUPPORT_HW_FLOW                                               // {6}
+    #if defined SUPPORT_HW_FLOW                                          // {6}
     if (pars->Config & RTS_CTS) {                                        // HW flow control defined so configure RTS/CTS pins
         fnControlLine(Channel, (CONFIG_RTS_PIN | CONFIG_CTS_PIN), 0);
     }
@@ -1780,7 +1780,7 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     return 0;                                                            // OK, we were not busy
 }
 
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
 static void fnSetRTS(QUEUE_HANDLE channel, int iState)                   // {6}
 {
     switch (channel) {

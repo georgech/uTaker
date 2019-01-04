@@ -694,7 +694,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #if defined KINETIS_KL
     UART0_C4 = UART_C4_OSR_16;
     #endif
-    #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined UART_WITHOUT_MODEM_CONTROL
     UART0_SFIFO  = 0xc0;
     UART0_RWFIFO = 0x01;
     UART0_WP7816T0 = 0x0a;
@@ -711,12 +711,12 @@ static void fnSetDevice(unsigned long *port_inits)
     #if defined KINETIS_KL
     UART1_C4 = UART_C4_OSR_16;
     #endif
-        #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined UART_WITHOUT_MODEM_CONTROL
     UART1_SFIFO  = 0xc0;
     UART1_RWFIFO = 0x01;
     UART1_WP7816T0 = 0x0a;
     UART1_WF7816 = 0x01;
-        #endif
+    #endif
 #endif
 #if UARTS_AVAILABLE > 2 || (LPUARTS_AVAILABLE == 2 && UARTS_AVAILABLE == 1)
     UART2_BDL    = 0x04;   
@@ -724,7 +724,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #if defined KINETIS_KL
     UART2_C4 = UART_C4_OSR_16;
     #endif
-     #if !defined KINETIS_KL && !defined KINETIS_KE
+    #if !defined UART_WITHOUT_MODEM_CONTROL
     UART2_SFIFO  = 0xc0;
     UART2_RWFIFO = 0x01;
     UART2_WP7816T0 = 0x0a;
@@ -738,18 +738,22 @@ static void fnSetDevice(unsigned long *port_inits)
 #if UARTS_AVAILABLE > 3
     UART3_BDL    = 0x04;   
     UART3_S1     = 0xc0;
+    #if !defined UART_WITHOUT_MODEM_CONTROL
     UART3_SFIFO  = 0xc0;
     UART3_RWFIFO = 0x01;
     UART3_WP7816T0 = 0x0a;
     UART3_WF7816 = 0x01;
+    #endif
 #endif
 #if UARTS_AVAILABLE > 4
     UART4_BDL    = 0x04;   
     UART4_S1     = 0xc0;
+    #if !defined UART_WITHOUT_MODEM_CONTROL
     UART4_SFIFO  = 0xc0;
     UART4_RWFIFO = 0x01;
     UART4_WP7816T0 = 0x0a;
     UART4_WF7816 = 0x01;
+    #endif
 #endif
 #if UARTS_AVAILABLE > 5
     UART5_BDL    = 0x04;   

@@ -11,7 +11,7 @@
     File:      kinetis_UART.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.03.2012 Add K70 UART2 alternative port mapping                    {3}
     05.04.2012 Add UART DMA support for Tx                               {6}
@@ -50,6 +50,7 @@
     12.06.2018 Protect bit setting and clearing from other UART interrupts (with higher priority) using PROTECTED_SET_VARIABLE() and PROTECTED_SET_VARIABLE()
     22.07.2018 Added fnPrepareRxDMA_mode() to handle generic configuration of rx DMA mode {214}
     31.07.2018 Corrected shared DMA channel numbering between Rx and Tx  {215}
+    04.01.2019 Add local defines MANUAL_MODEM_CONTROL, MANUAL_MODEM_CONTROL_LPUART and MANUAL_MODEM_CONTROL_UART to better control modem mode operation {216}
 
 */
 
@@ -143,6 +144,16 @@
 #define UART_RTS_PIN_ASSERT      5
 #define LPUART_RTS_PIN_NEGATE    6
 #define UART_RTS_PIN_NEGATE      6
+
+#if ((LPUARTS_AVAILABLE > 0) && defined LPUART_WITHOUT_MODEM_CONTROL) || ((UARTS_AVAILABLE > 0) && defined UART_WITHOUT_MODEM_CONTROL) // {216}
+    #define MANUAL_MODEM_CONTROL
+#endif
+#if (LPUARTS_AVAILABLE > 0) && defined LPUART_WITHOUT_MODEM_CONTROL
+    #define MANUAL_MODEM_CONTROL_LPUART
+#endif
+#if (UARTS_AVAILABLE > 0) && defined UART_WITHOUT_MODEM_CONTROL
+    #define MANUAL_MODEM_CONTROL_UART
+#endif
 
 /* =================================================================== */
 /*                             constants                               */
@@ -332,7 +343,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
 #if defined SUPPORT_HW_FLOW && defined UART_WITHOUT_MODEM_CONTROL
     static unsigned char ucRTS_neg[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
-#if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+#if defined MANUAL_MODEM_CONTROL && defined UART_FRAME_END_COMPLETE
     static unsigned char ucReportEndOfFrame[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
 #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION        // {208}
@@ -449,7 +460,7 @@ static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int
     if (((ulState & LPUART_STAT_TDRE) & ptrLPUART->LPUART_CTRL) != 0) {  // if transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte((QUEUE_LIMIT)LPUART_Reference);                      // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE)
+        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || (defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE)
     if (((ulState & LPUART_STAT_TC) & ptrLPUART->LPUART_CTRL) != 0) {    // if transmit complete interrupt after final byte transmission is enabled and flag set
         ptrLPUART->LPUART_CTRL &= ~(LPUART_CTRL_TCIE);                   // disable the interrupt
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
@@ -465,7 +476,7 @@ static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int
         if (fnUserTxEndIrq[LPUART_Reference] != 0) {                    // if a transmission complete handler is installed it is called
             fnUserTxEndIrq[LPUART_Reference]((QUEUE_LIMIT)LPUART_Reference);
         }
-            #elif (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+            #elif defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
         if (ucReportEndOfFrame[LPUART_Reference] != 0) {                // if the end of frame call-back is enabled
             fnUARTFrameTermination(LPUART_Reference);
         }
@@ -676,7 +687,7 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
         #if defined SERIAL_SUPPORT_DMA
     }
         #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || ((defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE) // {96}
+        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || (defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE) // {96}
     if (((ptrUART->UART_C2 & UART_C2_TCIE) != 0) && ((ptrUART->UART_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         ptrUART->UART_C2 &= ~(UART_C2_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
@@ -692,7 +703,7 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
         if (fnUserTxEndIrq[UART_Reference] != 0) {                       // if a transmission complete handler is installed it is called
             fnUserTxEndIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference);
         }
-            #elif (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+            #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
         if (ucReportEndOfFrame[UART_Reference] != 0) {                   // if the end of frame call-back is enabled
             fnUARTFrameTermination(UART_Reference);                      // {200}
         }
@@ -986,7 +997,7 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
             #else
     uart_reg->UART_C2 |= (UART_C2_TCIE);                                 // enable UART transmit complete interrupt to signal when the complete last character has been sent
             #endif
-        #elif (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+        #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[Channel] != 0) {                              // if an end of frame interrupt is required
         uart_reg->UART_C2 |= (UART_C2_TCIE);                             // {200} enable UART transmit complete interrupt to signal when the complete last character has been sent
     }
@@ -1017,7 +1028,7 @@ static __interrupt void _lpuart_tx_dma_Interrupt(KINETIS_LPUART_CONTROL *ptrLPUA
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iLPUART_reference)); // block stop mode until the final interrupt arrives
         ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable the LPUART transmit complete flag interrupt to detect transmission completion
     }
-        #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+        #elif defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[iLPUART_reference] != 0) {                    // if an end of frame interrupt is required
         ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
     }
@@ -1042,7 +1053,7 @@ static __interrupt void _uart_tx_dma_Interrupt(KINETIS_UART_CONTROL *ptrUART, in
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iUART_reference)); // block stop mode until the final interrupt arrives
         ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable the UART transmit complete flag interrupt to detect transmission completion
     }
-        #elif defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+        #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[iUART_reference] != 0) {                      // if an end of frame interrupt is required
         ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable UART transmit complete interrupt to signal when the complete last character has been sent
     }
@@ -1658,7 +1669,7 @@ static void _cts_change_3(void)
 {
     GPIO_REGS *ptrGPIO = (GPIO_REGS *)GPIOA_ADD;
     ptrGPIO += ucCTS_port[3];
-    fnRTS_change(3, (ptrGPIO->PDIR & ulPin[3] == 0));                    // synchronise control with buffer control
+    fnRTS_change(3, ((ptrGPIO->PDIR & ulPin[3]) == 0));                  // synchronise control with buffer control
 }
     #endif
 
@@ -1709,7 +1720,7 @@ static int fnConfigCTS_port_interrupt(QUEUE_HANDLE channel, unsigned short usMod
 //
 extern QUEUE_TRANSFER fnControlLineInterrupt(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
 {
-    #if !defined LPUART_WITHOUT_MODEM_CONTROL && !defined UART_WITHOUT_MODEM_CONTROL
+    #if !((LPUARTS_AVAILABLE > 0) && defined LPUART_WITHOUT_MODEM_CONTROL) || !((UARTS_AVAILABLE > 0) && defined UART_WITHOUT_MODEM_CONTROL)
     KINETIS_UART_CONTROL *uart_reg = fnSelectChannel(channel);
     #endif
     #if UARTS_AVAILABLE > 0 && LPUARTS_AVAILABLE > 0
@@ -1984,7 +1995,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_IDLECFG_4 | LPUART_CTRL_ILIE | LPUART_CTRL_ILT); // ensure that the idle line interrupt is disabled
     }
     #endif
-    #if defined KINETIS_KL && defined UART_FRAME_END_COMPLETE
+    #if defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
     if ((pars->Config & INFORM_ON_FRAME_TRANSMISSION) != 0) {
         ucReportEndOfFrame[Channel] = 1;                                 // we want to work with a frame completion interrupt
     }
@@ -2051,7 +2062,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         uart_reg->UART_C2 &= ~UART_C2_ILIE;                              // ensure that the idle line interrupt is disabled
     }
     #endif
-    #if (defined KINETIS_KL || defined KINETIS_KE) && defined UART_FRAME_END_COMPLETE
+    #if defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
     if ((pars->Config & INFORM_ON_FRAME_TRANSMISSION) != 0) {            // {200}
         ucReportEndOfFrame[Channel] = 1;                                 // we want to work with a frame completion interrupt
     }

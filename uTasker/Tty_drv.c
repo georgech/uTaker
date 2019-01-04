@@ -133,7 +133,7 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         if (Counter != 0) {                                              // modify driver state
 #if defined SUPPORT_HW_FLOW                                              // {6}
             if ((Counter & MODIFY_CONTROL) != 0) {                       // control signals
-                fnControlLine(channel, (unsigned short)Counter, ptTTYQue->opn_mode);// pass on to hardware
+                fnControlLine(channel, (unsigned short)Counter, ptTTYQue->opn_mode); // pass on to hardware
             }
             else if ((MODIFY_INTERRUPT & Counter) != 0) {
                 rtn_val = fnControlLineInterrupt(channel, (unsigned short)Counter, ptTTYQue->opn_mode); // pass on to hardware

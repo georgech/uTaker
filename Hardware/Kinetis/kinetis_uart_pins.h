@@ -11,7 +11,7 @@
     File:      kinetis_uart_pins.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 
@@ -128,7 +128,6 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             _CONFIG_PERIPHERAL(C, 3, (PC_3_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC3 (alt. function 7)
             #endif
         #endif
-
         #if defined irq_LPUART0_RX_ID
             iInterruptID = irq_LPUART0_RX_ID;                            // LPUART0 receiver has unique interrupt vector
         #else
@@ -173,7 +172,6 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             _CONFIG_PERIPHERAL(C, 9, (PC_9_LPUART0_RTS));                // LPUART0_RTS on PC9 (alt. function 6)
             #endif
             break;
-        }
         #endif
         }
         break;

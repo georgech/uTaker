@@ -1099,7 +1099,7 @@ extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned 
 #define MS_DSR_ON  0x0020
 #define MS_RING_ON 0x0040
 #define MS_RLSD_ON 0x0080                                                // carrier detect
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     unsigned long ulChange = (ulNewState ^ ulOldState);
     switch (iPort) {
     #ifdef CTS_0_PIN

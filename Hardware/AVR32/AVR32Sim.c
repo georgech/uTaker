@@ -506,14 +506,14 @@ static void fnModemChange(unsigned long ulInput, int iState, int iSetPort)
 
 extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned long ulOldState)
 {
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
 // Note that the modem status bits are according to the MS specifications as passed by GetCommModemStatus().
 // To avoid including MS headers, the bits are defined here - it is not expected that they will ever change...
 #define MS_CTS_ON  0x0010
 #define MS_DSR_ON  0x0020
 #define MS_RING_ON 0x0040
 #define MS_RLSD_ON 0x0080                                                // carrier detect
-    #ifdef SUPPORT_HW_FLOW
+    #if defined SUPPORT_HW_FLOW
     unsigned long ulChange = (ulNewState ^ ulOldState);
     switch (iPort) {
     case 0:                                                              // USART 0
@@ -711,7 +711,7 @@ extern void fnSimPorts(void)
     fnSimPortsAVR(3);
 #endif
 
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
     if (US_CR_0 & (AVR32_RTSEN | AVR32_RTSDIS)) {                        // handle RTS changes on USARTs
         if (US_CR_0 & AVR32_RTSEN) {
             fnConfigSimSCI(0, ASSERT_RTS_COM_0, 0);                      // assert control line

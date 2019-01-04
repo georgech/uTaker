@@ -228,7 +228,7 @@ static void ext_sci_0_interrupt(void)
             else if (ucInterrupt == SC16IS7XX_IIR_THR_INT) {
                 fnSciTxByte(NUMBER_SERIAL);                              // transmit next byte
             }
-    #ifdef SUPPORT_HW_FLOW
+    #if defined SUPPORT_HW_FLOW
             else if (ucInterrupt == SC16IS7XX_IIR_MODEM_STATUS_CHANGE_INT) { // modem status change
                 unsigned char ucModemChange = fnReadExtSCI_byte(0, (SC16IS7XX_CHANNEL_A | SC16IS7XX_REG_MSR_READ)); // read the state and clear the interrupt
                 if ((ucModemChange & SC16IS7XX_MSR_CTS_CHANGED_STATE) != 0) { // change due to CTS on this channel
@@ -246,7 +246,7 @@ static void ext_sci_0_interrupt(void)
             else if (ucInterrupt == SC16IS7XX_IIR_THR_INT) {
                 fnSciTxByte((NUMBER_SERIAL + 1));                        // transmit next byte
             }
-        #ifdef SUPPORT_HW_FLOW
+        #if defined SUPPORT_HW_FLOW
             else if (ucInterrupt == SC16IS7XX_IIR_MODEM_STATUS_CHANGE_INT) { // modem status change
                 unsigned char ucModemChange = fnReadExtSCI_byte(1, (SC16IS7XX_CHANNEL_B | SC16IS7XX_REG_MSR_READ)); // read the state and clear the interrupt
                 if ((ucModemChange & SC16IS7XX_MSR_CTS_CHANGED_STATE) != 0) { // change due to CTS on this channel
@@ -480,7 +480,7 @@ static void fnExtSCITxOff(QUEUE_HANDLE Channel)
     fnSendExtSCI_byte(Channel, SC16IS7XX_REG_IER, ucIER[Channel]);
 }
 
-#ifdef SUPPORT_HW_FLOW
+#if defined SUPPORT_HW_FLOW
 // Control the state of RTS line
 //
 static void fnSetExtRTS(QUEUE_HANDLE channel, int iState)
