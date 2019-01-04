@@ -16,7 +16,6 @@
 
 */  
 
-extern void fnSimulateSLCD(void);
 
 
 typedef struct st_iMX_IOMUXC_SNVS_GPR
@@ -4361,7 +4360,7 @@ typedef struct stKINETIS_PERIPH
 } KINETIS_PERIPH;
 
 
-
+extern iMX_PERIPH  iMX;
 extern KINETIS_PERIPH kinetis;
 
 #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18

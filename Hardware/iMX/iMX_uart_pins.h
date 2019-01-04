@@ -28,7 +28,9 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
     case FIRST_LPUART_CHANNEL:
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART0 tx pin configuration
-        #if defined KINETIS_KL03
+        #if defined _iMX
+            IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_06 = GPIO_AD_B0_06_LPUART1_TX; // select LPUART1 Tx on GPIO1-06
+        #elif defined KINETIS_KL03
             #if defined LPUART0_ON_A
             _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PA3 (alt. function 4)
             #elif defined LPUART0_ON_B_HIGH
@@ -83,7 +85,9 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         case LPUART_RX_PIN:                                              // LPUART0 rx pin configuration
-        #if defined KINETIS_KL03
+        #if defined _iMX
+            IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_07 = GPIO_AD_B0_07_LPUART1_RX; // select LPUART1 Rx on GPIO1-07
+        #elif defined KINETIS_KL03
             #if defined LPUART0_ON_A
             _CONFIG_PERIPHERAL(A, 4, (PA_4_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PA4 (alt. function 4)
             #elif defined LPUART0_ON_B_HIGH

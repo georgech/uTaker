@@ -144,6 +144,26 @@
 #define MATCH_SUCCESSFUL                 1
 #define DELETED_LFN_MATCH_SUCCESSFUL     2
 
+#define CARD_REMOVAL_DETECTED            0
+#define ERROR_TYPE_NOT_SUPPORTED        -1
+#define ERROR_CARD_NOT_DETECTED         -2
+#define ERROR_GO_IDLE_FAILED            -3
+#define ERROR_NO_VOLTAGE_RANGE_RESPONSE -4
+#define ERROR_CHECK_PATTERN_FAILED      -5
+#define ERROR_CMD55_CMD41_1             -6
+#define ERROR_CMD55_CMD41_2             -7
+#define ERROR_OCR_FAILED                -8
+#define ERROR_INFO_FAILED               -9
+#define ERROR_SET_ADDRESS_FAILED        -10
+#define ERROR_GET_SECTORS_FAILED        -11
+#define ERROR_SELECT_CARD_FAILED        -12
+#define ERROR_SET_INTERFACE_PREPARE_FAILED -13
+#define ERROR_SET_INTERFACE_FAILED      -14
+#define ERROR_SET_BLOCK_LENGTH_FAILED   -15
+#define ERROR_MOUNTING_2                -16
+#define ERROR_DISK_REMOVAL_CHECK_FAILED -17
+#define ERROR_READ_SECTOR_FAILED        -18
+
 
 // File search results
 //
@@ -315,7 +335,7 @@ typedef struct stFAT12_FAT
         #endif
     #endif
     static int  ut_read_disk(UTDISK *ptr_utDisk);
-    static void fnInitialisationError(int iDisk, int iNotSupported);
+    static void fnInitialisationError(int iDisk, int iError);
     static void fnCardNotFormatted(int iDisk);
     #if !defined SDCARD_ACCESS_WITHOUT_UTFAT
     static void fnResetDirectories(unsigned char ucDisk);
@@ -2145,7 +2165,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             fnPrepareDetectInterrupt();                                  // prepare interrupt detection of SD card presence
                     #endif
             if (SDCARD_DETECTION() == 0) {                               // if card is not detected immediately abort mounting process
-                fnInitialisationError(DISK_SDCARD, 0);                   // try to remount the card
+                fnInitialisationError(DISK_SDCARD, ERROR_CARD_NOT_DETECTED); // try to remount the card
                 break;
             }
                     #if defined _WINDOWS
@@ -2170,7 +2190,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             fnPrepareDetectInterrupt();                                  // prepare interrupt detection of SD card presence
                     #endif
             if (SDCARD_DETECTION() == 0) {                               // if card is not detected immediately abort mounting process
-                fnInitialisationError(DISK_SDCARD, 0);                   // try to remount the card
+                fnInitialisationError(DISK_SDCARD, ERROR_CARD_NOT_DETECTED); // try to remount the card
                 break;
             }
                     #if defined _WINDOWS
@@ -2203,7 +2223,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 ucResult = 0;                                            // set error since the result is not as expected
             }
             if (R1_IN_IDLE_STATE != ucResult) {                          // no valid card detected so disable power and try again after a delay
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is no present or is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_GO_IDLE_FAILED);// the card is not present or is behaving incorrectly - stop and try again later
                 break;
             }                                                            // SD card must return the idle state to be able to continue
                                                                          // in the idle state the card accepts only commands 0, 1, ACMD41 and 58
@@ -2213,7 +2233,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_NO_VOLTAGE_RANGE_RESPONSE); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             if (ucResult == SDC_CARD_VERSION_2PLUS) {                    // version 2 or higher
@@ -2226,21 +2246,21 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                     fnMemoryDebugMsg("SD-card voltage error\r\n");
                 }
                 else {
-                    fnInitialisationError(DISK_SDCARD, 0);               // no valid response
+                    fnInitialisationError(DISK_SDCARD, ERROR_CHECK_PATTERN_FAILED); // no valid response
                     break;
                 }
             }
             else {                                                       // version 1 or MMC type
                 fnMemoryDebugMsg("SD-card V1 or MMC - not supported!\r\n");
             }
-            fnInitialisationError(DISK_SDCARD, 1);                       // not supported
+            fnInitialisationError(DISK_SDCARD, ERROR_TYPE_NOT_SUPPORTED);// not supported
             break;
         case SD_STATE_APP_CMD55_CMD41:
             if ((iActionResult = fnSendSD_command(ucAPP_CMD_CMD55, &ucResult, 0)) != UTFAT_SUCCESS) {
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_CMD55_CMD41_1); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             if (ucResult > R1_IN_IDLE_STATE) {
@@ -2258,7 +2278,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_CMD55_CMD41_2); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             #if defined SD_CONTROLLER_AVAILABLE
@@ -2278,7 +2298,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_OCR_FAILED);    // the card is behaving incorrectly - stop and try again later
                 break;
             }
             #endif
@@ -2298,7 +2318,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_INFO_FAILED);   // the card is behaving incorrectly - stop and try again later
                 break;
             }
             iMemoryState[DISK_SDCARD] = SD_STATE_SET_ADDRESS;
@@ -2307,7 +2327,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_SET_ADDRESS_FAILED); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             if ((ucData[2] & (CURRENT_CARD_STATUS_MASK | SD_CARD_READY_FOR_DATA)) == (CURRENT_STATE_IDENT | SD_CARD_READY_FOR_DATA)) {
@@ -2321,7 +2341,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_GET_SECTORS_FAILED); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             #if !defined SD_CONTROLLER_AVAILABLE
@@ -2353,7 +2373,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_SELECT_CARD_FAILED); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             iMemoryState[DISK_SDCARD] = SD_SET_INTERFACE_PREPARE;
@@ -2362,7 +2382,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_SET_INTERFACE_PREPARE_FAILED); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             if (ucResult > R1_IN_IDLE_STATE) {
@@ -2379,7 +2399,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                     if (iActionResult == CARD_BUSY_WAIT) {
                         _return;                                         // read is taking time to complete so quit for the moment
                     }
-                    fnInitialisationError(DISK_SDCARD, 0);               // the card is behaving incorrectly - stop and try again later
+                    fnInitialisationError(DISK_SDCARD, ERROR_SET_INTERFACE_FAILED); // the card is behaving incorrectly - stop and try again later
                     break;
                 }
                 iMemoryState[DISK_SDCARD] = SD_SET_BLOCK_LENGTH;
@@ -2399,7 +2419,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
                 if (iActionResult == CARD_BUSY_WAIT) {
                     _return;                                             // read is taking time to complete so quit for the moment
                 }
-                fnInitialisationError(DISK_SDCARD, 0);                   // the card is behaving incorrectly - stop and try again later
+                fnInitialisationError(DISK_SDCARD, ERROR_SET_BLOCK_LENGTH_FAILED); // the card is behaving incorrectly - stop and try again later
                 break;
             }
             iMemoryState[DISK_SDCARD] = DISK_MOUNTING_1;
@@ -2431,7 +2451,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             else {
                 iMemoryState[iDiskNumber] = DISK_MOUNTING_3;
                 if (iActionResult != 0) {
-                    fnInitialisationError(iDiskNumber, 0);               // the card is behaving incorrectly - stop and try again later
+                    fnInitialisationError(iDiskNumber, ERROR_MOUNTING_2);// the card is behaving incorrectly - stop and try again later
                     break;
                 }
                 else {
@@ -2639,7 +2659,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         case STATE_CHECKING_DISK_REMOVAL:
             #if defined SDCARD_DETECT_INPUT_POLL
             if ((SDCARD_DETECTION()) == 0) {                             // if card has been removed start remounting process
-                fnInitialisationError(iDiskNumber, 0);                   // try to remount the card
+                fnInitialisationError(iDiskNumber, ERROR_DISK_REMOVAL_CHECK_FAILED); // try to remount the card
             }
             else {
                 iMemoryState[iDiskNumber] = DISK_STATE_READY;
@@ -2648,7 +2668,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
             }
             #else
             if (UTFAT_SUCCESS != _utReadDiskSector[iDiskNumber](&utDisks[iDiskNumber], utDisks[iDiskNumber].ulPresentSector, utDisks[iDiskNumber].ptrSectorData)) { // {53} read presently selected buffer to verify that the card is still responding
-                fnInitialisationError(iDiskNumber, 0);                   // try to remount the card
+                fnInitialisationError(iDiskNumber, ERROR_READ_SECTOR_FAILED); // try to remount the card
             }
             else {                                                       // card polling was successful
                 iMemoryState[iDiskNumber] = DISK_STATE_READY;
@@ -3128,7 +3148,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
         #endif
                 }
                 else {                                                   // card has been removed so stop operation
-                    fnInitialisationError(DISK_SDCARD, 0);
+                    fnInitialisationError(DISK_SDCARD, CARD_REMOVAL_DETECTED);
                 }
         #if defined SDCARD_SINGLE_EDGE_INTERRUPT
                 fnPrepareDetectInterrupt();                              // devices that support interrupt one just one edge need to change the interrupt polarity now
@@ -3198,7 +3218,7 @@ static void fnCardNotFormatted(int iDisk)
 
 // Interrupt initisalisation sequence on error, remove power and start next try after a delay
 //
-static void fnInitialisationError(int iDisk, int iNotSupported)
+static void fnInitialisationError(int iDisk, int iError)
 {
     #if defined SDCARD_SUPPORT
     SET_SD_CS_HIGH();
@@ -3207,14 +3227,20 @@ static void fnInitialisationError(int iDisk, int iNotSupported)
         #if !defined SDCARD_DETECT_INPUT_INTERRUPT
     uTaskerMonoTimer(OWN_TASK, T_NEXT_CHECK, E_POLL_SD_CARD);            // try again later
         #endif
-    if (iNotSupported != 0) {
+    if (iError == ERROR_TYPE_NOT_SUPPORTED) {
         utDisks[iDisk].usDiskFlags = DISK_TYPE_NOT_SUPPORTED;
         #if defined _WINDOWS
         SD_card_state(0, (SDCARD_FORMATTED_32 | SDCARD_FORMATTED_16));
         #endif
     }
     else {
-        fnMemoryDebugMsg("SD-card not responding\r\n");
+        fnMemoryDebugMsg("SD-card not responding: ");
+        if (iError == CARD_REMOVAL_DETECTED) {
+            fnMemoryDebugMsg("removed\r\n");
+        }
+        else {
+            fnMemoryDebugDec(iError, (DISPLAY_NEGATIVE | WITH_CR_LF));
+        }
         utDisks[iDisk].usDiskFlags = DISK_NOT_PRESENT;
         iMemoryOperation[iDisk] = _IDLE_MEMORY;
         #if defined _WINDOWS
