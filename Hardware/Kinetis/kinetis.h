@@ -11,7 +11,7 @@
     File:      kinetis.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.03.2012 Correct PORT5_BLOCK address (K61/K70)                     {1}
     03.03.2012 Add UART2 alternative port mapping on K70                 {2}
@@ -131,6 +131,7 @@
     09.05.2018 Add cortex debug and trace registers                      {110}
     09.08.2018 Add TIMER_FREEZE and TIMER_CONTINUE flags                 {111}
     13.10.2018 Add comparator interface                                  {112}
+    04.01.2019 Add return value to fnConfigDMA_buffer()                  {113}
 */
 
 #if defined _WINDOWS
@@ -5002,38 +5003,38 @@ typedef struct stVECTOR_TABLE
   #define DMA_INT_INT31     0x80000000                                   // DMA interrupts request on channel 31
 
 #define DMA_ERR             *(volatile unsigned long *)(eDMA_BLOCK + 0x02c) // DMA Error Register (write '1' to clear)
-  #define DMA_ERR_ERR0      0x00000001                                   // DMA channel 0 encoutered an error
-  #define DMA_ERR_ERR1      0x00000002                                   // DMA channel 1 encoutered an error
-  #define DMA_ERR_ERR2      0x00000004                                   // DMA channel 2 encoutered an error
-  #define DMA_ERR_ERR3      0x00000008                                   // DMA channel 3 encoutered an error
-  #define DMA_ERR_ERR4      0x00000010                                   // DMA channel 4 encoutered an error
-  #define DMA_ERR_ERR5      0x00000020                                   // DMA channel 5 encoutered an error
-  #define DMA_ERR_ERR6      0x00000040                                   // DMA channel 6 encoutered an error
-  #define DMA_ERR_ERR7      0x00000080                                   // DMA channel 7 encoutered an error
-  #define DMA_ERR_ERR8      0x00000100                                   // DMA channel 8 encoutered an error
-  #define DMA_ERR_ERR9      0x00000200                                   // DMA channel 9 encoutered an error
-  #define DMA_ERR_ERR10     0x00000400                                   // DMA channel 10 encoutered an error
-  #define DMA_ERR_ERR11     0x00000800                                   // DMA channel 11 encoutered an error
-  #define DMA_ERR_ERR12     0x00001000                                   // DMA channel 12 encoutered an error
-  #define DMA_ERR_ERR13     0x00002000                                   // DMA channel 13 encoutered an error
-  #define DMA_ERR_ERR14     0x00004000                                   // DMA channel 14 encoutered an error
-  #define DMA_ERR_ERR15     0x00008000                                   // DMA channel 15 encoutered an error
-  #define DMA_ERR_ERR16     0x00010000                                   // DMA channel 0 encoutered an error
-  #define DMA_ERR_ERR17     0x00020000                                   // DMA channel 1 encoutered an error
-  #define DMA_ERR_ERR18     0x00040000                                   // DMA channel 2 encoutered an error
-  #define DMA_ERR_ERR19     0x00080000                                   // DMA channel 3 encoutered an error
-  #define DMA_ERR_ERR20     0x00100000                                   // DMA channel 4 encoutered an error
-  #define DMA_ERR_ERR21     0x00200000                                   // DMA channel 5 encoutered an error
-  #define DMA_ERR_ERR22     0x00400000                                   // DMA channel 6 encoutered an error
-  #define DMA_ERR_ERR23     0x00800000                                   // DMA channel 7 encoutered an error
-  #define DMA_ERR_ERR24     0x01000000                                   // DMA channel 8 encoutered an error
-  #define DMA_ERR_ERR25     0x02000000                                   // DMA channel 9 encoutered an error
-  #define DMA_ERR_ERR26     0x04000000                                   // DMA channel 10 encoutered an error
-  #define DMA_ERR_ERR27     0x08000000                                   // DMA channel 11 encoutered an error
-  #define DMA_ERR_ERR28     0x10000000                                   // DMA channel 12 encoutered an error
-  #define DMA_ERR_ERR29     0x20000000                                   // DMA channel 13 encoutered an error
-  #define DMA_ERR_ERR30     0x40000000                                   // DMA channel 14 encoutered an error
-  #define DMA_ERR_ERR31     0x80000000                                   // DMA channel 15 encoutered an error
+  #define DMA_ERR_ERR0      0x00000001                                   // DMA channel 0 encountered an error
+  #define DMA_ERR_ERR1      0x00000002                                   // DMA channel 1 encountered an error
+  #define DMA_ERR_ERR2      0x00000004                                   // DMA channel 2 encountered an error
+  #define DMA_ERR_ERR3      0x00000008                                   // DMA channel 3 encountered an error
+  #define DMA_ERR_ERR4      0x00000010                                   // DMA channel 4 encountered an error
+  #define DMA_ERR_ERR5      0x00000020                                   // DMA channel 5 encountered an error
+  #define DMA_ERR_ERR6      0x00000040                                   // DMA channel 6 encountered an error
+  #define DMA_ERR_ERR7      0x00000080                                   // DMA channel 7 encountered an error
+  #define DMA_ERR_ERR8      0x00000100                                   // DMA channel 8 encountered an error
+  #define DMA_ERR_ERR9      0x00000200                                   // DMA channel 9 encountered an error
+  #define DMA_ERR_ERR10     0x00000400                                   // DMA channel 10 encountered an error
+  #define DMA_ERR_ERR11     0x00000800                                   // DMA channel 11 encountered an error
+  #define DMA_ERR_ERR12     0x00001000                                   // DMA channel 12 encountered an error
+  #define DMA_ERR_ERR13     0x00002000                                   // DMA channel 13 encountered an error
+  #define DMA_ERR_ERR14     0x00004000                                   // DMA channel 14 encountered an error
+  #define DMA_ERR_ERR15     0x00008000                                   // DMA channel 15 encountered an error
+  #define DMA_ERR_ERR16     0x00010000                                   // DMA channel 16 encountered an error
+  #define DMA_ERR_ERR17     0x00020000                                   // DMA channel 17 encountered an error
+  #define DMA_ERR_ERR18     0x00040000                                   // DMA channel 18 encountered an error
+  #define DMA_ERR_ERR19     0x00080000                                   // DMA channel 19 encountered an error
+  #define DMA_ERR_ERR20     0x00100000                                   // DMA channel 20 encountered an error
+  #define DMA_ERR_ERR21     0x00200000                                   // DMA channel 21 encountered an error
+  #define DMA_ERR_ERR22     0x00400000                                   // DMA channel 22 encountered an error
+  #define DMA_ERR_ERR23     0x00800000                                   // DMA channel 23 encountered an error
+  #define DMA_ERR_ERR24     0x01000000                                   // DMA channel 24 encountered an error
+  #define DMA_ERR_ERR25     0x02000000                                   // DMA channel 25 encountered an error
+  #define DMA_ERR_ERR26     0x04000000                                   // DMA channel 26 encountered an error
+  #define DMA_ERR_ERR27     0x08000000                                   // DMA channel 27 encountered an error
+  #define DMA_ERR_ERR28     0x10000000                                   // DMA channel 28 encountered an error
+  #define DMA_ERR_ERR29     0x20000000                                   // DMA channel 29 encountered an error
+  #define DMA_ERR_ERR30     0x40000000                                   // DMA channel 30 encountered an error
+  #define DMA_ERR_ERR31     0x80000000                                   // DMA channel 31 encountered an error
 
 #define DMA_HRS             *(unsigned long *)(eDMA_BLOCK + 0x034)       // DMA Hardware Request Status Register
 
@@ -5626,8 +5627,8 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_DIRECTION_BUFFER_BUFFER  0x00002000                          // buffer to buffer
 #define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
 
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
-
+extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority); // {113}
+    #define DMA_ERROR_OCCURRED       -1
 
 // INTMUX                                                                {100}
 //
@@ -17486,6 +17487,7 @@ typedef struct stUSB_HW
             #define RCM_SRS0_WDOG   0x20                                 // reset caused by watchdog timeout
             #define RCM_SRS0_PIN    0x40                                 // reset caused by external reset pin
             #define RCM_SRS0_POR    0x80                                 // power on reset
+            #define WATCHDOG_RESET_DETECTED()   ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_PIN | RCM_SRS0_WDOG)) == RCM_SRS0_WDOG)
         #define RCM_SRS1         *(volatile unsigned char *)(RCM_BASE_ADD + 0x01) // system reset status register 1 (read-only)
             #define RCM_SRS1_JTAG   0x01                                 // reset caused by JTAG
             #define RCM_SRS1_LOCKUP 0x02                                 // reset caused by core lockup

@@ -11,7 +11,7 @@
     File:      kinetis_DMA.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     17.11.2013 Add uReverseMemcpy() using DMA                            {59}
     06.05.2014 Add KL DMA based uMemcpy() and uMemset()                  {80}
@@ -27,6 +27,7 @@
     17.12.2017 Change uMemset() to match memset() parameters             {7}
     12.02.2018 Add DMA_SW_TRIGGER, DMA_INITIATE_TRANSFER and DMA_WAIT_TERMINATION options as well as DMA_BUFFER_START_FINISH {8}
     25.03.2018 Correct _DMA_Interrupt_3()                                {9}
+    04.01.2019 Monitor DMA channel errors when performing blocking software based transfers and return an error code {10}
 
 */
 
@@ -449,7 +450,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
 
 // Buffer source to fixed destination address or fixed source address to buffer
 //
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
+extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
 
@@ -636,10 +637,18 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
         if ((ulRules & DMA_INITIATE_TRANSFER) != 0) {                    // if the transfer is to be initiated immediately
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
             if ((ulRules & DMA_WAIT_TERMINATION) != 0) {                 // if the call is a blocking call we wait until the transfer terminates
-                while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(ucDMA_channel, 0); } // wait until completed
+                while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { // wait until completed
+                    if ((DMA_ERR & (DMA_ERR_ERR0 << ucDMA_channel)) != 0) { // {10} if a DMA channel error occurs
+                        WRITE_ONE_TO_CLEAR(DMA_ERR, (DMA_ERR_ERR0 << ucDMA_channel)); // clear the error flag
+                        return DMA_ERROR_OCCURRED;                       // {10} return error
+                    }
+        #if defined _WINDOWS
+                    fnSimulateDMA(ucDMA_channel, 0);
+        #endif
+                }
             }
         }
-        return;                                                          
+        return 0;                                                          
     }
     if ((ulRules & DMA_BUFFER_BURST_MODE) != 0) {                        // if a single trigger is to start a complete buffer burst [note - not proven]
         ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulBufLength;                     // the transfer byte count
@@ -716,6 +725,7 @@ extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDma
     #endif
     // Note that the DMA channel has not been activated yet - to do this fnDMA_BufferReset(channel_number, DMA_BUFFER_START); is performed
     //
+    return 0;
 }
 #endif
 
