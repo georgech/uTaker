@@ -51,6 +51,7 @@
     22.07.2018 Added fnPrepareRxDMA_mode() to handle generic configuration of rx DMA mode {214}
     31.07.2018 Corrected shared DMA channel numbering between Rx and Tx  {215}
     04.01.2019 Add local defines MANUAL_MODEM_CONTROL, MANUAL_MODEM_CONTROL_LPUART and MANUAL_MODEM_CONTROL_UART to better control modem mode operation {216}
+    07.01.2019 Allow UART0_MANUAL_RTS_CONTROL..UARTn_MANUAL_RTS_CONTROL to allow automatic RTS control in RS485 mode on UARTs {217}
 
 */
 
@@ -67,8 +68,7 @@
 #if defined _WINDOWS
     static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock);
 #endif
-
-
+static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference);  // in kinetis_uart_pins.h
 
 // Rules for numbering LPUARTS/UART channels
 //
@@ -144,6 +144,8 @@
 #define UART_RTS_PIN_ASSERT      5
 #define LPUART_RTS_PIN_NEGATE    6
 #define UART_RTS_PIN_NEGATE      6
+#define LPUART_RTS_RS485_MANUAL_MODE    7
+#define UART_RTS_RS485_MANUAL_MODE      7
 
 #if ((LPUARTS_AVAILABLE > 0) && defined LPUART_WITHOUT_MODEM_CONTROL) || ((UARTS_AVAILABLE > 0) && defined UART_WITHOUT_MODEM_CONTROL) // {216}
     #define MANUAL_MODEM_CONTROL
@@ -154,6 +156,7 @@
 #if (UARTS_AVAILABLE > 0) && defined UART_WITHOUT_MODEM_CONTROL
     #define MANUAL_MODEM_CONTROL_UART
 #endif
+
 
 /* =================================================================== */
 /*                             constants                               */
@@ -340,8 +343,14 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
         #endif
     #endif
 #endif
-#if defined SUPPORT_HW_FLOW && defined UART_WITHOUT_MODEM_CONTROL
+#if defined UART0_MANUAL_RTS_CONTROL || defined UART1_MANUAL_RTS_CONTROL || defined UART2_MANUAL_RTS_CONTROL || defined UART3_MANUAL_RTS_CONTROL || defined UART4_MANUAL_RTS_CONTROL || defined UART5_MANUAL_RTS_CONTROL
+    #define UART_MANUAL_RTS_CONTROL                                      // {217}
+#endif
+#if defined SUPPORT_HW_FLOW && (defined UART_WITHOUT_MODEM_CONTROL || defined UART_MANUAL_RTS_CONTROL)
     static unsigned char ucRTS_neg[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
+    #if defined UART_MANUAL_RTS_CONTROL
+    static unsigned char ucManualRS485[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // {217}
+    #endif
 #endif
 #if defined MANUAL_MODEM_CONTROL && defined UART_FRAME_END_COMPLETE
     static unsigned char ucReportEndOfFrame[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
@@ -460,7 +469,7 @@ static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int
     if (((ulState & LPUART_STAT_TDRE) & ptrLPUART->LPUART_CTRL) != 0) {  // if transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte((QUEUE_LIMIT)LPUART_Reference);                      // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || (defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE)
+        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || defined USER_DEFINED_UART_TX_FRAME_COMPLETE || (defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE)
     if (((ulState & LPUART_STAT_TC) & ptrLPUART->LPUART_CTRL) != 0) {    // if transmit complete interrupt after final byte transmission is enabled and flag set
         ptrLPUART->LPUART_CTRL &= ~(LPUART_CTRL_TCIE);                   // disable the interrupt
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
@@ -687,11 +696,16 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
         #if defined SERIAL_SUPPORT_DMA
     }
         #endif
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || (defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE) // {96}
+        #if defined SUPPORT_LOW_POWER || defined UART_MANUAL_RTS_CONTROL || defined UART_HW_TRIGGERED_MODE_SUPPORTED || defined USER_DEFINED_UART_TX_FRAME_COMPLETE || (defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE) // {96}
     if (((ptrUART->UART_C2 & UART_C2_TCIE) != 0) && ((ptrUART->UART_S1 & UART_S1_TC) != 0)) { // transmit complete interrupt after final byte transmission together with low power operation
         ptrUART->UART_C2 &= ~(UART_C2_TCIE);                             // disable the interrupt
             #if defined SUPPORT_LOW_POWER
         PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << UART_Reference)); // confirmation that the final byte has been sent out on the line so the UART no longer needs a UART clock (stop mode doesn't needed to be blocked)
+            #endif
+            #if defined UART_MANUAL_RTS_CONTROL                          // {217}
+        if (ucManualRS485[UART_Reference] != 0) {                        // if in manual RS485 mode
+            fnConfigureUARTpin(UART_Reference, UART_RTS_PIN_NEGATE);     // negate the RTS line in manual mode when a transmission completes
+        }
             #endif
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED                 // {213}
         if (ucTriggeredTX_mode[UART_Reference] != 0) {
@@ -703,7 +717,8 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
         if (fnUserTxEndIrq[UART_Reference] != 0) {                       // if a transmission complete handler is installed it is called
             fnUserTxEndIrq[UART_Reference]((QUEUE_LIMIT)UART_Reference);
         }
-            #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
+            #endif
+            #if defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
         if (ucReportEndOfFrame[UART_Reference] != 0) {                   // if the end of frame call-back is enabled
             fnUARTFrameTermination(UART_Reference);                      // {200}
         }
@@ -858,6 +873,9 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
 }
 #endif
 
+#include "kinetis_uart_pins.h"                                           // include fnConfigureUARTpin() for configuring LPUART/UART pins and entering related interrupt handlers 
+
+
 // The TTY driver uses this call to send a byte of data over the serial port
 //
 extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
@@ -896,8 +914,17 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
         if ((uart_reg->UART_S1 & UART_S1_TDRE) == 0) {                   // check whether transmit buffer is presently empty
             return 1;                                                    // UART transmitter is presently active
         }
+        #if defined UART_MANUAL_RTS_CONTROL                              // {217}
+        if ((uart_reg->UART_C2 & (UART_C2_TIE | UART_C2_TCIE)) == 0) {   // first character
+            if (ucManualRS485[Channel] != 0) {
+                fnConfigureUARTpin(Channel, UART_RTS_PIN_ASSERT);        // assert the RTS line in manual mode when a new transmission is started
+            }
+        }
+        #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that this UART is in use
+        #endif
+        #if defined SUPPORT_LOW_POWER || defined UART_MANUAL_RTS_CONTROL
         (void)(uart_reg->UART_S1);                                       // read the status register to clear the transmit complete flag when the transmit data register is written
         #endif
         uart_reg->UART_D = ucTxByte;                                     // send the character
@@ -997,10 +1024,22 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
             #else
     uart_reg->UART_C2 |= (UART_C2_TCIE);                                 // enable UART transmit complete interrupt to signal when the complete last character has been sent
             #endif
-        #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
+        #else
+            #if defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[Channel] != 0) {                              // if an end of frame interrupt is required
         uart_reg->UART_C2 |= (UART_C2_TCIE);                             // {200} enable UART transmit complete interrupt to signal when the complete last character has been sent
     }
+            #endif
+            #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    if (fnUserTxEndIrq[Channel] != 0) {                                  // if there is a user call-back on end of transmission
+        uart_reg->UART_C2 |= (UART_C2_TCIE);                             // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
+            #if defined UART_MANUAL_RTS_CONTROL                          // {217}
+    if (ucManualRS485[Channel] != 0) {                                   // if an end of frame interrupt is required
+        uart_reg->UART_C2 |= UART_C2_TCIE;                               // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
         #endif
     uart_reg->UART_C2 &= ~(UART_C2_TIE);                                 // disable UART transmission interrupt
     #endif
@@ -1053,10 +1092,22 @@ static __interrupt void _uart_tx_dma_Interrupt(KINETIS_UART_CONTROL *ptrUART, in
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iUART_reference)); // block stop mode until the final interrupt arrives
         ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable the UART transmit complete flag interrupt to detect transmission completion
     }
-        #elif defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
+        #else
+            #if defined MANUAL_MODEM_CONTROL_UART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[iUART_reference] != 0) {                      // if an end of frame interrupt is required
         ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable UART transmit complete interrupt to signal when the complete last character has been sent
     }
+            #endif
+            #if defined UART_MANUAL_RTS_CONTROL                          // {217}
+    if (ucManualRS485[iUART_reference] != 0) {                           // if an end of frame interrupt is required
+        ptrUART->UART_C2 |= UART_C2_TCIE;                                // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
+            #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    if (fnUserTxEndIrq[iUART_reference] != 0) {                          // if there is a user call-back on end of transmission
+        ptrUART->UART_C2 |= (UART_C2_TCIE);                              // enable UART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
         #endif
 }
     #endif
@@ -1185,6 +1236,7 @@ static void fnStopTxTimer(int Channel)
 }
 #endif
 
+
 // Start transfer of a block via DMA
 //
 extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart, QUEUE_TRANSFER tx_length)
@@ -1201,6 +1253,11 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
         #else
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     ptrDMA_TCD += UART_DMA_TX_CHANNEL[Channel];
+        #endif
+        #if defined SUPPORT_HW_FLOW && defined UART_MANUAL_RTS_CONTROL   // {217}
+    if (ucManualRS485[Channel] != 0) {
+        fnConfigureUARTpin(Channel, UART_RTS_PIN_ASSERT);                // assert the RTS line in manual mode when a new transmission is started
+    }
         #endif
         #if LPUARTS_AVAILABLE > 0
             #if UARTS_AVAILABLE > 0
@@ -1508,9 +1565,6 @@ extern unsigned char fnGetMultiDropByte(QUEUE_HANDLE Channel)            // dumm
     #endif
 
 
-
-#include "kinetis_uart_pins.h"                                           // include fnConfigureUARTpin() for configuring LPUART/UART pins and entering related interrupt handlers 
-
 #if defined SUPPORT_HW_FLOW
 extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, UART_MODE_CONFIG OperatingMode)
 {
@@ -1535,7 +1589,15 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     iLPUART = 0;
     #endif
 
-    if ((usModifications & (CONFIG_RTS_PIN | SET_RS485_MODE)) != 0) {    // if the caller wants to modify the RTS pin configuration
+    if ((usModifications & CONFIG_RTS_PIN) != 0) {                       // if the caller wants to modify the RTS pin configuration
+    #if defined SUPPORT_HW_FLOW && defined UART_MANUAL_RTS_CONTROL       // {217}
+        if (((usModifications & (SET_RS485_MODE | SET_RS485_NEG)) != 0) && (fnConfigureUARTpin(channel, UART_RTS_RS485_MANUAL_MODE) != 0)) { // if in RS485 mode
+            ucManualRS485[channel] = 1;                                  // the RTS line is to be manually controlled in RS485 mode
+        }
+        else {
+            ucManualRS485[channel] = 0;                                  // no manual RS485 RTS line control
+        }
+    #endif
         if ((usModifications & SET_RS485_NEG) != 0) {                    // negative polarity control
             fnConfigureUARTpin(channel, UART_RTS_PIN_INVERTED);          // configure the LPUART/UART RTS pin in inverted mode
             if (iLPUART != 0) {
@@ -1555,7 +1617,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             fnConfigureUARTpin(channel, UART_RTS_PIN);                   // configure the LPUART/UART RTS pin
             if (iLPUART != 0) {
     #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL);  // enable automatic RTS with positive polarity
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL); // enable automatic RTS with positive polarity
     #endif
             }
             else {
@@ -1568,7 +1630,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     if ((usModifications & CONFIG_CTS_PIN) != 0) {                       // configure CTS for HW flow control
         fnConfigureUARTpin(channel, UART_CTS_PIN);                       // configure the UART CTS pin
     }
-    #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART_WITHOUT_MODEM_CONTROL // {200}
+    #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART_WITHOUT_MODEM_CONTROL || defined UART_MANUAL_RTS_CONTROL // {200}
     if ((((usModifications & CLEAR_RTS) != 0) && (ucRTS_neg[channel] == 0)) || (((usModifications & SET_RTS) != 0) && (ucRTS_neg[channel] != 0))) { // negate RTS output signal by setting output to '0' (or inverted assert)
         fnConfigureUARTpin(channel, UART_RTS_PIN_NEGATE);                // negate the LPUART/UART RTS pin
     }
@@ -3149,7 +3211,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     fnUserRxBreakIrq[Channel] = pars->receiveBreakHandler;
     #endif
     #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
-    fnUserTxEndIrq[Channel] = pars->txFrameCompleteHandler;
+    fnUserTxEndIrq[Channel] = pars->txFrameCompleteHandler;              // enter the user end of transmission interrupt call-back (0 means none used by the channel)
     #endif
 
     #if defined _WINDOWS

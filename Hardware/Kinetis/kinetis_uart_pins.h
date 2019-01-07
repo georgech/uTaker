@@ -13,12 +13,13 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
+    07.01.2019 Add return value to fnConfigureUARTpin() and handle UART_RTS_RS485_MANUAL_MODE case when channel operated in manual RS485 mode
 
 
 */
 
 
-static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
+static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 {
     int iInterruptID = 0;
     unsigned char ucPriority = 0;
@@ -138,9 +139,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
-            #if defined LPUART_WITHOUT_MODEM_CONTROL
+            #if defined UART0_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
+            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
         case LPUART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[0] != 0) {
+            if (ucRTS_neg[0] == 0) {
                 _SET_RTS_0_HIGH();
             }
             else {
@@ -148,7 +153,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case LPUART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[0] != 0) {
+            if (ucRTS_neg[0] == 0) {
                 _SET_RTS_0_LOW();
             }
             else {
@@ -159,14 +164,14 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
         case LPUART_RTS_PIN_INVERTED:
         case LPUART_RTS_PIN:
-            #if defined LPUART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == LPUART_RTS_PIN_INVERTED) {
+            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
+            if (iPinReference != LPUART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_0_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[0] = 1;                                        // inverted RTS mode
+                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_0_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[0] = 1;                                        // inverted RTS mode
             }
             #elif defined KINETIS_KE15
             _CONFIG_PERIPHERAL(C, 9, (PC_9_LPUART0_RTS));                // LPUART0_RTS on PC9 (alt. function 6)
@@ -484,9 +489,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             InterruptFunc = _SCI0_Interrupt;
             break;
         #if defined SUPPORT_HW_FLOW
-            #if defined UART_WITHOUT_MODEM_CONTROL
+            #if defined UART0_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[0] != 0) {
+            if (ucRTS_neg[0] == 0) {
                 _SET_RTS_0_HIGH();
             }
             else {
@@ -494,7 +503,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[0] != 0) {
+            if (ucRTS_neg[0] == 0) {
                 _SET_RTS_0_LOW();
             }
             else {
@@ -505,14 +514,14 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:
-            #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_0_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[0] = 1;                                        // inverted RTS mode
+                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_0_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[0] = 1;                                        // inverted RTS mode
             }
             #elif defined KINETIS_K02
                 #if defined UART0_A_LOW
@@ -608,9 +617,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
-            #if defined UART_WITHOUT_MODEM_CONTROL
+            #if defined UART1_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART1_MANUAL_RTS_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[1] != 0) {
+            if (ucRTS_neg[1] == 0) {
                 _SET_RTS_1_HIGH();
             }
             else {
@@ -618,7 +631,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[1] != 0) {
+            if (ucRTS_neg[1] == 0) {
                 _SET_RTS_1_LOW();
             }
             else {
@@ -629,14 +642,14 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:                                               // configure RTS1 pin
-            #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART1_MANUAL_RTS_CONTROL
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_1_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[1] = 1;                                        // inverted RTS mode
+                ucRTS_neg[1] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_1_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[1] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[1] = 1;                                        // inverted RTS mode
             }
             #elif defined UART1_ON_C
             _CONFIG_PERIPHERAL(C, 1, (PC_1_UART1_RTS | UART_PULL_UPS));  // UART1_RTS on PC1 (alt. function 3) {16}
@@ -722,9 +735,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
-            #if defined UART_WITHOUT_MODEM_CONTROL
+            #if defined UART2_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART2_MANUAL_RTS_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[2] != 0) {
+            if (ucRTS_neg[2] == 0) {
                 _SET_RTS_2_HIGH();
             }
             else {
@@ -732,7 +749,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[2] != 0) {
+            if (ucRTS_neg[2] == 0) {
                 _SET_RTS_2_LOW();
             }
             else {
@@ -743,14 +760,14 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:
-            #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            #if defined UART_WITHOUT_MODEM_CONTROL || defined UART2_MANUAL_RTS_CONTROL
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_2_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[2] = 1;                                        // inverted RTS mode
+                ucRTS_neg[2] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_2_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[2] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[2] = 1;                                        // inverted RTS mode
             }
             #elif (defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K21 || defined KINETIS_KW2X) && defined UART2_ON_E // {25}
             _CONFIG_PERIPHERAL(E, 19, (PE_19_UART2_RTS | UART_PULL_UPS));// UART2_RTS on PE19 (alt. function 3)
@@ -818,9 +835,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
+            #if defined UART3_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
             #if defined UART_WITHOUT_MODEM_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[3] != 0) {
+            if (ucRTS_neg[3] == 0) {
                 _SET_RTS_3_HIGH();
             }
             else {
@@ -828,7 +849,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[3] != 0) {
+            if (ucRTS_neg[3] == 0) {
                 _SET_RTS_3_LOW();
             }
             else {
@@ -840,13 +861,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:
             #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_3_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[3] = 1;                                        // inverted RTS mode
+                ucRTS_neg[3] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_3_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[3] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[3] = 1;                                        // inverted RTS mode
             }
             #elif defined UART3_ON_B
             _CONFIG_PERIPHERAL(B, 8, (PB_8_UART3_RTS | UART_PULL_UPS));  // UART3_RTS on PB8 (alt. function 3)
@@ -902,9 +923,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
+            #if defined UART4_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
             #if defined UART_WITHOUT_MODEM_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[4] != 0) {
+            if (ucRTS_neg[4] == 0) {
                 _SET_RTS_4_HIGH();
             }
             else {
@@ -912,7 +937,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[4] != 0) {
+            if (ucRTS_neg[4] == 0) {
                 _SET_RTS_4_LOW();
             }
             else {
@@ -924,13 +949,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:
             #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_4_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[4] = 1;                                        // inverted RTS mode
+                ucRTS_neg[4] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_4_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[4] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[4] = 1;                                        // inverted RTS mode
             }
             #elif defined UART4_ON_C
             _CONFIG_PERIPHERAL(C, 12, (PC_12_UART4_RTS | UART_PULL_UPS));// UART4_RTS on PC12 (alt. function 3)
@@ -978,9 +1003,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
+            #if defined UART5_MANUAL_RTS_CONTROL
+        case UART_RTS_RS485_MANUAL_MODE:
+            return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
+            #endif
             #if defined UART_WITHOUT_MODEM_CONTROL
         case UART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[5] != 0) {
+            if (ucRTS_neg[5] == 0) {
                 _SET_RTS_5_HIGH();
             }
             else {
@@ -988,7 +1017,7 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             }
             break;
         case UART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[5] != 0) {
+            if (ucRTS_neg[5] == 0) {
                 _SET_RTS_5_LOW();
             }
             else {
@@ -1000,13 +1029,13 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         case UART_RTS_PIN_INVERTED:
         case UART_RTS_PIN:
             #if defined UART_WITHOUT_MODEM_CONTROL
-            if (iPinReference == UART_RTS_PIN_INVERTED) {
+            if (iPinReference != UART_RTS_PIN_INVERTED) {
                 _CONFIGURE_RTS_5_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[5] = 1;                                        // inverted RTS mode
+                ucRTS_neg[5] = 0;                                        // not inverted RTS mode
             }
             else {
                 _CONFIGURE_RTS_5_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[5] = 0;                                        // not inverted RTS mode
+                ucRTS_neg[5] = 1;                                        // inverted RTS mode
             }
             #elif defined UART5_ON_D
             _CONFIG_PERIPHERAL(D, 10, (PD_10_UART5_RTS | UART_PULL_UPS));// UART5_RTS on PD10 (alt. function 3)
@@ -1048,10 +1077,11 @@ static void fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
     #endif
 
     default:
-        return;
+        return 0;
     }
 
     if (InterruptFunc != 0) {                                            // if the interrupt handler is to be installed
         fnEnterInterrupt(iInterruptID, ucPriority, InterruptFunc);       // enter UART/LPUART interrupt handler
     }
+    return 0;
 }
