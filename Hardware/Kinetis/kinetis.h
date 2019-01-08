@@ -5981,6 +5981,23 @@ typedef struct stKINETIS_INTMUX
 #define CSCR5               *(unsigned long *)(FLEXBUS_ADD + 0x44)       // Chip Select Control Register - CS 5
 
 #define CSPMCR              *(unsigned long *)(FLEXBUS_ADD + 0x60)       // Chip Select Port Multiplexing Control Register
+    #define CSPMCR_GROUP1_MASK         0xf0000000
+    #define CSPMCR_GROUP1_FB_ALE       0x00000000
+    #define CSPMCR_GROUP1_FB_CS1       0x10000000
+    #define CSPMCR_GROUP1_FB_TS        0x20000000
+    #define CSPMCR_GROUP2_MASK         0x0f000000
+    #define CSPMCR_GROUP2_FB_CS4       0x00000000
+    #define CSPMCR_GROUP2_FB_TSIZ0     0x01000000
+    #define CSPMCR_GROUP2_FB_BE_31_24  0x02000000
+    #define CSPMCR_GROUP3_MASK         0x00f00000
+    #define CSPMCR_GROUP3_FB_CS5       0x00000000
+    #define CSPMCR_GROUP3_FB_TSIZ1     0x00100000
+    #define CSPMCR_GROUP3_FB_BE_23_16  0x00200000
+    #define CSPMCR_GROUP4_MASK         0x000f0000
+    #define CSPMCR_GROUP4_FB_TBST      0x00000000
+    #define CSPMCR_GROUP4_FB_CS2       0x00010000
+    #define CSPMCR_GROUP4_FB_BE_15_8   0x00020000
+    #define CSPMCR_GROUP5_MASK         0x0000f000
 #endif
 
 // Memory Protection Unit
@@ -12739,6 +12756,22 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PD_0_FB_TS                   PORT_MUX_ALT5
     #define PC_11_FB_RW                  PORT_MUX_ALT5
     #define PB_19_FB_OE                  PORT_MUX_ALT5                   // {32}
+
+    #define PA_29_FB_A24                 PORT_MUX_ALT6
+    #define PA_29_FB_A25                 PORT_MUX_ALT6
+    #define PA_29_FB_A26                 PORT_MUX_ALT6
+    #define PA_29_FB_A27                 PORT_MUX_ALT6
+    #define PC_15_FB_AD24                PORT_MUX_ALT5
+    #define PC_14_FB_AD25                PORT_MUX_ALT5
+    #define PC_13_FB_AD26                PORT_MUX_ALT5
+    #define PC_12_FB_AD27                PORT_MUX_ALT5
+    #define PA_29_FB_AD28                PORT_MUX_ALT5
+    #define PA_29_FB_AD29                PORT_MUX_ALT5
+    #define PA_29_FB_AD30                PORT_MUX_ALT5
+    #define PA_29_FB_AD31                PORT_MUX_ALT5
+
+    #define PC_17_FB_CS4                 PORT_MUX_ALT5
+    #define PC_18_FB_CS2                 PORT_MUX_ALT5
 #endif
 
 #if defined KINETIS_KV50

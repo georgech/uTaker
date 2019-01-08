@@ -11,7 +11,7 @@
     File:      time_keeper.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.02.2014 Correct fnConvertSecondsTime() calculation                {69}
     19.08.2015 Use uMemset() to initialise strcture to avoid GCC using memset() {1}
@@ -1341,7 +1341,7 @@ extern void fnStartRTC(void (*seconds_callback)(void))
     RTC_SETUP rtc_setup;
     rtc_setup.command = (RTC_TICK_SEC | RTC_INITIALISATION);             // start the RTC (if not already operating) and configure 1s interrupt rate
     rtc_setup.int_handler = seconds_callback;                            // interrupt handler
-    if (fnConfigureRTC(&rtc_setup) == WAIT_STABILISING_DELAY) {
+    if (fnConfigureRTC(&rtc_setup) == WAIT_STABILISING_DELAY) {          // if the RTC oscillator needs to be started on first use
     #if defined SUPPORT_RTC
         #if !defined RTC_OSCILLATOR_STABILISATION_DELAY
             #define RTC_OSCILLATOR_STABILISATION_DELAY    (1 * SEC)      // when nothing else defined, default to 1 second

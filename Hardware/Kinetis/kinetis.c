@@ -11,7 +11,7 @@
     File:      kinetis.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     23.02.2012 Allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined {1}
     12.03.2012 Add ADC support                                           {5}
@@ -668,6 +668,10 @@ extern void fnClearSLCD(void)
 }
 #endif
 
+// This delay ensures at least the requested delay in us
+// - it may be extended by interrupts occuring during its us wait loop that take longer that us to complete
+// - its main use is for short delays to ensure respecting minimum hardware stabilisation times and such
+//
 extern void fnDelayLoop(unsigned long ulDelay_us)
 {
 #if defined TSTMR_AVAILABLE                                              // {133}
@@ -715,27 +719,25 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
     }
 #elif !defined TICK_USES_LPTMR && !defined TICK_USES_RTC                 // if the SYSTICK is operating we use it as a us timer for best independence of code execution speed and compiler (KL typically +15% longer then requested value between 100us and 10ms)
     #define CORE_US (CORE_CLOCK/1000000)                                 // the number of core clocks in a us
-    #if !defined _WINDOWS
-    register unsigned long ulPresentSystick;
-    #endif
     register unsigned long ulMatch;
     register unsigned long _ulDelay_us = ulDelay_us;                     // ensure that the compiler puts the variable in a register rather than work with it on the stack
     if (_ulDelay_us == 0) {                                              // minimum delay is 1us
         _ulDelay_us = 1;
     }
     (void)SYSTICK_CSR;                                                   // clear the SysTick reload flag
-    ulMatch = (SYSTICK_CURRENT - CORE_US);                               // next 1us match value (SysTick counts down)
+    ulMatch = ((SYSTICK_CURRENT - CORE_US) & SYSTICK_COUNT_MASK);        // first 1us match value (SysTick counts down)
     do {
     #if !defined _WINDOWS
-        while ((ulPresentSystick = SYSTICK_CURRENT) > ulMatch) {         // wait until a us period has expired
-            if ((SYSTICK_CSR & SYSTICK_COUNTFLAG) != 0) {                // if we missed a reload
-                (void)SYSTICK_CSR;
-                break;                                                   // assume a us period expired
+        while (SYSTICK_CURRENT > ulMatch) {                              // wait until the us period has expired
+            if ((SYSTICK_CSR & SYSTICK_COUNTFLAG) != 0) {                // if we missed a reload (that is, the SysTick was reloaded with its reload value after reaching zero)
+                (void)SYSTICK_CSR;                                       // clear the SysTick reload flag
+                break;                                                   // assume a single us period expired
             }
         }
-        ulMatch = (ulPresentSystick - CORE_US);
+        ulMatch -= CORE_US;                                              // set the next 1us match
+        ulMatch &= SYSTICK_COUNT_MASK;                                   // respect SysTick 24 bit counter mask
     #endif
-    } while (--_ulDelay_us != 0);
+    } while (--_ulDelay_us != 0);                                        // one us period has expired so count down the requested periods until zero
 #else
     volatile register unsigned long _ulDelay_us = ulDelay_us;            // {124} ensure that the compiler puts the variable in a register rather than work with it on the stack
     volatile register unsigned long ul_us;

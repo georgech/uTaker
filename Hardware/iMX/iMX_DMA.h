@@ -449,7 +449,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
 
 // Buffer source to fixed destination address or fixed source address to buffer
 //
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
+extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
 

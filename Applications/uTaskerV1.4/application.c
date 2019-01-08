@@ -11,7 +11,7 @@
     File:      application.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     16.02.2006 Add SMTP LOGIN support
     18.02.2006 Add SMTP parameter settings
@@ -659,12 +659,23 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #if defined BLAZE_DIGITAL_WATCH
         fnStartRTC(_rtc_second_interrupt);                               // start the RTC if it isn't yet operating and register the 1s callback
         #else
+            #if defined FRDM_K66F                                        // example of checking the RTC access (VBAT not cnnected would cause a hard fault) via DMA to determine whether the RTC can be used or not
+        {
+            unsigned long ulRegCopy;
+            POWER_UP_ATOMIC(6, RTC);                                     // ensure the RTC is powered
+            if (DMA_ERROR_OCCURRED == fnConfigDMA_buffer(4, 0, sizeof(ulRegCopy), (void *)RTC_BLOCK, &ulRegCopy, (DMA_DIRECTION_INPUT | DMA_LONG_WORDS | DMA_SINGLE_CYCLE | DMA_FIXED_ADDRESSES | DMA_SW_TRIGGER_WAIT_TERMINATION), 0, 0)) { // configure the transfer, start and wait for termination
+                // RTC cannot be accessed - probably due to missing VBAT voltage
+                // - avoid RTC access
+            }
+            else {
+                // ulRegCopy has the present RTC_TSR content, meaning that the RTC could be accessed
+                //
+                fnStartRTC(0);                                           // start the RTC if it isn't yet operating
+            }
+        }
+            #else
         fnStartRTC(0);                                                   // start the RTC if it isn't yet operating
-        #endif
-        #if defined KINETIS_KL && !defined _WINDOWS                      // {105} removed since solved in the RTC driver
-      //if ((RCM_SRS0 & (RCM_SRS0_POR | RCM_SRS0_LVD)) != 0) {           // power on reset/low voltage detector
-      //    fnResetBoard();                                              // temp fix for first alarm that otherwise immediately fires
-      //}
+            #endif
         #endif
     #endif
 #endif
@@ -1641,10 +1652,13 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
             break;
         case FOR_I_O:
             fnDriver(newSerialID, (TX_ON | RX_ON), 0);                   // enable rx and tx
+    #if defined SUPPORT_HW_FLOW
             if ((ptrInterfaceParameters->Config & RTS_CTS) != 0) {       // {8} if HW flow control is being used
                 fnDriver(newSerialID, (MODIFY_INTERRUPT | ENABLE_CTS_CHANGE), 0); // activate CTS interrupt when working with HW flow control (this returns also the present control line states)
                 fnDriver(newSerialID, (MODIFY_CONTROL | SET_RTS), 0);    // activate RTS line when working with HW flow control
             }
+          //fnDriver(newSerialID, (MODIFY_CONTROL | CONFIG_RTS_PIN | SET_RS485_MODE), 0); // configure RTS pin for RS485 mode
+    #endif
             break;
         default:
             break;

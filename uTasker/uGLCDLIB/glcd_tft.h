@@ -11,7 +11,7 @@
     File:      glcd_tft.h [LPC247x / LPC1788 / Kinetis K70]
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.08.2010 Add CGLCD_PIXEL_SIZE to control effective size             {1}
     10.08.2010 Don't remove pull-up from P1-27 when USB is used           {2}
@@ -568,11 +568,11 @@ static void fnInit_SDRAM(void)
     //
     EMCDynamicControl = (SDRAM_NOP_CMD | DYNAMIC_CLKOUT_CONTINUOUS | DYNAMIC_MEM_CLK_EN);
     ulDelay = 200*30;
-    while (ulDelay--) {}
+    while (ulDelay-- != 0) {}
     EMCDynamicControl = (SDRAM_PRECHARGE_ALL_CMD | DYNAMIC_CLKOUT_CONTINUOUS | DYNAMIC_MEM_CLK_EN); // PALL
     EMCDynamicRefresh = 1;
     ulDelay = 128;
-    while (ulDelay--) {}                                                 // 128 clock delay
+    while (ulDelay-- != 0) {}                                            // 128 clock delay
     EMCDynamicRefresh = CALC_PERIOD(SDRAM_REFRESH) >> 4;
     EMCDynamicControl = (SDRAM_MODE_CMD | DYNAMIC_CLKOUT_CONTINUOUS | DYNAMIC_MEM_CLK_EN); // COMM
     ulDelay = *(volatile unsigned short *)fnGetSDRAM((unsigned char *)(SDRAM_ADDR + (0x33UL << (12)))); // burst 8, sequential, CAS-2

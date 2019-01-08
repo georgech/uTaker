@@ -5816,7 +5816,7 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_DIRECTION_BUFFER_BUFFER  0x00002000                          // buffer to buffer
 #define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
 
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
+extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
 
 
 // INTMUX                                                                {100}
