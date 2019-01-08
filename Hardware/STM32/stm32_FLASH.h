@@ -11,7 +11,7 @@
     File:      stm32_FLASH.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     20.01.2017 Add 2MByte Flash support                                  {1}
     28.11.2018 Add fnSetFlashOption()                                    {2}
@@ -83,8 +83,10 @@ static void fnExecuteCommand(_STM32_FMI *ptrFMI, _STM32_IWDG *ptrIWDG, unsigned 
 
 // Routine to set new flash options (write protections, brown-out reset level, etc.)
 //
-extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1) // {2}
+extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, unsigned long ulMask) // {2}
 {
+    ulOption &= ~(ulMask);
+    ulOption |= (FLASH_OPTCR & ulMask);
 #if !defined ALLOW_SECURING_DEBUG_ACCESS
     if ((ulOption & FLASH_OPTCR_RDP_MASK) == FLASH_OPTCR_RDP_LEVEL_2) {  // if the option would set read protection level 2 (cannot be lowered again and loses debug control forever)
         ulOption &= ~(FLASH_OPTCR_RDP_MASK);

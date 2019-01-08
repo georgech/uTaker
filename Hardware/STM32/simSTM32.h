@@ -11,7 +11,7 @@
     File:      simSTM32.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     08.09.2012 Adapt RTC for F2/F4 devices                               {1}
     11.09.2012 Add SYSTEM_HANDLER_x_y_PRIORITY_REGISTERs                 {2}
@@ -1325,6 +1325,41 @@ typedef struct stSTM32_CORTEX_M4_TRACE
     unsigned long DWT_LSUCNT;
     unsigned long DWT_FOLDCNT;
     unsigned long DWT_PCSR;
+    unsigned long DWT_COMP0;
+    unsigned long DWT_MASK0;
+    unsigned long DWT_FUNCTION0;
+    unsigned long ulRes0;
+    unsigned long DWT_COMP1;
+    unsigned long DWT_MASK1;
+    unsigned long DWT_FUNCTION1;
+    unsigned long ulRes1;
+    unsigned long DWT_COMP2;
+    unsigned long DWT_MASK2;
+    unsigned long DWT_FUNCTION2;
+    unsigned long ulRes2;
+    unsigned long DWT_COMP3;
+    unsigned long DWT_MASK3;
+    unsigned long DWT_FUNCTION3;
+    #if defined ARM_MATH_CM7
+    unsigned long ulRes3[981];
+    unsigned long DWT_LAR;
+    unsigned long DWT_LSR;
+    unsigned long ulRes4[6];
+    #else
+    unsigned long ulRes3[989];
+    #endif
+    unsigned long DWT_PID4;
+    unsigned long DWT_PID5;
+    unsigned long DWT_PID6;
+    unsigned long DWT_PID7;
+    unsigned long DWT_PID0;
+    unsigned long DWT_PID1;
+    unsigned long DWT_PID2;
+    unsigned long DWT_PID3;
+    unsigned long DWT_CID0;
+    unsigned long DWT_CID1;
+    unsigned long DWT_CID2;
+    unsigned long DWT_CID3;
 } STM32_CORTEX_M4_TRACE;
 #endif
 

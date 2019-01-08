@@ -11,7 +11,7 @@
     File:      STM32.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     02.03.2012 Remove USB_FIFO_INTERMEDIATE_BUFFER to correctly handle buffered USB OUT flow control
     06.03.2012 Remove start_application() define
@@ -86,7 +86,7 @@ extern void _fnMIIwrite(unsigned char _mradr, unsigned short _mwdata);
 
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
 
-extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1); // {25}
+extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, unsigned long ulMask); // {25}
 
 #define _MALLOC_ALIGN                                                    // support malloc with align option since LAN memory should be on specific boundary
 #define _ALIGN_HEAP_4                                                    // all heap blocks are aligned
@@ -6575,15 +6575,44 @@ typedef struct stVECTOR_TABLE
 
     // Cortex data watch and trace unit
     //
-    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00)
+    #define DWT_CTRL                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x00) // control register
         #define DWT_CTRL_CYCCNTENA    0x00000001                         // enable the cycle counter
-    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04)
-    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08)
-    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c)
-    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10)
-    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14)
-    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18)
-    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c)
+    #define DWT_CYCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x04) // cycle count register
+    #define DWT_CPICNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x08) // CPI count register
+    #define DWT_EXCCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x0c) // exception overhead count register
+    #define DWT_SLEEPVNT              *(volatile unsigned long *)(CORTEX_M4_DWT + 0x10) // sleep count register
+    #define DWT_LSUCNT                *(volatile unsigned long *)(CORTEX_M4_DWT + 0x14) // LSU count register
+    #define DWT_FOLDCNT               *(volatile unsigned long *)(CORTEX_M4_DWT + 0x18) // folder-instruction count register
+    #define DWT_PCSR                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0x1c) // program counter sample regster - read-only
+    #define DWT_COMP0                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x20) // compare register 0
+    #define DWT_MASK0                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x24) // mask register 0
+    #define DWT_FUNCTION0             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x28) // function register 0
+    #define DWT_COMP1                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x30) // compare register 1
+    #define DWT_MASK1                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x34) // mask register 1
+    #define DWT_FUNCTION1             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x38) // function register 1
+    #define DWT_COMP2                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x40) // compare register 2
+    #define DWT_MASK2                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x44) // mask register 2
+    #define DWT_FUNCTION2             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x48) // function register 2
+    #define DWT_COMP3                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x50) // compare register 3
+    #define DWT_MASK3                 *(volatile unsigned long *)(CORTEX_M4_DWT + 0x54) // mask register 3
+    #define DWT_FUNCTION3             *(volatile unsigned long *)(CORTEX_M4_DWT + 0x58) // function register 3
+    #if defined ARM_MATH_CM7
+        #define DWT_LAR               *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfb0) // lock access register
+            #define DWT_LAR_UNLOCK    0xc5acce55                         // unlock code
+        #define DWT_LSR               *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfb4) // lock access register - read-only
+    #endif
+    #define DWT_PID4                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd0) // peripheral identification register 4 - read-only
+    #define DWT_PID5                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd4) // peripheral identification register 5 - read-only
+    #define DWT_PID6                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfd8) // peripheral identification register 6 - read-only
+    #define DWT_PID7                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfdc) // peripheral identification register 7 - read-only
+    #define DWT_PID0                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe0) // peripheral identification register 0 - read-only
+    #define DWT_PID1                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe4) // peripheral identification register 1 - read-only
+    #define DWT_PID2                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfe8) // peripheral identification register 2 - read-only
+    #define DWT_PID3                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xfec) // peripheral identification register 3 - read-only
+    #define DWT_CID0                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff0) // component identification register 0 - read-only
+    #define DWT_CID1                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff4) // component identification register 1 - read-only
+    #define DWT_CID2                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xff8) // component identification register 2 - read-only
+    #define DWT_CID3                  *(volatile unsigned long *)(CORTEX_M4_DWT + 0xffc) // component identification register 3 - read-only
 #endif
 
 // Interrupt sources

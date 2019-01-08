@@ -11,7 +11,7 @@
     File:        STM32_boot.c
     Project:     Single Chip Embedded Internet - boot loader hardware support
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     06.03.2012 Add start_application()                                   {1}
     12.12.2012 Correct flash erase routine for F1 parts                  {2}
@@ -410,11 +410,11 @@ extern int STM32_LowLevelInit(void)
 #include "stm32_CLOCK.h"                                                 // {7} clock configuration
 #if defined FLASH_OPTION_SETTING && defined FLASH_OPTCR                  // {8} program a flash configuration option (this is only performed when the setting causes a change to that already programmed)
     #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
-    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1);
+    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1, FLASH_OPTION_MASK);
     #elif defined FLASH_OPTCR1
-    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1, FLASH_OPTION_MASK);
     #else
-    fnSetFlashOption(FLASH_OPTION_SETTING, 0);
+    fnSetFlashOption(FLASH_OPTION_SETTING, 0, FLASH_OPTION_MASK);
     #endif
 #endif
 #if defined _WINDOWS

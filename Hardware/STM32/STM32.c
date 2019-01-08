@@ -11,7 +11,7 @@
     File:      STM32.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     02.03.2012 Improve endpoint NAK control and unblocking               {1}
     06.03.2012 Add start_application()                                   {3}
@@ -3186,11 +3186,11 @@ static void STM32_LowLevelInit(void)
 #include "stm32_CLOCK.h"                                                 // {39} clock configuration
 #if defined FLASH_OPTION_SETTING && defined FLASH_OPTCR                  // {40} program a flash configuration option (this is only performed when the setting causes a change to that already programmed)
     #if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
-    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1);
+    fnSetFlashOption(FLASH_OPTION_SETTING, FLASH_OPTION_SETTING_1, 0);
     #elif defined FLASH_OPTCR1
-    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+    fnSetFlashOption(FLASH_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1, 0);
     #else
-    fnSetFlashOption(FLASH_OPTION_SETTING, 0);
+    fnSetFlashOption(FLASH_OPTION_SETTING, 0, 0);
     #endif
 #endif
 #if defined INTERRUPT_VECTORS_IN_FLASH                                   // {111}
