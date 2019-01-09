@@ -343,6 +343,9 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
         #endif
     #endif
 #endif
+#if defined LPUART0_MANUAL_RTS_CONTROL || defined LPUART1_MANUAL_RTS_CONTROL || defined LPUART2_MANUAL_RTS_CONTROL || defined LPUART3_MANUAL_RTS_CONTROL || defined LPUART4_MANUAL_RTS_CONTROL || defined LPUART5_MANUAL_RTS_CONTROL
+    #define UART_MANUAL_RTS_CONTROL                                      // {217}
+#endif
 #if defined UART0_MANUAL_RTS_CONTROL || defined UART1_MANUAL_RTS_CONTROL || defined UART2_MANUAL_RTS_CONTROL || defined UART3_MANUAL_RTS_CONTROL || defined UART4_MANUAL_RTS_CONTROL || defined UART5_MANUAL_RTS_CONTROL
     #define UART_MANUAL_RTS_CONTROL                                      // {217}
 #endif
@@ -469,7 +472,7 @@ static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int
     if (((ulState & LPUART_STAT_TDRE) & ptrLPUART->LPUART_CTRL) != 0) {  // if transmit buffer is empty and the transmit interrupt is enabled
         fnSciTxByte((QUEUE_LIMIT)LPUART_Reference);                      // transmit data empty interrupt - write next byte, if waiting
     }
-        #if defined SUPPORT_LOW_POWER || defined UART_HW_TRIGGERED_MODE_SUPPORTED || defined USER_DEFINED_UART_TX_FRAME_COMPLETE || (defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE)
+        #if defined SUPPORT_LOW_POWER || defined UART_MANUAL_RTS_CONTROL || defined UART_HW_TRIGGERED_MODE_SUPPORTED || defined USER_DEFINED_UART_TX_FRAME_COMPLETE || (defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE)
     if (((ulState & LPUART_STAT_TC) & ptrLPUART->LPUART_CTRL) != 0) {    // if transmit complete interrupt after final byte transmission is enabled and flag set
         ptrLPUART->LPUART_CTRL &= ~(LPUART_CTRL_TCIE);                   // disable the interrupt
             #if defined UART_HW_TRIGGERED_MODE_SUPPORTED
@@ -481,11 +484,17 @@ static __interrupt void _LPUART_interrupt(KINETIS_LPUART_CONTROL *ptrLPUART, int
             #if defined SUPPORT_LOW_POWER
         PROTECTED_CLEAR_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << LPUART_Reference)); // confirmation that the final byte has been sent out on the line so the LPUART no longer needs a UART clock (stop mode doesn't needed to be blocked)
             #endif
+            #if defined UART_MANUAL_RTS_CONTROL                          // {217}
+        if (ucManualRS485[LPUART_Reference] != 0) {                      // if in manual RS485 mode
+            fnConfigureUARTpin(LPUART_Reference, UART_RTS_PIN_NEGATE);   // negate the RTS line in manual mode when a transmission completes
+        }
+            #endif
             #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
         if (fnUserTxEndIrq[LPUART_Reference] != 0) {                    // if a transmission complete handler is installed it is called
             fnUserTxEndIrq[LPUART_Reference]((QUEUE_LIMIT)LPUART_Reference);
         }
-            #elif defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
+            #endif
+            #if defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
         if (ucReportEndOfFrame[LPUART_Reference] != 0) {                // if the end of frame call-back is enabled
             fnUARTFrameTermination(LPUART_Reference);
         }
@@ -894,6 +903,13 @@ extern int fnTxByte(QUEUE_HANDLE Channel, unsigned char ucTxByte)
         if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_STAT & LPUART_STAT_TDRE) == 0) {
             return 1;                                                    // LPUART transmitter is presently active
         }
+        #if defined UART_MANUAL_RTS_CONTROL                              // {217}
+        if ((((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL & (LPUART_CTRL_TIE | LPUART_CTRL_TCIE)) == 0) { // first character
+            if (ucManualRS485[Channel] != 0) {
+                fnConfigureUARTpin(Channel, LPUART_RTS_PIN_ASSERT);      // assert the RTS line in manual mode when a new transmission is started
+            }
+        }
+        #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << Channel)); // mark that this UART is in use
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_STAT;               // read the status register to clear the transmit complete flag when the transmit data register is written
@@ -1003,6 +1019,10 @@ extern void fnClearTxInt(QUEUE_HANDLE Channel)
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96} no more transmissions are required
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_TCIE); // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        #elif defined UART_MANUAL_RTS_CONTROL                            // {217}
+        if (ucManualRS485[Channel] != 0) {                                   // if an end of frame interrupt is required
+            ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL |= (LPUART_CTRL_TCIE); // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+        }
         #endif
         ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_CTRL &= ~(LPUART_CTRL_TIE); // disable LPUART transmission interrupt
         return;
@@ -1067,10 +1087,22 @@ static __interrupt void _lpuart_tx_dma_Interrupt(KINETIS_LPUART_CONTROL *ptrLPUA
         PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (UART0_TX_CLK_REQUIRED << iLPUART_reference)); // block stop mode until the final interrupt arrives
         ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable the LPUART transmit complete flag interrupt to detect transmission completion
     }
-        #elif defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
+        #else
+            #if defined MANUAL_MODEM_CONTROL_LPUART && defined UART_FRAME_END_COMPLETE
     if (ucReportEndOfFrame[iLPUART_reference] != 0) {                    // if an end of frame interrupt is required
         ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
     }
+            #endif
+            #if defined UART_MANUAL_RTS_CONTROL                          // {217}
+    if (ucManualRS485[iLPUART_reference] != 0) {                         // if an end of frame interrupt is required
+        ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
+            #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
+    if (fnUserTxEndIrq[iLPUART_reference] != 0) {                        // if there is a user call-back on end of transmission
+        ptrLPUART->LPUART_CTRL |= LPUART_CTRL_TCIE;                      // enable LPUART transmit complete interrupt to signal when the complete last character has been sent
+    }
+            #endif
         #endif
 }
     #endif
@@ -1603,7 +1635,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             if (iLPUART != 0) {
     #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
                 ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR &= ~(LPUART_MODIR_TXRTSPOL);
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE); // enable automatic RTS with negative polarity
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_TXRTSE); // enable automatic RTS with negative polarity
     #endif
             }
             else {
@@ -1617,7 +1649,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             fnConfigureUARTpin(channel, UART_RTS_PIN);                   // configure the LPUART/UART RTS pin
             if (iLPUART != 0) {
     #if (LPUARTS_AVAILABLE > 0) && !defined LPUART_WITHOUT_MODEM_CONTROL
-                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_RXRTSE | LPUART_MODIR_TXRTSPOL); // enable automatic RTS with positive polarity
+                ((KINETIS_LPUART_CONTROL *)uart_reg)->LPUART_MODIR |= (LPUART_MODIR_TXRTSE | LPUART_MODIR_TXRTSPOL); // enable automatic RTS with positive polarity
     #endif
             }
             else {

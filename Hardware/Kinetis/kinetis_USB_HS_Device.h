@@ -11,7 +11,7 @@
     File:      kinetis_USB_HS_Device.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.03.2013 Add USB HS support                                        {33}
     04.06.2013 Added USB_FS_MALLOC(), USB_FS_MALLOC_ALIGN(), USB_HS_MALLOC(), USB_HS_MALLOC_ALIGN() defaults {42}
@@ -768,7 +768,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
 {
     #if defined USB_BDT_FIXED
         #if defined _WINDOWS
-    static KINETIS_USB_ENDPOINT_BD USB_BDT_RAM[NUMBER_OF_USB_ENDPOINTS * 2];
+    static KINETIS_USB_ENDPOINT_BD USB_BDT_RAM[NUMBER_OF_HSUSB_ENDPOINTS * 2];
     static KINETIS_USB_ENDPOINT_BD *__USB_BDT_RAM = USB_BDT_RAM;
         #else
     extern KINETIS_USB_ENDPOINT_BD __USB_BDT_RAM[];

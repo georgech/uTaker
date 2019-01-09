@@ -11,7 +11,7 @@
     File:      LCD.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.10.2007 Add configurable delay to ensure two back to back writes are not too fast in 4 bit mode {1}
     10.10.2007 Correct nibble adjustment in 4-bit read                   {2}
@@ -336,9 +336,9 @@ static void _fnWriteDisplay(LCD_CONTROL_PORT_SIZE rs, unsigned char ucData)
 #else
     O_CONTROL_PORT_DAT &= ~O_CONTROL_EN;                                 // then set clock EN low PWEH >= 220ns 
 #endif
-  // RS and R/W can be set back if required 10ns after EN falling edge
-  // Data must remain stable >= 10ns
-  // EN could then be reactivated with a periodicity of 500ns
+    // RS and R/W can be set back if required 10ns after EN falling edge
+    // Data must remain stable >= 10ns
+    // EN could then be reactivated with a periodicity of 500ns
     //
 }
 
@@ -478,9 +478,11 @@ static int fnInitDisplay(int iState)
 #if defined LCD_CONTRAST_CONTROL                                         // {6}
         fnSetLCDContrast(temp_pars->temp_parameters.ucGLCDContrastPWM);  // {10} set default contrast
 #endif
+        // Fall through intentionally
+        //
     case STATE_INITIALISING:
         _fnWriteDisplay(0, INIT_FUNCTION_SET);                           // write function set
-        uTaskerMonoTimer( OWN_TASK, T_INIT_WAIT, E_INIT_CONTINUE );      // wait at least 4,1ms the first time and 100us the second time - we do longer waits than necessayr
+        uTaskerMonoTimer(OWN_TASK, T_INIT_WAIT, E_INIT_CONTINUE);        // wait at least 4,1ms the first time and 100us the second time - we do longer waits than necessary
         break;
 
     case WRITE_FUNCTION_SET:

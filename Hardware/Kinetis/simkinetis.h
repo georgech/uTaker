@@ -3900,7 +3900,7 @@ typedef struct stKINETIS_PERIPH
 #if defined LTC_AVAILABLE
     KINETIS_LTC        LTC;                                              // {33}
 #endif
-#if defined KINETIS_K80
+#if defined QSPI_AVAILABLE
     KINETIS_QSPI       QSPI;                                             // {29}
 #endif
 #if !defined KINETIS_KL && !defined KINETIS_KE

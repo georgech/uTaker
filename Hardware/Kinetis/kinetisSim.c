@@ -11,7 +11,7 @@
     File:      kinetisSim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     04.03.2012 Add NAND Flash controller                                 {1}
     18.03.2012 Add ADC                                                   {2}
@@ -8839,8 +8839,8 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-            #if LPUARTS_AVAILABLE == 5
-                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART5_TX) > 0)
+            #if UARTS_AVAILABLE == 5
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART0_TX) > 0)
             #else
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART5_TX) > 0)
             #endif

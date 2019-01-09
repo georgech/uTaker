@@ -139,40 +139,48 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             break;
 
         #if defined SUPPORT_HW_FLOW
-            #if defined UART0_MANUAL_RTS_CONTROL
+            #if defined LPUART0_MANUAL_RTS_CONTROL
         case UART_RTS_RS485_MANUAL_MODE:
             return 1;                                                    // this UART's RTS line is manually controlled in RS485 mode
             #endif
-            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
+            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined LPUART0_MANUAL_RTS_CONTROL
         case LPUART_RTS_PIN_ASSERT:
-            if (ucRTS_neg[0] == 0) {
-                _SET_RTS_0_HIGH();
+            if (ucRTS_neg[FIRST_LPUART_CHANNEL] == 0) {
+                _SET_LPRTS_0_HIGH();
             }
             else {
-                _SET_RTS_0_LOW();
+                _SET_LPRTS_0_LOW();
             }
             break;
         case LPUART_RTS_PIN_NEGATE:
-            if (ucRTS_neg[0] == 0) {
-                _SET_RTS_0_LOW();
+            if (ucRTS_neg[FIRST_LPUART_CHANNEL] == 0) {
+                _SET_LPRTS_0_LOW();
             }
             else {
-                _SET_RTS_0_HIGH();
+                _SET_LPRTS_0_HIGH();
             }
             break;
             #endif
 
         case LPUART_RTS_PIN_INVERTED:
         case LPUART_RTS_PIN:
-            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined UART0_MANUAL_RTS_CONTROL
+            #if defined LPUART_WITHOUT_MODEM_CONTROL || defined LPUART0_MANUAL_RTS_CONTROL
             if (iPinReference != LPUART_RTS_PIN_INVERTED) {
-                _CONFIGURE_RTS_0_LOW();                                  // configure RTS output and set to '0'
-                ucRTS_neg[0] = 0;                                        // not inverted RTS mode
+                _CONFIGURE_LPRTS_0_LOW();                                // configure RTS output and set to '0'
+                ucRTS_neg[FIRST_LPUART_CHANNEL] = 0;                     // not inverted RTS mode
             }
             else {
-                _CONFIGURE_RTS_0_HIGH();                                 // configure RTS output and set to '1'
-                ucRTS_neg[0] = 1;                                        // inverted RTS mode
+                _CONFIGURE_LPRTS_0_HIGH();                               // configure RTS output and set to '1'
+                ucRTS_neg[FIRST_LPUART_CHANNEL] = 1;                     // inverted RTS mode
             }
+            #elif defined KINETIS_K65 || defined KINETIS_K66
+                #if defined LPUART0_ON_D
+            _CONFIG_PERIPHERAL(D, 10, (PD_10_LPUART0_RTS));              // LPUART0_RTS on PD10 (alt. function 5)
+                #elif defined LPUART0_ON_A
+            _CONFIG_PERIPHERAL(A, 3, (PA_3_LPUART0_RTS));                // LPUART0_RTS on PA3 (alt. function 5)
+                #else
+            _CONFIG_PERIPHERAL(E, 11, (PE_11_LPUART0_RTS));              // LPUART0_RTS on PE11 (alt. function 5)
+                #endif
             #elif defined KINETIS_KE15
             _CONFIG_PERIPHERAL(C, 9, (PC_9_LPUART0_RTS));                // LPUART0_RTS on PC9 (alt. function 6)
             #endif

@@ -320,18 +320,18 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define BUS_FLASH_CLOCK_SHARED                                       // bus and flash clocks are shared and so have the same speed
 #endif
 
-#if (defined KINETIS_K60 && (KINETIS_MAX_SPEED >= 120000000)) || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+#if (defined KINETIS_K60 && (KINETIS_MAX_SPEED >= 120000000)) || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
     #define HS_USB_AVAILABLE
-    #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+    #if defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
         #define KINETIS_WITH_USBPHY                                      // USB2.0 PHY integrated in device
     #endif
 #endif
 
-#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KV40 || defined KINETIS_KV50 || defined KINETIS_KS
+#if (defined KINETIS_K22 && !defined KINETIS_FLEX && ((SIZE_OF_FLASH >= (128 * 1024)) && (SIZE_OF_FLASH <= (512 * 1024)))) || defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KV40 || defined KINETIS_KV50 || defined KINETIS_KS
     #define HIGH_SPEED_RUN_MODE_AVAILABLE
 #endif
 
-#if defined KINETIS_K26 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && (((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)) && !defined KINETIS_FLEX))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15 || defined KINETIS_KS
+#if defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_KL28 || defined KINETIS_K63 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K02 || defined KINETIS_K63 || (defined KINETIS_K22 && (((SIZE_OF_FLASH == (512 * 1024)) || (SIZE_OF_FLASH == (128 * 1024)) && !defined KINETIS_FLEX))) || defined KINETIS_K24 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KL03 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL82 || defined KINETIS_KV30 || defined KINETIS_KE15 || defined KINETIS_KS
     #define KINETIS_HAS_IRC48M                                           // device has IRC48M which can be used for crystal-less USB
 #endif
 
@@ -1272,7 +1272,7 @@ typedef struct stRESET_VECTOR
 
 // CAU configuration
 //
-#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL28
+#if defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL28
     #define CAU_V2_AVAILABLE
 #elif (defined KINETIS_K24 && (SIZE_OF_FLASH == (1 * 1024 * 1024))) || defined  KINETIS_K64
     #define CAU_V1_AVAILABLE
@@ -1286,7 +1286,7 @@ typedef struct stRESET_VECTOR
 
 // UART configuration
 //
-#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
+#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_KS
     #define UARTS_AVAILABLE         3
@@ -1345,7 +1345,7 @@ typedef struct stRESET_VECTOR
 
 // LPUART configuration
 //
-#if defined KINETIS_K80
+#if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
     #define LPUARTS_AVAILABLE       5
     #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KE18
@@ -1420,7 +1420,7 @@ typedef struct stRESET_VECTOR
 #endif
 #define SPI_CHIP_SELECTS            6
 
-#if defined KINETIS_K80
+#if defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K80
     #define QSPI_AVAILABLE          1
 #endif
 
@@ -1432,7 +1432,7 @@ typedef struct stRESET_VECTOR
 #elif defined KINETIS_KE15 || defined KINETIS_KS
     #define I2C_AVAILABLE                0
     #define LPI2C_AVAILABLE              2
-#elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+#elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
     #define I2C_AVAILABLE                4
     #define LPI2C_AVAILABLE              0
 #elif defined KINETIS_K64
@@ -1474,7 +1474,7 @@ typedef struct stRESET_VECTOR
     #define I2S_AVAILABLE                2
 #elif defined KINETIS_K22 || defined KINETIS_KL43 || defined KINETIS_K80
     #define I2S_AVAILABLE                1
-#elif defined KINETIS_K61 || defined KINETIS_K70 || ((defined KINETIS_K60 || defined KINETIS_K20) && KINETIS_MAX_SPEED > 100000000)
+#elif defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K61 || defined KINETIS_K70 || ((defined KINETIS_K60 || defined KINETIS_K20) && KINETIS_MAX_SPEED > 100000000)
     #define I2S_AVAILABLE                2
 #else
     #define I2S_AVAILABLE                0
@@ -1600,7 +1600,7 @@ typedef struct stRESET_VECTOR
     #define ADC_CONTROLLERS         2
 #elif defined KINETIS_KE18
     #define ADC_CONTROLLERS         3
-#elif defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || defined KINETIS_K12 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
+#elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_K02 || defined KINETIS_K12 || ((defined KINETIS_K20 || defined KINETIS_K21) && (KINETIS_MAX_SPEED < 72000000))
     #define ADC_CONTROLLERS         1
 #elif defined KINETIS_KM || defined KINETIS_KV50
     #define ADC_CONTROLLERS         1
@@ -1683,7 +1683,7 @@ typedef struct stRESET_VECTOR
     #else
         #define NUMBER_OF_SDHC    0
     #endif
-#elif defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K40 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80
+#elif defined KINETIS_K21 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K40 || defined KINETIS_K53 || defined KINETIS_K60 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80
     #define NUMBER_OF_SDHC        1
 #elif defined KINETIS_K20 && (KINETIS_MAX_SPEED == 120000000)
     #define NUMBER_OF_SDHC        1
@@ -1737,9 +1737,9 @@ typedef struct stRESET_VECTOR
 
 // RNG configuration
 //
-#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24 || defined KINETIS_KL82 || defined KINETIS_KV50
+#if defined KINETIS_K60 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K52 || defined KINETIS_K53 || defined KINETIS_K24 || defined KINETIS_KL82 || defined KINETIS_KV50
     #define RNG_AVAILABLE                                                // hardware based random number generator available
-    #if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KV50
+    #if defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KV50
         #define TRUE_RANDOM_NUMBER_GENERATOR                             // true random number generator is available
     #elif defined KINETIS_REVISION_2 || defined KINETIS_K70
         #define RANDOM_NUMBER_GENERATOR_A                                // random number generator A is available
@@ -4098,7 +4098,7 @@ typedef struct stVECTOR_TABLE
     #if defined LTC_AVAILABLE
         #define LTC_BLOCK                      ((unsigned char *)(&kinetis.LTC)) // LTC
     #endif
-    #if defined KINETIS_K80
+    #if defined QSPI_AVAILABLE
         #define QSPI_BLOCK                     ((unsigned char *)(&kinetis.QSPI)) // QuadSPI
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
@@ -4741,7 +4741,7 @@ typedef struct stVECTOR_TABLE
             #define LTC_BLOCK                  0x400d1000                // LTC
         #endif
     #endif
-    #if defined KINETIS_K80
+    #if defined QSPI_AVAILABLE
         #define QSPI_BLOCK                     0x400da000                // QuadSPI
     #endif
     #define OSC1_BLOCK                         0x400e5000                // Oscillator 1
@@ -8088,7 +8088,7 @@ typedef struct st_KINETIS_DSPI
     #define LTC0_IFIFO          *(volatile unsigned long *)(LTC_BLOCK + 0x7e0) // LTC input data FIFO (read-only)
     #define LTC0_OFIFO          *(volatile unsigned long *)(LTC_BLOCK + 0x7f0) // LTC output data FIFO (write-only)
 #endif
-#if defined KINETIS_K80
+#if defined QSPI_AVAILABLE
     // QuadSPI                                                           // {76}
     //
     #define QuadSPI0_MCR        *(unsigned long *)(QSPI_BLOCK + 0x000)   // QSPI0 module configuration register
@@ -16673,7 +16673,8 @@ typedef struct stKINETIS_UART_CONTROL
       #define USB_CLK_RECOVER_INT_STATUS_OVF_ERROR 0x10
 #endif
 
-#define NUMBER_OF_USB_ENDPOINTS 16                                       // Kinetis support 16 end points
+#define NUMBER_OF_USB_ENDPOINTS   16                                     // Kinetis FS OTG supports 16 bi-directional end points
+#define NUMBER_OF_HSUSB_ENDPOINTS 8                                      // Kinetis HS OTG supports 8 bi-directional end points
 
 //#define _SUPRESS_REPEAT_DATA                                           // repeated data not supressed due to problems when flashing memory at the same time
 
