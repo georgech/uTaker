@@ -6103,7 +6103,7 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
         #if defined DMAMUX0_CHCFG_SOURCE_LPUART5_RX
             #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART5_RX)
         #else
-            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UAR5_RX)
+            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART5_RX)
         #endif
     #endif
 

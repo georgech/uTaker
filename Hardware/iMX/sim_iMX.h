@@ -391,6 +391,42 @@ typedef struct st_iMX_GPIO
     unsigned long GPIO_DR_TOGGLE;
 } iMX_GPIO;
 
+typedef struct st_iMX_CCM
+{
+    unsigned long CCM_CCR;
+    unsigned long ulRes0;
+    unsigned long CCM_CSR;
+    unsigned long CCM_CCSR;
+    unsigned long CCM_CACRR;
+    unsigned long CCM_CBCDR;
+    unsigned long CCM_CBCMR;
+    unsigned long CCM_CSCMR1;
+    unsigned long CCM_CSCMR2;
+    unsigned long CCM_CSCDR1;
+    unsigned long CCM_CS1CDR;
+    unsigned long CCM_CS2CDR;
+    unsigned long CCM_CDCDR;
+    unsigned long ulRes1;
+    unsigned long CCM_CSCDR2;
+    unsigned long CCM_CSCDR3;
+    unsigned long ulRes2[2];
+    unsigned long CCM_CDHIPR;
+    unsigned long ulRes3[2];
+    unsigned long CCM_CLPCR;
+    unsigned long CCM_CISR;
+    unsigned long CCM_CIMR;
+    unsigned long CCM_CCOSR;
+    unsigned long CCM_CGPR;
+    unsigned long CCM_CCGR0;
+    unsigned long CCM_CCGR1;
+    unsigned long CCM_CCGR2;
+    unsigned long CCM_CCGR3;
+    unsigned long CCM_CCGR4;
+    unsigned long CCM_CCGR5;
+    unsigned long CCM_CCGR6;
+    unsigned long CCM_CMEOR;
+} iMX_CCM;
+
 #define _PORT1                  0
 #define _PORT2                  1
 #define _PORT3                  2
@@ -665,7 +701,9 @@ typedef struct stKINETIS_CORTEX_M4_REGS
     unsigned long DMA_ERR;
     unsigned long ulRes4;
     unsigned long DMA_HRS;
-    unsigned long ulRes5[50];
+    unsigned long ulRes5[3];
+    unsigned long DMA_EARS;                                              // kinetis eDMA doesn't have this regiter
+    unsigned long ulRes6[46];
     unsigned char DMA_DCHPRI3;
     unsigned char DMA_DCHPRI2;
     unsigned char DMA_DCHPRI1;
@@ -1924,42 +1962,42 @@ typedef struct stKINETIS_DMAMUX
 {
 unsigned char DMAMUX_CHCFG0;
     #if !defined KINETIS_KM
-    unsigned char DMAMUX_CHCFG1;
-    unsigned char DMAMUX_CHCFG2;
-    unsigned char DMAMUX_CHCFG3;
+    unsigned long DMAMUX_CHCFG1;
+    unsigned longDMAMUX_CHCFG2;
+    unsigned longDMAMUX_CHCFG3;
         #if DMA_CHANNEL_COUNT > 4
-        unsigned char DMAMUX_CHCFG4;
-        unsigned char DMAMUX_CHCFG5;
-        unsigned char DMAMUX_CHCFG6;
-        unsigned char DMAMUX_CHCFG7;
+        unsigned longDMAMUX_CHCFG4;
+        unsigned longDMAMUX_CHCFG5;
+        unsigned longDMAMUX_CHCFG6;
+        unsigned longDMAMUX_CHCFG7;
         #endif
         #if DMA_CHANNEL_COUNT > 8
-        unsigned char DMAMUX_CHCFG8;
-        unsigned char DMAMUX_CHCFG9;
-        unsigned char DMAMUX_CHCFG10;
-        unsigned char DMAMUX_CHCFG11;
-        unsigned char DMAMUX_CHCFG12;
-        unsigned char DMAMUX_CHCFG13;
-        unsigned char DMAMUX_CHCFG14;
-        unsigned char DMAMUX_CHCFG15;
+        unsigned longDMAMUX_CHCFG8;
+        unsigned longDMAMUX_CHCFG9;
+        unsigned longDMAMUX_CHCFG10;
+        unsigned longDMAMUX_CHCFG11;
+        unsigned longDMAMUX_CHCFG12;
+        unsigned longDMAMUX_CHCFG13;
+        unsigned longDMAMUX_CHCFG14;
+        unsigned longDMAMUX_CHCFG15;
         #endif
         #if DMA_CHANNEL_COUNT > 16
-        unsigned char DMAMUX_CHCFG16;
-        unsigned char DMAMUX_CHCFG17;
-        unsigned char DMAMUX_CHCFG18;
-        unsigned char DMAMUX_CHCFG19;
-        unsigned char DMAMUX_CHCFG20;
-        unsigned char DMAMUX_CHCFG21;
-        unsigned char DMAMUX_CHCFG22;
-        unsigned char DMAMUX_CHCFG23;
-        unsigned char DMAMUX_CHCFG24;
-        unsigned char DMAMUX_CHCFG25;
-        unsigned char DMAMUX_CHCFG26;
-        unsigned char DMAMUX_CHCFG27;
-        unsigned char DMAMUX_CHCFG28;
-        unsigned char DMAMUX_CHCFG29;
-        unsigned char DMAMUX_CHCFG30;
-        unsigned char DMAMUX_CHCFG31;
+        unsigned longDMAMUX_CHCFG16;
+        unsigned longDMAMUX_CHCFG17;
+        unsigned longDMAMUX_CHCFG18;
+        unsigned longDMAMUX_CHCFG19;
+        unsigned longDMAMUX_CHCFG20;
+        unsigned longDMAMUX_CHCFG21;
+        unsigned longDMAMUX_CHCFG22;
+        unsigned longDMAMUX_CHCFG23;
+        unsigned longDMAMUX_CHCFG24;
+        unsigned longDMAMUX_CHCFG25;
+        unsigned longDMAMUX_CHCFG26;
+        unsigned longDMAMUX_CHCFG27;
+        unsigned longDMAMUX_CHCFG28;
+        unsigned longDMAMUX_CHCFG29;
+        unsigned longDMAMUX_CHCFG30;
+        unsigned longDMAMUX_CHCFG31;
         #endif
     #endif
 } KINETIS_DMAMUX;
@@ -3226,7 +3264,7 @@ typedef struct stKINETIS_UART
 
 typedef struct stKINETIS_LPUART
 {
-#if defined KINETIS_KL28 || defined KINETIS_KE15
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined _iMX
     volatile unsigned long  LPUART_VERID;
     volatile unsigned long  LPUART_PARAM;
     unsigned long  LPUART_GLOBAL;
@@ -3240,7 +3278,7 @@ typedef struct stKINETIS_LPUART
 #if !defined LPUART_WITHOUT_MODEM_CONTROL
     unsigned long LPUART_MODIR;
 #endif
-#if defined KINETIS_KL28 || defined KINETIS_KE15
+#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined _iMX
     unsigned long LPUART_FIFO;
     unsigned long LPUART_WATER;
 #endif
@@ -4126,6 +4164,7 @@ typedef struct st_iMX_PERIPH
     iMX_IOMUXC_SW         IOMUXC_SW;                                     // IOMUXC SW control
 
     iMX_GPIO              GPIO[5];                                       // GPIO (warning - these are not physically contiguous in the memory map)
+    iMX_CCM               CCM;                                           // clock control module
 } iMX_PERIPH;
 
 

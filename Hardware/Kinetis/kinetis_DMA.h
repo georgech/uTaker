@@ -28,6 +28,7 @@
     12.02.2018 Add DMA_SW_TRIGGER, DMA_INITIATE_TRANSFER and DMA_WAIT_TERMINATION options as well as DMA_BUFFER_START_FINISH {8}
     25.03.2018 Correct _DMA_Interrupt_3()                                {9}
     04.01.2019 Monitor DMA channel errors when performing blocking software based transfers and return an error code {10}
+    09.01.2019 Shared with iMX project
 
 */
 
@@ -671,7 +672,11 @@ extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaT
         usDmaTriggerSource = DMAMUX0_DMA0_CHCFG_SOURCE_PIT0;
     }
         #endif
-    *(unsigned char *)(DMAMUX0_BLOCK + ucDMA_channel) = (unsigned char)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
+    {                                                                    // set DMAMUX trigger (compatible between kinetis and iMX)
+        DMA_MUX_REGISTER *ptrDMAMUX = (DMA_MUX_REGISTER *)DMAMUX0_BLOCK;
+        ptrDMAMUX += ucDMA_channel;
+        *ptrDMAMUX = (DMA_MUX_REGISTER)(usDmaTriggerSource | DMAMUX_CHCFG_ENBL); // connect trigger source to DMA channel
+    }
     #endif
     #if defined _WINDOWS                                                 // simulator checks to help detect incorrect usage
         #if defined DMA_MEMCPY_CHANNEL

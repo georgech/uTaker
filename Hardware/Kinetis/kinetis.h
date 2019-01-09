@@ -6657,6 +6657,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
 #if !defined DEVICE_WITHOUT_DMA
     // DMAMUX 0
     //
+    #define DMA_MUX_REGISTER     unsigned char
     #define DMAMUX0_CHCFG_ADD   (unsigned char *)(DMAMUX0_BLOCK + 0x00)
     #define DMAMUX0_CHCFG0     *(unsigned char *)(DMAMUX0_BLOCK + 0x00)  // channel 0 configuration register
       #define DMAMUX0_CHCFG_SOURCE_DISABLED          0                   // 0x00 - valid for Kinetis KV50 on channel s 0..15

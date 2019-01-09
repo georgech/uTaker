@@ -364,7 +364,6 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = cPinDefaults[_PORT1][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = cPinDefaults[_PORT1][31];
 
-
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00 = cPinDefaults[_PORT2][0];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_01 = cPinDefaults[_PORT2][1];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_02 = cPinDefaults[_PORT2][2];
@@ -408,12 +407,33 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_40 = cPinDefaults[_PORT3][8];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41 = cPinDefaults[_PORT3][9];
 
-
-
-
-
-
-
+    // Clock configuration module (CCM)
+    //
+    CCM_CCR = 0x0401107f;
+    CCM_CSR = 0x00000010;
+    CCM_CCSR = 0x00000100;
+    CCM_CBCDR = 0x000a8000;
+    CCM_CBCMR = 0x2daa8324;
+    CCM_CSCMR1 = 0x04900000;
+    CCM_CSCMR2 = 0x13192f06;
+    CCM_CSCDR1 = 0x06490b00;
+    CCM_CS1CDR = 0x0ec102c1;
+    CCM_CS2CDR = 0x000736c1;
+    CCM_CDCDR = 0x33f71f92;
+    CCM_CSCDR2 = 0x00029150;
+    CCM_CSCDR3 = 0x00030841;
+    CCM_CLPCR = 0x00000079;
+    CCM_CIMR = 0xffffffff;
+    CCM_CCOSR = 0x000a0001;
+    CCM_CGPR = 0x0000fe62;
+    CCM_CCGR0 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
+    CCM_CCGR1 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
+    CCM_CCGR2 = 0xfc3fffff;                                              // xbar1 and xbar2 clocks stopped
+    CCM_CCGR3 = 0xffffffcf;                                              // semc clocks stopped
+    CCM_CCGR4 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
+    CCM_CCGR5 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
+    CCM_CCGR6 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
+    CCM_CMEOR = 0xffffffff;
 #if !defined KINETIS_KL
     FMC_PFAPR  = 0x00f8003f;                                             // flash memory controller
     #if defined KINETIS_K66
@@ -4220,7 +4240,7 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
     }
     if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
         if (ucTriggerSource != 0) {
-            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+            unsigned long *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
             // Check that the trigger source is correctly connected to the DMA channel
             //
             if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
@@ -4436,7 +4456,7 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
     #else
     int iMuxChannels = DMA_CHANNEL_COUNT;                                // DMAMUX has the same channel count as there are DMA channels
     #endif
-    unsigned char *ptrMux;
+    unsigned long *ptrMux;
     int iChannel = 0;
     switch (iDMAmux) {
     case 0:
@@ -5007,11 +5027,7 @@ static const unsigned char uart_type[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {
         #else
             #define DMUX_UART4_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UART4_RX)
         #endif
-        #if defined DMAMUX0_CHCFG_SOURCE_LPUART5_RX
-            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART5_RX)
-        #else
-            #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_UAR5_RX)
-        #endif
+        #define DMUX_UART5_RX_CHANNEL (DMAMUX0_CHCFG_SOURCE_LPUART5_RX)
     #endif
 
     #if defined SERIAL_INTERFACE && !defined DEVICE_WITHOUT_DMA
@@ -7733,12 +7749,7 @@ extern unsigned long fnSimDMA(char *argv[])
         #endif
         #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
             case DMA_UART5_TX_CHANNEL:                                   // handle UART DMA transmission on UART 5
-            #if UARTS_AVAILABLE == 5
-                if ((LPUART0_BAUD & LPUART_BAUD_TDMAE) != 0)             // if DMA operation is enabled
-            #else
-                if ((UART5_C5 & UART_C5_TDMAS) != 0)                     // if DMA operation is enabled
-            #endif
-                {
+                if ((LPUART5_BAUD & LPUART_BAUD_TDMAE) != 0) {           // if DMA operation is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_UART5];
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
@@ -7746,22 +7757,13 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
-            #if LPUARTS_AVAILABLE == 5
-                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART5_TX) > 0)
-            #else
-                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_UART5_TX) > 0)
-            #endif
-                            {
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART5_TX) > 0) {
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {
                                 fnUART_Tx_int(5);                        // handle possible pending interrupt after DMA completion
                             }
-            #if UARTS_AVAILABLE == 5
-                            fnLogTx5((unsigned char)LPUART0_DATA);
-            #else
-	                        fnLogTx5(UART5_D);
-            #endif
+                            fnLogTx5((unsigned char)LPUART5_DATA);
                             ulNewActions |= SEND_COM_5;
                         }
                     }

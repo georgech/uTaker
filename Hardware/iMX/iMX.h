@@ -1166,7 +1166,9 @@ typedef struct stRESET_VECTOR
 
 // UART configuration
 //
-#if defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
+#if defined _iMX
+    #define UARTS_AVAILABLE         0
+#elif defined KINETIS_KL03 || defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_K80 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_KW41 // devices exclusively with LPUARTs
     #define UARTS_AVAILABLE         0
 #elif defined KINETIS_KS
     #define UARTS_AVAILABLE         3
@@ -1225,7 +1227,9 @@ typedef struct stRESET_VECTOR
 
 // LPUART configuration
 //
-#if defined KINETIS_K80
+#if defined _iMX
+    #define LPUARTS_AVAILABLE       8                                    // LPUARTs 1..8
+#elif defined KINETIS_K80
     #define LPUARTS_AVAILABLE       5
     #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE15 || defined KINETIS_KE18
@@ -4118,6 +4122,8 @@ typedef struct stVECTOR_TABLE
 
     #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[5])) // GPIO
 
+    #define CCM_BLOCK                          ((unsigned char *)(&iMX.CCM)) // clock control module
+
 
 
     #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {48}
@@ -4334,6 +4340,15 @@ typedef struct stVECTOR_TABLE
     #if LPUARTS_AVAILABLE > 4
         #define LPUART4_BLOCK                  ((unsigned char *)(&kinetis.LPUART[4])) // LPUART4
     #endif
+    #if LPUARTS_AVAILABLE > 5
+        #define LPUART5_BLOCK                  ((unsigned char *)(&kinetis.LPUART[5])) // LPUART5
+    #endif
+    #if LPUARTS_AVAILABLE > 6
+        #define LPUART6_BLOCK                  ((unsigned char *)(&kinetis.LPUART[6])) // LPUART6
+    #endif
+    #if LPUARTS_AVAILABLE > 7
+        #define LPUART7_BLOCK                  ((unsigned char *)(&kinetis.LPUART[7])) // LPUART7
+    #endif
     #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         #define UART0_BLOCK                    ((unsigned char *)(&kinetis.UART[0])) // UART
     #endif
@@ -4469,14 +4484,16 @@ typedef struct stVECTOR_TABLE
 
     #define GPIO5_BLOCK                        0x40oc8000                // GPIO 5
 
+    #define CCM_BLOCK                          0x400fc000                // clock control module
+
 
     #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {48}
         #if !defined DEVICE_WITHOUT_DMA
             #define DMA_BLOCK                  0x40008100                // DMA Controller
         #endif
     #else
-        #define eDMA_BLOCK                     0x40008000                // eDMA Controller
-        #define eDMA_DESCRIPTORS               0x40009000                // eDMA Descriptor Memory
+        #define eDMA_BLOCK                     0x400e8000                // eDMA Controller
+        #define eDMA_DESCRIPTORS               0x400e9000                // eDMA Descriptor Memory
     #endif
     #if defined INTMUX0_AVAILABLE                                        // {100}
         #define INTMUX0_BLOCK                  0x40024000                // INTMUX0
@@ -4502,7 +4519,7 @@ typedef struct stVECTOR_TABLE
     #endif
     #define FTFL_BLOCK                         0x40020000                // Flash Memory Module
     #if !defined DEVICE_WITHOUT_DMA
-        #define DMAMUX0_BLOCK                  0x40021000                // DMAMUX0
+        #define DMAMUX0_BLOCK                  0x400ec000                // DMAMUX0
     #endif
     #if defined KINETIS_KM
         #define DMAMUX1_BLOCK                  0x40022000                // DMAMUX1
@@ -4732,41 +4749,28 @@ typedef struct stVECTOR_TABLE
         #define LPI2C2_BLOCK                   0x40042000                // LPI2C1
     #endif
     #if LPUARTS_AVAILABLE > 0
-        #if defined KINETIS_KE15
-            #define LPUART0_BLOCK              0x4006a000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K66 || defined KINETIS_K65
-            #define LPUART0_BLOCK              0x400c4000                // LPUART0
-        #elif defined KINETIS_KL
-            #define LPUART0_BLOCK              0x40054000                // LPUART0
-        #else
-            #define LPUART0_BLOCK              0x4002a000                // LPUART0
-        #endif
+        #define LPUART0_BLOCK                  0x40184000                // LPUART0 [NXP cpounts LPUART1..8]
     #endif
     #if LPUARTS_AVAILABLE > 1
-        #if defined KINETIS_KE15
-            #define LPUART1_BLOCK              0x4006b000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28
-            #define LPUART1_BLOCK              0x400c5000                // LPUART1
-        #else
-            #define LPUART1_BLOCK              0x40055000                // LPUART1
-        #endif
+        #define LPUART1_BLOCK                  0x40188000                // LPUART1
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #if defined KINETIS_KE15
-            #define LPUART2_BLOCK              0x4006c000                // LPUART0
-        #elif defined KINETIS_KL28
-            #define LPUART2_BLOCK              0x40046000                // LPUART2
-        #elif defined KINETIS_KL82
-            #define LPUART2_BLOCK              0x40056000                // LPUART2
-        #else
-            #define LPUART2_BLOCK              0x400c6000                // LPUART2
-        #endif
+        #define LPUART2_BLOCK                  0x4018c000                // LPUART2
     #endif
     #if LPUARTS_AVAILABLE > 3
-        #define LPUART3_BLOCK                 0x400c7000                 // LPUART3
+        #define LPUART3_BLOCK                  0x40190000                // LPUART3
     #endif
     #if LPUARTS_AVAILABLE > 4
-        #define LPUART4_BLOCK                 0x400d6000                 // LPUART4
+        #define LPUART4_BLOCK                  0x40194000                // LPUART4
+    #endif
+    #if LPUARTS_AVAILABLE > 5
+        #define LPUART5_BLOCK                  0x40198000                // LPUART5
+    #endif
+    #if LPUARTS_AVAILABLE > 6
+        #define LPUART6_BLOCK                  0x4019c000                // LPUART6
+    #endif
+    #if LPUARTS_AVAILABLE > 7
+        #define LPUART7_BLOCK                  0x401a0000                // LPUART7
     #endif
     #if UARTS_AVAILABLE > 0 && (LPUARTS_AVAILABLE < 1 || defined LPUARTS_PARALLEL)
         #define UART0_BLOCK                    0x4006a000                // UART0
@@ -5226,6 +5230,8 @@ typedef struct stVECTOR_TABLE
   #define DMA_ERR_ERR31     0x80000000                                   // DMA channel 15 encoutered an error
 
 #define DMA_HRS             *(unsigned long *)(eDMA_BLOCK + 0x034)       // DMA Hardware Request Status Register
+
+#define DMA_EARS            *(unsigned long *)(eDMA_BLOCK + 0x044)       // DMA enable asynchronous request in stop register
 
 #define DMA_DCHPRI3         *(unsigned char *)(eDMA_BLOCK + 0x100)       // DMA Channel 3 Priority Register
   #define DMA_DCHPRI_DPA    0x40                                         // disable preempt ability
@@ -5816,8 +5822,8 @@ typedef struct stKINETIS_DMA_TDC
 #define DMA_DIRECTION_BUFFER_BUFFER  0x00002000                          // buffer to buffer
 #define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
 
-extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
-
+extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority); // {113}
+    #define DMA_ERROR_OCCURRED       -1
 
 // INTMUX                                                                {100}
 //
@@ -6829,8 +6835,28 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
 #if !defined DEVICE_WITHOUT_DMA
     // DMAMUX 0
     //
-    #define DMAMUX0_CHCFG_ADD   (unsigned char *)(DMAMUX0_BLOCK + 0x00)
-    #define DMAMUX0_CHCFG0     *(unsigned char *)(DMAMUX0_BLOCK + 0x00)  // channel 0 configuration register
+    #define DMA_MUX_REGISTER     unsigned long
+    #define DMAMUX0_CHCFG_ADD   (unsigned long *)(DMAMUX0_BLOCK + 0x00)
+    #define DMAMUX0_CHCFG0     *(unsigned long *)(DMAMUX0_BLOCK + 0x00)  // channel 0 configuration register
+        #define DMAMUX0_CHCFG_SOURCE_FLEXIO1_0_1     0                   // 0x00 FlexIO 1 request 0 or 1
+        #define DMAMUX0_CHCFG_SOURCE_FLEXIO1_4_5     1                   // 0x01 FlexIO 1 request 4 or 5
+        #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX      2                   // 0x02 LPUART0 TX [LPUART 1]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX      3                   // 0x03 LPUART0 RX [LPUART 1]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX      4                   // 0x04 LPUART2 TX [LPUART 3]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX      5                   // 0x05 LPUART2 RX [LPUART 3]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX      6                   // 0x06 LPUART4 TX [LPUART 5]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX      7                   // 0x07 LPUART4 RX [LPUART 5]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART6_TX      8                   // 0x08 LPUART6 TX [LPUART 7]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART6_RX      9                   // 0x09 LPUART6 RX [LPUART 7]
+
+        #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX      66                  // 0x42 LPUART1 TX [LPUART 2]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX      67                  // 0x43 LPUART1 RX [LPUART 2]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX      68                  // 0x44 LPUART3 TX [LPUART 4]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX      69                  // 0x45 LPUART3 RX [LPUART 4]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART5_TX      70                  // 0x46 LPUART5 TX [LPUART 6]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART5_RX      71                  // 0x47 LPUART5 RX [LPUART 6]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART7_TX      72                  // 0x48 LPUART7 TX [LPUART 8]
+        #define DMAMUX0_CHCFG_SOURCE_LPUART7_RX      73                  // 0x49 LPUART7 RX [LPUART 8]
       #define DMAMUX0_CHCFG_SOURCE_DISABLED          0                   // 0x00 - valid for Kinetis KV50 on channel s 0..15
     #if defined KINETIS_KL82 || defined KINETIS_KL28
         #define DMAMUX0_CHCFG_SOURCE_FLEXIO0_SHIFT0  1                   // 0x01 FlexIO shifter 0
@@ -7229,22 +7255,6 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX1       (61 | DMAMUX_CHCFG_TRIG) // 0x3d DMA MUX - always enabled
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX2       (62 | DMAMUX_CHCFG_TRIG) // 0x3e DMA MUX - always enabled
           #define DMAMUX0_CHCFG_SOURCE_DMAMUX3       (63 | DMAMUX_CHCFG_TRIG) // 0x3f DMA MUX - always enabled
-          // For compatibility
-          //
-          #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    DMAMUX0_CHCFG_SOURCE_UART0_RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    DMAMUX0_CHCFG_SOURCE_UART0_TX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    DMAMUX0_CHCFG_SOURCE_UART1_RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART1_TX    DMAMUX0_CHCFG_SOURCE_UART1_TX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    DMAMUX0_CHCFG_SOURCE_UART2_RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    DMAMUX0_CHCFG_SOURCE_UART2_TX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX    DMAMUX0_CHCFG_SOURCE_UART3_RX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX    DMAMUX0_CHCFG_SOURCE_UART3_TX
-          #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX    DMAMUX0_CHCFG_SOURCE_UART4_RX
-          #if defined DMAMUX0_CHCFG_SOURCE_UART4_TX
-              #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_TX
-          #else
-              #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
-          #endif
         #elif LPUARTS_AVAILABLE > 0
           #if !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE15 && !defined KINETIS_KE18
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
@@ -7280,8 +7290,9 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT2   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 | 0x0200)
         #define DMAMUX0_DMA0_CHCFG_SOURCE_PIT3   (DMAMUX0_DMA0_CHCFG_SOURCE_PIT0 | 0x0300)
       #endif
-      #define DMAMUX_CHCFG_TRIG                  0x40                    // DMA channel trigger enable
-      #define DMAMUX_CHCFG_ENBL                  0x80                    // DMA channel enable
+      #define DMAMUX_CHCFG_A_ON                  0x20000000              // DMA channel always enable
+      #define DMAMUX_CHCFG_TRIG                  0x40000000              // DMA channel trigger enable
+      #define DMAMUX_CHCFG_ENBL                  0x80000000              // DMA channel enable
 
     #if defined KINETIS_KV50                                             // valid for channels 16..31
         #define DMAMUX0_CHCFG_SOURCE_UART2_RX      2                     // 0x02 UART2 RX
@@ -7322,42 +7333,42 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
     #endif
 
     #if !defined KINETIS_KM
-        #define DMAMUX0_CHCFG1     *(unsigned char *)(DMAMUX0_BLOCK + 0x01) // Channel 1 Configuration Register
-        #define DMAMUX0_CHCFG2     *(unsigned char *)(DMAMUX0_BLOCK + 0x02) // Channel 2 Configuration Register
-        #define DMAMUX0_CHCFG3     *(unsigned char *)(DMAMUX0_BLOCK + 0x03) // Channel 3 Configuration Register
+        #define DMAMUX0_CHCFG1     *(unsigned long *)(DMAMUX0_BLOCK + 0x04) // Channel 1 Configuration Register
+        #define DMAMUX0_CHCFG2     *(unsigned long *)(DMAMUX0_BLOCK + 0x08) // Channel 2 Configuration Register
+        #define DMAMUX0_CHCFG3     *(unsigned long *)(DMAMUX0_BLOCK + 0x0c) // Channel 3 Configuration Register
         #if DMA_CHANNEL_COUNT > 4
-            #define DMAMUX0_CHCFG4     *(unsigned char *)(DMAMUX0_BLOCK + 0x04) // Channel 4 Configuration Register
-            #define DMAMUX0_CHCFG5     *(unsigned char *)(DMAMUX0_BLOCK + 0x05) // Channel 5 Configuration Register
-            #define DMAMUX0_CHCFG6     *(unsigned char *)(DMAMUX0_BLOCK + 0x06) // Channel 6 Configuration Register
-            #define DMAMUX0_CHCFG7     *(unsigned char *)(DMAMUX0_BLOCK + 0x07) // Channel 7 Configuration Register
+            #define DMAMUX0_CHCFG4     *(unsigned long *)(DMAMUX0_BLOCK + 0x10) // Channel 4 Configuration Register
+            #define DMAMUX0_CHCFG5     *(unsigned long *)(DMAMUX0_BLOCK + 0x14) // Channel 5 Configuration Register
+            #define DMAMUX0_CHCFG6     *(unsigned long *)(DMAMUX0_BLOCK + 0x18) // Channel 6 Configuration Register
+            #define DMAMUX0_CHCFG7     *(unsigned long *)(DMAMUX0_BLOCK + 0x1c) // Channel 7 Configuration Register
         #endif
         #if DMA_CHANNEL_COUNT > 8
-            #define DMAMUX0_CHCFG8     *(unsigned char *)(DMAMUX0_BLOCK + 0x08) // Channel 8 Configuration Register
-            #define DMAMUX0_CHCFG9     *(unsigned char *)(DMAMUX0_BLOCK + 0x09) // Channel 9 Configuration Register
-            #define DMAMUX0_CHCFG10    *(unsigned char *)(DMAMUX0_BLOCK + 0x0a) // Channel 10 Configuration Register
-            #define DMAMUX0_CHCFG11    *(unsigned char *)(DMAMUX0_BLOCK + 0x0b) // Channel 11 Configuration Register
-            #define DMAMUX0_CHCFG12    *(unsigned char *)(DMAMUX0_BLOCK + 0x0c) // Channel 12 Configuration Register
-            #define DMAMUX0_CHCFG13    *(unsigned char *)(DMAMUX0_BLOCK + 0x0d) // Channel 13 Configuration Register
-            #define DMAMUX0_CHCFG14    *(unsigned char *)(DMAMUX0_BLOCK + 0x0e) // Channel 14 Configuration Register
-            #define DMAMUX0_CHCFG15    *(unsigned char *)(DMAMUX0_BLOCK + 0x0f) // Channel 15 Configuration Register
+            #define DMAMUX0_CHCFG8     *(unsigned long *)(DMAMUX0_BLOCK + 0x20) // Channel 8 Configuration Register
+            #define DMAMUX0_CHCFG9     *(unsigned long *)(DMAMUX0_BLOCK + 0x24) // Channel 9 Configuration Register
+            #define DMAMUX0_CHCFG10    *(unsigned long *)(DMAMUX0_BLOCK + 0x28) // Channel 10 Configuration Register
+            #define DMAMUX0_CHCFG11    *(unsigned long *)(DMAMUX0_BLOCK + 0x2c) // Channel 11 Configuration Register
+            #define DMAMUX0_CHCFG12    *(unsigned long *)(DMAMUX0_BLOCK + 0x30) // Channel 12 Configuration Register
+            #define DMAMUX0_CHCFG13    *(unsigned long *)(DMAMUX0_BLOCK + 0x34) // Channel 13 Configuration Register
+            #define DMAMUX0_CHCFG14    *(unsigned long *)(DMAMUX0_BLOCK + 0x38) // Channel 14 Configuration Register
+            #define DMAMUX0_CHCFG15    *(unsigned long *)(DMAMUX0_BLOCK + 0x3c) // Channel 15 Configuration Register
         #endif
         #if DMA_CHANNEL_COUNT > 16
-            #define DMAMUX0_CHCFG16    *(unsigned char *)(DMAMUX0_BLOCK + 0x10) // Channel 16 Configuration Register
-            #define DMAMUX0_CHCFG17    *(unsigned char *)(DMAMUX0_BLOCK + 0x11) // Channel 17 Configuration Register
-            #define DMAMUX0_CHCFG18    *(unsigned char *)(DMAMUX0_BLOCK + 0x12) // Channel 18 Configuration Register
-            #define DMAMUX0_CHCFG19    *(unsigned char *)(DMAMUX0_BLOCK + 0x13) // Channel 19 Configuration Register
-            #define DMAMUX0_CHCFG20    *(unsigned char *)(DMAMUX0_BLOCK + 0x14) // Channel 20 Configuration Register
-            #define DMAMUX0_CHCFG21    *(unsigned char *)(DMAMUX0_BLOCK + 0x15) // Channel 21 Configuration Register
-            #define DMAMUX0_CHCFG22    *(unsigned char *)(DMAMUX0_BLOCK + 0x16) // Channel 22 Configuration Register
-            #define DMAMUX0_CHCFG23    *(unsigned char *)(DMAMUX0_BLOCK + 0x17) // Channel 23 Configuration Register
-            #define DMAMUX0_CHCFG24    *(unsigned char *)(DMAMUX0_BLOCK + 0x18) // Channel 24 Configuration Register
-            #define DMAMUX0_CHCFG25    *(unsigned char *)(DMAMUX0_BLOCK + 0x19) // Channel 25 Configuration Register
-            #define DMAMUX0_CHCFG26    *(unsigned char *)(DMAMUX0_BLOCK + 0x1a) // Channel 26 Configuration Register
-            #define DMAMUX0_CHCFG27    *(unsigned char *)(DMAMUX0_BLOCK + 0x1b) // Channel 27 Configuration Register
-            #define DMAMUX0_CHCFG28    *(unsigned char *)(DMAMUX0_BLOCK + 0x1c) // Channel 28 Configuration Register
-            #define DMAMUX0_CHCFG29    *(unsigned char *)(DMAMUX0_BLOCK + 0x1d) // Channel 29 Configuration Register
-            #define DMAMUX0_CHCFG30    *(unsigned char *)(DMAMUX0_BLOCK + 0x1e) // Channel 30 Configuration Register
-            #define DMAMUX0_CHCFG31    *(unsigned char *)(DMAMUX0_BLOCK + 0x1f) // Channel 31 Configuration Register
+            #define DMAMUX0_CHCFG16    *(unsigned long *)(DMAMUX0_BLOCK + 0x40) // Channel 16 Configuration Register
+            #define DMAMUX0_CHCFG17    *(unsigned long *)(DMAMUX0_BLOCK + 0x44) // Channel 17 Configuration Register
+            #define DMAMUX0_CHCFG18    *(unsigned long *)(DMAMUX0_BLOCK + 0x48) // Channel 18 Configuration Register
+            #define DMAMUX0_CHCFG19    *(unsigned long *)(DMAMUX0_BLOCK + 0x4c) // Channel 19 Configuration Register
+            #define DMAMUX0_CHCFG20    *(unsigned long *)(DMAMUX0_BLOCK + 0x50) // Channel 20 Configuration Register
+            #define DMAMUX0_CHCFG21    *(unsigned long *)(DMAMUX0_BLOCK + 0x54) // Channel 21 Configuration Register
+            #define DMAMUX0_CHCFG22    *(unsigned long *)(DMAMUX0_BLOCK + 0x58) // Channel 22 Configuration Register
+            #define DMAMUX0_CHCFG23    *(unsigned long *)(DMAMUX0_BLOCK + 0x5c) // Channel 23 Configuration Register
+            #define DMAMUX0_CHCFG24    *(unsigned long *)(DMAMUX0_BLOCK + 0x60) // Channel 24 Configuration Register
+            #define DMAMUX0_CHCFG25    *(unsigned long *)(DMAMUX0_BLOCK + 0x64) // Channel 25 Configuration Register
+            #define DMAMUX0_CHCFG26    *(unsigned long *)(DMAMUX0_BLOCK + 0x68) // Channel 26 Configuration Register
+            #define DMAMUX0_CHCFG27    *(unsigned long *)(DMAMUX0_BLOCK + 0x6c) // Channel 27 Configuration Register
+            #define DMAMUX0_CHCFG28    *(unsigned long *)(DMAMUX0_BLOCK + 0x70) // Channel 28 Configuration Register
+            #define DMAMUX0_CHCFG29    *(unsigned long *)(DMAMUX0_BLOCK + 0x74) // Channel 29 Configuration Register
+            #define DMAMUX0_CHCFG30    *(unsigned long *)(DMAMUX0_BLOCK + 0x78) // Channel 30 Configuration Register
+            #define DMAMUX0_CHCFG31    *(unsigned long *)(DMAMUX0_BLOCK + 0x7c) // Channel 31 Configuration Register
         #endif
     #endif
 
@@ -16106,24 +16117,19 @@ typedef struct stKINETIS_CAN_CONTROL
 } KINETIS_CAN_CONTROL;
 
 
-// UART/LPUARTs
+// LPUARTs
 //
-#if LPUARTS_AVAILABLE > 0                                                // {59} low power UART
-    #if defined KINETIS_KL28 || defined KINETIS_KE15
-        #define LPUART0_VERID            *(volatile unsigned long *)(LPUART0_BLOCK + 0x00) // LPUART 0 version ID register (read-only)
-        #define LPUART0_PARAM            *(volatile unsigned long *)(LPUART0_BLOCK + 0x04) // LPUART 0 parameter register (read-only)
-        #define LPUART0_GLOBAL           *(unsigned long *)(LPUART0_BLOCK + 0x08) // LPUART 0 global register
-            #define LPUART_GLOBAL_RST    0x00000002                      // module in reset state
-        #define LPUART0_PINCFG           *(unsigned long *)(LPUART0_BLOCK + 0x0c) // LPUART 0 pin configuration register
-            #define LPUART_PINCFG_TRGSEL_NONE 0x00000000                 // no input trigger
-            #define LPUART_PINCFG_TRGSEL_RXD  0x00000001                 // input trigger is used instead of RXD pin input
-            #define LPUART_PINCFG_TRGSEL_CTS  0x00000002                 // input trigger is used instead of CTS pin input
-            #define LPUART_PINCFG_TRGSEL_TXDE 0x00000003                 // input trigger is used to modulate the TXD pin output
-        #define LPUART_OFFSET            0x10
-    #else
-        #define LPUART_OFFSET            0
-    #endif
-    #define LPUART0_BAUD                 *(unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x00) // LPUART 0 baud rate register
+#if LPUARTS_AVAILABLE > 0                                                // low power UART
+    #define LPUART0_VERID                *(volatile unsigned long *)(LPUART0_BLOCK + 0x00) // LPUART 0 version ID register (read-only)
+    #define LPUART0_PARAM                *(volatile unsigned long *)(LPUART0_BLOCK + 0x04) // LPUART 0 parameter register (read-only)
+    #define LPUART0_GLOBAL               *(unsigned long *)(LPUART0_BLOCK + 0x08) // LPUART 0 global register
+        #define LPUART_GLOBAL_RST        0x00000002                      // module in reset state
+    #define LPUART0_PINCFG               *(unsigned long *)(LPUART0_BLOCK + 0x0c) // LPUART 0 pin configuration register
+        #define LPUART_PINCFG_TRGSEL_NONE 0x00000000                     // no input trigger
+        #define LPUART_PINCFG_TRGSEL_RXD  0x00000001                     // input trigger is used instead of RXD pin input
+        #define LPUART_PINCFG_TRGSEL_CTS  0x00000002                     // input trigger is used instead of CTS pin input
+        #define LPUART_PINCFG_TRGSEL_TXDE 0x00000003                     // input trigger is used to modulate the TXD pin output
+    #define LPUART0_BAUD                 *(unsigned long *)(LPUART0_BLOCK + 0x10) // LPUART 0 baud rate register
         #define LPUART_BAUD_SBR          0x00001fff                      // baud rate modulo divisor mask
         #define LPUART_BAUD_SBNS_1       0x00000000                      // 1 stop bits
         #define LPUART_BAUD_SBNS_2       0x00002000                      // 2 stop bits
@@ -16143,7 +16149,7 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_BAUD_M10          0x20000000                      // 10-bit mode select
         #define LPUART_BAUD_MAEN2        0x40000000                      // match address mode enable 2
         #define LPUART_BAUD_MAEN1        0x80000000                      // match address mode enable 1
-    #define LPUART0_STAT                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x04) // LPUART 0 Status Register
+    #define LPUART0_STAT                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x14) // LPUART 0 Status Register
         #define LPUART_STAT_MA2F         0x00004000                      // match 2 flag (write '1' to clear)
         #define LPUART_STAT_MA1F         0x00008000                      // match 1 flag (write '1' to clear)
         #define LPUART_STAT_PF           0x00010000                      // parity error flag (write '1' to clear)
@@ -16162,8 +16168,8 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_STAT_MSBF         0x20000000                      // MSB first
         #define LPUART_STAT_RXEDGIF      0x40000000                      // LPUART_RX pin active edge interrupt flag (write '1' to clear)
         #define LPUART_STAT_LBKDIF       0x80000000                      // LIN break detect interrupt flag (write '1' to clear)
-    #define LPUART0_CTRL_ADD             (unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x08)
-    #define LPUART0_CTRL                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x08) // LPUART 0 Control Register
+    #define LPUART0_CTRL_ADD             (unsigned long *)(LPUART0_BLOCK + 0x18)
+    #define LPUART0_CTRL                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x18) // LPUART 0 Control Register
         #define LPUART_CTRL_PT_EVEN      0x00000000                      // parity even
         #define LPUART_CTRL_PT_ODD       0x00000001                      // parity odd
         #define LPUART_CTRL_PE           0x00000002                      // parity enable
@@ -16199,110 +16205,144 @@ typedef struct stKINETIS_CAN_CONTROL
         #define LPUART_CTRL_TXDIR        0x20000000                      // LPUART_TX pin direction in single-wire mode
         #define LPUART_CTRL_R9T8         0x40000000                      // receive bit 9 / transmit bit 8
         #define LPUART_CTRL_R8T9         0x80000000                      // receive bit 8 / transmit bit 9
-    #define LPUART0_DATA                 *(volatile unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 0 Data Register
+    #define LPUART0_DATA                 *(volatile unsigned long *)(LPUART0_BLOCK + 0x1c) // LPUART 0 Data Register
         #define LPUART_DATA_MASK         0x000003ff                      // data word mask
         #define LPUART_DATA_IDLINE       0x00000800                      // idle line
         #define LPUART_DATA_RXEMPT       0x00001000                      // receive buffer empty
         #define LPUART_DATA_FRETSC       0x00002000                      // frame error / transmit special character
         #define LPUART_DATA_PARITYE      0x00004000                      // the current received data word was received with a parity error
         #define LPUART_DATA_NOISY        0x00008000                      // the current received data word was received with noise
-    #define LPUART0_MATCH                *(unsigned long *)(LPUART0_BLOCK + LPUART_OFFSET + 0x10) // LPUART 0 Match Address Register
+    #define LPUART0_MATCH                *(unsigned long *)(LPUART0_BLOCK + 0x20) // LPUART 0 Match Address Register
         #define LPUART_MATCH_MA1_MASK    0x000003ff                      // match address 1 mask
         #define LPUART_MATCH_MA2_MASK    0x03ff0000                      // match address 2 mask
-    #if !defined LPUART_WITHOUT_MODEM_CONTROL                            // LPUART with modem control
         #define LPUART0_MODIR            *(unsigned long *)(LPUART0_BLOCK + 0x24) // LPUART 0 modem IrDA register
-            #define LPUART_MODIR_TXCTSE  0x00000001                      // transmitter clear-to-send enable
-            #define LPUART_MODIR_TXRTSE  0x00000002                      // transmitter request-to-send enable
-            #define LPUART_MODIR_TXRTSPOL 0x00000004                     // transmitter request-to-send polarity
-            #define LPUART_MODIR_RXRTSE  0x00000008                      // receiver request-to-send enable
-            #define LPUART_MODIR_TXCTSC  0x00000010                      // transmit CTS configuration
-            #define LPUART_MODIR_TXCTSSRC 0x00000020                     // transmitter CTS source
-            #define LPUART_MODIR_TNP_1   0x00000000                      // transmitter narrow pulse 1/OSR
-            #define LPUART_MODIR_TNP_2   0x00010000                      // transmitter narrow pulse 2/OSR
-            #define LPUART_MODIR_TNP_3   0x00020000                      // transmitter narrow pulse 3/OSR
-            #define LPUART_MODIR_TNP_4   0x00030000                      // transmitter narrow pulse 4/OSR
-            #define LPUART_MODIR_IREN    0x00040000                      // infrared enable
-    #endif
-    #if defined KINETIS_KL28 || defined KINETIS_KE15
+        #define LPUART_MODIR_TXCTSE      0x00000001                      // transmitter clear-to-send enable
+        #define LPUART_MODIR_TXRTSE      0x00000002                      // transmitter request-to-send enable
+        #define LPUART_MODIR_TXRTSPOL    0x00000004                      // transmitter request-to-send polarity
+        #define LPUART_MODIR_RXRTSE      0x00000008                      // receiver request-to-send enable
+        #define LPUART_MODIR_TXCTSC      0x00000010                      // transmit CTS configuration
+        #define LPUART_MODIR_TXCTSSRC    0x00000020                      // transmitter CTS source
+        #define LPUART_MODIR_TNP_1       0x00000000                      // transmitter narrow pulse 1/OSR
+        #define LPUART_MODIR_TNP_2       0x00010000                      // transmitter narrow pulse 2/OSR
+        #define LPUART_MODIR_TNP_3       0x00020000                      // transmitter narrow pulse 3/OSR
+        #define LPUART_MODIR_TNP_4       0x00030000                      // transmitter narrow pulse 4/OSR
+        #define LPUART_MODIR_IREN        0x00040000                      // infrared enable
         #define LPUART0_FIFO             *(unsigned long *)(LPUART0_BLOCK + 0x28) // LPUART 0 FIFO register
         #define LPUART0_WATER            *(unsigned long *)(LPUART0_BLOCK + 0x2c) // LPUART 0 watermark register
-    #endif
 
     #if LPUARTS_AVAILABLE > 1
-        #if defined KINETIS_KL28 || defined KINETIS_KE15
-            #define LPUART1_VERID        *(volatile unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART 1 version ID register (read-only)
-            #define LPUART1_PARAM        *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART 1 parameter register (read-only)
-            #define LPUART1_GLOBAL       *(unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART 1 global register
-            #define LPUART1_PINCFG       *(unsigned long *)(LPUART1_BLOCK + 0x0c) // LPUART 1 pin configuration register
-        #endif
-        #define LPUART1_BAUD             *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x00) // LPUART 1 Baud Rate Register
-        #define LPUART1_STAT             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x04) // LPUART 1 Status Register
-        #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x08) // LPUART 1 Control Register
-        #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 1 Data Register
-        #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + LPUART_OFFSET + 0x10) // LPUART 1 Match Address Register
-        #if !defined LPUART_WITHOUT_MODEM_CONTROL
-            #define LPUART1_MODIR        *(unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART 1 modem IrDA register
-        #endif
-        #if defined KINETIS_KL28 || defined KINETIS_KE15
-            #define LPUART1_FIFO         *(unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART 1 FIFO register
-            #define LPUART1_WATER        *(unsigned long *)(LPUART1_BLOCK + 0x2c) // LPUART 1 watermark register
-        #endif
+        #define LPUART1_VERID            *(volatile unsigned long *)(LPUART1_BLOCK + 0x00) // LPUART 1 version ID register (read-only)
+        #define LPUART1_PARAM            *(volatile unsigned long *)(LPUART1_BLOCK + 0x04) // LPUART 1 parameter register (read-only)
+        #define LPUART1_GLOBAL           *(unsigned long *)(LPUART1_BLOCK + 0x08) // LPUART 1 global register
+        #define LPUART1_PINCFG           *(unsigned long *)(LPUART1_BLOCK + 0x0c) // LPUART 1 pin configuration register
+        #define LPUART1_BAUD             *(unsigned long *)(LPUART1_BLOCK + 0x10) // LPUART 1 Baud Rate Register
+        #define LPUART1_STAT             *(volatile unsigned long *)(LPUART1_BLOCK + 0x14) // LPUART 1 Status Register
+        #define LPUART1_CTRL             *(volatile unsigned long *)(LPUART1_BLOCK + 0x18) // LPUART 1 Control Register
+        #define LPUART1_DATA             *(volatile unsigned long *)(LPUART1_BLOCK + 0x1c) // LPUART 1 Data Register
+        #define LPUART1_MATCH            *(unsigned long *)(LPUART1_BLOCK + 0x20) // LPUART 1 Match Address Register
+        #define LPUART1_MODIR            *(unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART 1 modem IrDA register
+        #define LPUART1_FIFO             *(unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART 1 FIFO register
+        #define LPUART1_WATER            *(unsigned long *)(LPUART1_BLOCK + 0x2c) // LPUART 1 watermark register
     #endif
     #if LPUARTS_AVAILABLE > 2
-        #if defined KINETIS_KL28 || defined KINETIS_KE15
-            #define LPUART2_VERID        *(volatile unsigned long *)(LPUART2_BLOCK + 0x00) // LPUART 2 version ID register (read-only)
-            #define LPUART2_PARAM        *(volatile unsigned long *)(LPUART2_BLOCK + 0x04) // LPUART 2 parameter register (read-only)
-            #define LPUART2_GLOBAL       *(unsigned long *)(LPUART2_BLOCK + 0x08) // LPUART 2 global register
-            #define LPUART2_PINCFG       *(unsigned long *)(LPUART2_BLOCK + 0x0c) // LPUART 2 pin configuration register
-        #endif
-        #define LPUART2_BAUD             *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x00) // LPUART 2 Baud Rate Register
-        #define LPUART2_STAT             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x04) // LPUART 2 Status Register
-        #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x08) // LPUART 2 Control Register
-        #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x0c) // LPUART 2 Data Register
-        #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + LPUART_OFFSET + 0x10) // LPUART 2 Match Address Register
-        #if !defined LPUART_WITHOUT_MODEM_CONTROL
-            #define LPUART2_MODIR        *(unsigned long *)(LPUART2_BLOCK + 0x24) // LPUART 2 modem IrDA register
-        #endif
-        #if defined KINETIS_KL28 || defined KINETIS_KE15
-            #define LPUART2_FIFO         *(unsigned long *)(LPUART2_BLOCK + 0x28) // LPUART 2 FIFO register
-            #define LPUART2_WATER        *(unsigned long *)(LPUART2_BLOCK + 0x2c) // LPUART 2 watermark register
-        #endif
+        #define LPUART2_VERID            *(volatile unsigned long *)(LPUART2_BLOCK + 0x00) // LPUART 2 version ID register (read-only)
+        #define LPUART2_PARAM            *(volatile unsigned long *)(LPUART2_BLOCK + 0x04) // LPUART 2 parameter register (read-only)
+        #define LPUART2_GLOBAL           *(unsigned long *)(LPUART2_BLOCK + 0x08) // LPUART 2 global register
+        #define LPUART2_PINCFG           *(unsigned long *)(LPUART2_BLOCK + 0x0c) // LPUART 2 pin configuration register
+        #define LPUART2_BAUD             *(unsigned long *)(LPUART2_BLOCK + 0x10) // LPUART 2 Baud Rate Register
+        #define LPUART2_STAT             *(volatile unsigned long *)(LPUART2_BLOCK + 0x14) // LPUART 2 Status Register
+        #define LPUART2_CTRL             *(volatile unsigned long *)(LPUART2_BLOCK + 0x18) // LPUART 2 Control Register
+        #define LPUART2_DATA             *(volatile unsigned long *)(LPUART2_BLOCK + 0x1c) // LPUART 2 Data Register
+        #define LPUART2_MATCH            *(unsigned long *)(LPUART2_BLOCK + 0x20) // LPUART 2 Match Address Register
+        #define LPUART2_MODIR            *(unsigned long *)(LPUART2_BLOCK + 0x24) // LPUART 2 modem IrDA register
+        #define LPUART2_FIFO             *(unsigned long *)(LPUART2_BLOCK + 0x28) // LPUART 2 FIFO register
+        #define LPUART2_WATER            *(unsigned long *)(LPUART2_BLOCK + 0x2c) // LPUART 2 watermark register
     #endif
     #if LPUARTS_AVAILABLE > 3
-        #define LPUART3_BAUD             *(unsigned long *)(LPUART3_BLOCK + 0x00) // LPUART 3 Baud Rate Register
-        #define LPUART3_STAT             *(volatile unsigned long *)(LPUART3_BLOCK + 0x04) // LPUART 3 Status Register
-        #define LPUART3_CTRL             *(volatile unsigned long *)(LPUART3_BLOCK + 0x08) // LPUART 3 Control Register
-        #define LPUART3_DATA             *(volatile unsigned long *)(LPUART3_BLOCK + 0x0c) // LPUART 3 Data Register
-        #define LPUART3_MATCH            *(unsigned long *)(LPUART3_BLOCK + 0x10) // LPUART 3 Match Address Register
+        #define LPUART3_VERID            *(volatile unsigned long *)(LPUART3_BLOCK + 0x00) // LPUART 3 version ID register (read-only)
+        #define LPUART3_PARAM            *(volatile unsigned long *)(LPUART3_BLOCK + 0x04) // LPUART 3 parameter register (read-only)
+        #define LPUART3_GLOBAL           *(unsigned long *)(LPUART3_BLOCK + 0x08) // LPUART 3 global register
+        #define LPUART3_PINCFG           *(unsigned long *)(LPUART3_BLOCK + 0x0c) // LPUART 3 pin configuration register
+        #define LPUART3_BAUD             *(unsigned long *)(LPUART3_BLOCK + 0x10) // LPUART 3 Baud Rate Register
+        #define LPUART3_STAT             *(volatile unsigned long *)(LPUART3_BLOCK + 0x14) // LPUART 3 Status Register
+        #define LPUART3_CTRL             *(volatile unsigned long *)(LPUART3_BLOCK + 0x18) // LPUART 3 Control Register
+        #define LPUART3_DATA             *(volatile unsigned long *)(LPUART3_BLOCK + 0x1c) // LPUART 3 Data Register
+        #define LPUART3_MATCH            *(unsigned long *)(LPUART3_BLOCK + 0x20) // LPUART 3 Match Address Register
+        #define LPUART3_MODIR            *(unsigned long *)(LPUART3_BLOCK + 0x24) // LPUART 3 modem IrDA register
+        #define LPUART3_FIFO             *(unsigned long *)(LPUART3_BLOCK + 0x28) // LPUART 3 FIFO register
+        #define LPUART3_WATER            *(unsigned long *)(LPUART3_BLOCK + 0x2c) // LPUART 3 watermark register
     #endif
     #if LPUARTS_AVAILABLE > 4
-        #define LPUART4_BAUD             *(unsigned long *)(LPUART4_BLOCK + 0x00) // LPUART 4 Baud Rate Register
-        #define LPUART4_STAT             *(volatile unsigned long *)(LPUART4_BLOCK + 0x04) // LPUART 4 Status Register
-        #define LPUART4_CTRL             *(volatile unsigned long *)(LPUART4_BLOCK + 0x08) // LPUART 4 Control Register
-        #define LPUART4_DATA             *(volatile unsigned long *)(LPUART4_BLOCK + 0x0c) // LPUART 4 Data Register
-        #define LPUART4_MATCH            *(unsigned long *)(LPUART4_BLOCK + 0x10) // LPUART 4 Match Address Register
+        #define LPUART4_VERID            *(volatile unsigned long *)(LPUART4_BLOCK + 0x00) // LPUART 4 version ID register (read-only)
+        #define LPUART4_PARAM            *(volatile unsigned long *)(LPUART4_BLOCK + 0x04) // LPUART 4 parameter register (read-only)
+        #define LPUART4_GLOBAL           *(unsigned long *)(LPUART4_BLOCK + 0x08) // LPUART 4 global register
+        #define LPUART4_PINCFG           *(unsigned long *)(LPUART4_BLOCK + 0x0c) // LPUART 4 pin configuration register
+        #define LPUART4_BAUD             *(unsigned long *)(LPUART4_BLOCK + 0x10) // LPUART 4 Baud Rate Register
+        #define LPUART4_STAT             *(volatile unsigned long *)(LPUART4_BLOCK + 0x14) // LPUART 4 Status Register
+        #define LPUART4_CTRL             *(volatile unsigned long *)(LPUART4_BLOCK + 0x18) // LPUART 4 Control Register
+        #define LPUART4_DATA             *(volatile unsigned long *)(LPUART4_BLOCK + 0x1c) // LPUART 4 Data Register
+        #define LPUART4_MATCH            *(unsigned long *)(LPUART4_BLOCK + 0x20) // LPUART 4 Match Address Register
+        #define LPUART4_MODIR            *(unsigned long *)(LPUART4_BLOCK + 0x24) // LPUART 4 modem IrDA register
+        #define LPUART4_FIFO             *(unsigned long *)(LPUART4_BLOCK + 0x28) // LPUART 4 FIFO register
+        #define LPUART4_WATER            *(unsigned long *)(LPUART4_BLOCK + 0x2c) // LPUART 4 watermark register
+    #endif
+    #if LPUARTS_AVAILABLE > 5
+        #define LPUART5_VERID            *(volatile unsigned long *)(LPUART5_BLOCK + 0x00) // LPUART 5 version ID register (read-only)
+        #define LPUART5_PARAM            *(volatile unsigned long *)(LPUART5_BLOCK + 0x04) // LPUART 5 parameter register (read-only)
+        #define LPUART5_GLOBAL           *(unsigned long *)(LPUART5_BLOCK + 0x08) // LPUART 5 global register
+        #define LPUART5_PINCFG           *(unsigned long *)(LPUART5_BLOCK + 0x0c) // LPUART 5 pin configuration register
+        #define LPUART5_BAUD             *(unsigned long *)(LPUART5_BLOCK + 0x10) // LPUART 5 Baud Rate Register
+        #define LPUART5_STAT             *(volatile unsigned long *)(LPUART5_BLOCK + 0x14) // LPUART 5 Status Register
+        #define LPUART5_CTRL             *(volatile unsigned long *)(LPUART5_BLOCK + 0x18) // LPUART 5 Control Register
+        #define LPUART5_DATA             *(volatile unsigned long *)(LPUART5_BLOCK + 0x1c) // LPUART 5 Data Register
+        #define LPUART5_MATCH            *(unsigned long *)(LPUART5_BLOCK + 0x20) // LPUART 5 Match Address Register
+        #define LPUART5_MODIR            *(unsigned long *)(LPUART5_BLOCK + 0x24) // LPUART 5 modem IrDA register
+        #define LPUART5_FIFO             *(unsigned long *)(LPUART5_BLOCK + 0x28) // LPUART 5 FIFO register
+        #define LPUART5_WATER            *(unsigned long *)(LPUART5_BLOCK + 0x2c) // LPUART 5 watermark register
+    #endif
+    #if LPUARTS_AVAILABLE > 6
+        #define LPUART6_VERID            *(volatile unsigned long *)(LPUART6_BLOCK + 0x00) // LPUART 6 version ID register (read-only)
+        #define LPUART6_PARAM            *(volatile unsigned long *)(LPUART6_BLOCK + 0x04) // LPUART 6 parameter register (read-only)
+        #define LPUART6_GLOBAL           *(unsigned long *)(LPUART6_BLOCK + 0x08) // LPUART 6 global register
+        #define LPUART6_PINCFG           *(unsigned long *)(LPUART6_BLOCK + 0x0c) // LPUART 6 pin configuration register
+        #define LPUART6_BAUD             *(unsigned long *)(LPUART6_BLOCK + 0x10) // LPUART 6 Baud Rate Register
+        #define LPUART6_STAT             *(volatile unsigned long *)(LPUART6_BLOCK + 0x14) // LPUART 6 Status Register
+        #define LPUART6_CTRL             *(volatile unsigned long *)(LPUART6_BLOCK + 0x18) // LPUART 6 Control Register
+        #define LPUART6_DATA             *(volatile unsigned long *)(LPUART6_BLOCK + 0x1c) // LPUART 6 Data Register
+        #define LPUART6_MATCH            *(unsigned long *)(LPUART6_BLOCK + 0x20) // LPUART 6 Match Address Register
+        #define LPUART6_MODIR            *(unsigned long *)(LPUART6_BLOCK + 0x24) // LPUART 6 modem IrDA register
+        #define LPUART6_FIFO             *(unsigned long *)(LPUART6_BLOCK + 0x28) // LPUART 6 FIFO register
+        #define LPUART6_WATER            *(unsigned long *)(LPUART6_BLOCK + 0x2c) // LPUART 6 watermark register
+    #endif
+    #if LPUARTS_AVAILABLE > 7
+        #define LPUART7_VERID            *(volatile unsigned long *)(LPUART7_BLOCK + 0x00) // LPUART 7 version ID register (read-only)
+        #define LPUART7_PARAM            *(volatile unsigned long *)(LPUART7_BLOCK + 0x04) // LPUART 7 parameter register (read-only)
+        #define LPUART7_GLOBAL           *(unsigned long *)(LPUART7_BLOCK + 0x08) // LPUART 7 global register
+        #define LPUART7_PINCFG           *(unsigned long *)(LPUART7_BLOCK + 0x0c) // LPUART 7 pin configuration register
+        #define LPUART7_BAUD             *(unsigned long *)(LPUART7_BLOCK + 0x10) // LPUART 7 Baud Rate Register
+        #define LPUART7_STAT             *(volatile unsigned long *)(LPUART7_BLOCK + 0x14) // LPUART 7 Status Register
+        #define LPUART7_CTRL             *(volatile unsigned long *)(LPUART7_BLOCK + 0x18) // LPUART 7 Control Register
+        #define LPUART7_DATA             *(volatile unsigned long *)(LPUART7_BLOCK + 0x1c) // LPUART 7 Data Register
+        #define LPUART7_MATCH            *(unsigned long *)(LPUART7_BLOCK + 0x20) // LPUART 7 Match Address Register
+        #define LPUART7_MODIR            *(unsigned long *)(LPUART7_BLOCK + 0x24) // LPUART 7 modem IrDA register
+        #define LPUART7_FIFO             *(unsigned long *)(LPUART7_BLOCK + 0x28) // LPUART 7 FIFO register
+        #define LPUART7_WATER            *(unsigned long *)(LPUART7_BLOCK + 0x2c) // LPUART 7 watermark register
     #endif
 
     typedef struct stKINETIS_LPUART_CONTROL
     {
-    #if defined KINETIS_KL28 || defined KINETIS_KE15
         volatile unsigned long  LPUART_VERID;
         volatile unsigned long  LPUART_PARAM;
         unsigned long  LPUART_GLOBAL;
         unsigned long  LPUART_PINCFG;
-    #endif
         unsigned long LPUART_BAUD;
         volatile unsigned long LPUART_STAT;
         volatile unsigned long LPUART_CTRL;
         volatile unsigned long LPUART_DATA;
         unsigned long LPUART_MATCH;
-    #if defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KE15
         unsigned long LPUART_MODIR;
-    #endif
-    #if defined KINETIS_KL28 || defined KINETIS_KE15
         unsigned long LPUART_FIFO;
         unsigned long LPUART_WATER;
-    #endif
     } KINETIS_LPUART_CONTROL;
 
     // Macro to directly change the baud rate of a LPUART - the user must know the LPUART clock's speed and be sure that the LPUART has already been powered up {109}
@@ -19459,6 +19499,7 @@ extern void fnSimPers(void);
     #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
 #else
     #define _CONFIG_PERIPHERAL(port, pin, function) POWER_UP_ATOMIC(5, PORT##port); PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
+#define _CONFIG_PERIPHERAL_iMX(port, function, chars) IOMUXC_SW_MUX_CTL_PAD_##port = ##port##_##function; _SIM_PER_CHANGE
 #endif
 
 // Write to a port with a mask eg. eg. _WRITE_PORT_MASK(C, 0x1234,  0x0000ffff)
@@ -21601,6 +21642,106 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO5_DR_SET                    *(volatile unsigned long *)(GPIO5_BLOCK + 0x0084) // GPIO5 data register set
 #define GPIO5_DR_CLEAR                  *(volatile unsigned long *)(GPIO5_BLOCK + 0x0088) // GPIO5 data register clear
 #define GPIO5_DR_TOGGLE                 *(volatile unsigned long *)(GPIO5_BLOCK + 0x008c) // GPIO5 data register toggle
+
+
+
+// Clock Control Module (CCM)
+//
+#define CCM_CCR                         *(unsigned long *)(CCM_BLOCK + 0x0000) // CCM control register
+#define CCM_CSR                         *(volatile unsigned long *)(CCM_BLOCK + 0x0008) // CCM status register (read-only)
+#define CCM_CCSR                        *(unsigned long *)(CCM_BLOCK + 0x000c) // CCM clock switcher register
+#define CCM_CACRR                       *(unsigned long *)(CCM_BLOCK + 0x0010) // CCM arm clock root register
+#define CCM_CBCDR                       *(unsigned long *)(CCM_BLOCK + 0x0014) // CCM bus clock divider register
+#define CCM_CBCMR                       *(unsigned long *)(CCM_BLOCK + 0x0018) // CCM bus clock multiplexer register
+#define CCM_CSCMR1                      *(unsigned long *)(CCM_BLOCK + 0x001c) // CCM serial clock multiplexer register 1
+#define CCM_CSCMR2                      *(unsigned long *)(CCM_BLOCK + 0x0020) // CCM serial clock multiplexer register 2
+#define CCM_CSCDR1                      *(unsigned long *)(CCM_BLOCK + 0x0024) // CCM serial clock divider register 1
+#define CCM_CS1CDR                      *(unsigned long *)(CCM_BLOCK + 0x0028) // CCM clock divider register 1
+#define CCM_CS2CDR                      *(unsigned long *)(CCM_BLOCK + 0x002c) // CCM clock divider register 2
+#define CCM_CDCDR                       *(unsigned long *)(CCM_BLOCK + 0x0030) // CCM D1 clock divider register
+#define CCM_CSCDR2                      *(unsigned long *)(CCM_BLOCK + 0x0038) // CCM serial clock divider register 2
+#define CCM_CSCDR3                      *(unsigned long *)(CCM_BLOCK + 0x003c) // CCM serial clock divider register 3
+#define CCM_CDHIPR                      *(volatile unsigned long *)(CCM_BLOCK + 0x0048) // CCM divider handshake in process register (read-only)
+#define CCM_CLPCR                       *(unsigned long *)(CCM_BLOCK + 0x0054) // CCM low power control register
+#define CCM_CISR                        *(volatile unsigned long *)(CCM_BLOCK + 0x0058) // CCM interrupt status register (write '1' to clear)
+#define CCM_CIMR                        *(unsigned long *)(CCM_BLOCK + 0x005c) // CCM interrupt mask register
+#define CCM_CCOSR                       *(unsigned long *)(CCM_BLOCK + 0x0060) // CCM clock output source register
+#define CCM_CGPR                        *(unsigned long *)(CCM_BLOCK + 0x0064) // CCM general purpose register
+#define CCM_CCGR0                       *(unsigned long *)(CCM_BLOCK + 0x0068) // CCM clock gating register 0
+    #define CCM_CCGR0_GPIO2_CLOCKS_MASK          0xc0000000
+    #define CCM_CCGR0_GPIO2_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_GPIO2_CLOCKS_RUN           0x40000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_GPIO2_CLOCKS_STOP          0xc0000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_LPUART2_CLOCK_MASK         0x30000000
+    #define CCM_CCGR0_LPUART2_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_LPUART2_CLOCK_RUN          0x10000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_LPUART2_CLOCK_STOP         0x30000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_GPT2_SERIAL_CLOCKS_MASK    0x0c000000
+    #define CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF     0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_GPT2_SERIAL_CLOCKS_RUN     0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_GPT2_SERIAL_CLOCKS_STOP    0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_GPT2_BUS_CLOCKS_MASK       0x03000000
+    #define CCM_CCGR0_GPT2_BUS_CLOCKS_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_GPT2_BUS_CLOCKS_RUN        0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_GPT2_BUS_CLOCKS_STOP       0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_GPT2_TRACE_CLOCK_MASK      0x00c00000
+    #define CCM_CCGR0_GPT2_TRACE_CLOCK_OFF       0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_GPT2_TRACE_CLOCK_RUN       0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_GPT2_TRACE_CLOCK_STOP      0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_CAN2_SERIAL_CLOCK_MASK     0x00300000
+    #define CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF      0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_CAN2_SERIAL_CLOCK_RUN      0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_CAN2_SERIAL_CLOCK_STOP     0x00300000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_CAN2_CLOCK_MASK            0x000c0000
+    #define CCM_CCGR0_CAN2_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_CAN2_CLOCK_RUN             0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_CAN2_CLOCK_STOP            0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_CAN1_SERIAL_CLOCK_MASK     0x00030000
+    #define CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF      0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_CAN1_SERIAL_CLOCK_RUN      0x00010000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_CAN1_SERIAL_CLOCK_STOP     0x00030000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_CAN1_CLOCK_MASK            0x0000c000
+    #define CCM_CCGR0_CAN1_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_CAN1_CLOCK_RUN             0x00004000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_CAN1_CLOCK_STOP            0x0000c000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_LPUART3_CLOCK_MASK         0x00003000
+    #define CCM_CCGR0_LPUART3_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_LPUART3_CLOCK_RUN          0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_LPUART3_CLOCK_STOP         0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_DCP_CLOCK_MASK             0x00000c00
+    #define CCM_CCGR0_DCP_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_DCP_CLOCK_RUN              0x00000400              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_DCP_CLOCK_STOP             0x00000c00              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_SIM_M_CLK_R_CLK_MASK       0x00000300
+    #define CCM_CCGR0_SIM_M_CLK_R_CLK_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_SIM_M_CLK_R_CLK_RUN        0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_SIM_M_CLK_R_CLK_STOP       0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_FLEXSPI_EXSC_CLOCK_MASK    0x000000c0
+    #define CCM_CCGR0_FLEXSPI_EXSC_CLOCK_OFF     0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_FLEXSPI_EXSC_CLOCK_RUN     0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_FLEXSPI_EXSC_CLOCK_STOP    0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_MQS_CLOCK_MASK             0x00000030
+    #define CCM_CCGR0_MQS_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_MQS_CLOCK_RUN              0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_MQS_CLOCK_STOP             0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_AIPS_TZ2_CLOCK2_MASK       0x0000000c
+    #define CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_AIPS_TZ2_CLOCK2_RUN        0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_AIPS_TZ2_CLOCK2_STOP       0x0000000c              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_AIPS_TZ1_CLOCK2_MASK       0x00000003
+    #define CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_AIPS_TZ1_CLOCK2_RUN        0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_AIPS_TZ1_CLOCK2_STOP       0x00000003              // clock is on during all modes except STOP mode
+#define CCM_CCGR1                       *(unsigned long *)(CCM_BLOCK + 0x006c) // CCM clock gating register 1
+#define CCM_CCGR2                       *(unsigned long *)(CCM_BLOCK + 0x0070) // CCM clock gating register 2
+#define CCM_CCGR3                       *(unsigned long *)(CCM_BLOCK + 0x0074) // CCM clock gating register 3
+#define CCM_CCGR4                       *(unsigned long *)(CCM_BLOCK + 0x0078) // CCM clock gating register 4
+#define CCM_CCGR5                       *(unsigned long *)(CCM_BLOCK + 0x007c) // CCM clock gating register 5
+#define CCM_CCGR6                       *(unsigned long *)(CCM_BLOCK + 0x0080) // CCM clock gating register 6
+#define CCM_CMEOR                       *(unsigned long *)(CCM_BLOCK + 0x0088) // CCM module enable overide register
+
+
+
 /************************************************************************************************/
 
 extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)); // {34}

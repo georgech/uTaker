@@ -52,6 +52,7 @@
     31.07.2018 Corrected shared DMA channel numbering between Rx and Tx  {215}
     04.01.2019 Add local defines MANUAL_MODEM_CONTROL, MANUAL_MODEM_CONTROL_LPUART and MANUAL_MODEM_CONTROL_UART to better control modem mode operation {216}
     07.01.2019 Allow UART0_MANUAL_RTS_CONTROL..UARTn_MANUAL_RTS_CONTROL to allow automatic RTS control in RS485 mode on UARTs {217}
+    09.01.2019 Share LPUART driver with iMX project
 
 */
 
@@ -1210,7 +1211,7 @@ static __interrupt void _uart4_tx_dma_Interrupt(void)
     #if (UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
 static __interrupt void _uart5_tx_dma_Interrupt(void)
 {
-        #if LPUARTS_AVAILABLE == 1
+        #if (LPUARTS_AVAILABLE == 1) || defined _iMX
     _lpuart_tx_dma_Interrupt((KINETIS_LPUART_CONTROL *)LPUART0_BLOCK, 5);// handle LPUART method
         #else
     _uart_tx_dma_Interrupt((KINETIS_UART_CONTROL *)UART5_BLOCK, 5);      // handle UART method

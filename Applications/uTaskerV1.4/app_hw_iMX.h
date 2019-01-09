@@ -2638,7 +2638,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SERIAL_PORT_4    4                                           // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5    6                                           // if we open UART channel 5 we simulate using comx on the PC
 
-    #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && (defined TWR_SER || defined TWR_SER2)) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
+    #if defined _iMX
+        #define DEMO_UART    0                                           // LPUART1
+    #elif defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && (defined TWR_SER || defined TWR_SER2)) || (defined TWR_K60N512 && defined DEBUG_ON_VIRT_COM)
         #define DEMO_UART    5                                           // use UART 5
         #define RFC2217_UART 0
     #elif defined FRDM_K82F || defined TRINAMIC_LANDUNGSBRUECKE || defined K66FX1M0

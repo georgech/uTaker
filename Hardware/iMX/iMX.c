@@ -80,12 +80,16 @@
 #define UART3_TX_CLK_REQUIRED 0x00000008
 #define UART4_TX_CLK_REQUIRED 0x00000010
 #define UART5_TX_CLK_REQUIRED 0x00000020
-#define UART0_RX_CLK_REQUIRED 0x00000040
-#define UART1_RX_CLK_REQUIRED 0x00000080
-#define UART2_RX_CLK_REQUIRED 0x00000100
-#define UART3_RX_CLK_REQUIRED 0x00000200
-#define UART4_RX_CLK_REQUIRED 0x00000400
-#define UART5_RX_CLK_REQUIRED 0x00000800
+#define UART6_TX_CLK_REQUIRED 0x00000040
+#define UART7_TX_CLK_REQUIRED 0x00000080
+#define UART0_RX_CLK_REQUIRED 0x00000100
+#define UART1_RX_CLK_REQUIRED 0x00000200
+#define UART2_RX_CLK_REQUIRED 0x00000400
+#define UART3_RX_CLK_REQUIRED 0x00000800
+#define UART4_RX_CLK_REQUIRED 0x00001000
+#define UART5_RX_CLK_REQUIRED 0x00002000
+#define UART6_RX_CLK_REQUIRED 0x00004000
+#define UART7_RX_CLK_REQUIRED 0x00008000
 
 
 /* =================================================================== */
@@ -1501,10 +1505,10 @@ extern void fnRetriggerWatchdog(void)
 /*                                 DMA                                 */
 /* =================================================================== */
     #define _DMA_SHARED_CODE
-        #include "iMX_DMA.h"                                             // include driver code for peripheral/buffer DMA
+        #include "../Kinetis/kinetis_DMA.h"                              // include driver code for peripheral/buffer DMA
     #undef _DMA_SHARED_CODE
     #define _DMA_MEM_TO_MEM
-        #include "iMX_DMA.h"                                             // include memory-memory transfer code 
+        #include "../Kinetis/kinetis_DMA.h"                              // include memory-memory transfer code 
     #undef _DMA_MEM_TO_MEM
 #endif
 
@@ -1531,7 +1535,7 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                    Serial Interface - UART                          */
 /* =================================================================== */
-    #include "iMX_UART.h"                                                // include LPUART hardware driver code
+    #include "../Kinetis/kinetis_UART.h"                                 // include LPUART hardware driver code (driver shared with kinetis)
 #endif
 
 #if defined SPI_INTERFACE
