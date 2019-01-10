@@ -11,7 +11,7 @@
    File:        LM3SXXXX.c [Luminary]
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
    04.12.2008 Add IAR5 support
    07.12.2008 Increase Ethernet buffer sizes to account for length in content and to ensure acceptance of long word writes {1}
@@ -176,7 +176,7 @@ static void LM3SXXXX_LowLevelInit(void);
     static unsigned long ulFlashRow[FLASH_ROW_SIZE/sizeof(unsigned long)]; // FLASH row backup buffer (on word boundary)
 #endif
 
-#ifdef ETH_INTERFACE
+#if defined ETH_INTERFACE
     static unsigned char *ptrEthTxBuffer;
     static unsigned char *ptrEthRxBuffer[NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE]; // pointer to a number of LAN frame reception buffers
     static int iRxEthBufferPut = 0;
@@ -478,24 +478,24 @@ INITHW void fnInitHW(void)                                               // perf
         PORTJ_DEFAULT_INPUT,                                             // {23}
     #endif
     #if defined SUPPORT_ADC && (PART_DC1 & ADC0_PRESENT1)
-        ((AN0_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),  // initial voltages when simulating
-        ((AN1_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN2_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN3_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN4_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN5_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN6_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN7_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN0_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),                   // initial voltages when simulating
+        ((AN1_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN2_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN3_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN4_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN5_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN6_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN7_START_VOLTAGE ) / ADC_REFERENCE_VOLTAGE),
     #endif
     #if defined SUPPORT_ADC && (PART_DC1 & ADC1_PRESENT1)                // second ADC - assume 16 ADC inputs available
-        ((AN8_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),  // initial voltages when simulating
-        ((AN9_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN10_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN11_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN12_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN13_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN14_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
-        ((AN15_START_VOLTAGE * ADC_FULL_SCALE) / ADC_REFERENCE_VOLTAGE),
+        ((AN8_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),  // initial voltages when simulating
+        ((AN9_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN10_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN11_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN12_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN13_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN14_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
+        ((AN15_START_VOLTAGE) / ADC_REFERENCE_VOLTAGE),
     #endif
     };
     #ifdef RANDOM_NUMBER_GENERATOR
@@ -669,10 +669,10 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     }
     #ifdef USE_IP_STATS
     else if (ETHERNET_RX_OVERRUN == *ucEvent) {
-        fnIncrementEthernetStats(TOTAL_LOST_RX_FRAMES);                  // we lost a frame due to RX overrun so count the event
+        fnIncrementEthernetStats(TOTAL_LOST_RX_FRAMES, DEFAULT_NETWORK); // we lost a frame due to RX overrun so count the event
     }
     else {
-        fnIncrementEthernetStats(TOTAL_OTHER_EVENTS);                    // count other unexpected events
+        fnIncrementEthernetStats(TOTAL_OTHER_EVENTS, DEFAULT_NETWORK);   // count other unexpected events
     }
     #endif
     return -1;                                                           // invalid channel
@@ -898,7 +898,7 @@ __interrupt void EMAC_Interrupt(void)
 
 // Ethernet configuration routine
 //
-extern void fnConfigEthernet(ETHTABLE *pars)
+extern int fnConfigEthernet(ETHTABLE *pars)
 {
     unsigned long  ulPhyIdentifier;
     unsigned long  ulTemp;
@@ -952,7 +952,7 @@ extern void fnConfigEthernet(ETHTABLE *pars)
     ulPhyIdentifier |= fnReadMII(LM3SXXXX_PHY_IDENTIFIER_2);             // check that the PHY is working correctly by reading its identifier
 
     if ((ulPhyIdentifier & PHY_MASK) != PHY_IDENTIFIER) {
-        return;                                                          // if the identifier is incorrect the phy isn't resonding correctly
+        return -1;                                                       // if the identifier is incorrect the phy isn't resonding correctly
     }
 
     if (pars->usMode & LAN_LEDS) {                                       // enable LEDs to be controlled by PHY
@@ -1025,7 +1025,7 @@ extern void fnConfigEthernet(ETHTABLE *pars)
     #ifdef _WINDOWS
     fnOpenDefaultHostAdapter();                                          // simulate link up
     #endif
-    return;
+    return 0;
 }
 
 
@@ -1158,8 +1158,8 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
 
     MACTR = NEWTX;                                                       // start transmission
 
-    #ifdef _WINDOWS
-    fnSimulateEthTx(length);
+    #if defined _WINDOWS
+    fnSimulateEthTx(length, (ptr_put - DataLen));
     ptr_put -= length;
     ptr_put += DataLen;
     if (usPhyMode & PHY_LOOP_BACK) {                                     // if the PHY is in loop back mode, simulate reception of sent frame

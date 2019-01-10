@@ -11,7 +11,7 @@
     File:      kinetis_PIT.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     25.02.2012 Mask PIT old mode before setting new one
     09.03.2012 Disable PIT before configuring load value so that it is retriggerable {1}

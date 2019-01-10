@@ -11,7 +11,7 @@
     File:      kinetis_FLEXTIMER.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     21.06.2014 Adjust FlexTimer/TPM use of FTM_SC_TOF to clear interrupt correctly {1}
     22.07.2014 Add clock source selection to TPM                         {2}
@@ -254,11 +254,13 @@ static __interrupt void _flexTimerInterrupt_5(void)
                     #endif
                 #endif
             SIM_SOPT2 |= SIM_SOPT2_TPMSRC_MCGIRCLK;                      // use MCGIRCLK as timer clock source
+            #elif defined TPM_CLOCKED_FROM_IRC48M && defined SIM_SOPT2_PLLFLLSEL_IRC48M && (SIM_SOPT2_PLLFLLSEL_IRC48M != 0)
+            SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL_IRC48M | SIM_SOPT2_TPMSRC_MCG); // use IRC48M
             #elif defined TPM_CLOCKED_FROM_OSCERCLK
             OSC0_CR |= (OSC_CR_ERCLKEN | OSC_CR_EREFSTEN);               // enable the external reference clock and keep it enabled in stop mode
             SIM_SOPT2 |= (SIM_SOPT2_TPMSRC_OSCERCLK);                    // use OSCERCLK as timer clock source
             #else
-            SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TPMSRC_MCG);   // use MCGPLLCLK/2 (or MCGFLL if FLL is used)
+            SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | SIM_SOPT2_TPMSRC_MCG);   // use MCGPLLCLK/2 (or MCGFLL if FLL is used) - devices with KINETIS_WITH_MCG_LITE and HIRC48M will use 48MHz
             #endif
         #endif
     #endif

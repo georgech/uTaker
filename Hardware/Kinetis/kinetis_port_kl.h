@@ -237,9 +237,6 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][4] = {
     },
 };
 #elif defined KINETIS_KL03
-  //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin QFN
-  //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin WLCSP
-    #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
 #if PIN_COUNT == PIN_COUNT_24_PIN
     #define _PIN_COUNT          0                                        // 24 pin QFN
 #elif PIN_COUNT == PIN_COUNT_20_PIN

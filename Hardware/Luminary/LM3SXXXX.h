@@ -1,53 +1,53 @@
 /**********************************************************************
-   Mark Butcher    Bsc (Hons) MPhil MIET
+    Mark Butcher    Bsc (Hons) MPhil MIET
 
-   M.J.Butcher Consulting
-   Birchstrasse 20f,    CH-5406, Rütihof
-   Switzerland
+    M.J.Butcher Consulting
+    Birchstrasse 20f,    CH-5406, Rütihof
+    Switzerland
 
-   www.uTasker.com    Skype: M_J_Butcher
+    www.uTasker.com    Skype: M_J_Butcher
 
-   ---------------------------------------------------------------------
-   File:   	    LM3SXXXX.h
-   Project: 	Single Chip Embedded Internet
-   ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
-   *********************************************************************
+    ---------------------------------------------------------------------
+    File:   	    LM3SXXXX.h
+    Project: 	Single Chip Embedded Internet
+    ---------------------------------------------------------------------
+    Copyright (C) M.J.Butcher Consulting 2004..2019
+    *********************************************************************
 
-   16.12.2008 Add GPIO H interrupt for specific processors               {1}
-   18.12.2008 PORTS_AVAILABLE and PORT_WIDTH moved here from WinSim.c    {2}
-   18.12.2008 Add USB registers                                          {3}
-   02.01.2009 Add uDMA registers                                         {4}
-   17.01.2009 Add CAN registers                                          {5}
-   18.01.2009 Add SSI1 registers                                         {6}
-   18.01.2009 Added device specific CHIP_HAS_UARTS                       {7}
-   05.02.2009 Added TIMER interrupt support                              {8}
-   05.02.2009 Add _CLEAR_INTERRUPT macro                                 {9}
-   31.03.2009 Add ADC registers                                          {10}
-   03.08.2009 Add LM3S2139 configuration                                 {11}
-   12.08.2009 Add port simulation to port macros                         {12}
-   29.08.2009 Add timer PWM configuration                                {13}
-   03.09.2009 Add alternative DMA channel assignments                    {14}
-   08.09.2009 Add internal temperature to ADC channels                   {15}
-   05.11.2009 Add LM3S9B90 and extend Tempest class crystals             {16}
-   07.11.2009 Adjust PWM to 1/10 % from 1% steps                         {17}
-   11.11.2009 Extend PLL support for LM3S9BXX                            {18}
-   29.11.2009 User line buffer with LM3S9BXX FLASH to avoid programming long words more than once {19}
-   26.02.2010 Add LM3S6911 configuration                                 {20}
-   13.05.2010 Add LM3S1958 configuration                                 {21}
-   15.05.2010 Add additional port macros _CONFIG_PORT_PULLUP(), _CONFIG_PORT_PULLDOWN(), _UNLOCK_GPIO(), _UNLOCK_PERIPHERAL(), and _LOCK_PORT() {22}
-   15.05.2010 Use volatile with port masking addresses                   {23}
-   07.07.2010 Correct VECTKEY value                                      {24}
-   08.07.2010 Add CGC_SSI1 bit                                           {25}
-   11.07.2010 Correct ADC_CHANNEL_15 and add CGC_SARADC1 and LM3XXXXX_ADC{26}
-   10.08.2010 Add SDCARD_MALLOC()                                        {27}
-   17.08.2010 Add _RESET_PORT_PERIPHERAL() macro                         {28}
-   06.10.2010 Add 16 bit timer mode                                      {29}
-   27.12.2010 Add PWM_CONFIGURATION                                      {30}
-   27.12.2010 Add _LM3S1776                                              {31}
-   22.02.2011 Add _LM3S9B96                                              {32}
-   25.09.2018 Make FMA (flash memory address) volatile                   {33}
-   27.09.2018 volatile register set throughout
+    16.12.2008 Add GPIO H interrupt for specific processors              {1}
+    18.12.2008 PORTS_AVAILABLE and PORT_WIDTH moved here from WinSim.c   {2}
+    18.12.2008 Add USB registers                                         {3}
+    02.01.2009 Add uDMA registers                                        {4}
+    17.01.2009 Add CAN registers                                         {5}
+    18.01.2009 Add SSI1 registers                                        {6}
+    18.01.2009 Added device specific CHIP_HAS_UARTS                      {7}
+    05.02.2009 Added TIMER interrupt support                             {8}
+    05.02.2009 Add _CLEAR_INTERRUPT macro                                {9}
+    31.03.2009 Add ADC registers                                         {10}
+    03.08.2009 Add LM3S2139 configuration                                {11}
+    12.08.2009 Add port simulation to port macros                        {12}
+    29.08.2009 Add timer PWM configuration                               {13}
+    03.09.2009 Add alternative DMA channel assignments                   {14}
+    08.09.2009 Add internal temperature to ADC channels                  {15}
+    05.11.2009 Add LM3S9B90 and extend Tempest class crystals            {16}
+    07.11.2009 Adjust PWM to 1/10 % from 1% steps                        {17}
+    11.11.2009 Extend PLL support for LM3S9BXX                           {18}
+    29.11.2009 User line buffer with LM3S9BXX FLASH to avoid programming long words more than once {19}
+    26.02.2010 Add LM3S6911 configuration                                {20}
+    13.05.2010 Add LM3S1958 configuration                                {21}
+    15.05.2010 Add additional port macros _CONFIG_PORT_PULLUP(), _CONFIG_PORT_PULLDOWN(), _UNLOCK_GPIO(), _UNLOCK_PERIPHERAL(), and _LOCK_PORT() {22}
+    15.05.2010 Use volatile with port masking addresses                  {23}
+    07.07.2010 Correct VECTKEY value                                     {24}
+    08.07.2010 Add CGC_SSI1 bit                                          {25}
+    11.07.2010 Correct ADC_CHANNEL_15 and add CGC_SARADC1 and LM3XXXXX_ADC{26}
+    10.08.2010 Add SDCARD_MALLOC()                                       {27}
+    17.08.2010 Add _RESET_PORT_PERIPHERAL() macro                        {28}
+    06.10.2010 Add 16 bit timer mode                                     {29}
+    27.12.2010 Add PWM_CONFIGURATION                                     {30}
+    27.12.2010 Add _LM3S1776                                             {31}
+    22.02.2011 Add _LM3S9B96                                             {32}
+    25.09.2018 Make FMA (flash memory address) volatile                  {33}
+    27.09.2018 volatile register set throughout
 
 */
 
@@ -780,6 +780,11 @@
     #define SIZE_OF_FLASH       (256*1024)
 #endif
 
+// Ethernet
+//
+#if PART_DC4 & EMAC0_PRESENT4
+    #define ETHERNET_AVAILABLE
+#endif
 
 // CAN
 //
@@ -895,11 +900,11 @@
 #if defined _DUST_DEVIL_CLASS || defined _TEMPEST_CLASS
     #define PORTS_AVAILABLE      __PORTS_AVAILABLE                       // ADC multiplexed with ports
 #else
-  //#if PART_DC1 & ADC0_PRESENT1
-  //    #define PORTS_AVAILABLE  (__PORTS_AVAILABLE + 1)                 // add ADC
-  //#else
+    #if PART_DC1 & ADC0_PRESENT1
+        #define PORTS_AVAILABLE  (__PORTS_AVAILABLE + 1)                 // add ADC
+    #else
         #define PORTS_AVAILABLE  __PORTS_AVAILABLE                       // no ADC
-  //#endif
+    #endif
 #endif
 /*****************************************************************************************************/
 

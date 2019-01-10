@@ -11,7 +11,7 @@
     File:      eth_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     15.03.2007 VLAN transmission support added                           {1}
     07.05.2007 Added STR91XF support                                     {2}
@@ -72,7 +72,7 @@
 /*                     global variable definitions                     */
 /* =================================================================== */
 
-#if defined _HW_SAM7X
+#if defined _HW_SAM7X || defined _LM3SXXXX
     ETHERNETQue *eth_tx_control;
     ETHERNETQue *eth_rx_control;
 #endif
@@ -328,7 +328,7 @@ extern QUEUE_HANDLE fnOpenETHERNET(ETHTABLE *pars, unsigned short driver_mode)
     que_ids[DriverID].output_buffer_control = new_memory;
 
     ptEthQue = (struct stETHERNETQue *)(que_ids[DriverID].output_buffer_control);
-    #if defined _HW_SAM7X
+    #if defined _HW_SAM7X || defined _LM3SXXXX
     eth_tx_control = ptEthQue;
     #endif
     ptEthQue->ETH_queue.put = ptEthQue->ETH_queue.get = ptEthQue->ETH_queue.QUEbuffer = 0; // {9} fnGetTxBufferAdd(0) replaced since 0 means that the buffer is presently not in use

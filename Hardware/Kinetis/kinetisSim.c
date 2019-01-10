@@ -2836,7 +2836,7 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
         #endif
         break;
     case SIM_SOPT2_TPMSRC_MCG:
-        #if defined FLL_FACTOR
+        #if defined FLL_FACTOR || defined KINETIS_WITH_MCG_LITE
         ulClockSpeed = MCGFLLCLK;
         #else
         ulClockSpeed = (MCGFLLCLK/2);

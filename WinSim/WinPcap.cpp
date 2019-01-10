@@ -11,17 +11,21 @@
     File:      WinPcap.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     08.01.2008 Made content conditional on Ethernet interface availability
     16.07.2008 Wait before injecting Ethernet frames if the main task is active {1}
     01.05.2010 Add local define _EXCLUDE_WINDOWS_
     03.10.2016 Display more adapter details and allow detecting any NIC         {2}
+    10.01.2019 Undefine H and C (used by Luminary projects) in order to not disturb newer build environments {3}
 
 */
 
 #define _EXCLUDE_WINDOWS_
 #include "config.h"
+
+#undef H                                                                 // {3}
+#undef C
 
 #if defined ETH_INTERFACE
 #include "WinPcap.h"
@@ -31,6 +35,8 @@
 
 #include <pcap.h>
 #include <winsock2.h>
+
+
 
 
 #if _VC80_UPGRADE>=0x0600

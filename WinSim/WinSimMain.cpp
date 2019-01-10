@@ -11,7 +11,7 @@
     File:      WinSimMain.cpp
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.01.2007 Correct array size                                        {1}
     26.01.2007 Increase ucDoList[10000]; to ensure no overrun {2} and OVERLAPPED data structure in fnSendSerialMessage
@@ -2449,11 +2449,11 @@ static void fnDisplayLAN_LEDs(HDC hdc, RECT refresh_rect)
     // Draw a box with rx and tx LEDs. If active red, or else white
     // RoundRect(hdc, rect_LAN_LED.left, rect_LAN_LED.top, rect_LAN_LED.right, rect_LAN_LED.bottom, 10, 10);
     //
-    if (iLastRxActivity) {
+    if (iLastRxActivity != 0) {
         hBrush = hGreenBrush;                                            // {4}
     }
     else {
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        hBrush = hGrayBrush;
     }
     SelectObject(hdc, hBrush);                                           // select the brush style for the first LED
     #if defined USER_CHIP_PACKAGE                                        // {95}
@@ -2461,11 +2461,11 @@ static void fnDisplayLAN_LEDs(HDC hdc, RECT refresh_rect)
     #else
     Rectangle(hdc, (rect_LAN_LED.left + 2), (rect_LAN_LED.top + 27 + (18 * (IP_NETWORK_COUNT - 1))), (rect_LAN_LED.left + 2 + 10), (rect_LAN_LED.top + 27 + 8 + (18 * (IP_NETWORK_COUNT - 1))));
     #endif
-    if (iLastTxActivity) {
+    if (iLastTxActivity != 0) {
         hBrush = hRedBrush;                                              // {4}
     }
     else {
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        hBrush = hGrayBrush;
     }
     SelectObject(hdc, hBrush);                                           // select the brush style for the second LED
     #if defined USER_CHIP_PACKAGE                                        // {95}
@@ -2542,7 +2542,7 @@ static void fnDisplayUSB(HDC hdc, RECT refresh_rect)                     // {14}
         }
     }
     iUSB_state_changed = 0;
-    if (iUSBEnumerated) {                                                // draw a USB sign
+    if (iUSBEnumerated != 0) {                                           // draw a USB sign
         SelectObject(hdc, hRedPen);
         SelectObject(hdc, hRedBrush);
     }
@@ -4506,14 +4506,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hPen = (HPEN)CreatePen(0, 0, RGB(180, 180, 180));            // create a pen with the colour for drawing the LAN LEDs {4}
             hGreenBrush = (HBRUSH)CreateSolidBrush(RGB(0, 255, 0));
             hRedBrush = (HBRUSH)CreateSolidBrush(RGB(220, 0, 0));
+            hGrayBrush = (HBRUSH)CreateSolidBrush(RGB(140, 140, 140));
 #if defined USB_INTERFACE                                                // create pens used by USB
             hRedPen = (HPEN)CreatePen(0,(USB_CIRCLE_RADIUS/2), RGB(220, 0, 0));
-            hGrayBrush = (HBRUSH)CreateSolidBrush(RGB(140, 140, 140));
             hGrayPen = (HPEN)CreatePen(0, (USB_CIRCLE_RADIUS/2), RGB(140, 140, 140));
             hGreenPen = (HPEN)CreatePen(0, (3), RGB(0, 255, 0));
 #elif defined SDCARD_SUPPORT                                             // create pens used by SD card (if not created by USB)
             hRedPen = (HPEN)CreatePen(0, 2, RGB(220, 0, 0));
-            hGrayBrush = (HBRUSH)CreateSolidBrush(RGB(140, 140, 140));
             hGrayPen = (HPEN)CreatePen(0, 2, RGB(140, 140, 140));
             hGreenPen = (HPEN)CreatePen(0,(3), RGB(0, 255, 0));
 #endif
@@ -4759,7 +4758,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_PAINT:
-            if (GetUpdateRect(hWnd, rect, FALSE)) {
+            if (GetUpdateRect(hWnd, rect, FALSE) != 0) {
                 hdc = BeginPaint(hWnd, &ps);
                 fnDoDraw(hWnd, hdc, ps, rt);                             // we do user specific stuff here
                 EndPaint(hWnd, &ps);

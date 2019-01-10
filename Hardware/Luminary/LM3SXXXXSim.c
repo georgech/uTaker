@@ -11,7 +11,7 @@
    File:        LM3SXXXXSim.c
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
    06.12.2008 Added additional serial receivers for the simulator        {1}
    06.12.2008 Corrected UART 2 transmission counter                      {2}
@@ -39,6 +39,7 @@
    10.10.2010 Add 16 bit timer mode support                              {22}
    07.10.2018 Add external ports                                         {23}
    07.10.2018 Add key input port default override and extended port default states {24}
+   10.01.2019 Add uninitialisedRAM[]                                     {25}
 
 */  
 
@@ -92,6 +93,8 @@ static unsigned char ucPort_in_J;
 static unsigned long ucGPIO_per_A = 0, ucGPIO_per_B = 0, ucGPIO_per_C = 0, ucGPIO_per_D = 0, ucGPIO_per_E = 0, ucGPIO_per_F = 0, ucGPIO_per_G = 0, ucGPIO_per_H = 0, ucGPIO_per_J = 0;
 
 unsigned long vector_ram[(RESERVE_DMA_MEMORY + sizeof(VECTOR_TABLE))/sizeof(unsigned long)]; // long word aligned
+
+unsigned char uninitialisedRAM[16];                                      // {25}
 
 static unsigned char ucPortFunctions[PORTS_AVAILABLE][PORT_WIDTH] = { 0 };
 

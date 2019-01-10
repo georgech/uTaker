@@ -552,7 +552,7 @@
     #define TX_BUFFER_SIZE   (256)                                       // the size of RS232 input and output buffers
     #define RX_BUFFER_SIZE   (64)
 
-    #ifdef SUPPORT_HW_FLOW                                               // define the ports for RTS/CTS use
+    #if defined SUPPORT_HW_FLOW                                          // define the ports for RTS/CTS use
         #define RTS_0_PORT         GPIODATA_D
         #define RTS_0_PIN          PORTD_BIT1
         #define RTS_0_PORT_POWER   CGC_GPIOD
@@ -976,10 +976,10 @@
 #endif
 
 #define CONFIG_TIMER_TEST_LEDS()       DEMO_LED_DDR |= (DEMO_LED_3 | DEMO_LED_4)
-#define TIMER_TEST_LED_ON()            DEMO_LED_PORT |= (DEMO_LED_3);
-#define TIMER_TEST_LED2_ON()           DEMO_LED_PORT |= (DEMO_LED_4);
-#define TIMER_TEST_LED_OFF()           DEMO_LED_PORT &= ~(DEMO_LED_3);
-#define TIMER_TEST_LED2_OFF()          DEMO_LED_PORT &= ~(DEMO_LED_4);
+#define TIMER_TEST_LED_ON()            DEMO_LED_PORT |= (DEMO_LED_3)
+#define TIMER_TEST_LED2_ON()           DEMO_LED_PORT |= (DEMO_LED_4)
+#define TIMER_TEST_LED_OFF()           DEMO_LED_PORT &= ~(DEMO_LED_3)
+#define TIMER_TEST_LED2_OFF()          DEMO_LED_PORT &= ~(DEMO_LED_4)
 
 
 #define CONFIG_TEST_OUTPUT()                                             // {6} we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
@@ -988,11 +988,13 @@
 // Ports
 //
 #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-    #define INIT_WATCHDOG_LED()        ENABLE_LED_PORT();                // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
+    #define INIT_WATCHDOG_LED()        ENABLE_LED_PORT()                 // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
+#else
+    #define INIT_WATCHDOG_LED()        ENABLE_LED_PORT()
 #endif
 //#define TOGGLE_WATCHDOG_LED()        DEMO_LED_PORT ^= BLINK_LED        // blink the LED, if set as output
 
-#define INIT_WATCHDOG_DISABLE()      //PMC_PCER = (PIOA);                // ensure clocks to port
+#define INIT_WATCHDOG_DISABLE()      //PMC_PCER = (PIOA)                 // ensure clocks to port
 #define WATCHDOG_DISABLE()             0                                 // enable watchdog
 //#define WATCHDOG_DISABLE()           1                                 // don't enable watchdog
 #define WATCHDOG_TIMEOUT_MS            1500                              // watchdog timeout of 1.5 seconds (maximum at 50MHz 85s)

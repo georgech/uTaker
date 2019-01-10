@@ -1811,6 +1811,7 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #elif defined KINETIS_KE || defined KINETIS_KL02 || defined KINETIS_KL03 // devices that don't support DMA
     #define DEVICE_WITHOUT_DMA
+    #define DMA_CHANNEL_COUNT        0
 #elif defined KINETIS_KV50
     #define DEVICE_WITH_TWO_DMA_GROUPS
     #define eDMA_SHARES_INTERRUPTS                                       // DMA channel 16 shares an interrupt vector with channel 0, 17 with 1, 18 with 2 and 19 with 3, etc.
@@ -13592,7 +13593,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #endif
 #endif
 
-#if defined KINETIS_KL02                                                 // TPM0
+#if defined KINETIS_KL02 || defined KINETIS_KL03                         // TPM0
     #define PA_6_TPM0_CH0                PORT_MUX_ALT2
     #define PA_5_TPM0_CH1                PORT_MUX_ALT2
     #define PB_7_TPM1_CH0                PORT_MUX_ALT2
