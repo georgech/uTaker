@@ -594,7 +594,7 @@ static int iPrevBit = -1;
     #define PORT_TEXT_LENGTH 8
     static  RECT rect_LAN_LED = {301, 85, 348, 140};
 #elif defined _STM32                                                     // {54}
-    #if defined ST_VALUE                                                 // value line
+    #if defined _VALUE_LINE || defined _PERFORMANCE_LINE                 // value/performance lines
         #if defined _EXE
             #define CHIP_PACKAGE "stm32f100.bmp"
         #else
@@ -602,6 +602,11 @@ static int iPrevBit = -1;
         #endif
         #define PORT_FIRST_LINE   270
         #define PORT_DISPLAY_LEFT 149
+
+        #define USB_LEFT   (269)
+        #define USB_TOP    (132)
+        #define USB_RIGHT  (321)
+        #define USB_BOTTOM (152)
     #else                                                                // connectivity line
         #if defined _STM32L4XX
             #if defined _EXE
@@ -656,10 +661,12 @@ static int iPrevBit = -1;
     #define START_PORTS_X (PORT_DISPLAY_LEFT)
     #define PORT_TEXT_LENGTH 8
     static  RECT rect_LAN_LED = {303, 84, 350, 139};
-    #define USB_LEFT   (294)                                             // {75}
-    #define USB_TOP    (159)
-    #define USB_RIGHT  (346)
-    #define USB_BOTTOM (179)
+    #if !defined _VALUE_LINE && !defined _PERFORMANCE_LINE
+        #define USB_LEFT   (294)                                         // {75}
+        #define USB_TOP    (159)
+        #define USB_RIGHT  (346)
+        #define USB_BOTTOM (179)
+    #endif
 #elif defined _LPC17XX                                                   // {46}
     #if defined _EXE
         #define CHIP_PACKAGE "LPC17XX.bmp"

@@ -11,7 +11,7 @@
     File:      types.h
     Project:   Single Chip Embedded Internet - serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     14.02.2010 Remove "../../Hardware/xxxx/xxxx.h" include to app_hw_xxxx.h {1}
     01.12.2010 Add RX6XX                                                 {2}
@@ -177,12 +177,7 @@ typedef char              CHAR;
     #define MEMORY_RANGE_POINTER   unsigned char *
 #endif
 
-
-#if defined COMPILE_IAR && !defined _HW_SAM7X
-    typedef unsigned long size_t;
-#else
     typedef unsigned int size_t;
-#endif
 
 #include "../../Hardware/packages.h"                                     // {6} include the general package defines
 

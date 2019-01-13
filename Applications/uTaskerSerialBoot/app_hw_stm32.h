@@ -125,6 +125,21 @@
     #define STM32F100RB                                                  // exact processor type
     #define PCLK1_DIVIDE        2
     #define PCLK2_DIVIDE        1
+#elif defined ARDUINO_BLUE_PILL
+    #define CRYSTAL_FREQ        8000000
+  //#define DISABLE_PLL                                                  // run from clock source directly
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source
+    #define USE_PLL2_CLOCK                                               // use the PLL2 output as PLL input (don't use USE_HSI_CLOCK in this configuration)
+    #define PLL2_INPUT_DIV      5                                        // clock input is divided by 5 to give 5MHz to the PLL2 input (range 1..16)
+    #define PLL2_VCO_MUL        8                                        // the pll2 frequency is multiplied by 8 to 40MHz (range 8..14 or 16 or 20)
+    #define PLL_INPUT_DIV       1                                        // 1..16 - should set the input to pll in the range 3..12MHz - not valid for HSI clock source
+    #define PLL_VCO_MUL         9                                        // 4..9 where PLL out must be 18..72MHz. Also 65 is accepted as x6.5 (special case)
+    #define PIN_COUNT           PIN_COUNT_48_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (20 * 1024)                              // 20k SRAM
+    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k FLASH
+    #define PCLK1_DIVIDE        2
+    #define PCLK2_DIVIDE        1
 #else
                                                                          // other configurations can be added here
 #endif
@@ -393,7 +408,7 @@
   //#define SERIAL_SUPPORT_DMA                                           // enable UART DMA support
   //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
 
-    #if defined ST_MB913C_DISCOVERY
+    #if defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
         #define LOADER_UART    2                                         // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined STM3240G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK
         #define LOADER_UART    2                                         // use UART channel 2 (USART 3 since ST USARTs count from 1) - the board can't use USART 4 and SD card at the same time so needs a modification for this
@@ -578,6 +593,30 @@
                                        POWER_DOWN(AHB2, RCC_AHB2ENR_OTGFSEN); \
                                        POWER_DOWN(APB2, RCC_APB2ENR_SYSCFGEN); \
                                        SDIO_POWER = SDIO_POWER_POWER_OFF;
+#elif defined ARDUINO_BLUE_PILL                                          // STM32F103
+    #define BLINK_LED                  PORTC_BIT13                       // green LED
+
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(B, (PORTB_BIT12 | PORTB_BIT13), (INPUT_PULL_UP)) // PB12 and PB13 configured as input with pull-up
+    #define WATCHDOG_DISABLE()         (_READ_PORT_MASK(B, (PORTB_BIT13)) == 0) // disable watchdog by pulling pin 19 to ground at reset
+    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
+
+    #define FORCE_BOOT()               (_READ_PORT_MASK(B, (PORTB_BIT12))) // pull pin 20 to ground at reset to force boot loader mode
+    #define RETAIN_LOADER_MODE()       0                                 // force retaining boot loader mode after update
+
+                                        // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS     {RGB(0,255,0),RGB(20,20,20), 1, {650, 215, 666, 244}, _PORTC, BLINK_LED},
+
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/BluePill.bmp"
+
+    // Power down the USB controller and disable interrupts before jumping to the application
+    //
+    #define RESET_PERIPHERALS()        IRQ0_31_CER  = 0xffffffff; \
+                                       IRQ32_63_CER = 0xffffffff; \
+                                       IRQ64_95_CER = 0xffffffff; \
+                                       IRQ0_31_CPR  = 0xffffffff; \
+                                       IRQ32_63_CPR = 0xffffffff; \
+                                       IRQ64_95_CPR = 0xffffffff;
 #elif defined ST_MB913C_DISCOVERY                                        // F1
     #define USER_KEY_BUTTON            PORTA_BIT0
     #define LED3                       PORTC_BIT9                        // green LED
@@ -586,7 +625,7 @@
     #define BLINK_LED                  LED3
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PA0 configured as input with pull-up
-    #define WATCHDOG_DISABLE()         (!(_READ_PORT_MASK(A, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
+    #define WATCHDOG_DISABLE()         (_READ_PORT_MASK(A, (USER_KEY_BUTTON)) == 0) // disable watchdog by holding the user button down at reset
     #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 
@@ -863,6 +902,7 @@
 #define PRIORITY_USART3            6
 #define PRIORITY_HW_TIMER          5
 #define PRIORITY_TIMERS            5
+#define PRIORITY_DEVICE_LP_FS      4
 #define PRIORITY_USB_OTG           4
 #define PRIORITY_I2C1              4
 #define PRIORITY_I2C2              4
@@ -870,6 +910,7 @@
 #define PRIORITY_TICK_TIMER        3
 #define PRIORITY_ADC               2
 #define PRIORITY_EMAC              1
+#define PRIORITY_DEVICE_HP_FS      1
 #define PRIORITY_OTG_FS            1
 
 

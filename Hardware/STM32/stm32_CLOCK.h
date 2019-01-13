@@ -11,7 +11,7 @@
     File:      stm32_CLOCK.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     17.10.2017 Add timers 9 and 12                                       {1}
     17.10.2017 Correct prescaler adjustment for PCLK2                    {2}
@@ -31,7 +31,7 @@
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
 #if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32L4X5 && !defined _STM32L4X6
-    #if defined _EXTERNAL_CLOCK                                          // use external lock input rather than crystal oscillator
+    #if defined _EXTERNAL_CLOCK                                          // use external clock input rather than crystal oscillator
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON | RCC_CR_HSEBYP); // enable the high-speed external clock
     #else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
@@ -52,7 +52,7 @@
 #elif defined _STM32L0x1
     FLASH_ACR = (FLASH_ACR_PRE_READ | FLASH_ACR_PRFTEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer and cache
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // prepare HCLK (AHB), PCLK1 and PCLK2 speeds
-#elif defined _CONNECTIVITY_LINE || defined _STM32F031
+#elif defined _CONNECTIVITY_LINE || defined _PERFORMANCE_LINE || defined _STM32F031
     FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_WAIT_STATES);                  // set flash wait states appropriately and enable pre-fetch buffer
     RCC_CFGR = (RCC_CFGR_HPRE_SYSCLK | RCC_CFGR_PPRE1_HCLK_DIV2 | RCC_CFGR_PPRE2_HCLK); // set HCLK to SYSCLK, PCLK2 to HCLK and PCLK1 to HCLK/2 - PCLK1 must not be greater than SYSCLK/2
 #else

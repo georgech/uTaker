@@ -135,13 +135,31 @@
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 #elif defined _STM32
-    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
-      #define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
+    // STM32
+    //
+    // Nucleo 32 range
+    //
+    //#define NUCLEO_F031K6                                              // evaluation board with STM32F031 (cortex-m0)
+    //#define NUCLEO_L011K4                                              // evaluation board with STM32L011 (cortex-m0+)
+    //#define NUCLEO_L031K6                                              // evaluation board with STM32L031 (cortex-m0+)
+    //#define NUCLEO_L432KC                                              // evaluation board with STM32L432 (cortex-m4 with FPU)
+
+    // Nucleo 144 range
+    //
+    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
+    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
+    //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
+    //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
+
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
+      #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
+    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
+    //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
+    //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
+    //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
+    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
-    //#define STM32F405_BOARD                                            // board with STM32F405
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
-    //#define STM32_P207                                                 // Olimex prototyping board with STM32F207ZET6
 #endif
 
 #if defined FRDM_KE02Z
@@ -791,6 +809,11 @@
     #define _STM32F100X                                                  // part group
     #define DEVICE_WITHOUT_ETHERNET                                      // STM32F100 doesn't have Ethernet
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+#elif defined ARDUINO_BLUE_PILL
+    #define TARGET_HW            "BLUE PILL (STM32F103C8T6)"
+    #define _STM32F103X                                                  // part group
+    #define DEVICE_WITHOUT_ETHERNET                                      // STM32F103 doesn't have Ethernet
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
 #elif defined STM32_P207
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define TARGET_HW       "STM32-P207"
@@ -914,7 +937,7 @@
 
 
 #if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22 && !(defined FRDM_KL27Z && defined _DEV2)
-    #define SERIAL_INTERFACE                                             // enable serial interface driver
+  //#define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS
@@ -1084,7 +1107,7 @@
 #endif
 
 #if !defined TWR_K20D50M && !defined FRDM_K20D50M && !defined FRDM_KL46Z && !defined FRDM_KL43Z && !defined TWR_KL46Z48M && !defined FRDM_KL26Z && !defined FRDM_KL27Z && !defined TWR_KL25Z48M && !defined FRDM_KL02Z && !defined FRDM_KL03Z && !defined FRDM_KL05Z && !defined FRDM_KE02Z && !defined FRDM_KE02Z40M && !defined FRDM_KE04Z && !defined TWR_K20D72M && !defined TWR_K21D50M && !defined TWR_K22F120M && !defined TWR_K24F120M && !defined K24FN1M0_120 && !defined FRDM_K22F && !defined TWR_KV10Z32 && !defined TWR_KV31F120M && !defined K66FX1M0 // boards have no SD card socket
-    #define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
+  //#define SDCARD_SUPPORT                                               // SD-card interface (only choose one of these options at a time)
   //#define SPI_FLASH_FAT                                                // SPI flash
         #define SIMPLE_FLASH                                             // don't perform block management and wear-levelling
         #define FLASH_FAT_MANAGEMENT_ADDRESS     (SIZE_OF_FLASH)

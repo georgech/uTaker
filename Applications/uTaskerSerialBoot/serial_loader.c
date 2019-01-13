@@ -2474,7 +2474,7 @@ extern void fnJumpToValidApplication(int iResetPeripherals)              // {25}
 extern void fnUserHWInit(void)
 {
 #if defined USB_INTERFACE                                                 // {9}
-    #if !defined MEMORY_SWAP
+    #if defined USB_MSD_DEVICE_LOADER && !defined MEMORY_SWAP
     int iForcedToBootMode = 0;
     #endif
     #if defined USB_HOST_SUPPORT
@@ -2482,7 +2482,7 @@ extern void fnUserHWInit(void)
     #endif
 #endif
 #if !defined MEMORY_SWAP                                                 // swap memory remains always in the loader
-    #if defined _WINDOWS && defined USB_INTERFACE
+    #if defined _WINDOWS && (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER)
     iForcedToBootMode = 1;
     #endif
     if ((FORCE_BOOT() == 0)) {

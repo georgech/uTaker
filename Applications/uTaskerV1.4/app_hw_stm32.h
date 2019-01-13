@@ -127,7 +127,7 @@
     #define USE_PLL2_CLOCK                                               // use the PLL2 output as PLL input (don't use USE_HSI_CLOCK in this configuration)
     #define PLL2_INPUT_DIV      5                                        // clock input is divided by 5 to give 5MHz to the PLL2 input (range 1..16)
     #define PLL2_VCO_MUL        8                                        // the pll2 frequency is multiplied by 8 to 40MHz (range 8..14 or 16 or 20)
-    #define PLL_INPUT_DIV       5                                        // 1..16 - should set the input to pll in the range 3..12MHz - not valid for HSI clock source
+    #define PLL_INPUT_DIV       1                                        // 1..16 - should set the input to pll in the range 3..12MHz - not valid for HSI clock source
     #define PLL_VCO_MUL         9                                        // 4..9 where PLL out must be 18..72MHz. Also 65 is accepted as x6.5 (special case)
     #define PIN_COUNT           PIN_COUNT_48_PIN
     #define PACKAGE_TYPE        PACKAGE_LQFP
@@ -1565,7 +1565,7 @@
 #elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL           // F1
     #define USER_KEY_BUTTON            PORTA_BIT0
     #if defined ARDUINO_BLUE_PILL
-        #define LED3                   PORTC_BIT13                       // red LED
+        #define LED3                   PORTC_BIT13                       // green LED
         #define LED4                   PORTC_BIT14
         #define PORT_SHIFT             13
     #else
@@ -1611,7 +1611,7 @@
     #define KEYPAD_LEDS  2
     #if defined ARDUINO_BLUE_PILL
                                            // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-        #define KEYPAD_LED_DEFINITIONS     {RGB(255,0,0),RGB(20,20,20), 1, {650, 215, 666, 244}, _PORTC, LED3},
+        #define KEYPAD_LED_DEFINITIONS     {RGB(0,255,0),RGB(20,20,20), 1, {650, 215, 666, 244}, _PORTC, LED3},
 
         #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {580, 55, 608, 79}},
 

@@ -11,7 +11,7 @@
     File:      kinetis_USB_OTG.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.03.2013 Add USB HS support                                        {33}
     05.03.2014 Add USB error counters and clear errors in the USB interrupt routine {71}
@@ -465,7 +465,7 @@ static void fnUSB_reset(int iError)
     ENDPT0 = EP_HSHK;                                                    // disable transmission and reception
     ENDPT1 = 0; ENDPT2 = 0; ENDPT2 = 0; ENDPT4 = 0; ENDPT5 = 0; ENDPT6 = 0; ENDPT7 = 0; ENDPT8 = 0; ENDPT9 = 0; ENDPT10 = 0;
     ENDPT11 = 0; ENDPT2 = 0; ENDPT13 = 0; ENDPT14 = 0; ENDPT15 = 0;      // disable all other endpoints
-    while (ENDPT0 & EP_TX_ENABLE) {}                                     // wait for tx disable to complete
+    while ((ENDPT0 & EP_TX_ENABLE) != 0) {}                              // wait for tx disable to complete
                                                                          // reconfigure all packet buffers of the control endpoint
     ptrBDT->usb_bd_rx_odd.ulUSB_BDControl  = (SET_FRAME_LENGTH(ENDPOINT_0_SIZE) | DTS | OWN); // set control endpoint rx size and configure Data Toggle Synchronisation (receive DATA 0 frames)
     ptrBDT->usb_bd_rx_even.ulUSB_BDControl = (ptrBDT->usb_bd_rx_odd.ulUSB_BDControl | DATA_1); // set control endpoint rx size and configure Data Toggle Synchronisation (Receive DATA 1 frames)
