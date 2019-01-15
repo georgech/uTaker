@@ -794,10 +794,10 @@ Build_STM32.bat
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\uTasker___Win32_uTasker_Kinetis_build/uTaskerV1-4.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\uTasker___Win32_uTasker_Kinetis_build/</AssemblerListingLocation>
-      <ObjectFileName>.\uTasker___Win32_uTasker_Kinetis_build/</ObjectFileName>
-      <ProgramDataBaseFileName>.\uTasker___Win32_uTasker_Kinetis_build/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\uTasker Luminary/uTaskerV1-4.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\uTasker Luminary/</AssemblerListingLocation>
+      <ObjectFileName>.\uTasker Luminary/</ObjectFileName>
+      <ProgramDataBaseFileName>.\uTasker Luminary/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -3000,6 +3000,7 @@ Build_Luminary.bat</Command>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExpandAttributedSource Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExpandAttributedSource>
     </ClCompile>
     <ClCompile Include="..\..\..\WinSim\WinSim.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -4490,6 +4491,8 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_device.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\cc.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\perf.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\sys_arch.h" />

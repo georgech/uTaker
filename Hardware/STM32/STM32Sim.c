@@ -11,7 +11,7 @@
     File:      STM32Sim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     08.09.2012 Adapt RTC for F2/F4 devices                               {1}
     09.09.2012 Handle additional functions                               {2}
@@ -159,7 +159,6 @@ static void fnSetDevice(unsigned short *port_inits)
     FLASH_OBR = 0x03fffffc;
     #endif
 #endif
-
 #if defined _STM32L0x1
     GPIOA_MODER = 0xebfffcff;
     GPIOA_PUPDR = 0x24000000;
@@ -238,8 +237,6 @@ static void fnSetDevice(unsigned short *port_inits)
     #endif
 #endif
 
-    USB_CNTR = 0x0003;                                                   // USB device
-
     SPI1_CRCPR = 7;                                                      // SPI (I2S)
     SPI2_I2SPR = 0x00000002;
     SPI2_CRCPR = 7;
@@ -261,8 +258,10 @@ static void fnSetDevice(unsigned short *port_inits)
 #if defined _STM32L432 || defined _STM32L0x1
     IWDG_WINR = 0xfff;
 #endif
-
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX       // USB OTG FS
+#if defined USB_DEVICE_AVAILABLE                                         // USB FS device
+    USB_CNTR = (USB_CNTR_PDWN | USB_CNTR_FRES);
+#endif
+#if defined USB_OTG_AVAILABLE                                            // USB OTG FS
     OTG_FS_GOTGCTL  = OTG_FS_GOTGCTL_DHNPEN;
     OTG_FS_GUSBCFG  = 0x00000a00;
     OTG_FS_GRSTCTL  = 0x20000000;
@@ -2322,25 +2321,140 @@ extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW)
     }
 }
 
+#if defined USB_DEVICE_AVAILABLE
+// The SRAM is organised as long words but only half-words are actually used and the unused half-words are skipped
+//
+static void fnWriteUSB_data(unsigned long *ptrInputBuffer, unsigned char *ptrDebugIn, unsigned short usLenEvent)
+{
+    unsigned long ulNextEntry = 0;
+    while (usLenEvent != 0) {
+        ulNextEntry = *ptrDebugIn++;
+        if (usLenEvent >= 2) {
+            ulNextEntry |= (*ptrDebugIn++ << 8);
+            usLenEvent -= 2;
+        }
+        else {
+            usLenEvent--;
+        }
+        *ptrInputBuffer++ = ulNextEntry;
+    }
+}
+#endif
+
 // Inject USB transactions for test purposes
 //
 extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsigned char *ptrDebugIn, unsigned short usLenEvent)
 {
     int iReset = 0;
-    if (!ptrDebugIn) {
-        if (usLenEvent & USB_RESET_CMD) {                                // usb reset
+#if defined USB_DEVICE_AVAILABLE
+    if (ptrDebugIn == 0) {
+        if ((usLenEvent & USB_RESET_CMD) != 0) {                         // usb reset
+            memset(ucRxBank, 0, sizeof(ucRxBank));                       // default is even bank
+            memset(ucTxBuffer, 0, sizeof(ucTxBuffer));                   // default is even buffer
+            USB_ISTR = USB_ISTR_RESET;                                   // set reset detected interrupt flag
+            USB_EP0R = USB_EP1R = USB_EP2R = USB_EP3R = USB_EP4R = USB_EP5R = USB_EP6R = USB_EP7R = 0;
+            iReset = 1;
+        }
+        if ((usLenEvent & USB_SLEEP_CMD) != 0) {                         // usb suspend
+            USB_ISTR |= USB_ISTR_SUSP;                                   // set suspend detected interrupt flag
+        }
+        if (usLenEvent & USB_RESUME_CMD) {
+            USB_ISTR |= USB_ISTR_WKUP;                                   // set resume detected interrupt flag
+        }
+        if (usLenEvent & USB_IN_SUCCESS) {
+        }
+        if (((USB_CNTR & USB_ISTR) & (USB_ISTR_RESET | USB_ISTR_SUSP | USB_ISTR_WKUP)) != 0) { // if low priority interrupt enabled and interrupt source pending
+            if (fnGenInt(irq_USB_LP_CAN_RX0_ID) != 0) {                      // if low priority USB interrupt is not disabled in core
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_USB_LP_CAN1_RX0();         // call the low priority interrupt handler
+                if (iReset != 0) {
+                }
+            }
+        }
+    }
+    else {
+        volatile unsigned long *ptrEndpointControl = USB_EP0R_ADD;
+        USB_BD_TABLE *ptrBD = (USB_BD_TABLE *)(USB_CAN_SRAM_ADDR + USB_BTABLE); // the start of the buffer descripter table
+        if ((USB_DADDR & USB_DADDR_EF) == 0) {                           // if the function is disabled
+            return 1;
+        }
+        if (((USB_DADDR & USB_DADDR_ADD_MASK) >> 4) != (unsigned long)iDevice) { // not our device address so ignore
+            if (iDevice != 0xff) {                                       // special broadcast for simulator use so that it doesn't have to know the USB address
+                return 1;
+            }
+        }
+        ptrEndpointControl += iEndPoint;
+        ptrBD += iEndPoint;
+        switch (ucPID) {
+        case OUT_PID:
+        case SETUP_PID:
+            {
+                unsigned short usMaxRx = ((ptrBD->usUSB_COUNT_RX_0 & USB_COUNT_RX_NUM_BLOCK_MASK) >> USB_COUNT_SHIFT);
+                volatile unsigned long *ptrInputBuffer = (USB_CAN_SRAM_ADDR + USB_BTABLE);
+                ptrInputBuffer += (ptrBD->usUSB_ADDR_RX/2);
+                if ((ptrBD->usUSB_COUNT_RX_0 & USB_COUNT_RX_BL_SIZE) != 0) {
+                    usMaxRx *= 32;
+                    usMaxRx += 32;
+                }
+                else {
+                    usMaxRx *= 2;
+                }
+                if (usLenEvent > usMaxRx) {
+                    usLenEvent = usMaxRx;
+                }
+                fnWriteUSB_data((unsigned long *)ptrInputBuffer, ptrDebugIn, usLenEvent);
+                ptrBD->usUSB_COUNT_RX_0 &= ~(USB_COUNT_COUNT_MASK);
+                ptrBD->usUSB_COUNT_RX_0 |= (usLenEvent & USB_COUNT_COUNT_MASK);
+                ucTxBuffer[iEndPoint] = 0;
+                if ((*ptrEndpointControl & USB_EPR_CTR_STAT_RX_MSK) == USB_EPR_CTR_STAT_RX_VALID) {
+                    if (ucPID == SETUP_PID) {
+                        *ptrEndpointControl |= (USB_EPR_CTR_CTR_RX | USB_EPR_CTR_SETUP | USB_EPR_CTR_DTOG_TX);
+                    }
+                    else {
+                        *ptrEndpointControl |= (USB_EPR_CTR_CTR_RX);
+                    }
+                    USB_ISTR |= (USB_CNTR_CTRM | USB_ISTR_DIR);
+                }
+            }
+            break;
+        default:
+            _EXCEPTION("Unknown PID!");
+            return 0;
+        }
+        USB_ISTR &= ~(USB_ISTR_EP_ID_MASK);
+        USB_ISTR |= (iEndPoint);
+        if (((USB_CNTR & USB_ISTR) & (USB_CNTR_CTRM)) != 0) {           // if correct transfer interrupt enabled and interrupt source pending
+            if (0 == 1) {                                               // osochronous or double-buffered endpoint
+                if (fnGenInt(irq_USB_HP_CAN_TX_ID) != 0) {              // if high priority USB interrupt is not disabled in core
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_USB_HP_CAN1_TX(); // call the high priority interrupt handler
+                }
+            }
+            else {
+                if (fnGenInt(irq_USB_LP_CAN_RX0_ID) != 0) {             // if low priority USB interrupt is not disabled in core
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    ptrVect->processor_interrupts.irq_USB_LP_CAN1_RX0();// call the low priority interrupt handler
+                    if (iReset != 0) {
+                    }
+                }
+            }
+        }
+    }
+#elif defined USB_OTG_AVAILABLE
+    if (ptrDebugIn == 0) {
+        if ((usLenEvent & USB_RESET_CMD) != 0) {                         // usb reset
             memset(ucRxBank,   0, sizeof(ucRxBank));                     // default is even bank
             memset(ucTxBuffer, 0, sizeof(ucTxBuffer));                   // default is even buffer
             OTG_FS_GINTSTS = (OTG_FS_GINTSTS_PTXFE | 0x00800000 | OTG_FS_GINTSTS_USBRST | OTG_FS_GINTSTS_USBSUSP | OTG_FS_GINTSTS_ESUSP | OTG_FS_GINTSTS_NPTXFE); // set reset detected interrupt flag
             iReset = 1;
         }
-        if (usLenEvent & USB_SLEEP_CMD) {                                // usb suspend
+        if ((usLenEvent & USB_SLEEP_CMD) != 0) {                         // usb suspend
             OTG_FS_GINTSTS |= OTG_FS_GINTSTS_USBSUSP;                    // set suspend detected interrupt flag
         }
-        if (usLenEvent & USB_RESUME_CMD) {
+        if ((usLenEvent & USB_RESUME_CMD) != 0) {
             OTG_FS_GINTSTS |= OTG_FS_GINTSTS_WKUINT;                     // set resume detected interrupt flag
         }
-        if (usLenEvent & USB_IN_SUCCESS) {
+        if ((usLenEvent & USB_IN_SUCCESS) != 0) {
         }
     }
     else {
@@ -2424,6 +2538,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
             }
         }
     }
+#endif
     return 0;
 }
 
@@ -2431,6 +2546,8 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
 //
 extern void fnCheckUSBOut(int iDevice, int iEndpoint)
 {
+#if defined USB_DEVICE_AVAILABLE
+#elif defined USB_OTG_AVAILABLE
     unsigned short usUSBLength;
     switch (iEndpoint) {
     case 0:
@@ -2462,6 +2579,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
         }
         break;
     }
+#endif
 }
 
 // Request an endpoint buffer size
@@ -2469,6 +2587,8 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
 extern unsigned short fnGetEndpointInfo(int iEndpoint)
 {
     unsigned short usLength = 0;
+    #if defined USB_DEVICE_AVAILABLE
+    #elif defined USB_OTG_AVAILABLE
     switch (iEndpoint) {
     case 0:
         usLength = (unsigned short)(OTG_FS_DIEPTXF0 >> 16);              // length in words
@@ -2483,7 +2603,8 @@ extern unsigned short fnGetEndpointInfo(int iEndpoint)
         usLength = (unsigned short)(OTG_FS_DIEPTXF3 >> 16);              // length in words
         break;
     }
-    usLength *= 4;                                                       // mength in bytes
+    usLength *= 4;                                                       // length in bytes
+    #endif
     return usLength;
 }
 #endif

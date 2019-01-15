@@ -637,7 +637,7 @@
         #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
         #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)
     #elif defined RUN_FROM_LIRC
-        #define RUN_FROM_LIRC_2M                                         // selet 2MHz rather than 8MHz
+        #define RUN_FROM_LIRC_2M                                         // select 2MHz rather than 8MHz
         #define SLOW_CLOCK_DIVIDE    1                                   // optionally divide the slow clock output (1, 2, 4, 8, 16, 32, 64 or 128)
         #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
         #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)

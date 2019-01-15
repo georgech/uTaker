@@ -320,7 +320,7 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     #endif  
 #endif
 
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if !defined _ST_FLASH_UNIFORM_GRANULARITY || defined _WINDOWS
 // The STM32F2xx and STM32F4xx have variable flash granularity - this routine determines the size of the flash sector that the access is in as well as the sector's number
 //
 static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned long *ulSectorNumber, int *iProtected)
@@ -338,6 +338,14 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
     *ulSectorNumber = 0;
     #endif
     *iProtected = FLASH_SECTOR_NOT_PROTECTED;
+    #if defined _ST_FLASH_UNIFORM_GRANULARITY
+    ptrSector -= (FLASH_START_ADDRESS);
+    *ulSectorNumber += (((CAST_POINTER_ARITHMETIC)ptrSector) / FLASH_GRANULARITY);
+    ulSectorSize = FLASH_GRANULARITY;
+    if ((FLASH_WRPR & (FLASH_WRPR_WRP0 << *ulSectorNumber)) == 0) {
+        *iProtected = FLASH_SECTOR_PROTECTED;                            // sector is write protected
+    }
+    #else
     if (ptrSector >= (unsigned char *)(FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER))) { // {22}
         ptrSector -= (FLASH_START_ADDRESS + (NUMBER_OF_BOOT_SECTORS * FLASH_GRANULARITY_BOOT) + (NUMBER_OF_PARAMETER_SECTORS * FLASH_GRANULARITY_PARAMETER));
         *ulSectorNumber += ((NUMBER_OF_BOOT_SECTORS + NUMBER_OF_PARAMETER_SECTORS) + (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY));
@@ -357,7 +365,6 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
         *ulSectorNumber += (((CAST_POINTER_ARITHMETIC)ptrSector)/FLASH_GRANULARITY_BOOT);
         ulSectorSize = FLASH_GRANULARITY_BOOT;                           // access in boot area
     }
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     if (*ulSectorNumber < 16) {
         if ((FLASH_OPTCR & (FLASH_OPTCR_nWRP0 << *ulSectorNumber)) == 0) {
             *iProtected = FLASH_SECTOR_PROTECTED;                        // sector is write protected
@@ -375,7 +382,7 @@ static unsigned long fnGetFlashSectorSize(unsigned char *ptrSector, unsigned lon
 }
     #endif
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if !defined _ST_FLASH_UNIFORM_GRANULARITY
 static int fnSingleByteFlashWrite(unsigned char *ucDestination, unsigned char ucData)
 {
     #if defined _WINDOWS
@@ -490,7 +497,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         ulFlashLockState = 0;
     #endif
     }
-    #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if defined FLASH_USES_WRITE_PROTECTION && !defined _ST_FLASH_UNIFORM_GRANULARITY
     do {
         _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
         ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)); // align to sector start boundary
@@ -624,7 +631,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         }
     }
     #endif
-    #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if defined FLASH_USES_WRITE_PROTECTION && !defined _ST_FLASH_UNIFORM_GRANULARITY
     ptrSector = (unsigned char *)FLASH_START_ADDRESS;
     do {
         _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
@@ -762,12 +769,12 @@ extern unsigned char fnGetStorageType(unsigned char *memory_pointer, ACCESS_DETA
 extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
 {
 #if !defined _STM32L0x1                                                  // temporary
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _ST_FLASH_UNIFORM_GRANULARITY                            // F1 has uniform flash granularity
+        #define _ulSectorSize FLASH_GRANULARITY
+    #else
     unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
     unsigned long ulSectorNumber;
     int iProtectedSector;
-    #else
-    #define _ulSectorSize FLASH_GRANULARITY                              // F1 has uniform flash granularity
     #endif
     #if defined MANAGED_FILES
     MAX_FILE_LENGTH OriginalLength = Length;
@@ -778,7 +785,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         AccessDetails.BlockLength = Length;
         switch (fnGetStorageType(ptrSector, &AccessDetails)) {           // get the storage type based on the memory location and also return the largest amount of data that can be read from a single device
         case _STORAGE_INTERNAL_FLASH:
-            #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+            #if !defined _ST_FLASH_UNIFORM_GRANULARITY
             _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
             #endif
             Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
@@ -870,7 +877,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     } FOREVER_LOOP();
     #else                                                                // case when only internal Flash is available
     do {
-        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+        #if !defined _ST_FLASH_UNIFORM_GRANULARITY
         _ulSectorSize = fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedSector);
         #endif
         Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_ulSectorSize - 1)));
@@ -901,10 +908,11 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         FLASH_CR = (FLASH_CR_PER | FLASH_CR_STRT);                       // {15} start page erase operation
       //FLASH_CR |= FLASH_CR_STRT;                                       // start page erase operation
         #endif
-        #if defined _WINDOWS
+        #if defined _WINDOWS                                             // only used when simulating
         FLASH_CR |= ulFlashLockState;
         {
             int iProtectedState;
+            unsigned long ulSectorNumber;
             fnGetFlashSectorSize(ptrSector, &ulSectorNumber, &iProtectedState);
             if (((FLASH_CR & FLASH_CR_LOCK) == 0) && (iProtectedState == 0)) {
                 uMemset(fnGetFlashAdd(ptrSector), 0xff, _ulSectorSize);  // delete the sector content

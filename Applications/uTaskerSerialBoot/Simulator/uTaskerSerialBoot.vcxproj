@@ -859,6 +859,8 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_device.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h" />
     <ClInclude Include="..\..\..\NXP\HS_USB_MSD_HOST_SDK2.2\board.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Serial Loader - STM32|Win32'">true</ExcludedFromBuild>

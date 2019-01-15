@@ -11,7 +11,7 @@
     File:      USB_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     06.10.2008 Adjust USB read/writes to support FIFO operation          {1}
     17.10.2008 Add control endpoint direction control and setup clear    {2}
@@ -82,10 +82,14 @@ static void fnError(int iErrorNumber)
 #define DIRECTION_IN()  ((ucFirstByte & STANDARD_DEVICE_TO_HOST) != 0)
 
 #if defined USB_FIFO && !defined _WINDOWS                                // {1}
-    #define GET_USB_DATA()         (unsigned char)(*(volatile unsigned char *)ptrData)
+    #define GET_USB_DATA()         (unsigned char)(*(volatile unsigned char *)ptrData) // get from a fifo
     #define GET_USB_DATA_NO_INC()  (unsigned char)(*(volatile unsigned char *)ptrData)
+#elif defined USB_NON_LINEAR_BUFFER
+    extern unsigned char fnGetUSB_data(unsigned char **ptrData, int iInc);
+    #define GET_USB_DATA()         fnGetUSB_data(&ptrData, 1)            // get from a non-linear buffer and increment the pointer
+    #define GET_USB_DATA_NO_INC()  fnGetUSB_data(&ptrData, 0)            // get from a non-linear buffer without incrementing the pointer
 #else
-    #define GET_USB_DATA()         *ptrData++
+    #define GET_USB_DATA()         *ptrData++                            // get from a linear buffer
     #define GET_USB_DATA_NO_INC()  *ptrData
 #endif
 
@@ -746,7 +750,7 @@ static void fnExtract(unsigned char *ptrData, unsigned char ucFlags, unsigned sh
     #define INDEX_INDEX   0x02
     #define LENGTH_INDEX  0x04
 
-    if (ucFlags & VALUE_INDEX) {
+    if ((ucFlags & VALUE_INDEX) != 0) {
         *usValues =  GET_USB_DATA();
         *usValues++ |= (GET_USB_DATA() << 8);
     }
@@ -768,7 +772,7 @@ static void fnExtract(unsigned char *ptrData, unsigned char ucFlags, unsigned sh
         ptrData += sizeof(unsigned short);
 #endif
     }
-    if (ucFlags & LENGTH_INDEX) {
+    if ((ucFlags & LENGTH_INDEX) != 0) {
         *usValues =  GET_USB_DATA();
         *usValues |= (GET_USB_DATA() << 8);
     }
@@ -1471,7 +1475,7 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
                             }
                             break;
                         }
-                        if (tx_queue->ucState & USB_ENDPOINT_STALLED) {
+                        if ((tx_queue->ucState & USB_ENDPOINT_STALLED) != 0) {
                             fnPrepareOutData(DEVICE_DATA  (unsigned char *)&usEndpointStalled, sizeof(usEndpointStalled), sizeof(usEndpointStalled), 0, ptrUSB_HW);
                         }
                         else {

@@ -1609,6 +1609,12 @@
     <ClInclude Include="..\..\..\Hardware\iMX\sim_iMX.h">
       <Filter>WinSim\SIMiMX</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_device.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h">
+      <Filter>Hardware\STM32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

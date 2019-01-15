@@ -4,6 +4,7 @@
 # 09.06.2018 Integrated into uTasker project (new layout and Modbus)
 # 03.07.2018 Add -Wundef in order to discover any undefined definitions
 # 04.07.2018 Add ../../../Hardware/packages.h
+# 15.01.2019 Add peripheral dependences
 
 # All objects (Hardware, application, uTasker, stack)
 #
@@ -28,6 +29,19 @@ OPTS    = -D _GNU -D _STM32 -g -c -Os
 CC      = arm-none-eabi-gcc
 CC_OBJ  = arm-none-eabi-objcopy
 CC_SIZE = arm-none-eabi-size
+
+# Hardware peripheral dependencies
+#
+PERIPH_DEP = ../../../Hardware/STM32/stm32_UART.h \
+             ../../../Hardware/STM32/stm32_ADC.h \
+             ../../../Hardware/STM32/stm32_FLASH.h \
+             ../../../Hardware/STM32/stm32_I2C.h \
+             ../../../Hardware/STM32/stm32_PORTS.h \
+             ../../../Hardware/STM32/stm32_TIMER.h \
+             ../../../Hardware/STM32/stm32_ENET.h \
+			 ../../../Hardware/STM32/stm32_USB_OTG.h \
+			 ../../../Hardware/STM32/stm32_USB_device.h \
+             ../../../Hardware/STM32/stm32_CLOCK.h
 
 # SPI FLASH dependencies
 #
@@ -67,7 +81,7 @@ Build/webInterface.o: ../webInterface.c $(DEPENDS)
 
 # Hardware files
 #
-Build/STM32.o: ../../../Hardware/STM32/STM32.c $(DEPENDS) $(SPI_FLASH_DEP)
+Build/STM32.o: ../../../Hardware/STM32/STM32.c $(DEPENDS) $(PERIPH_DEP) $(SPI_FLASH_DEP)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../Hardware/STM32/STM32.c -o Build/STM32.o
 
 

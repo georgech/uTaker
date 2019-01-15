@@ -5,7 +5,8 @@
 # 26.05.2015 Add usb descriptor header dependencies
 # 03.07.2018 Add -Wundef in order to discover any undefined definitions
 # 04.07.2018 Add ../../../Hardware/packages.h
-# 01.11.2018 Add AES, SHA, DSP ,MQTT and crypto
+# 01.11.2018 Add AES, SHA, DSP, MQTT and crypto
+# 15.01.2019 Add stm32_USB_OTG.h and stm32_USB_device.h dependencies 
 #
 
 # Compiler flags (thumb mode - little endian)
@@ -68,6 +69,8 @@ PERIPH_DEP = ../../../Hardware/STM32/stm32_UART.h \
              ../../../Hardware/STM32/stm32_PORTS.h \
              ../../../Hardware/STM32/stm32_TIMER.h \
              ../../../Hardware/STM32/stm32_ENET.h \
+			 ../../../Hardware/STM32/stm32_USB_OTG.h \
+			 ../../../Hardware/STM32/stm32_USB_device.h \
              ../../../Hardware/STM32/stm32_CLOCK.h
 
 # SPI FLASH dependencies

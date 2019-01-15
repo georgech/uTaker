@@ -179,10 +179,13 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define TIMER_14_AVAILABLE
 #elif defined _STM32L0x1
     #define FLASH_GRANULARITY           (128)                            // sector delete size
+    #define _ST_FLASH_UNIFORM_GRANULARITY
 #elif !defined _CONNECTIVITY_LINE && (SIZE_OF_FLASH <= (128 * 1024))     // {11}
     #define FLASH_GRANULARITY           (1 * 1024)                       // sector delete size
+    #define _ST_FLASH_UNIFORM_GRANULARITY
 #else
     #define FLASH_GRANULARITY           (2 * 1024)                       // sector delete size
+    #define _ST_FLASH_UNIFORM_GRANULARITY
 #endif
 
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1
@@ -195,6 +198,17 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 //
 #if defined _STM32F407 || defined _STM32F427 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
     #define ETHERNET_AVAILABLE
+#endif
+
+// USB configuration
+//
+#if defined _STM32F103X
+    #define USB_DEVICE_AVAILABLE
+    #define USB_CAN_SRAM_SIZE       256                                  // 1024 bytes (structed as 256 short words in long words)
+    #define USB_DEVICE_T_STARTUP    10                                   // 1us (10 used for safety)
+    #define USB_NON_LINEAR_BUFFER                                        // USB data is stored in a buffer that is not linear and thus requires software support to extract data
+#else
+    #define USB_OTG_AVAILABLE
 #endif
 
 // UART configuration
@@ -938,7 +952,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
             #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ZERO_WAIT
         #endif
     #endif
-#elif defined _CONNECTIVITY_LINE || defined _STM32F031
+#elif defined _CONNECTIVITY_LINE || defined _PERFORMANCE_LINE || defined _STM32F031
     #if defined _STM32F031
         #define PLL_MAX_FREQ        48000000                             // highest speed possible
     #else
@@ -952,9 +966,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ZERO_WAIT
     #endif
 #else
-    #if defined _PERFORMANCE_LINE
-        #define PLL_MAX_FREQ  72000000
-    #elif defined _ACCESS_LINE_WITH_USB
+    #if defined _ACCESS_LINE_WITH_USB
         #define PLL_MAX_FREQ  48000000
     #elif defined _ACCESS_LINE
         #define PLL_MAX_FREQ  36000000
@@ -1049,8 +1061,11 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #if defined TIMER_14_AVAILABLE
         #define TIM14_BLOCK             ((unsigned char *)(&STM32.TIM9_10_11_12_13_14[5])) // TIM14
     #endif
-    #define USB_DEV_FS_BLOCK            ((unsigned char *)(&STM32.USBD))       // USB Device
-    #define PWR_BLOCK                   ((unsigned char *)(&STM32.PWR))        // Power Control
+    #if defined USB_DEVICE_AVAILABLE
+        #define USB_CAN_MEM_BLOCK       ((unsigned short *)(STM32.USB_CAN_SRAM)) // shared USB/CAN sSRAM
+        #define USB_DEV_FS_BLOCK        ((unsigned char *)(&STM32.USBD))       // USB device
+    #endif
+    #define PWR_BLOCK                   ((unsigned char *)(&STM32.PWR))        // power control
     #define CAN1_BLOCK                  ((unsigned char *)(&STM32.CAN))        // bxCAN1
     #define CAN2_BLOCK                  ((unsigned char *)(&STM32.CAN_SLAVE))  // bxCAN2
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
@@ -1066,7 +1081,9 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define SPI2_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[0])) // SPI-I2S
         #define SPI3_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[1])) // SPI-I2S
     #endif
-    #define USB_OTG_FS_BLOCK            ((unsigned char *)(&STM32.USB_OTG_FS)) // {10} USB OTG FS
+    #if defined USB_OTG_AVAILABLE
+        #define USB_OTG_FS_BLOCK        ((unsigned char *)(&STM32.USB_OTG_FS)) // {10} USB OTG FS
+    #endif
     #define CORTEX_M3_BLOCK             ((unsigned char *)(&STM32.CORTEX_M3))
     #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
         #define CORTEX_M4_DEBUG         ((unsigned char *)(&STM32.CORTEX_M4_DEBUG))
@@ -1368,7 +1385,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define I2C1_BLOCK                  0x40005400
         #define I2C2_BLOCK                  0x40005800
         #define USB_DEV_FS_BLOCK            0x40005c00
-        #define USB_CAN_MEM_BLOCK           0x40006000                   // not accessible in connectivity line devices
+        #define USB_CAN_MEM_BLOCK           0x40006000                   // not accessible in connectivity line devices and used by either CAN or USB device (but not both at the same time)
         #define CAN1_BLOCK                  0x40006400
         #define CAN2_BLOCK                  0x40006800
         #define BKP_BLOCK                   0x40006c00
@@ -1408,6 +1425,8 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define ENET_BLOCK                  0x40028000
 
         #define USB_OTG_FS_BLOCK            0x50000000                   // {10}
+
+        #define DBG_BLOCK                   0xe0042000
     #endif
     #define CORTEX_M3_BLOCK                 0xe000e000
     #if defined ARM_MATH_CM4 || defined ARM_MATH_CM7
@@ -4187,7 +4206,7 @@ typedef struct stSTM32_ADC_REGS
             #define FLASH_ACR_RUN_PD          0x00002000                 // flash power-down during run or low power run mode
             #define FLASH_ACR_SLEEP_PD        0x00004000                 // flash power-down during sleep or low power sleep mode
         #endif
-    #elif defined _CONNECTIVITY_LINE || defined _STM32F031
+    #elif defined _CONNECTIVITY_LINE || defined _PERFORMANCE_LINE || defined _STM32F031
         #define FLASH_ACR_LATENCY_ZERO_WAIT  0x00000000                  // zero wait states when SYSCLK <= 24MHz
         #define FLASH_ACR_LATENCY_ONE_WAIT   0x00000001                  // one wait state when SYSCLK > 24MHz
         #define FLASH_ACR_LATENCY_TWO_WAITS  0x00000002                  // two wait states when SYSCLK > 48MHz
@@ -4305,6 +4324,7 @@ typedef struct stSTM32_ADC_REGS
         #define FLASH_AR                 *(volatile unsigned long *)(FMI_BLOCK + 0x14) // FLASH Address Register (write-only) - no access when FLASH busy bit is set
         #define FLASH_OBR                *(volatile unsigned long *)(FMI_BLOCK + 0x1c) // Option Byte Register
         #define FLASH_WRPR               *(volatile unsigned long *)(FMI_BLOCK + 0x20) // Write Protection Register (read-only)
+            #define FLASH_WRPR_WRP0      0x00000001                      // flash sector not write protected when read as '1'
         #ifdef XL_DENSITY
             #define FLASH_KEYR2          *(unsigned long *)(FMI_BLOCK + 0x44)
             #define FLASH_SR2            *(unsigned long *)(FMI_BLOCK + 0x4c)
@@ -5507,462 +5527,578 @@ typedef struct stTIM9_10_11_13_12_14_REGS
       #define PTP_PPS_REMAP             0x40000000
     #endif
     #define AFIO_EXTICR1_ADD            (unsigned long *)(AFIO_BLOCK + 0x08)
-    #define AFIO_EXTICR1                *(unsigned long *)(AFIO_BLOCK + 0x08)                 // External Interrupt Configuration Register 1
-    #define AFIO_EXTICR2                *(unsigned long *)(AFIO_BLOCK + 0x0c)                 // External Interrupt Configuration Register 2
-    #define AFIO_EXTICR3                *(unsigned long *)(AFIO_BLOCK + 0x10)                 // External Interrupt Configuration Register 3
-    #define AFIO_EXTICR4                *(unsigned long *)(AFIO_BLOCK + 0x14)                 // External Interrupt Configuration Register 4
+    #define AFIO_EXTICR1                *(unsigned long *)(AFIO_BLOCK + 0x08) // External Interrupt Configuration Register 1
+    #define AFIO_EXTICR2                *(unsigned long *)(AFIO_BLOCK + 0x0c) // External Interrupt Configuration Register 2
+    #define AFIO_EXTICR3                *(unsigned long *)(AFIO_BLOCK + 0x10) // External Interrupt Configuration Register 3
+    #define AFIO_EXTICR4                *(unsigned long *)(AFIO_BLOCK + 0x14) // External Interrupt Configuration Register 4
 
-    #define AFIO_MAPR2                  *(unsigned long *)(AFIO_BLOCK + 0x1c)                 // AF Remap and Debug I/O Register 2
+    #define AFIO_MAPR2                  *(unsigned long *)(AFIO_BLOCK + 0x1c) // AF Remap and Debug I/O Register 2
 #endif
 
 
-// USB device (F1)
-//
-#define USB_EP0R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x00)  // USB Endpoint 0 Register
-#define USB_EP1R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x04)  // USB Endpoint 1 Register
-#define USB_EP2R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x08)  // USB Endpoint 2 Register
-#define USB_EP3R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x0c)  // USB Endpoint 3 Register
-#define USB_EP4R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x10)  // USB Endpoint 4 Register
-#define USB_EP5R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x14)  // USB Endpoint 5 Register
-#define USB_EP6R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x18)  // USB Endpoint 6 Register
-#define USB_EP7R                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x1c)  // USB Endpoint 7 Register
-#define USB_CNTR                         *(unsigned long *)(USB_DEV_FS_BLOCK + 0x40)           // USB Control Register
-#define USB_ISTR                         *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x44)  // USB Interrupt Status Register
-#define USB_FNR                          *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x48)  // USB Frame Number Register
-#define USB_DADDR                        *(unsigned long *)(USB_DEV_FS_BLOCK + 0x4c)           // USB Device Address Register
-#define USB_BTABLE                       *(unsigned long *)(USB_DEV_FS_BLOCK + 0x50)           // USB Buffer Table Address
+#if defined USB_DEVICE_AVAILABLE
+    #define USB_CAN_SRAM_ADDR            (volatile unsigned long *)(USB_CAN_MEM_BLOCK) // start of USB/CAN SRAM
 
-// USB Device (F4)
-//
-// Core Global Control and Status Registers
-//
-#define OTG_FS_GOTGCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x000) // OTG_FS control and status register
-  #define OTG_FS_GOTGCTL_SRQSCS          0x00000001                      // session request success (only device mode)
-  #define OTG_FS_GOTGCTL_SRQ             0x00000002                      // session request
-  #define OTG_FS_GOTGCTL_HNGSCS          0x00000100                      // host negotiation success
-  #define OTG_FS_GOTGCTL_HNPRG           0x00000200                      // HNP request
-  #define OTG_FS_GOTGCTL_HSHNPEN         0x00000400                      // host set HNP is enabled
-  #define OTG_FS_GOTGCTL_DHNPEN          0x00000800                      // device HNP is enabled
-  #define OTG_FS_GOTGCTL_CIDSTS_A        0x00000000                      // connector ID - A-device mode
-  #define OTG_FS_GOTGCTL_CIDSTS_B        0x00010000                      // connector ID - B-device mode
-  #define OTG_FS_GOTGCTL_DBCT_LONG       0x00000000                      // long debounce time (100ms + 2.5us)
-  #define OTG_FS_GOTGCTL_DBCT_SHORT      0x00020000                      // short debounce time (2.5us)
-  #define OTG_FS_GOTGCTL_ASVLD           0x00040000                      // A-session is valid
-  #define OTG_FS_GOTGCTL_BSVLD           0x00080000                      // B-session is valid
-#define OTG_FS_GOTGINT                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x004) // OTG_FS interrupt register
-#define OTG_FS_GAHBCFG                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x008) // OTG_FS AHB configuration register
-  #define OTG_FS_GAHBCFG_GINTMSK         0x00000001                      // global interrupt enable
-  #define OTG_FS_GAHBCFG_TXFELVL_HALF_E  0x00000000                      // IN endpoint TxFIFO empty level - half empty
-  #define OTG_FS_GAHBCFG_TXFELVL_EMPTY   0x00000080                      // IN endpoint TxFIFO empty level - completely empty
-  #define OTG_FS_GAHBCFG_PTXFELVL_HALF_E 0x00000000                      // periodic TxFIFO empty level - half empty
-  #define OTG_FS_GAHBCFG_PTXFELVL_EMPTY  0x00000100                      // periodic TxFIFO empty level - completely empty
-#define OTG_FS_GUSBCFG                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x00c) // OTG_FS USB configuration register (do not change after initial configuration)
-  #define OTG_FS_GUSBCFG_TOCAL           0x00000007                      // timeout calibration
-  #define OTG_FS_GUSBCFG_PHYSEL          0x00000080                      // write only access - always '1'
-  #define OTG_FS_GUSBCFG_SRPCAP          0x00000100                      // SRP capable
-  #define OTG_FS_GUSBCFG_HNPCAP          0x00000200                      // HNP capable
-  #define OTG_FS_GUSBCFG_TRDT_MASK       0x00003c00                      // USB turnaround time in PHY clocks (only device mode)
-  #define OTG_FS_GUSBCFG_TRDT_SHIFT      10
-  #define OTG_FS_GUSBCFG_TRDT_MAX        0x0f
-  #define OTG_FS_GUSBCFG_FHMOD           0x20000000                      // force host mode (irrespective of OTG_FS_ID pin state) - takes 25ms to take effect
-  #define OTG_FS_GUSBCFG_FDMOD           0x40000000                      // force device mode (irrespective of OTG_FS_ID pin state) - takes 25ms to take effect
-  #define OTG_FS_GUSBCFG_CTXPKT          0x80000000                      // corrupt tx packet (for debugging only)
-#define OTG_FS_GRSTCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x010) // OTG_FS reset register
-  #define OTG_FS_GRSTCTL_CSRST           0x00000001                      // core soft reset
-  #define OTG_FS_GRSTCTL_HSRST           0x00000002                      // HCLK soft reset
-  #define OTG_FS_GRSTCTL_FCRST           0x00000004                      // host frame counter reset (host mode only)
-  #define OTG_FS_GRSTCTL_RXFFLSH         0x00000010                      // flush entire rx FIFO                     
-  #define OTG_FS_GRSTCTL_TXFFLSH         0x00000020                      // selective flush of single or all tx FIFOs
-  #define OTG_FS_GRSTCTL_TXFNUM_FIFO0    0x00000000                      // define flush of Tx FIFO 0
-  #define OTG_FS_GRSTCTL_TXFNUM_FIFO1    0x00000040                      // define flush of Tx FIFO 1
-  #define OTG_FS_GRSTCTL_TXFNUM_FIFO2    0x00000080                      // define flush of Tx FIFO 2
-  #define OTG_FS_GRSTCTL_TXFNUM_ALL      0x00000400                      // define flush all Tx FIFOs
-  #define OTG_FS_GRSTCTL_AHBIDL          0x80000000                      // AHB master state machine is in idle condition
-#define OTG_FS_GINTSTS                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x014) // OTG_FS core interrupt register
-  #define OTG_FS_GINTSTS_CMOD_DEVICE     0x00000000                      // current mode of operation is device
-  #define OTG_FS_GINTSTS_CMOD_HOST       0x00000001                      // current mode of operation is host
-  #define OTG_FS_GINTSTS_MMIS            0x00000002                      // mode mismatch interrupt
-  #define OTG_FS_GINTSTS_OTGINT          0x00000004                      // OTG interrupt
-  #define OTG_FS_GINTSTS_SOF             0x00000008                      // start of frame interrupt
-  #define OTG_FS_GINTSTS_RXFLVL          0x00000010                      // receive FIFO non-empty
-  #define OTG_FS_GINTSTS_NPTXFE          0x00000020                      // non-periodic TxFIFO empty interrupt
-  #define OTG_FS_GINTSTS_GINAKEFF        0x00000040                      // global non-periodic IN NAK effective interrupt
-  #define OTG_FS_GINTSTS_GONAKEFF        0x00000080                      // global OUT NAK effective interrupt
-  #define OTG_FS_GINTSTS_ESUSP           0x00000400                      // early suspend interrupt
-  #define OTG_FS_GINTSTS_USBSUSP         0x00000800                      // USB suspend interrupt
-  #define OTG_FS_GINTSTS_USBRST          0x00001000                      // USB reset interrupt
-  #define OTG_FS_GINTSTS_ENUMDNE         0x00002000                      // enumeration done interrupt
-  #define OTG_FS_GINTSTS_ISOODRP         0x00004000                      // isochronous OUT packet dropped interrupt
-  #define OTG_FS_GINTSTS_EOPF            0x00008000                      // end of periodic frame interrupt
-  #define OTG_FS_GINTSTS_IEPINT          0x00040000                      // IN endpoints interrupt
-  #define OTG_FS_GINTSTS_OEPINT          0x00080000                      // OUT endpoints interrupt
-  #define OTG_FS_GINTSTS_IISOIXFR        0x00100000                      // incomplete isochronous IN transfer interrupt
-  #define OTG_FS_GINTSTS_IPXFR           0x00200000                      // incomplete periodic transfer interrupt
-  #define OTG_FS_GINTSTS_HPRTINT         0x01000000                      // host port interrupt
-  #define OTG_FS_GINTSTS_HCINT           0x02000000                      // host channels interrupt
-  #define OTG_FS_GINTSTS_PTXFE           0x04000000                      // periodic TxFIFO empty interrupt
-  #define OTG_FS_GINTSTS_CIDSCHG         0x10000000                      // connector ID status change interrupt
-  #define OTG_FS_GINTSTS_DISCINT         0x20000000                      // disconnected detected interrupt
-  #define OTG_FS_GINTSTS_SRQINT          0x40000000                      // session request/new session detected interrupt
-  #define OTG_FS_GINTSTS_WKUINT          0x80000000                      // resume/remote wakeup detected interrupt
-#define OTG_FS_GINTMSK                   *(unsigned long *)(USB_OTG_FS_BLOCK + 0x018) // OTG_FS interrupt mask register
-  #define OTG_FS_GINTMSK_MMISM           0x00000002                      // mode mismatch interrupt enabled
-  #define OTG_FS_GINTMSK_OTGINT          0x00000004                      // OTG interrupt enabled
-  #define OTG_FS_GINTMSK_SOFM            0x00000008                      // start of frame interrupt enabled
-  #define OTG_FS_GINTMSK_RXFLVLM         0x00000010                      // receive FIFO non-empty interrupt enabled
-  #define OTG_FS_GINTMSK_NPTXFEM         0x00000020                      // non-periodic TxFIFO empty interrupt enabled
-  #define OTG_FS_GINTMSK_GINAKEFFM       0x00000040                      // global non-periodic IN NAK effective interrupt enabled
-  #define OTG_FS_GINTMSK_GONAKEFFM       0x00000080                      // global OUT NAK effective interrupt enabled
-  #define OTG_FS_GINTMSK_ESUSPM          0x00000400                      // early suspend interrupt enabled
-  #define OTG_FS_GINTMSK_USBSUSPM        0x00000800                      // USB suspend interrupt enabled
-  #define OTG_FS_GINTMSK_USBRST          0x00001000                      // USB reset interrupt enabled
-  #define OTG_FS_GINTMSK_ENUMDNEM        0x00002000                      // enumeration done interrupt enabled
-  #define OTG_FS_GINTMSK_ISOODRPM        0x00004000                      // isochronous OUT packet dropped interrupt enabled
-  #define OTG_FS_GINTMSK_EOPFM           0x00008000                      // end of periodic frame interrupt enabled
-  #define OTG_FS_GINTMSK_EPMISM          0x00020000                      // endpoint mismatch interrupt enabled
-  #define OTG_FS_GINTMSK_IEPINT          0x00040000                      // IN endpoints interrupt enabled
-  #define OTG_FS_GINTMSK_OEPINT          0x00080000                      // OUT endpoints interrupt enabled
-  #define OTG_FS_GINTMSK_IISOIXFRM       0x00100000                      // incomplete isochronous IN transfer interrupt enabled
-  #define OTG_FS_GINTMSK_IISOOXFRM       0x00200000                      // incomplete isochronous OUT transfer interrupt enabled
-  #define OTG_FS_GINTMSK_PRTIM           0x01000000                      // host port interrupt enabled
-  #define OTG_FS_GINTMSK_HCIM            0x02000000                      // host channels interrupt enabled
-  #define OTG_FS_GINTMSK_PTXFEM          0x04000000                      // periodic TxFIFO empty interrupt enabled
-  #define OTG_FS_GINTMSK_CIDSCHGM        0x10000000                      // connector ID status change interrupt enabled
-  #define OTG_FS_GINTMSK_DISCINT         0x20000000                      // disconnected detected interrupt enabled
-  #define OTG_FS_GINTMSK_SRQIM           0x40000000                      // session request/new session detected interrupt enabled
-  #define OTG_FS_GINTMSK_WUIM            0x80000000                      // resume/remote wakeup detected interrupt enabled
-#define OTG_FS_GRXSTSR                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x01c) // OTG_FS receive status debug read register (read-only)
-  #define OTG_FS_GRXSTSR_CHNUM           0x0000000f                      // channel number to which current packet belongs (host mode)
-  #define OTG_FS_GRXSTSR_EPNUM           0x0000000f                      // endpoint to which current packet belongs (device mode)
-  #define OTG_FS_GRXSTSR_BCNT_MASK       0x00007ff0                      // byte count of received IN data packet
-  #define OTG_FS_GRXSTSR_BCNT_SHIFT      4
-  #define OTG_FS_GRXSTSR_DPID_DATA0      0x00000000                      // data PID - DATA0
-  #define OTG_FS_GRXSTSR_DPID_DATA1      0x00010000                      // data PID - DATA1
-  #define OTG_FS_GRXSTSR_DPID_DATA2      0x00008000                      // data PID - DATA2
-  #define OTG_FS_GRXSTSR_DPID_MDATA      0x00018000                      // data PID - MDATA
-  #define OTG_FS_GRXSTSR_PKTSTS_MASK     0x001e0000
-  #define OTG_FS_GRXSTSR_PKTSTS_IN_RX    0x00040000                      // packet status - IN data packet received (host)
-  #define OTG_FS_GRXSTSR_PKTSTS_IN_OUT   0x00060000                      // packet status - IN transfer completed (host)
-  #define OTG_FS_GRXSTSR_PKTSTS_DT_ERR   0x000a0000                      // packet status - data toggle error (host)
-  #define OTG_FS_GRXSTSR_PKTSTS_HALT     0x000e0000                      // packet status - channel halted (host)
-  #define OTG_FS_GRXSTSR_PKTSTS_OUT_NAK  0x00020000                      // packet status - global OUT NAK (device)
-  #define OTG_FS_GRXSTSR_PKTSTS_OUT_RX   0x00040000                      // packet status - OUT data packet received (device)
-  #define OTG_FS_GRXSTSR_PKTSTS_OUT_OK   0x00060000                      // packet status - OUT transfer completed (device)
-  #define OTG_FS_GRXSTSR_PKTSTS_SETUP_OK 0x00080000                      // packet status - SETUP transaction completed (device)
-  #define OTG_FS_GRXSTSR_PKTSTS_SETUP_RX 0x000c0000                      // packet status - SETUP data packet received (device)
-  #define OTG_FS_GRXSTSR_FRMNUM          0x01e00000                      // frame number (device - only isochronous OUTs)
-#define OTG_FS_GRXSTSP                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x020) // OTG_FS status read and pop register
-#define OTG_FS_GRXFSIZ                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x024) // OTG_FS receive FIFO size register (16..256) in 32 bit words
-#define OTG_FS_DIEPTXF0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x028) // OTG_FS endpoint 0 transmit FIFO size
-  #define OTG_FS_DIEPTXF_TX0FD_MASK     0xffff0000                       // endpoint TxFIFO depth (16..256)
-  #define OTG_FS_DIEPTXF_TX0FSA_MASK    0x0000ffff                       // memory start address for the endpoint transmit FIFO RAM
-#define OTG_FS_HNPTXSTS                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x02c) // OTG_FS non-periodic transmit FIFO/queue status register
+    // USB device (F1)
+    //
+    #define USB_EP0R_ADD                 (volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x00) // USB endpoint 0 register address
+    #define USB_EP0R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x00) // USB endpoint 0 register
+        #define USB_EPR_CTR_CTR_RX       0x8000                          // correct transfer for reception (write '0' to clear)
+        #define USB_EPR_CTR_DTOG_RX      0x4000                          // data toggle, for reception transfers (write '1' to toggle)
+        #define USB_EPR_CTR_STAT_RX_MSK  0x3000                          // status bits, for reception transfers (write '1' to toggle)
+        #define USB_EPR_CTR_STAT_RX_DISABLED 0x0000                      // reception status - disabled
+        #define USB_EPR_CTR_STAT_RX_STALL    0x1000                      // reception status - stalled
+        #define USB_EPR_CTR_STAT_RX_NAK      0x2000                      // reception status - nacked
+        #define USB_EPR_CTR_STAT_RX_VALID    0x3000                      // reception status - valid (enabled for reception)
+        #define USB_EPR_CTR_SETUP        0x0800                          // setup transaction completed (read-only)
+        #define USB_EPR_CTR_EP_TYPE_MASK 0x0600                          // endpoint type
+        #define USB_EPR_CTR_EP_TYPE_BULK 0x0000                          // endpoint type - bulk
+        #define USB_EPR_CTR_EP_TYPE_CONTROL 0x0200                       // endpoint type - control
+        #define USB_EPR_CTR_EP_TYPE_ISO  0x0400                          // endpoint type - ISO
+        #define USB_EPR_CTR_EP_TYPE_INTERRUPT 0x0600                     // endpoint type - interrupt
+        #define USB_EPR_CTR_EP_TYPE_KIND_BULK 0x0000                     // endpoint type - bulk
+        #define USB_EPR_CTR_EP_TYPE_KIND_CONTROL 0x0200                  // endpoint type - control
+        #define USB_EPR_CTR_EP_KIND      0x0100                          // endpoint kind
+        #define USB_EPR_CTR_CTR_TX       0x0080                          // correct transfer for transmission (write '0' to clear)
+        #define USB_EPR_CTR_DTOG_TX      0x0040                          // data toggle, for transmission transfers (write '1' to toggle)
+        #define USB_EPR_CTR_STAT_TX_MASK 0x0030                          // status bits, for transmission transfers (write '1' to toggle)
+        #define USB_EPR_CTR_STAT_TX_DISABLED 0x0000                      // transmission status - disabled
+        #define USB_EPR_CTR_STAT_TX_STALL    0x0010                      // transmission status - stalled
+        #define USB_EPR_CTR_STAT_TX_NAK      0x0020                      // transmission status - nacked
+        #define USB_EPR_CTR_STAT_TX_VALID    0x0030                      // transmission status - enabled for transmission
+        #define USB_EPR_CTR_ES_MASK      0x000f                          // endpoint address
+    #define USB_EP1R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x04) // USB Endpoint 1 Register
+    #define USB_EP2R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x08) // USB Endpoint 2 Register
+    #define USB_EP3R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x0c) // USB Endpoint 3 Register
+    #define USB_EP4R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x10) // USB Endpoint 4 Register
+    #define USB_EP5R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x14) // USB Endpoint 5 Register
+    #define USB_EP6R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x18) // USB Endpoint 6 Register
+    #define USB_EP7R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x1c) // USB Endpoint 7 Register
+    #define USB_CNTR                     *(unsigned long *)(USB_DEV_FS_BLOCK + 0x40) // USB Control Register
+        #define USB_CNTR_CTRM            0x8000                          // CTR interrupt enabled
+        #define USB_CNTR_PMAOVRM         0x4000                          // PMAOVR interrupt enabled
+        #define USB_CNTR_ERRM            0x2000                          // ERR interrupt enabled
+        #define USB_CNTR_WKUPM           0x1000                          // WKUP interrupt enabled
+        #define USB_CNTR_SUSPM           0x0800                          // SUSPM interrupt enabled
+        #define USB_CNTR_RESETM          0x0400                          // RESETM interrupt enabled
+        #define USB_CNTR_SOFM            0x0200                          // SOFM interrupt enabled
+        #define USB_CNTR_ESOFM           0x0100                          // ESOFM interrupt enabled
+        #define USB_CNTR_RESUME          0x0010                          // resume request
+        #define USB_CNTR_FSUSP           0x0008                          // force suspend
+        #define USB_CNTR_LP_MODE         0x0004                          // low power mode
+        #define USB_CNTR_PDWN            0x0002                          // power down
+        #define USB_CNTR_FRES            0x0001                          // force USB reset
+    #define USB_ISTR                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x44) // USB Interrupt Status Register
+        #define USB_ISTR_CTR             0x8000                          // correct transfer (read-only)
+        #define USB_ISTR_PMAOVR          0x4000                          // packet memory area over/underrun (write '0' to clear)
+        #define USB_ISTR_ERR             0x2000                          // error (write '0' to clear)
+        #define USB_ISTR_WKUP            0x1000                          // wakeup (write '0' to clear)
+        #define USB_ISTR_SUSP            0x0800                          // suspend mode request (write '0' to clear)
+        #define USB_ISTR_RESET           0x0400                          // USB reset request (write '0' to clear)
+        #define USB_ISTR_SOF             0x0200                          // start of frame (write '0' to clear)
+        #define USB_ISTR_ESOF            0x0100                          // expected start of frame (write '0' to clear)
+        #define USB_ISTR_DIR             0x0010                          // direction of transaction (read-only) - '1' is OUT and '0' is IN
+        #define USB_ISTR_EP_ID_MASK      0x000f                          // endpoint identifier
+    #define USB_FNR                      *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x48) // USB Frame Number Register
+        #define USB_FNR_RXDP             0x8000                          // receive data + line status
+        #define USB_FNR_RXDM             0x4000                          // receive data - line status
+        #define USB_FNR_LCK              0x2000                          // locked
+        #define USB_FNR_LSOF_MASK        0x1800                          // lost SOF
+        #define USB_FNR_FN_MASK          0x07ff                          // frame number
+    #define USB_DADDR                    *(unsigned long *)(USB_DEV_FS_BLOCK + 0x4c) // USB Device Address Register
+        #define USB_DADDR_EF             0x0080                          // enable function
+        #define USB_DADDR_ADD_MASK       0x007f                          // device address
+    #define USB_BTABLE                   *(unsigned long *)(USB_DEV_FS_BLOCK + 0x50) // USB Buffer Table Address
+        #define USB_BTABLE_MASK          0xfff8                          // buffer table
 
-#define OTG_FS_GCCFG                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x038) // OTG_FS general core configuration register
-  #define OTG_FS_GCCFG_PWRDWN            0x00010000                      // power down deactivated (transceiver active)
-  #define OTG_FS_GCCFG_VBUSASEN          0x00040000                      // enable Vbus sening "A" device
-  #define OTG_FS_GCCFG_VBUSBSEN          0x00080000                      // enable Vbus sening "B" device
-  #define OTG_FS_GCCFG_SOFOUTEN          0x00100000                      // SOF output enable
-  #define OTG_FS_GCCFG_NOVBUSSENS        0x00200000                      // Vbus sensing disable option
-#define OTG_FS_CID                       *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x03c) // OTG_FS core ID register
+    #define USB_FIFO_BUFFER_DEPTH        1
 
-#define OTG_FS_HPTXFSIZ                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x100) // OTG_FS host periodic transmit FIFO size register
-#define OTG_FS_DIEPTXF1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x104) // OTG_FS device IN1 endpoint transmit FIFO size register
-#define OTG_FS_DIEPTXF2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x108) // OTG_FS device IN2 endpoint transmit FIFO size register
-#define OTG_FS_DIEPTXF3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x10c) // OTG_FS device IN3 endpoint transmit FIFO size register
+    #define NUMBER_OF_USB_ENDPOINTS      8                               // device supports endpoint 0 plus seven other endpoints
+
+    typedef struct stUSB_END_POINT
+    {
+        unsigned long ulNextRxData0;
+        unsigned long ulNextTxData0;
+        unsigned long ulEndpointSize;                                    // contains size of endpoint plus some control flags
+    } USB_END_POINT;
+
+    typedef struct _PACK stUSB_BD_TABLE
+    {
+        unsigned short usUSB_ADDR_TX;                                    // transmission buffer address in USB SRAM
+        unsigned short usRes0;
+        unsigned short usUSB_COUNT_TX_0;                                 // transmission byte count 0
+        unsigned short usRes1;
+      //unsigned short usUSB_COUNT_TX_0;                                 // transmission byte count 1
+      //unsigned short usRes2;
+        unsigned short usUSB_ADDR_RX;                                    // reception buffer address in USB SRAM
+        unsigned short usRes3;
+        unsigned short usUSB_COUNT_RX_0;                                 // reception byte count 0
+        unsigned short usRes4;
+      //unsigned short usUSB_COUNT_RX_0;                                 // reception byte count 1
+      //unsigned short usRes5;
+    } USB_BD_TABLE;
+
+    #define USB_COUNT_RX_BL_SIZE        0x8000                           // allocated buffer size ranges from 32 to 1024 bytes (else from 2 to 62 bytes)
+    #define USB_COUNT_RX_NUM_BLOCK_MASK 0x7c00                           // number of memory blocks allocated to this packet buffer
+    #define USB_COUNT_COUNT_MASK        0x02ff                           // transmission/reception byte count mask
+    #define USB_COUNT_SHIFT             10
+
+    typedef struct stUSB_HW
+    {
+        unsigned long  ulUSB_buffer[NUMBER_OF_USB_ENDPOINTS][64/sizeof(unsigned long)]; // linear, word aligned buffer large enough to hold largest single reception (there is one for each endpoint in case it is necessary to hold the input)
+        USB_END_POINT *ptrEndpoint;
+        unsigned char **ptrRxDatBuffer;                                  // pointer to the next reception buffer pointer
+        unsigned char **ptrTxDatBuffer;                                  // pointer to the next transmission buffer pointer
+        unsigned short usLength;                                         // length of present input being handled
+        unsigned short usStoredLength[NUMBER_OF_USB_ENDPOINTS];          // length information being held in the input buffer
+        unsigned long  ucUSBAddress;                                     // our USB address                       
+    } USB_HW;
+
+    extern void fnSendUSB_data(unsigned char *pData, unsigned short Len, int iEndpoint, USB_HW *ptrUSB_HW);
+    extern void fnSendZeroData(USB_HW *ptrUSB_HW, int iEndpoint);
+    extern void fnPutToFIFO(int iLength, volatile unsigned long *ptrRxFIFO, unsigned char *ptrBuffer);
+    extern void fnPrepareTx(int Len, unsigned char *pData);
 
 
+    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) fnSendUSB_data(pData, Len, iEndpoint, ptrUSB_HW)
+    #define FNSEND_ZERO_DATA(ptrUSB_HW, iEndpoint)            fnSendZeroData(ptrUSB_HW, iEndpoint)
+    #define SET_CONTROL_DIRECTION(a,b)
+    #define CLEAR_SETUP(a)                                               // for compatibility with generic driver
+    #define VALIDATE_NEW_CONFIGURATION()
+#endif
 
-#define OTG_FS_HCFG                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x400) // 
-#define OTG_FS_HFIR                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x404) // 
-#define OTG_FS_HFNUM                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x408) //
+#if defined USB_OTG_AVAILABLE
+    // USB Device (F4)
+    //
+    // Core Global Control and Status Registers
+    //
+    #define OTG_FS_GOTGCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x000) // OTG_FS control and status register
+      #define OTG_FS_GOTGCTL_SRQSCS          0x00000001                  // session request success (only device mode)
+      #define OTG_FS_GOTGCTL_SRQ             0x00000002                  // session request
+      #define OTG_FS_GOTGCTL_HNGSCS          0x00000100                  // host negotiation success
+      #define OTG_FS_GOTGCTL_HNPRG           0x00000200                  // HNP request
+      #define OTG_FS_GOTGCTL_HSHNPEN         0x00000400                  // host set HNP is enabled
+      #define OTG_FS_GOTGCTL_DHNPEN          0x00000800                  // device HNP is enabled
+      #define OTG_FS_GOTGCTL_CIDSTS_A        0x00000000                  // connector ID - A-device mode
+      #define OTG_FS_GOTGCTL_CIDSTS_B        0x00010000                  // connector ID - B-device mode
+      #define OTG_FS_GOTGCTL_DBCT_LONG       0x00000000                  // long debounce time (100ms + 2.5us)
+      #define OTG_FS_GOTGCTL_DBCT_SHORT      0x00020000                  // short debounce time (2.5us)
+      #define OTG_FS_GOTGCTL_ASVLD           0x00040000                  // A-session is valid
+      #define OTG_FS_GOTGCTL_BSVLD           0x00080000                  // B-session is valid
+    #define OTG_FS_GOTGINT                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x004) // OTG_FS interrupt register
+    #define OTG_FS_GAHBCFG                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x008) // OTG_FS AHB configuration register
+      #define OTG_FS_GAHBCFG_GINTMSK         0x00000001                  // global interrupt enable
+      #define OTG_FS_GAHBCFG_TXFELVL_HALF_E  0x00000000                  // IN endpoint TxFIFO empty level - half empty
+      #define OTG_FS_GAHBCFG_TXFELVL_EMPTY   0x00000080                  // IN endpoint TxFIFO empty level - completely empty
+      #define OTG_FS_GAHBCFG_PTXFELVL_HALF_E 0x00000000                  // periodic TxFIFO empty level - half empty
+      #define OTG_FS_GAHBCFG_PTXFELVL_EMPTY  0x00000100                  // periodic TxFIFO empty level - completely empty
+    #define OTG_FS_GUSBCFG                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x00c) // OTG_FS USB configuration register (do not change after initial configuration)
+      #define OTG_FS_GUSBCFG_TOCAL           0x00000007                  // timeout calibration
+      #define OTG_FS_GUSBCFG_PHYSEL          0x00000080                  // write only access - always '1'
+      #define OTG_FS_GUSBCFG_SRPCAP          0x00000100                  // SRP capable
+      #define OTG_FS_GUSBCFG_HNPCAP          0x00000200                  // HNP capable
+      #define OTG_FS_GUSBCFG_TRDT_MASK       0x00003c00                  // USB turnaround time in PHY clocks (only device mode)
+      #define OTG_FS_GUSBCFG_TRDT_SHIFT      10
+      #define OTG_FS_GUSBCFG_TRDT_MAX        0x0f
+      #define OTG_FS_GUSBCFG_FHMOD           0x20000000                  // force host mode (irrespective of OTG_FS_ID pin state) - takes 25ms to take effect
+      #define OTG_FS_GUSBCFG_FDMOD           0x40000000                  // force device mode (irrespective of OTG_FS_ID pin state) - takes 25ms to take effect
+      #define OTG_FS_GUSBCFG_CTXPKT          0x80000000                  // corrupt tx packet (for debugging only)
+    #define OTG_FS_GRSTCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x010) // OTG_FS reset register
+      #define OTG_FS_GRSTCTL_CSRST           0x00000001                  // core soft reset
+      #define OTG_FS_GRSTCTL_HSRST           0x00000002                  // HCLK soft reset
+      #define OTG_FS_GRSTCTL_FCRST           0x00000004                  // host frame counter reset (host mode only)
+      #define OTG_FS_GRSTCTL_RXFFLSH         0x00000010                  // flush entire rx FIFO                     
+      #define OTG_FS_GRSTCTL_TXFFLSH         0x00000020                  // selective flush of single or all tx FIFOs
+      #define OTG_FS_GRSTCTL_TXFNUM_FIFO0    0x00000000                  // define flush of Tx FIFO 0
+      #define OTG_FS_GRSTCTL_TXFNUM_FIFO1    0x00000040                  // define flush of Tx FIFO 1
+      #define OTG_FS_GRSTCTL_TXFNUM_FIFO2    0x00000080                  // define flush of Tx FIFO 2
+      #define OTG_FS_GRSTCTL_TXFNUM_ALL      0x00000400                  // define flush all Tx FIFOs
+      #define OTG_FS_GRSTCTL_AHBIDL          0x80000000                  // AHB master state machine is in idle condition
+    #define OTG_FS_GINTSTS                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x014) // OTG_FS core interrupt register
+      #define OTG_FS_GINTSTS_CMOD_DEVICE     0x00000000                  // current mode of operation is device
+      #define OTG_FS_GINTSTS_CMOD_HOST       0x00000001                  // current mode of operation is host
+      #define OTG_FS_GINTSTS_MMIS            0x00000002                  // mode mismatch interrupt
+      #define OTG_FS_GINTSTS_OTGINT          0x00000004                  // OTG interrupt
+      #define OTG_FS_GINTSTS_SOF             0x00000008                  // start of frame interrupt
+      #define OTG_FS_GINTSTS_RXFLVL          0x00000010                  // receive FIFO non-empty
+      #define OTG_FS_GINTSTS_NPTXFE          0x00000020                  // non-periodic TxFIFO empty interrupt
+      #define OTG_FS_GINTSTS_GINAKEFF        0x00000040                  // global non-periodic IN NAK effective interrupt
+      #define OTG_FS_GINTSTS_GONAKEFF        0x00000080                  // global OUT NAK effective interrupt
+      #define OTG_FS_GINTSTS_ESUSP           0x00000400                  // early suspend interrupt
+      #define OTG_FS_GINTSTS_USBSUSP         0x00000800                  // USB suspend interrupt
+      #define OTG_FS_GINTSTS_USBRST          0x00001000                  // USB reset interrupt
+      #define OTG_FS_GINTSTS_ENUMDNE         0x00002000                  // enumeration done interrupt
+      #define OTG_FS_GINTSTS_ISOODRP         0x00004000                  // isochronous OUT packet dropped interrupt
+      #define OTG_FS_GINTSTS_EOPF            0x00008000                  // end of periodic frame interrupt
+      #define OTG_FS_GINTSTS_IEPINT          0x00040000                  // IN endpoints interrupt
+      #define OTG_FS_GINTSTS_OEPINT          0x00080000                  // OUT endpoints interrupt
+      #define OTG_FS_GINTSTS_IISOIXFR        0x00100000                  // incomplete isochronous IN transfer interrupt
+      #define OTG_FS_GINTSTS_IPXFR           0x00200000                  // incomplete periodic transfer interrupt
+      #define OTG_FS_GINTSTS_HPRTINT         0x01000000                  // host port interrupt
+      #define OTG_FS_GINTSTS_HCINT           0x02000000                  // host channels interrupt
+      #define OTG_FS_GINTSTS_PTXFE           0x04000000                  // periodic TxFIFO empty interrupt
+      #define OTG_FS_GINTSTS_CIDSCHG         0x10000000                  // connector ID status change interrupt
+      #define OTG_FS_GINTSTS_DISCINT         0x20000000                  // disconnected detected interrupt
+      #define OTG_FS_GINTSTS_SRQINT          0x40000000                  // session request/new session detected interrupt
+      #define OTG_FS_GINTSTS_WKUINT          0x80000000                  // resume/remote wakeup detected interrupt
+    #define OTG_FS_GINTMSK                   *(unsigned long *)(USB_OTG_FS_BLOCK + 0x018) // OTG_FS interrupt mask register
+      #define OTG_FS_GINTMSK_MMISM           0x00000002                  // mode mismatch interrupt enabled
+      #define OTG_FS_GINTMSK_OTGINT          0x00000004                  // OTG interrupt enabled
+      #define OTG_FS_GINTMSK_SOFM            0x00000008                  // start of frame interrupt enabled
+      #define OTG_FS_GINTMSK_RXFLVLM         0x00000010                  // receive FIFO non-empty interrupt enabled
+      #define OTG_FS_GINTMSK_NPTXFEM         0x00000020                  // non-periodic TxFIFO empty interrupt enabled
+      #define OTG_FS_GINTMSK_GINAKEFFM       0x00000040                  // global non-periodic IN NAK effective interrupt enabled
+      #define OTG_FS_GINTMSK_GONAKEFFM       0x00000080                  // global OUT NAK effective interrupt enabled
+      #define OTG_FS_GINTMSK_ESUSPM          0x00000400                  // early suspend interrupt enabled
+      #define OTG_FS_GINTMSK_USBSUSPM        0x00000800                  // USB suspend interrupt enabled
+      #define OTG_FS_GINTMSK_USBRST          0x00001000                  // USB reset interrupt enabled
+      #define OTG_FS_GINTMSK_ENUMDNEM        0x00002000                  // enumeration done interrupt enabled
+      #define OTG_FS_GINTMSK_ISOODRPM        0x00004000                  // isochronous OUT packet dropped interrupt enabled
+      #define OTG_FS_GINTMSK_EOPFM           0x00008000                  // end of periodic frame interrupt enabled
+      #define OTG_FS_GINTMSK_EPMISM          0x00020000                  // endpoint mismatch interrupt enabled
+      #define OTG_FS_GINTMSK_IEPINT          0x00040000                  // IN endpoints interrupt enabled
+      #define OTG_FS_GINTMSK_OEPINT          0x00080000                  // OUT endpoints interrupt enabled
+      #define OTG_FS_GINTMSK_IISOIXFRM       0x00100000                  // incomplete isochronous IN transfer interrupt enabled
+      #define OTG_FS_GINTMSK_IISOOXFRM       0x00200000                  // incomplete isochronous OUT transfer interrupt enabled
+      #define OTG_FS_GINTMSK_PRTIM           0x01000000                  // host port interrupt enabled
+      #define OTG_FS_GINTMSK_HCIM            0x02000000                  // host channels interrupt enabled
+      #define OTG_FS_GINTMSK_PTXFEM          0x04000000                  // periodic TxFIFO empty interrupt enabled
+      #define OTG_FS_GINTMSK_CIDSCHGM        0x10000000                  // connector ID status change interrupt enabled
+      #define OTG_FS_GINTMSK_DISCINT         0x20000000                  // disconnected detected interrupt enabled
+      #define OTG_FS_GINTMSK_SRQIM           0x40000000                  // session request/new session detected interrupt enabled
+      #define OTG_FS_GINTMSK_WUIM            0x80000000                  // resume/remote wakeup detected interrupt enabled
+    #define OTG_FS_GRXSTSR                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x01c) // OTG_FS receive status debug read register (read-only)
+      #define OTG_FS_GRXSTSR_CHNUM           0x0000000f                  // channel number to which current packet belongs (host mode)
+      #define OTG_FS_GRXSTSR_EPNUM           0x0000000f                  // endpoint to which current packet belongs (device mode)
+      #define OTG_FS_GRXSTSR_BCNT_MASK       0x00007ff0                  // byte count of received IN data packet
+      #define OTG_FS_GRXSTSR_BCNT_SHIFT      4
+      #define OTG_FS_GRXSTSR_DPID_DATA0      0x00000000                  // data PID - DATA0
+      #define OTG_FS_GRXSTSR_DPID_DATA1      0x00010000                  // data PID - DATA1
+      #define OTG_FS_GRXSTSR_DPID_DATA2      0x00008000                  // data PID - DATA2
+      #define OTG_FS_GRXSTSR_DPID_MDATA      0x00018000                  // data PID - MDATA
+      #define OTG_FS_GRXSTSR_PKTSTS_MASK     0x001e0000
+      #define OTG_FS_GRXSTSR_PKTSTS_IN_RX    0x00040000                  // packet status - IN data packet received (host)
+      #define OTG_FS_GRXSTSR_PKTSTS_IN_OUT   0x00060000                  // packet status - IN transfer completed (host)
+      #define OTG_FS_GRXSTSR_PKTSTS_DT_ERR   0x000a0000                  // packet status - data toggle error (host)
+      #define OTG_FS_GRXSTSR_PKTSTS_HALT     0x000e0000                  // packet status - channel halted (host)
+      #define OTG_FS_GRXSTSR_PKTSTS_OUT_NAK  0x00020000                  // packet status - global OUT NAK (device)
+      #define OTG_FS_GRXSTSR_PKTSTS_OUT_RX   0x00040000                  // packet status - OUT data packet received (device)
+      #define OTG_FS_GRXSTSR_PKTSTS_OUT_OK   0x00060000                  // packet status - OUT transfer completed (device)
+      #define OTG_FS_GRXSTSR_PKTSTS_SETUP_OK 0x00080000                  // packet status - SETUP transaction completed (device)
+      #define OTG_FS_GRXSTSR_PKTSTS_SETUP_RX 0x000c0000                  // packet status - SETUP data packet received (device)
+      #define OTG_FS_GRXSTSR_FRMNUM          0x01e00000                  // frame number (device - only isochronous OUTs)
+    #define OTG_FS_GRXSTSP                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x020) // OTG_FS status read and pop register
+    #define OTG_FS_GRXFSIZ                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x024) // OTG_FS receive FIFO size register (16..256) in 32 bit words
+    #define OTG_FS_DIEPTXF0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x028) // OTG_FS endpoint 0 transmit FIFO size
+      #define OTG_FS_DIEPTXF_TX0FD_MASK     0xffff0000                   // endpoint TxFIFO depth (16..256)
+      #define OTG_FS_DIEPTXF_TX0FSA_MASK    0x0000ffff                   // memory start address for the endpoint transmit FIFO RAM
+    #define OTG_FS_HNPTXSTS                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x02c) // OTG_FS non-periodic transmit FIFO/queue status register
+
+    #define OTG_FS_GCCFG                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x038) // OTG_FS general core configuration register
+      #define OTG_FS_GCCFG_PWRDWN            0x00010000                  // power down deactivated (transceiver active)
+      #define OTG_FS_GCCFG_VBUSASEN          0x00040000                  // enable Vbus sening "A" device
+      #define OTG_FS_GCCFG_VBUSBSEN          0x00080000                  // enable Vbus sening "B" device
+      #define OTG_FS_GCCFG_SOFOUTEN          0x00100000                  // SOF output enable
+      #define OTG_FS_GCCFG_NOVBUSSENS        0x00200000                  // Vbus sensing disable option
+    #define OTG_FS_CID                       *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x03c) // OTG_FS core ID register
+
+    #define OTG_FS_HPTXFSIZ                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x100) // OTG_FS host periodic transmit FIFO size register
+    #define OTG_FS_DIEPTXF1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x104) // OTG_FS device IN1 endpoint transmit FIFO size register
+    #define OTG_FS_DIEPTXF2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x108) // OTG_FS device IN2 endpoint transmit FIFO size register
+    #define OTG_FS_DIEPTXF3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x10c) // OTG_FS device IN3 endpoint transmit FIFO size register
+
+
+
+    #define OTG_FS_HCFG                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x400) // 
+    #define OTG_FS_HFIR                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x404) // 
+    #define OTG_FS_HFNUM                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x408) //
  
-#define OTG_FS_HPTXSTS                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x410) // 
-#define OTG_FS_HAINT                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x414) // 
-#define OTG_FS_HAINTMSK                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x418) // 
+    #define OTG_FS_HPTXSTS                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x410) // 
+    #define OTG_FS_HAINT                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x414) // 
+    #define OTG_FS_HAINTMSK                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x418) // 
 
-#define OTG_FS_HPRT                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x440) // 
+    #define OTG_FS_HPRT                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x440) // 
 
-#define OTG_FS_HCCHAR0                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x500) // 
+    #define OTG_FS_HCCHAR0                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x500) // 
 
-#define OTG_FS_HCINT0                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x508) // 
-#define OTG_FS_HCINTMSK0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x50c) //
-#define OTG_FS_HCTSIZ0                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x510) //  
+    #define OTG_FS_HCINT0                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x508) // 
+    #define OTG_FS_HCINTMSK0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x50c) //
+    #define OTG_FS_HCTSIZ0                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x510) //  
 
-#define OTG_FS_HCCHAR1                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x520) //
+    #define OTG_FS_HCCHAR1                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x520) //
 
-#define OTG_FS_HCINT1                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x528) // 
-#define OTG_FS_HCINTMSK1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x52c) //  
-#define OTG_FS_HCTSIZ1                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x530) // 
+    #define OTG_FS_HCINT1                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x528) // 
+    #define OTG_FS_HCINTMSK1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x52c) //  
+    #define OTG_FS_HCTSIZ1                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x530) // 
 
-#define OTG_FS_HCCHAR2                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x540) //
+    #define OTG_FS_HCCHAR2                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x540) //
 
-#define OTG_FS_HCINT2                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x548) // 
-#define OTG_FS_HCINTMSK2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x54c) // 
-#define OTG_FS_HCTSIZ2                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x550) //
+    #define OTG_FS_HCINT2                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x548) // 
+    #define OTG_FS_HCINTMSK2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x54c) // 
+    #define OTG_FS_HCTSIZ2                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x550) //
 
-#define OTG_FS_HCCHAR3                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x560) // 
+    #define OTG_FS_HCCHAR3                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x560) // 
 
-#define OTG_FS_HCINT3                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x568) // 
-#define OTG_FS_HCINTMSK3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x56c) // 
-#define OTG_FS_HCTSIZ3                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x570) //
+    #define OTG_FS_HCINT3                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x568) // 
+    #define OTG_FS_HCINTMSK3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x56c) // 
+    #define OTG_FS_HCTSIZ3                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x570) //
 
-#define OTG_FS_HCCHAR4                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x580) //
+    #define OTG_FS_HCCHAR4                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x580) //
 
-#define OTG_FS_HCINT4                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x588) // 
-#define OTG_FS_HCINTMSK4                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x58c) // 
-#define OTG_FS_HCTSIZ4                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x590) //
+    #define OTG_FS_HCINT4                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x588) // 
+    #define OTG_FS_HCINTMSK4                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x58c) // 
+    #define OTG_FS_HCTSIZ4                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x590) //
 
-#define OTG_FS_HCCHAR5                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5a0) //
+    #define OTG_FS_HCCHAR5                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5a0) //
 
-#define OTG_FS_HCINT5                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5a8) // 
-#define OTG_FS_HCINTMSK5                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5ac) // 
-#define OTG_FS_HCTSIZ5                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5b0) //
+    #define OTG_FS_HCINT5                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5a8) // 
+    #define OTG_FS_HCINTMSK5                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5ac) // 
+    #define OTG_FS_HCTSIZ5                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5b0) //
 
-#define OTG_FS_HCCHAR6                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5c0) //
+    #define OTG_FS_HCCHAR6                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5c0) //
 
-#define OTG_FS_HCINT6                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5c8) // 
-#define OTG_FS_HCINTMSK6                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5cc) // 
-#define OTG_FS_HCTSIZ6                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5d0) //
+    #define OTG_FS_HCINT6                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5c8) // 
+    #define OTG_FS_HCINTMSK6                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5cc) // 
+    #define OTG_FS_HCTSIZ6                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5d0) //
 
-#define OTG_FS_HCCHAR7                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5e0) //
+    #define OTG_FS_HCCHAR7                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5e0) //
 
-#define OTG_FS_HCINT7                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5e8) // 
-#define OTG_FS_HCINTMSK7                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5ec) // 
-#define OTG_FS_HCTSIZ7                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5f0) // 
+    #define OTG_FS_HCINT7                    *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5e8) // 
+    #define OTG_FS_HCINTMSK7                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5ec) // 
+    #define OTG_FS_HCTSIZ7                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x5f0) // 
 
-#define OTG_FS_DCFG                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x800) // OTG_FS device configuration register (do not change after initial programming)
-  #define OTG_FS_DCFG_DSPD_FULL_SPEED    0x00000003                      // device speed
-  #define OTG_FS_DCFG_NZLSOHSK_OUT       0x00000000                      // non-zero-length status OUT handshake - send OUT
-  #define OTG_FS_DCFG_NZLSOHSK_STALL     0x00000004                      // non-zero-length status OUT handshake - send STALL
-  #define OTG_FS_DCFG_DAD_MASK           0x000007f0                      // device address - programmed after every SetAddress control command
-  #define OTG_FS_DCFG_PFIVL_80_PER       0x00000000                      // periodic frame interval - interrupt at 80% of the frame interval
-  #define OTG_FS_DCFG_PFIVL_85_PER       0x00000800                      // periodic frame interval - interrupt at 85% of the frame interval
-  #define OTG_FS_DCFG_PFIVL_90_PER       0x00001000                      // periodic frame interval - interrupt at 90% of the frame interval
-  #define OTG_FS_DCFG_PFIVL_95_PER       0x00001800                      // periodic frame interval - interrupt at 95% of the frame interval
-#define OTG_FS_DCTL                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x804) // device control register
-  #define OTG_FS_DCTL_RWUSIG             0x00000001                      // remote wakeup signaling
-  #define OTG_FS_DCTL_SDIS               0x00000002                      // soft disconnect 
-  #define OTG_FS_DCTL_GINSTS             0x00000004                      // global IN NAK status (read-only)
-  #define OTG_FS_DCTL_GONSTS             0x00000008                      // global OUT NAK status (read-only)
-  #define OTG_FS_DCTL_TCTL_DISABLED      0x00000000                      // test control disabled
-  #define OTG_FS_DCTL_TCTL_TEST_J        0x00000010                      // test_J mode enabled
-  #define OTG_FS_DCTL_TCTL_TEST_K        0x00000020                      // test_K mode enabled
-  #define OTG_FS_DCTL_TCTL_TEST_SE0_NAK  0x00000030                      // test_SE0_NAK mode enabled
-  #define OTG_FS_DCTL_TCTL_TEST_PACKET   0x00000040                      // test_Packet mode enabled
-  #define OTG_FS_DCTL_TCTL_TEST_FORCE_EN 0x00000050                      // test_Force_Enable mode enabled
-  #define OTG_FS_DCTL_SGINAK             0x00000080                      // set global IN NAK (write-only)
-  #define OTG_FS_DCTL_CGINAK             0x00000100                      // clear global IN NAK (write only)
-  #define OTG_FS_DCTL_SGONAK             0x00000200                      // set global OUT NAK (write-only)
-  #define OTG_FS_DCTL_CGONAK             0x00000400                      // clear global OUT NAK (write-only)
-  #define OTG_FS_DCTL_POPRGDNE           0x00000800                      // power-on programming done
-#define OTG_FS_DSTS                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x808) // device status register (read-only)
-  #define OTG_FS_DSTS_SUSPSTS            0x00000001                      // suspend status
-  #define OTG_FS_DSTS_ENUMSPD_FULL_SPEED 0x00000006                      // enumerated speed is full speed (PHY clock is running at 48MHz)
-  #define OTG_FS_DSTS_EERR               0x00000008                      // erratic error
-  #define OTG_FS_DSTS_SUSPSTS_MASK       0x003fff00                      // frame number of the received SOF
-#define OTG_FS_DIEPMSK                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x810) // OTG_FS device IN endpoint common interrupt mask register
-  #define OTG_FS_DIEPMSK_XFRCM           0x00000001                      // transfer completed interrupt enabled
-  #define OTG_FS_DIEPMSK_EPDM            0x00000002                      // endpoint disabled interrupt enabled
-  #define OTG_FS_DIEPMSK_TOM             0x00000008                      // timeout condition mask (non-isochronous endpoints) interrupt enabled
-  #define OTG_FS_DIEPMSK_ITTXFEMSK       0x00000010                      // IN token received when TxFIFO empty interrupt enabled
-  #define OTG_FS_DIEPMSK_INEPNMM         0x00000020                      // IN token received with EP mismatch interrupt enabled
-  #define OTG_FS_DIEPMSK_INEPNEM         0x00000040                      // IN endpoint NAK interrupt enabled
-#define OTG_FS_DOEPMSK                   *(unsigned long *)(USB_OTG_FS_BLOCK + 0x814) // OTG_FS device OUT endpoint common interrupt mask register
-  #define OTG_FS_DOEPMSK_XFRCM           0x00000001                      // transfer completed interrupt enabled
-  #define OTG_FS_DOEPMSK_EPDM            0x00000002                      // endpoint disabled interrupt enabled
-  #define OTG_FS_DOEPMSK_STUPM           0x00000008                      // SETUP phase done interrupt enabled
-  #define OTG_FS_DOEPMSK_OTEPDM          0x00000010                      // OUT token received when endpoint disabled interrupt enabled
-#define OTG_FS_DAINT                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x818) // OTG_FS device all endpoints interrupt register (read-only - write '1' to clear)
-  #define OTG_FS_DAINT_IEPINT0           0x00000001                      // IN endpoint 0 interrupt
-  #define OTG_FS_DAINT_IEPINT1           0x00000002                      // IN endpoint 1 interrupt
-  #define OTG_FS_DAINT_IEPINT2           0x00000004                      // IN endpoint 2 interrupt
-  #define OTG_FS_DAINT_IEPINT3           0x00000008                      // IN endpoint 3 interrupt
-  #define OTG_FS_DAINT_OEPINT0           0x00010000                      // OUT endpoint 0 interrupt
-  #define OTG_FS_DAINT_OEPINT1           0x00020000                      // OUT endpoint 1 interrupt
-  #define OTG_FS_DAINT_OEPINT2           0x00040000                      // OUT endpoint 2 interrupt
-  #define OTG_FS_DAINT_OEPINT3           0x00080000                      // OUT endpoint 3 interrupt
-#define OTG_FS_DAINTMSK                  *(unsigned long *)(USB_OTG_FS_BLOCK + 0x81c) // OTG_FS all endpoint interrupt mask register
-  #define OTG_FS_DAINTMSK_IEPM0          0x00000001                      // IN endpoint 0 interrupt enabled
-  #define OTG_FS_DAINTMSK_IEPM1          0x00000002                      // IN endpoint 1 interrupt enabled
-  #define OTG_FS_DAINTMSK_IEPM2          0x00000004                      // IN endpoint 2 interrupt enabled
-  #define OTG_FS_DAINTMSK_IEPM3          0x00000008                      // IN endpoint 3 interrupt enabled
-  #define OTG_FS_DAINTMSK_OEPM0          0x00010000                      // OUT endpoint 0 interrupt enabled
-  #define OTG_FS_DAINTMSK_OEPM1          0x00020000                      // OUT endpoint 1 interrupt enabled
-  #define OTG_FS_DAINTMSK_OEPM2          0x00040000                      // OUT endpoint 2 interrupt enabled
-  #define OTG_FS_DAINTMSK_OEPM3          0x00080000                      // OUT endpoint 3 interrupt enabled
-#define OTG_FS_DVBUSDIS                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x828) //
-#define OTG_FS_DVBUSPULSE                *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x82c) //
+    #define OTG_FS_DCFG                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x800) // OTG_FS device configuration register (do not change after initial programming)
+      #define OTG_FS_DCFG_DSPD_FULL_SPEED    0x00000003                  // device speed
+      #define OTG_FS_DCFG_NZLSOHSK_OUT       0x00000000                  // non-zero-length status OUT handshake - send OUT
+      #define OTG_FS_DCFG_NZLSOHSK_STALL     0x00000004                  // non-zero-length status OUT handshake - send STALL
+      #define OTG_FS_DCFG_DAD_MASK           0x000007f0                  // device address - programmed after every SetAddress control command
+      #define OTG_FS_DCFG_PFIVL_80_PER       0x00000000                  // periodic frame interval - interrupt at 80% of the frame interval
+      #define OTG_FS_DCFG_PFIVL_85_PER       0x00000800                  // periodic frame interval - interrupt at 85% of the frame interval
+      #define OTG_FS_DCFG_PFIVL_90_PER       0x00001000                  // periodic frame interval - interrupt at 90% of the frame interval
+      #define OTG_FS_DCFG_PFIVL_95_PER       0x00001800                  // periodic frame interval - interrupt at 95% of the frame interval
+    #define OTG_FS_DCTL                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x804) // device control register
+      #define OTG_FS_DCTL_RWUSIG             0x00000001                  // remote wakeup signaling
+      #define OTG_FS_DCTL_SDIS               0x00000002                  // soft disconnect 
+      #define OTG_FS_DCTL_GINSTS             0x00000004                  // global IN NAK status (read-only)
+      #define OTG_FS_DCTL_GONSTS             0x00000008                  // global OUT NAK status (read-only)
+      #define OTG_FS_DCTL_TCTL_DISABLED      0x00000000                  // test control disabled
+      #define OTG_FS_DCTL_TCTL_TEST_J        0x00000010                  // test_J mode enabled
+      #define OTG_FS_DCTL_TCTL_TEST_K        0x00000020                  // test_K mode enabled
+      #define OTG_FS_DCTL_TCTL_TEST_SE0_NAK  0x00000030                  // test_SE0_NAK mode enabled
+      #define OTG_FS_DCTL_TCTL_TEST_PACKET   0x00000040                  // test_Packet mode enabled
+      #define OTG_FS_DCTL_TCTL_TEST_FORCE_EN 0x00000050                  // test_Force_Enable mode enabled
+      #define OTG_FS_DCTL_SGINAK             0x00000080                  // set global IN NAK (write-only)
+      #define OTG_FS_DCTL_CGINAK             0x00000100                  // clear global IN NAK (write only)
+      #define OTG_FS_DCTL_SGONAK             0x00000200                  // set global OUT NAK (write-only)
+      #define OTG_FS_DCTL_CGONAK             0x00000400                  // clear global OUT NAK (write-only)
+      #define OTG_FS_DCTL_POPRGDNE           0x00000800                  // power-on programming done
+    #define OTG_FS_DSTS                      *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x808) // device status register (read-only)
+      #define OTG_FS_DSTS_SUSPSTS            0x00000001                  // suspend status
+      #define OTG_FS_DSTS_ENUMSPD_FULL_SPEED 0x00000006                  // enumerated speed is full speed (PHY clock is running at 48MHz)
+      #define OTG_FS_DSTS_EERR               0x00000008                  // erratic error
+      #define OTG_FS_DSTS_SUSPSTS_MASK       0x003fff00                  // frame number of the received SOF
+    #define OTG_FS_DIEPMSK                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x810) // OTG_FS device IN endpoint common interrupt mask register
+      #define OTG_FS_DIEPMSK_XFRCM           0x00000001                  // transfer completed interrupt enabled
+      #define OTG_FS_DIEPMSK_EPDM            0x00000002                  // endpoint disabled interrupt enabled
+      #define OTG_FS_DIEPMSK_TOM             0x00000008                  // timeout condition mask (non-isochronous endpoints) interrupt enabled
+      #define OTG_FS_DIEPMSK_ITTXFEMSK       0x00000010                  // IN token received when TxFIFO empty interrupt enabled
+      #define OTG_FS_DIEPMSK_INEPNMM         0x00000020                  // IN token received with EP mismatch interrupt enabled
+      #define OTG_FS_DIEPMSK_INEPNEM         0x00000040                  // IN endpoint NAK interrupt enabled
+    #define OTG_FS_DOEPMSK                   *(unsigned long *)(USB_OTG_FS_BLOCK + 0x814) // OTG_FS device OUT endpoint common interrupt mask register
+      #define OTG_FS_DOEPMSK_XFRCM           0x00000001                  // transfer completed interrupt enabled
+      #define OTG_FS_DOEPMSK_EPDM            0x00000002                  // endpoint disabled interrupt enabled
+      #define OTG_FS_DOEPMSK_STUPM           0x00000008                  // SETUP phase done interrupt enabled
+      #define OTG_FS_DOEPMSK_OTEPDM          0x00000010                  // OUT token received when endpoint disabled interrupt enabled
+    #define OTG_FS_DAINT                     *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x818) // OTG_FS device all endpoints interrupt register (read-only - write '1' to clear)
+      #define OTG_FS_DAINT_IEPINT0           0x00000001                  // IN endpoint 0 interrupt
+      #define OTG_FS_DAINT_IEPINT1           0x00000002                  // IN endpoint 1 interrupt
+      #define OTG_FS_DAINT_IEPINT2           0x00000004                  // IN endpoint 2 interrupt
+      #define OTG_FS_DAINT_IEPINT3           0x00000008                  // IN endpoint 3 interrupt
+      #define OTG_FS_DAINT_OEPINT0           0x00010000                  // OUT endpoint 0 interrupt
+      #define OTG_FS_DAINT_OEPINT1           0x00020000                  // OUT endpoint 1 interrupt
+      #define OTG_FS_DAINT_OEPINT2           0x00040000                  // OUT endpoint 2 interrupt
+      #define OTG_FS_DAINT_OEPINT3           0x00080000                  // OUT endpoint 3 interrupt
+    #define OTG_FS_DAINTMSK                  *(unsigned long *)(USB_OTG_FS_BLOCK + 0x81c) // OTG_FS all endpoint interrupt mask register
+      #define OTG_FS_DAINTMSK_IEPM0          0x00000001                  // IN endpoint 0 interrupt enabled
+      #define OTG_FS_DAINTMSK_IEPM1          0x00000002                  // IN endpoint 1 interrupt enabled
+      #define OTG_FS_DAINTMSK_IEPM2          0x00000004                  // IN endpoint 2 interrupt enabled
+      #define OTG_FS_DAINTMSK_IEPM3          0x00000008                  // IN endpoint 3 interrupt enabled
+      #define OTG_FS_DAINTMSK_OEPM0          0x00010000                  // OUT endpoint 0 interrupt enabled
+      #define OTG_FS_DAINTMSK_OEPM1          0x00020000                  // OUT endpoint 1 interrupt enabled
+      #define OTG_FS_DAINTMSK_OEPM2          0x00040000                  // OUT endpoint 2 interrupt enabled
+      #define OTG_FS_DAINTMSK_OEPM3          0x00080000                  // OUT endpoint 3 interrupt enabled
+    #define OTG_FS_DVBUSDIS                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x828) //
+    #define OTG_FS_DVBUSPULSE                *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x82c) //
 
-#define OTG_FS_DIEPEMPMSK                *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x834) //OTG_FS device IN endpoint FIFO empty interrupt mask register
-  #define OTG_FS_DIEPEMPMSK_INEPTXFEM0   0x00000001                      // enable IN endpoint 0 Tx FIFO empty interrupt
-  #define OTG_FS_DIEPEMPMSK_INEPTXFEM1   0x00000002                      // enable IN endpoint 1 Tx FIFO empty interrupt
-  #define OTG_FS_DIEPEMPMSK_INEPTXFEM2   0x00000004                      // enable IN endpoint 2 Tx FIFO empty interrupt
-  #define OTG_FS_DIEPEMPMSK_INEPTXFEM3   0x00000008                      // enable IN endpoint 3 Tx FIFO empty interrupt
+    #define OTG_FS_DIEPEMPMSK                *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x834) //OTG_FS device IN endpoint FIFO empty interrupt mask register
+      #define OTG_FS_DIEPEMPMSK_INEPTXFEM0   0x00000001                  // enable IN endpoint 0 Tx FIFO empty interrupt
+      #define OTG_FS_DIEPEMPMSK_INEPTXFEM1   0x00000002                  // enable IN endpoint 1 Tx FIFO empty interrupt
+      #define OTG_FS_DIEPEMPMSK_INEPTXFEM2   0x00000004                  // enable IN endpoint 2 Tx FIFO empty interrupt
+      #define OTG_FS_DIEPEMPMSK_INEPTXFEM3   0x00000008                  // enable IN endpoint 3 Tx FIFO empty interrupt
 
-#define OTG_FS_DIEPCTL0_ADD              (unsigned long *)(USB_OTG_FS_BLOCK + 0x900)
-#define OTG_FS_DIEPCTL0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x900) // OTG_FS device control IN endpoint 0 control register
-  #define OTG_FS_DIEPCTL_MPSIZ_64_BYTES  0x00000000                      // maximum packet size on endpoint 0 - 64 bytes
-  #define OTG_FS_DIEPCTL_MPSIZ_32_BYTES  0x00000001                      // maximum packet size on endpoint 0 - 32 bytes
-  #define OTG_FS_DIEPCTL_MPSIZ_16_BYTES  0x00000002                      // maximum packet size on endpoint 0 - 16 bytes
-  #define OTG_FS_DIEPCTL_MPSIZ_8_BYTES   0x00000003                      // maximum packet size on endpoint 0 - 8 bytes
-  #define OTG_FS_DIEPCTL_USBAEP_ACTIVE   0x00008000                      // endpoint is active
-  #define OTG_FS_DIEPCTL_NAKSTS          0x00020000                      // NAK status
-  #define OTG_FS_DIEPCTL_EPTYP_CONTROL   0x00000000                      // control endpoint
-  #define OTG_FS_DIEPCTL_EPTYP_ISO       0x00040000                      // isochronous endpoint
-  #define OTG_FS_DIEPCTL_EPTYP_BULK      0x00080000                      // bulk endpoint
-  #define OTG_FS_DIEPCTL_EPTYP_INTERRUPT 0x000c0000                      // interrupt endpoint
-  #define OTG_FS_DIEPCTL_STALL           0x00200000                      // write '1' only to stall endpoint (cleared when SETUP received)
-  #define OTG_FS_DIEPCTL_TXFNUM          0x03c00000                      // FIFO number assigned to endpoint 0
-  #define OTG_FS_DIEPCTL_CNAK            0x04000000                      // clear NAK for endpoint (write-only)
-  #define OTG_FS_DIEPCTL_SNAK            0x08000000                      // set NAK for endpoint (write-only)
-  #define OTG_FS_DIEPCTL_EPDIS           0x40000000                      // disable transmitting data on endpoint 0 (cleared by USB controller)
-  #define OTG_FS_DIEPCTL_EPENA           0x80000000                      // start transmitting data on endpoint 0 (cleared by USB controller)
+    #define OTG_FS_DIEPCTL0_ADD              (unsigned long *)(USB_OTG_FS_BLOCK + 0x900)
+    #define OTG_FS_DIEPCTL0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x900) // OTG_FS device control IN endpoint 0 control register
+      #define OTG_FS_DIEPCTL_MPSIZ_64_BYTES  0x00000000                  // maximum packet size on endpoint 0 - 64 bytes
+      #define OTG_FS_DIEPCTL_MPSIZ_32_BYTES  0x00000001                  // maximum packet size on endpoint 0 - 32 bytes
+      #define OTG_FS_DIEPCTL_MPSIZ_16_BYTES  0x00000002                  // maximum packet size on endpoint 0 - 16 bytes
+      #define OTG_FS_DIEPCTL_MPSIZ_8_BYTES   0x00000003                  // maximum packet size on endpoint 0 - 8 bytes
+      #define OTG_FS_DIEPCTL_USBAEP_ACTIVE   0x00008000                  // endpoint is active
+      #define OTG_FS_DIEPCTL_NAKSTS          0x00020000                  // NAK status
+      #define OTG_FS_DIEPCTL_EPTYP_CONTROL   0x00000000                  // control endpoint
+      #define OTG_FS_DIEPCTL_EPTYP_ISO       0x00040000                  // isochronous endpoint
+      #define OTG_FS_DIEPCTL_EPTYP_BULK      0x00080000                  // bulk endpoint
+      #define OTG_FS_DIEPCTL_EPTYP_INTERRUPT 0x000c0000                  // interrupt endpoint
+      #define OTG_FS_DIEPCTL_STALL           0x00200000                  // write '1' only to stall endpoint (cleared when SETUP received)
+      #define OTG_FS_DIEPCTL_TXFNUM          0x03c00000                  // FIFO number assigned to endpoint 0
+      #define OTG_FS_DIEPCTL_CNAK            0x04000000                  // clear NAK for endpoint (write-only)
+      #define OTG_FS_DIEPCTL_SNAK            0x08000000                  // set NAK for endpoint (write-only)
+      #define OTG_FS_DIEPCTL_EPDIS           0x40000000                  // disable transmitting data on endpoint 0 (cleared by USB controller)
+      #define OTG_FS_DIEPCTL_EPENA           0x80000000                  // start transmitting data on endpoint 0 (cleared by USB controller)
 
-#define OTG_FS_DIEPINT0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x908) // OTG_FS device IN endpoint 0 interrupt register
-  #define OTG_FS_DIEPINT_XFRC            0x00000001                      // transfer completed interrupt
-  #define OTG_FS_DIEPINT_EPDISD          0x00000002                      // endpoint disabled interrupt
-  #define OTG_FS_DIEPINT_TOC             0x00000008                      // timeout condition
-  #define OTG_FS_DIEPINT_ITTXFE          0x00000010                      // IN token received when TxFIFO is empty
-  #define OTG_FS_DIEPINT_INEPNE          0x00000040                      // IN endpoint NAK effective
-  #define OTG_FS_DIEPINT_TXFE            0x00000080                      // TxFIFO empty
+    #define OTG_FS_DIEPINT0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x908) // OTG_FS device IN endpoint 0 interrupt register
+      #define OTG_FS_DIEPINT_XFRC            0x00000001                  // transfer completed interrupt
+      #define OTG_FS_DIEPINT_EPDISD          0x00000002                  // endpoint disabled interrupt
+      #define OTG_FS_DIEPINT_TOC             0x00000008                  // timeout condition
+      #define OTG_FS_DIEPINT_ITTXFE          0x00000010                  // IN token received when TxFIFO is empty
+      #define OTG_FS_DIEPINT_INEPNE          0x00000040                  // IN endpoint NAK effective
+      #define OTG_FS_DIEPINT_TXFE            0x00000080                  // TxFIFO empty
 
-#define OTG_FS_DIEPTSIZ0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x910) // OTG_FS device IN endpoint 0 transfer size register
-  #define OTG_FS_DIEPTSIZ_XFRSIZ_MASK   0x0000007f                       // transfer size
-  #define OTG_FS_DIEPTSIZ_PKTCNT_MASK   0x00180000                       // the total number of USB packets that constitute the transfer size amount of data
-  #define OTG_FS_DIEPTSIZ_PKTCNT_1      0x00080000                       // one packet
-  #define OTG_FS_DIEPTSIZ_PKTCNT_2      0x00100000                       // two packets
-  #define OTG_FS_DIEPTSIZ_PKTCNT_3      0x00180000                       // three packets
+    #define OTG_FS_DIEPTSIZ0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x910) // OTG_FS device IN endpoint 0 transfer size register
+      #define OTG_FS_DIEPTSIZ_XFRSIZ_MASK   0x0000007f                   // transfer size
+      #define OTG_FS_DIEPTSIZ_PKTCNT_MASK   0x00180000                   // the total number of USB packets that constitute the transfer size amount of data
+      #define OTG_FS_DIEPTSIZ_PKTCNT_1      0x00080000                   // one packet
+      #define OTG_FS_DIEPTSIZ_PKTCNT_2      0x00100000                   // two packets
+      #define OTG_FS_DIEPTSIZ_PKTCNT_3      0x00180000                   // three packets
 
-#define OTG_FS_DTXFSTS0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x918) // OTG_FS device IN endpoint 0 transmit FIFO status register
-  #define OTG_FS_DTXFSTS0_INEPTFSAV      0x0000ffff
+    #define OTG_FS_DTXFSTS0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x918) // OTG_FS device IN endpoint 0 transmit FIFO status register
+      #define OTG_FS_DTXFSTS0_INEPTFSAV      0x0000ffff
 
-#define OTG_FS_DIEPCTL1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x920) // OTG_FS device control IN endpoint 1 control register
-  #define OTG_FS_DIEPCTLX_MPSIZ_MASK     0x000007ff
-  #define OTG_FS_DIEPCTLX_EONUM_DPID     0x00010000                      // even frame (isochronous)/ DATA1 (interrupt/bulk)
-  #define OTG_FS_DIEPCTLX_SD0PID_SEVNFRM 0x10000000                      // set DATA0 PID (interrupt/bulk) or set even frame (isochronous)
-  #define OTG_FS_DIEPCTLX_SODDFRM        0x20000000                      // set odd frame (applies to isochronous IN/OUT endpoints only)
+    #define OTG_FS_DIEPCTL1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x920) // OTG_FS device control IN endpoint 1 control register
+      #define OTG_FS_DIEPCTLX_MPSIZ_MASK     0x000007ff
+      #define OTG_FS_DIEPCTLX_EONUM_DPID     0x00010000                  // even frame (isochronous)/ DATA1 (interrupt/bulk)
+      #define OTG_FS_DIEPCTLX_SD0PID_SEVNFRM 0x10000000                  // set DATA0 PID (interrupt/bulk) or set even frame (isochronous)
+      #define OTG_FS_DIEPCTLX_SODDFRM        0x20000000                  // set odd frame (applies to isochronous IN/OUT endpoints only)
 
-#define OTG_FS_DIEPINT1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x928) // OTG_FS device IN endpoint 1 interrupt register
+    #define OTG_FS_DIEPINT1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x928) // OTG_FS device IN endpoint 1 interrupt register
 
-#define OTG_FS_DIEPTSIZ1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x930) // OTG_FS device IN endpoint 1 transfer size register
+    #define OTG_FS_DIEPTSIZ1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x930) // OTG_FS device IN endpoint 1 transfer size register
 
-#define OTG_FS_DTXFSTS1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x938) // OTG_FS device IN endpoint 1 transmit FIFO status register
+    #define OTG_FS_DTXFSTS1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x938) // OTG_FS device IN endpoint 1 transmit FIFO status register
 
-#define OTG_FS_DIEPCTL2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x940) // OTG_FS device control IN endpoint 2 control register
+    #define OTG_FS_DIEPCTL2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x940) // OTG_FS device control IN endpoint 2 control register
 
-#define OTG_FS_DIEPINT2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x948) // OTG_FS device IN endpoint 2 interrupt register
+    #define OTG_FS_DIEPINT2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x948) // OTG_FS device IN endpoint 2 interrupt register
 
-#define OTG_FS_DIEPTSIZ2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x950) // OTG_FS device IN endpoint 2 transfer size register
+    #define OTG_FS_DIEPTSIZ2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x950) // OTG_FS device IN endpoint 2 transfer size register
 
-#define OTG_FS_DTXFSTS2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x958) // OTG_FS device IN endpoint 2 transmit FIFO status register
+    #define OTG_FS_DTXFSTS2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x958) // OTG_FS device IN endpoint 2 transmit FIFO status register
 
-#define OTG_FS_DIEPCTL3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x960) // OTG_FS device control IN endpoint 3 control register
+    #define OTG_FS_DIEPCTL3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x960) // OTG_FS device control IN endpoint 3 control register
 
-#define OTG_FS_DIEPINT3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x968) // OTG_FS device IN endpoint 3 interrupt register
+    #define OTG_FS_DIEPINT3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x968) // OTG_FS device IN endpoint 3 interrupt register
 
-#define OTG_FS_DIEPTSIZ3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x970) // OTG_FS device IN endpoint 3 transfer size register
+    #define OTG_FS_DIEPTSIZ3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x970) // OTG_FS device IN endpoint 3 transfer size register
 
-#define OTG_FS_DTXFSTS3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x978) // OTG_FS device IN endpoint 3 transmit FIFO status register
+    #define OTG_FS_DTXFSTS3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x978) // OTG_FS device IN endpoint 3 transmit FIFO status register
 
-#define OTG_FS_DOEPCTL0_ADD              (unsigned long *)(USB_OTG_FS_BLOCK + 0xb00)
-#define OTG_FS_DOEPCTL0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb00) // OTG_FS device control OUT endpoint 0 control register
-  #define OTG_FS_DOEPCTL_MPSIZ_64        0x00000000                      // (read-only) endpoint size 64 bytes
-  #define OTG_FS_DOEPCTL_MPSIZ_32        0x00000001                      // (read-only) endpoint size 32 bytes
-  #define OTG_FS_DOEPCTL_MPSIZ_16        0x00000002                      // (read-only) endpoint size 16 bytes
-  #define OTG_FS_DOEPCTL_MPSIZ_8         0x00000003                      // (read-only) endpoint size 8 bytes
-  #define OTG_FS_DOEPCTL_USBAEP          0x00008000                      // (read-only) endpoint active
-  #define OTG_FS_DOEPCTL_NAKSTS          0x00020000                      // (read-only) NAK status
-  #define OTG_FS_DOEPCTL_EPTYP           0x000c0000                      // (read-only)
-  #define OTG_FS_DOEPCTL_SNPM            0x00100000                      // snoop mode
-  #define OTG_FS_DOEPCTL_STALL           0x00200000                      // (write-only - set 1) stall handshake
-  #define OTG_FS_DOEPCTL_CNAK            0x04000000                      // (write-only - set 1) clear NAK on endpoint
-  #define OTG_FS_DOEPCTL_SNAK            0x08000000                      // (write-only - set 1) set NAK on endpoint
-  #define OTG_FS_DOEPCTL_EPDIS           0x40000000                      // (read-only) endpoint 0 can not be disabled
-  #define OTG_FS_DOEPCTL_EPENA           0x80000000                      // (write-only) enable endpoint
+    #define OTG_FS_DOEPCTL0_ADD              (unsigned long *)(USB_OTG_FS_BLOCK + 0xb00)
+    #define OTG_FS_DOEPCTL0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb00) // OTG_FS device control OUT endpoint 0 control register
+      #define OTG_FS_DOEPCTL_MPSIZ_64        0x00000000                  // (read-only) endpoint size 64 bytes
+      #define OTG_FS_DOEPCTL_MPSIZ_32        0x00000001                  // (read-only) endpoint size 32 bytes
+      #define OTG_FS_DOEPCTL_MPSIZ_16        0x00000002                  // (read-only) endpoint size 16 bytes
+      #define OTG_FS_DOEPCTL_MPSIZ_8         0x00000003                  // (read-only) endpoint size 8 bytes
+      #define OTG_FS_DOEPCTL_USBAEP          0x00008000                  // (read-only) endpoint active
+      #define OTG_FS_DOEPCTL_NAKSTS          0x00020000                  // (read-only) NAK status
+      #define OTG_FS_DOEPCTL_EPTYP           0x000c0000                  // (read-only)
+      #define OTG_FS_DOEPCTL_SNPM            0x00100000                  // snoop mode
+      #define OTG_FS_DOEPCTL_STALL           0x00200000                  // (write-only - set 1) stall handshake
+      #define OTG_FS_DOEPCTL_CNAK            0x04000000                  // (write-only - set 1) clear NAK on endpoint
+      #define OTG_FS_DOEPCTL_SNAK            0x08000000                  // (write-only - set 1) set NAK on endpoint
+      #define OTG_FS_DOEPCTL_EPDIS           0x40000000                  // (read-only) endpoint 0 can not be disabled
+      #define OTG_FS_DOEPCTL_EPENA           0x80000000                  // (write-only) enable endpoint
 
-#define OTG_FS_DOEPINT0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb08) // OTG_FS device OUT endpoint 0 interrupt register
-  #define OTG_FS_DOEPINT_XFRC            0x00000001                      // transfer completed interrupt
-  #define OTG_FS_DOEPINT_EPDISD          0x00000002                      // endpoint disabled interrupt
-  #define OTG_FS_DOEPINT_STUP            0x00000008                      // SETUP phase done
-  #define OTG_FS_DOEPINT_OTEPDIS         0x00000010                      // OUT token received when endpoint is disabled
-  #define OTG_FS_DOEPINT_B2BSTUP         0x00000040                      // back-to-back SETUP packets received
+    #define OTG_FS_DOEPINT0                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb08) // OTG_FS device OUT endpoint 0 interrupt register
+      #define OTG_FS_DOEPINT_XFRC            0x00000001                  // transfer completed interrupt
+      #define OTG_FS_DOEPINT_EPDISD          0x00000002                  // endpoint disabled interrupt
+      #define OTG_FS_DOEPINT_STUP            0x00000008                  // SETUP phase done
+      #define OTG_FS_DOEPINT_OTEPDIS         0x00000010                  // OUT token received when endpoint is disabled
+      #define OTG_FS_DOEPINT_B2BSTUP         0x00000040                  // back-to-back SETUP packets received
 
-#define OTG_FS_DOEPTSIZ0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb10) // OTG_FS device OUT endpoint 0 transfer size register
-  #define OTG_FS_DOEPTSIZ_XFRSIZ_MASK    0x0000007f
-  #define OTG_FS_DOEPTSIZ_PKTCNT         0x00080000
-  #define OTG_FS_DOEPTSIZ_STUPCNT_1      0x20000000                      // SETUP packet count - 1 packet (the number of back-to-back SETUP data packets that the endpoint can receive)
-  #define OTG_FS_DOEPTSIZ_STUPCNT_2      0x40000000                      // SETUP packet count - 2 packets
-  #define OTG_FS_DOEPTSIZ_STUPCNT_3      0x60000000                      // SETUP packet count - 3 packets
+    #define OTG_FS_DOEPTSIZ0                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb10) // OTG_FS device OUT endpoint 0 transfer size register
+      #define OTG_FS_DOEPTSIZ_XFRSIZ_MASK    0x0000007f
+      #define OTG_FS_DOEPTSIZ_PKTCNT         0x00080000
+      #define OTG_FS_DOEPTSIZ_STUPCNT_1      0x20000000                  // SETUP packet count - 1 packet (the number of back-to-back SETUP data packets that the endpoint can receive)
+      #define OTG_FS_DOEPTSIZ_STUPCNT_2      0x40000000                  // SETUP packet count - 2 packets
+      #define OTG_FS_DOEPTSIZ_STUPCNT_3      0x60000000                  // SETUP packet count - 3 packets
 
-#define OTG_FS_DOEPCTL1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb20) // OTG_FS device control OUT endpoint 1 control register
+    #define OTG_FS_DOEPCTL1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb20) // OTG_FS device control OUT endpoint 1 control register
 
-#define OTG_FS_DOEPINT1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb28) // OTG_FS device OUT endpoint 1 interrupt register
+    #define OTG_FS_DOEPINT1                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb28) // OTG_FS device OUT endpoint 1 interrupt register
 
-#define OTG_FS_DOEPTSIZ1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb30) // OTG_FS device OUT endpoint 1 transfer size register
+    #define OTG_FS_DOEPTSIZ1                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb30) // OTG_FS device OUT endpoint 1 transfer size register
 
-#define OTG_FS_DOEPCTL2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb40) // OTG_FS device control OUT endpoint 2 control register
+    #define OTG_FS_DOEPCTL2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb40) // OTG_FS device control OUT endpoint 2 control register
 
-#define OTG_FS_DOEPINT2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb48) // OTG_FS device OUT endpoint 2 interrupt register
+    #define OTG_FS_DOEPINT2                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb48) // OTG_FS device OUT endpoint 2 interrupt register
 
-#define OTG_FS_DOEPTSIZ2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb50) // OTG_FS device OUT endpoint 2 transfer size register
+    #define OTG_FS_DOEPTSIZ2                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb50) // OTG_FS device OUT endpoint 2 transfer size register
 
-#define OTG_FS_DOEPCTL3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb60) // OTG_FS device control OUT endpoint 3 control register
+    #define OTG_FS_DOEPCTL3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb60) // OTG_FS device control OUT endpoint 3 control register
 
-#define OTG_FS_DOEPINT3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb68) // OTG_FS device OUT endpoint 3 interrupt register
+    #define OTG_FS_DOEPINT3                  *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb68) // OTG_FS device OUT endpoint 3 interrupt register
 
-#define OTG_FS_DOEPTSIZ3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb70) // OTG_FS device OUT endpoint 3 transfer size register
+    #define OTG_FS_DOEPTSIZ3                 *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xb70) // OTG_FS device OUT endpoint 3 transfer size register
 
-#define OTG_FS_PCGCCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xe00) // OTG_FS power and clock gating control register
-  #define OTG_FS_PCGCCTL_STPPCLK         0x00000001                      // stop PHY clock (when USB is suspended)
-  #define OTG_FS_PCGCCTL_GATEHCLK        0x00000002                      // gate HCLK (to other AHB slave and masters and wakeup logic when USB is suspended or the session is not valid)
-  #define OTG_FS_PCGCCTL_PHYSUSP         0x00000010                      // PHY suspended
+    #define OTG_FS_PCGCCTL                   *(volatile unsigned long *)(USB_OTG_FS_BLOCK + 0xe00) // OTG_FS power and clock gating control register
+      #define OTG_FS_PCGCCTL_STPPCLK         0x00000001                  // stop PHY clock (when USB is suspended)
+      #define OTG_FS_PCGCCTL_GATEHCLK        0x00000002                  // gate HCLK (to other AHB slave and masters and wakeup logic when USB is suspended or the session is not valid)
+      #define OTG_FS_PCGCCTL_PHYSUSP         0x00000010                  // PHY suspended
 
-#define OTG_FS_DFIFO0_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x1000) // Data FIFO endpoint 0
+    #define OTG_FS_DFIFO0_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x1000) // Data FIFO endpoint 0
 
-#define OTG_FS_DFIFO1_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x2000) // Data FIFO endpoint 1
+    #define OTG_FS_DFIFO1_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x2000) // Data FIFO endpoint 1
 
-#define OTG_FS_DFIFO2_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x3000) // Data FIFO endpoint 2
+    #define OTG_FS_DFIFO2_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x3000) // Data FIFO endpoint 2
 
-#define OTG_FS_DFIFO3_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x4000) // Data FIFO endpoint 3
+    #define OTG_FS_DFIFO3_ADDR               (volatile unsigned long *)(USB_OTG_FS_BLOCK + 0x4000) // Data FIFO endpoint 3
 
+    #define MULTIPLE_TX                      3                           // allow three packets to be queued
 
-#define MULTIPLE_TX                      3                               // allow three packets to be queued
+    #define USB_FIFO_BUFFER_DEPTH            1
 
-#define USB_FIFO_BUFFER_DEPTH            1
+    #define NUMBER_OF_USB_ENDPOINTS          4                           // device supports endpoint 0 plus three other endpoints
 
-#define NUMBER_OF_USB_ENDPOINTS          4                               // device supports endpoint 0 plus three other endpoints
-
-typedef struct stUSB_END_POINT
-{
-    unsigned long ulNextRxData0;
-    unsigned long ulNextTxData0;
-    unsigned long ulEndpointSize;                                        // contains size of endpoint plus some control flags
-} USB_END_POINT;
-
-
-typedef struct stUSB_HW
-{
-    unsigned long  ulUSB_buffer[NUMBER_OF_USB_ENDPOINTS][64/sizeof(unsigned long)]; // linear, word aligned buffer large enough to hold largest single reception (there is one for each endpoint in case it is necessary to hold the input)
-    USB_END_POINT *ptrEndpoint;
-    unsigned char **ptrRxDatBuffer;                                      // pointer to the next reception buffer pointer
-    unsigned char **ptrTxDatBuffer;                                      // pointer to the next transmission buffer pointer
-    unsigned short usLength;                                             // length of present input being handled
-    unsigned short usStoredLength[NUMBER_OF_USB_ENDPOINTS];              // length information being held in the input buffer
-    unsigned long  ucUSBAddress;                                         // our USB address                       
-} USB_HW;
-
-extern void fnSendUSB_data(unsigned char *pData, unsigned short Len, int iEndpoint, USB_HW *ptrUSB_HW);
-extern void fnSendZeroData(USB_HW *ptrUSB_HW, int iEndpoint);
-extern void fnPutToFIFO(int iLength, volatile unsigned long *ptrRxFIFO, unsigned char *ptrBuffer);
-extern void fnPrepareTx(int Len, unsigned char *pData);
+    typedef struct stUSB_END_POINT
+    {
+        unsigned long ulNextRxData0;
+        unsigned long ulNextTxData0;
+        unsigned long ulEndpointSize;                                    // contains size of endpoint plus some control flags
+    } USB_END_POINT;
 
 
-#define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) fnSendUSB_data(pData, Len, iEndpoint, ptrUSB_HW)
-#define FNSEND_ZERO_DATA(ptrUSB_HW, iEndpoint)            fnSendZeroData(ptrUSB_HW, iEndpoint)
-#define SET_CONTROL_DIRECTION(a,b)
-#define CLEAR_SETUP(a)                                                   // for compatibility with generic driver
-#define VALIDATE_NEW_CONFIGURATION()
+    typedef struct stUSB_HW
+    {
+        unsigned long  ulUSB_buffer[NUMBER_OF_USB_ENDPOINTS][64/sizeof(unsigned long)]; // linear, word aligned buffer large enough to hold largest single reception (there is one for each endpoint in case it is necessary to hold the input)
+        USB_END_POINT *ptrEndpoint;
+        unsigned char **ptrRxDatBuffer;                                  // pointer to the next reception buffer pointer
+        unsigned char **ptrTxDatBuffer;                                  // pointer to the next transmission buffer pointer
+        unsigned short usLength;                                         // length of present input being handled
+        unsigned short usStoredLength[NUMBER_OF_USB_ENDPOINTS];          // length information being held in the input buffer
+        unsigned long  ucUSBAddress;                                     // our USB address                       
+    } USB_HW;
+
+    extern void fnSendUSB_data(unsigned char *pData, unsigned short Len, int iEndpoint, USB_HW *ptrUSB_HW);
+    extern void fnSendZeroData(USB_HW *ptrUSB_HW, int iEndpoint);
+    extern void fnPutToFIFO(int iLength, volatile unsigned long *ptrRxFIFO, unsigned char *ptrBuffer);
+    extern void fnPrepareTx(int Len, unsigned char *pData);
+
+
+    #define FNSEND_USB_DATA(pData, Len, iEndpoint, ptrUSB_HW) fnSendUSB_data(pData, Len, iEndpoint, ptrUSB_HW)
+    #define FNSEND_ZERO_DATA(ptrUSB_HW, iEndpoint)            fnSendZeroData(ptrUSB_HW, iEndpoint)
+    #define SET_CONTROL_DIRECTION(a,b)
+    #define CLEAR_SETUP(a)                                               // for compatibility with generic driver
+    #define VALIDATE_NEW_CONFIGURATION()
+#endif
 
 // SPI (I2S)
 //
@@ -6223,8 +6359,13 @@ typedef struct stPROCESSOR_IRQ
     #else
     void  (*irq_ADC1_2_3)(void);                                         // 18
     #endif
-    void  (*irq_CAN1_TX)(void);                                          // 19
-    void  (*irq_CAN1_RX0)(void);                                         // 20
+    #if defined USB_DEVICE_AVAILABLE
+        void  (*irq_USB_HP_CAN1_TX)(void);                               // 19
+        void  (*irq_USB_LP_CAN1_RX0)(void);                              // 20
+    #else
+        void  (*irq_CAN1_TX)(void);                                      // 19
+        void  (*irq_CAN1_RX0)(void);                                     // 20
+    #endif
     void  (*irq_CAN1_RX1)(void);                                         // 21
     void  (*irq_CAN1_SCE)(void);                                         // 22
     void  (*irq_EXTI9_5)(void);                                          // 23
@@ -6777,8 +6918,11 @@ typedef struct stVECTOR_TABLE
     #define irq_DMA1_Channel7_ID          17
     #define irq_DMA1_Stream6_ID           17
     #define irq_ADC_ID                    18                             // ADC global interrupts
+    #define irq_ADC1_2_ID                 18
     #define irq_CAN1_TX_ID                19
+    #define irq_USB_HP_CAN_TX_ID          19
     #define irq_CAN1_RX0_ID               20
+    #define irq_USB_LP_CAN_RX0_ID         20
     #define irq_CAN1_RX1_ID               21
     #define irq_CAN1_SCE_ID               22
     #define irq_EXTI9_5_ID                23

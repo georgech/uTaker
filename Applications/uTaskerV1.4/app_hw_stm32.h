@@ -1042,6 +1042,7 @@
     #define PRIORITY_RTC               5
     #define PRIORITY_HW_TIMER          5
     #define PRIORITY_TIMERS            5
+    #define PRIORITY_DEVICE_LP_FS      4
     #define PRIORITY_USB_OTG           4
     #define PRIORITY_I2C1              4
     #define PRIORITY_I2C2              4
@@ -1050,6 +1051,7 @@
     #define PRIORITY_TICK_TIMER        3
     #define PRIORITY_ADC               2
     #define PRIORITY_EMAC              1
+    #define PRIORITY_DEVICE_HP_FS      1
     #define PRIORITY_OTG_FS            1
 #endif
 

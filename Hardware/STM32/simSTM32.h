@@ -1426,7 +1426,10 @@ typedef struct stSTR32M_PERIPH
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
     STM32_TIM9_10_11_12_13_14 TIM9_10_11_12_13_14[6];
 #endif
+#if defined USB_DEVICE_AVAILABLE
+    unsigned long        USB_CAN_SRAM[USB_CAN_SRAM_SIZE];
     STM32_USBD           USBD;
+#endif
     STM32_PWR            PWR;
     STM32_CAN            CAN;
     STM32_CAN_SLAVE      CAN_SLAVE;
@@ -1442,7 +1445,9 @@ typedef struct stSTR32M_PERIPH
 #if defined _STM32F7XX
     STM32_QSPI           QUADSPI;
 #endif
+#if defined USB_OTG_AVAILABLE
     STM32_USB_OTG_FS     USB_OTG_FS;                                     // {4}
+#endif
     STM32_DBG            DBG;
 
     STM32_CORTEX_M3      CORTEX_M3;

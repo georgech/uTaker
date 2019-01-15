@@ -231,6 +231,7 @@
         #else
             #if defined SDCARD_SECURE_LOADER
                 #define NEW_SOFTWARE_FILE "sd_card_aes256_coded.bin"
+              //#define NEW_SOFTWARE_FILE "encrypted.bin"
             #else
                 #define NEW_SOFTWARE_FILE "software.bin"
             #endif
@@ -314,8 +315,13 @@
     #define SERIAL_SPEED              SERIAL_BAUD_115200                 // the Baud rate of the UART
     #define ROOT_FILE_ENTRIES         4                                  // when USB MSD loader this many directory entries are set to the start of FLASH - the application start is shifted by this amount x 32 bytes
     #define ENABLE_READBACK                                              // allow USB to transfer present application to PC
-    #define UTASKER_APP_START         (FLASH_START_ADDRESS + (16 * 1024))// application starts at this address
-    #define UTASKER_APP_END           (unsigned char *)(UTASKER_APP_START + (130 * 1024)) // end of application space - after maximum application size
+    #if defined ARDUINO_BLUE_PILL
+        #define UTASKER_APP_START     (FLASH_START_ADDRESS + (16 * 1024))// application starts at this address
+        #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (44 * 1024)) // end of application space - after maximum application size
+    #else
+        #define UTASKER_APP_START     (FLASH_START_ADDRESS + (16 * 1024))// application starts at this address
+        #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (130 * 1024)) // end of application space - after maximum application size
+    #endif
 
     // Before software can be read from the disk a password file must have been copied
     //
