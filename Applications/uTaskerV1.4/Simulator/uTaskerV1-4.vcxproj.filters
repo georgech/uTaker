@@ -581,6 +581,18 @@
     <ClCompile Include="..\..\..\Hardware\iMX\iMX_ports.cpp">
       <Filter>WinSim\SIMiMX</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\LPC2XXX\LPC23XX\LPC23XX.c">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\LPC17XX\LPC17XX.c">
+      <Filter>Hardware\LPC17XX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\SAM7\SAM7X.c">
+      <Filter>Hardware\SAM7</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Hardware\NE64\NE64.c">
+      <Filter>Hardware\NE64</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -1615,6 +1627,45 @@
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h">
       <Filter>Hardware\STM32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\LPC2XXX\LPC23XX\LPC23XX.h">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\LPC17XX\LPC17XX.h">
+      <Filter>Hardware\LPC17XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\LPC17XX\spi_flash_lpc_atmel.h">
+      <Filter>Hardware\LPC17XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\LPC17XX\spi_flash_lpc_sst25.h">
+      <Filter>Hardware\LPC17XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\LPC17XX\spi_flash_lpc_stmicro.h">
+      <Filter>Hardware\LPC17XX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\AT91SAM7S32_inc.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\sam7x.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\spi_flash_sam7x_atmel.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\spi_flash_sam7x_sst25.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\spi_flash_sam7x_stmicro.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SAM7\spi_sc16IS7xx.h">
+      <Filter>Hardware\SAM7</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\NE64\ne64.h">
+      <Filter>Hardware\NE64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F103X_port.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">
@@ -1683,6 +1734,45 @@
     </None>
     <None Include="..\..\..\Hardware\iMX\iMX_asm.s">
       <Filter>Hardware\iMX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\Cstartup.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\Cstartup_LPC21XX.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\CstartupIAR5.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\CstartupIAR5_LPC21XX.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\Lpc23xx_keil.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\startup_gnu.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC2XXX\LPC23XX\startup_LPC21XX_gnu.s">
+      <Filter>Hardware\LPC2XXX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC17XX\LPC17XX_asm.s">
+      <Filter>Hardware\LPC17XX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\LPC17XX\LPC17XX_startup_keil.s">
+      <Filter>Hardware\LPC17XX</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\SAM7\cstartup_iar5.s">
+      <Filter>Hardware\SAM7</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\SAM7\startup_gnu.s">
+      <Filter>Hardware\SAM7</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\SAM7\startup_keil.s">
+      <Filter>Hardware\SAM7</Filter>
+    </None>
+    <None Include="..\..\..\Hardware\NE64\crt0.s">
+      <Filter>Hardware\NE64</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

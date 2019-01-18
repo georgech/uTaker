@@ -1411,7 +1411,9 @@ typedef struct stSTR32M_PERIPH
     STM32_AFIO           AFIO;
 #endif
     STM32_USART          USART[USARTS_AVAILABLE];
+#if UARTS_AVAILABLE > 0
     STM32_UART           UART[UARTS_AVAILABLE];
+#endif
 #if LPUARTS_AVAILABLE > 0
     STM32_LPUART         LPUART[LPUARTS_AVAILABLE];
 #endif

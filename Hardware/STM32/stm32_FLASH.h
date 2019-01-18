@@ -71,10 +71,10 @@ static void fnConfigSPIFileSystem(void)
 //
 static void fnExecuteCommand(_STM32_FMI *ptrFMI, _STM32_IWDG *ptrIWDG, unsigned long ulOption)
 {
-    ptrFMI->_FLASH_OPTCR = ulOption;                                 // command the change
-    while ((ptrFMI->_FLASH_SR & FLASH_SR_BSY) != 0) {                // wait until the change has been committed
-      //TOGGLE_WATCHDOG_LED();                                       // indicate that it is waiting for the flash to be erased and the command to complete
-        ptrIWDG->_IWDG_KR = IWDG_KR_RETRIGGER;                       // ensure that the watchdog doesn't fire while waiting
+    ptrFMI->_FLASH_OPTCR = ulOption;                                     // command the change
+    while ((ptrFMI->_FLASH_SR & FLASH_SR_BSY) != 0) {                    // wait until the change has been committed
+      //TOGGLE_WATCHDOG_LED();                                           // indicate that it is waiting for the flash to be erased and the command to complete
+        ptrIWDG->_IWDG_KR = IWDG_KR_RETRIGGER;                           // ensure that the watchdog doesn't fire while waiting
     #if defined _WINDOWS
         ptrFMI->_FLASH_SR &= ~(FLASH_SR_BSY);
     #endif
@@ -85,7 +85,7 @@ static void fnExecuteCommand(_STM32_FMI *ptrFMI, _STM32_IWDG *ptrIWDG, unsigned 
 //
 extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, unsigned long ulMask) // {2}
 {
-    ulOption &= ~(ulMask);
+    ulOption &= ~(ulMask);                                               // mask out the flags that are not to be modified
     ulOption |= (FLASH_OPTCR & ulMask);
 #if !defined ALLOW_SECURING_DEBUG_ACCESS
     if ((ulOption & FLASH_OPTCR_RDP_MASK) == FLASH_OPTCR_RDP_LEVEL_2) {  // if the option would set read protection level 2 (cannot be lowered again and loses debug control forever)
@@ -94,10 +94,12 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     }
 #endif
     ulOption &= FLASH_OPTCR_SETTING_MASK;
+#if defined FLASH_OPTION_SETTING_1 && defined FLASH_OPTCR1
     ulOption1 &= FLASH_OPTCR1_SETTING_MASK;
+#endif
     if (
         ((FLASH_OPTCR & FLASH_OPTCR_SETTING_MASK) != ulOption)
-    #if defined FLASH_OPTCR
+    #if defined FLASH_OPTCR1
         || ((FLASH_OPTCR1 & FLASH_OPTCR1_SETTING_MASK) != ulOption1)
     #endif
         )

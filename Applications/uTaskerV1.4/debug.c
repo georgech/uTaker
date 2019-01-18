@@ -11,7 +11,7 @@
     File:      debug.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.02.2007 Corrected port support for M52233 DEMO board              {1}
     26.02.2007 Improve port control via serial/Telnet                    {2}
@@ -4057,7 +4057,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
         return;
 #if defined _STM32 && defined FLASH_OPTCR
     case DO_FLASH_OPTIONS:
-        fnSetFlashOption(fnHexStrHex(ptrInput), DEFAULT_FLASH_OPTION_SETTING_1);
+        fnSetFlashOption(fnHexStrHex(ptrInput), DEFAULT_FLASH_OPTION_SETTING_1, 0);
         break;
 #endif
 #if defined SUPPORT_PWM_MODULE && defined _KINETIS

@@ -1420,7 +1420,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 0:
                 case 1:
     #if defined ETH_INTERFACE
-                    if (!(AFIO_MAPR & MII_RMII_SEL)) {                   // MII
+                    if ((AFIO_MAPR & MII_RMII_SEL) == 0) {               // MII
                         ucPortFunctions[iPort][i] = 0;                   // this matches with the value in STM32_ports.c
                     }
                     else {                                               // RMII
@@ -1428,7 +1428,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
     #endif
                     break;
                 case 2:
-                    if ((!(AFIO_MAPR & USART2_REMAPPED)) && (USART2_CR1 & USART_CR1_RE)) {
+                    if (((AFIO_MAPR & USART2_REMAPPED) == 0) && ((USART2_CR1 & USART_CR1_RE) != 0)) {
                         ucPortFunctions[iPort][i] = 3;                   // USART2_TX
                     }
                     break;
@@ -1467,7 +1467,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                     break;
                 case 9:
     #if defined _CONNECTIVITY_LINE                                       // {4}
-                    if (OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) {            // if USB PHY is enabled
+                    if ((OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) != 0) {     // if USB PHY is enabled
                         if (OTG_FS_GCCFG & (OTG_FS_GCCFG_VBUSASEN | OTG_FS_GCCFG_VBUSBSEN)) { // bus monitoring enabled
                             ucPortFunctions[iPort][i] = 3;               // peripheral USB_VBUS
                             break;
@@ -1477,14 +1477,19 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 10:
                     ucPortFunctions[iPort][i] = 1;                       // UART1
                     break;
-    #if defined _CONNECTIVITY_LINE                                       // {4}
                 case 11:
                 case 12:
-                    if (OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) {            // if USB PHY is enabled
+    #if defined _CONNECTIVITY_LINE && defined USB_OTG_AVAILABLE          // {4}
+                    if ((OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) != 0) {     // if USB PHY is enabled
                         ucPortFunctions[iPort][i] = 3;                   // peripheral USB_VBUS
                     }
                     break;
+    #elif defined _PERFORMANCE_LINE && defined USB_DEVICE_AVAILABLE
+                    if ((USB_CNTR & USB_CNTR_PDWN) == 0) {               // if USB PHY is connected
+                        ucPortFunctions[iPort][i] = 2;                   // USBDP/USBDM
+                    }
     #endif
+                    break;
                 }
             }
             i++;
@@ -1493,7 +1498,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
         break;
     case _PORTB:
         while (i < PORT_WIDTH) {
-            if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function
+            if (ulBit & ulPeriph) {                                      // for each port bit that has a peripheral function enabled
                 switch (i) {
                 case 0:
                 case 1:
@@ -1535,8 +1540,8 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                     break;
                 case 10:
     #if defined _CONNECTIVITY_LINE
-                    if (ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) {     // EMAC is enabled so assume this use
-                        if (!(AFIO_MAPR & MII_RMII_SEL)) {               // {5} only in MII mode
+                    if ((ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) != 0) { // EMAC is enabled so assume this use
+                        if ((AFIO_MAPR & MII_RMII_SEL) == 0) {           // {5} only in MII mode
                             ucPortFunctions[iPort][i] = 0;               // ETH_MII_RX_ER
                         }
                         break;
@@ -1544,7 +1549,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
     #endif
     #if USARTS_AVAILABLE > 2
                     if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == 0) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
-                        ucPortFunctions[iPort][i] = 1;                   // USARTRX3
+                        ucPortFunctions[iPort][i] = 0;                   // USARTRX3
                     }
                     else {
                         ucPortFunctions[iPort][i] = 3;                   // I2C2_SCL
@@ -1557,7 +1562,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                     }
     #if USARTS_AVAILABLE > 2
                     else if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == 0) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
-                        ucPortFunctions[iPort][i] = 1;                   // USART3_RX
+                        ucPortFunctions[iPort][i] = 0;                   // USART3_RX
                     }
     #endif
                     else {
@@ -1594,7 +1599,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 10:
     #if USARTS_AVAILABLE > 2
                     if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && ((USART3_CR1 & USART_CR1_TE) != 0)) {
-                        ucPortFunctions[iPort][i] = 0;                   // USART3_TX
+                        ucPortFunctions[iPort][i] = 1;                   // USART3_TX
                     }
         #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & SPI3_REMAP) {                   // alternative mapping (SPI3 PA4:PC10:PC11:PC12)
@@ -1606,7 +1611,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 11:
     #if USARTS_AVAILABLE > 2
                     if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_PARTIALLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
-                        ucPortFunctions[iPort][i] = 0;                   // USART3_RX
+                        ucPortFunctions[iPort][i] = 1;                   // USART3_RX
                     }
         #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & SPI3_REMAP) {                   // alternative mapping (SPI3 PA4:PC10:PC11:PC12)
@@ -1635,11 +1640,11 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 8:
     #if USARTS_AVAILABLE > 2
                     if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && ((USART3_CR1 & USART_CR1_TE) != 0)) {
-                        ucPortFunctions[iPort][i] = 1;                   // USART3_TX
+                        ucPortFunctions[iPort][i] = 2;                   // USART3_TX
                     }
         #if defined _CONNECTIVITY_LINE
-                    else if (AFIO_MAPR & ETH_REMAP) {                    // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
-                        if (!(AFIO_MAPR & MII_RMII_SEL)) {               // MII
+                    else if ((AFIO_MAPR & ETH_REMAP) != 0) {             // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
+                        if ((AFIO_MAPR & MII_RMII_SEL) == 0) {           // MII
                             ucPortFunctions[iPort][i] = 0;               // this matches with the value in STM32_ports.c
                         }
                         else {                                           // RMII
@@ -1651,7 +1656,7 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
                 case 9:
     #if USARTS_AVAILABLE > 2
                     if (((AFIO_MAPR & USART3_FULLY_REMAPPED) == USART3_FULLY_REMAPPED) && ((USART3_CR1 & USART_CR1_RE) != 0)) {
-                        ucPortFunctions[iPort][i] = 1;                   // USART3_RX
+                        ucPortFunctions[iPort][i] = 2;                   // USART3_RX
                     }
         #if defined _CONNECTIVITY_LINE
                     else if (AFIO_MAPR & ETH_REMAP) {                    // alternative mapping (EMAC PD8:PD9:PD10:PD11:PD12)
@@ -1917,10 +1922,10 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                 }
                 break;
             case GET_PERIPHERALS:                
-                if ((ulReg & ALTERNATIVE_FUNCTION) && (ulReg & OUTPUT_FAST)) { // mode set to peripheral output function
+                if (((ulReg & ALTERNATIVE_FUNCTION) != 0) && ((ulReg & OUTPUT_FAST) != 0)) { // mode set to peripheral output function
                     usPeripherals |= usBit;                              // peripheral output
                 }
-                else if (!(ulReg & OUTPUT_FAST)) {                       // input but could be attached to peripheral
+                else if ((ulReg & OUTPUT_FAST) == 0) {                   // input but could be attached to peripheral
                     switch (i) {
                     case 0:
                     case 1:
@@ -1938,13 +1943,13 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
     #endif
                         break;
                     case 3:
-                        if ((!(AFIO_MAPR & USART2_REMAPPED)) && (USART2_CR1 & USART_CR1_RE)) {
+                        if (((AFIO_MAPR & USART2_REMAPPED) == 0) && ((USART2_CR1 & USART_CR1_RE) != 0)) {
                             usPeripherals |= usBit;                      // peripheral input
                         }
                         else {
     #if defined _CONNECTIVITY_LINE
-                            if (!(AFIO_MAPR & MII_RMII_SEL)) {           // MII
-                                if (ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) { // EMAC is enabled so assume peripheral input
+                            if ((AFIO_MAPR & MII_RMII_SEL) == 0) {       // MII
+                                if ((ETH_MACCR & (ETH_MACCR_RE | ETH_MACCR_TE)) != 0) { // EMAC is enabled so assume peripheral input
                                     usPeripherals |= usBit;              // peripheral input
                                 }
                             }
@@ -1968,14 +1973,21 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
                         break;
     #endif
                     case 10:
-                        if ((!(AFIO_MAPR & USART1_REMAPPED)) && (USART1_CR1 & USART_CR1_RE)) { // if USART1 rx is enabled
+                        if (((AFIO_MAPR & USART1_REMAPPED) == 0) && (USART1_CR1 & USART_CR1_RE)) { // if USART1 rx is enabled
                             usPeripherals |= usBit;                      // peripheral input
                         }
                         break;
-    #if defined _CONNECTIVITY_LINE                                       // {4}
+    #if defined _CONNECTIVITY_LINE && defined USB_OTG_AVAILABLE          // {4}
                     case 11:
                     case 12:
-                        if (OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) {        // if USB PHY is enabled
+                        if ((OTG_FS_GCCFG & OTG_FS_GCCFG_PWRDWN) != 0) { // if USB PHY is enabled
+                            usPeripherals |= usBit;                      // peripheral USB_DM/USB_DP
+                        }
+                        break;
+    #elif defined _PERFORMANCE_LINE && defined USB_DEVICE_AVAILABLE
+                    case 11:
+                    case 12:
+                        if ((USB_CNTR & USB_CNTR_PDWN) == 0) {           // if USB PHY is connected
                             usPeripherals |= usBit;                      // peripheral USB_DM/USB_DP
                         }
                         break;
@@ -2324,19 +2336,55 @@ extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW)
 #if defined USB_DEVICE_AVAILABLE
 // The SRAM is organised as long words but only half-words are actually used and the unused half-words are skipped
 //
-static void fnWriteUSB_data(unsigned long *ptrInputBuffer, unsigned char *ptrDebugIn, unsigned short usLenEvent)
+static void fnWriteUSB_data(unsigned long *ptrInputBuffer, unsigned char *ptrDebugIn, unsigned short usLength)
 {
     unsigned long ulNextEntry = 0;
-    while (usLenEvent != 0) {
+    while (usLength != 0) {
         ulNextEntry = *ptrDebugIn++;
-        if (usLenEvent >= 2) {
+        if (usLength >= 2) {
             ulNextEntry |= (*ptrDebugIn++ << 8);
-            usLenEvent -= 2;
+            usLength -= 2;
         }
         else {
-            usLenEvent--;
+            usLength--;
         }
         *ptrInputBuffer++ = ulNextEntry;
+    }
+}
+
+static void fnReadUSB_data(unsigned long *ptrUSB_in, unsigned char *ptrOutputBuffer, unsigned short usLength)
+{
+    unsigned long ulNextEntry = 0;
+    while (usLength != 0) {
+        ulNextEntry = *ptrUSB_in++;
+        *ptrOutputBuffer++ = (unsigned char)ulNextEntry;
+        if (usLength >= 2) {
+            *ptrOutputBuffer++ = (unsigned char)(ulNextEntry >> 8);
+            usLength -= 2;
+        }
+        else {
+            usLength--;
+        }
+    }
+}
+
+static void fnUSB_device_transfer_interrupt(int iEndpoint)
+{
+    USB_ISTR &= ~(USB_ISTR_EP_ID_MASK);
+    USB_ISTR |= (iEndpoint);
+    if (((USB_CNTR & USB_ISTR) & (USB_CNTR_CTRM)) != 0) {                // if correct transfer interrupt enabled and interrupt source pending
+        if (0 == 1) {                                                    // isochronous or double-buffered endpoint
+            if (fnGenInt(irq_USB_HP_CAN_TX_ID) != 0) {                   // if high priority USB interrupt is not disabled in core
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_USB_HP_CAN1_TX();      // call the high priority interrupt handler
+            }
+        }
+        else {
+            if (fnGenInt(irq_USB_LP_CAN_RX0_ID) != 0) {                  // if low priority USB interrupt is not disabled in core
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                ptrVect->processor_interrupts.irq_USB_LP_CAN1_RX0();     // call the low priority interrupt handler
+            }
+        }
     }
 }
 #endif
@@ -2358,10 +2406,10 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
         if ((usLenEvent & USB_SLEEP_CMD) != 0) {                         // usb suspend
             USB_ISTR |= USB_ISTR_SUSP;                                   // set suspend detected interrupt flag
         }
-        if (usLenEvent & USB_RESUME_CMD) {
+        if ((usLenEvent & USB_RESUME_CMD) != 0) {
             USB_ISTR |= USB_ISTR_WKUP;                                   // set resume detected interrupt flag
         }
-        if (usLenEvent & USB_IN_SUCCESS) {
+        if ((usLenEvent & USB_IN_SUCCESS) != 0) {
         }
         if (((USB_CNTR & USB_ISTR) & (USB_ISTR_RESET | USB_ISTR_SUSP | USB_ISTR_WKUP)) != 0) { // if low priority interrupt enabled and interrupt source pending
             if (fnGenInt(irq_USB_LP_CAN_RX0_ID) != 0) {                      // if low priority USB interrupt is not disabled in core
@@ -2378,7 +2426,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
         if ((USB_DADDR & USB_DADDR_EF) == 0) {                           // if the function is disabled
             return 1;
         }
-        if (((USB_DADDR & USB_DADDR_ADD_MASK) >> 4) != (unsigned long)iDevice) { // not our device address so ignore
+        if ((USB_DADDR & USB_DADDR_ADD_MASK) != (unsigned long)iDevice) { // not our device address so ignore
             if (iDevice != 0xff) {                                       // special broadcast for simulator use so that it doesn't have to know the USB address
                 return 1;
             }
@@ -2411,6 +2459,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                         *ptrEndpointControl |= (USB_EPR_CTR_CTR_RX | USB_EPR_CTR_SETUP | USB_EPR_CTR_DTOG_TX);
                     }
                     else {
+                        *ptrEndpointControl &= ~(USB_EPR_CTR_SETUP);
                         *ptrEndpointControl |= (USB_EPR_CTR_CTR_RX);
                     }
                     USB_ISTR |= (USB_CNTR_CTRM | USB_ISTR_DIR);
@@ -2421,24 +2470,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
             _EXCEPTION("Unknown PID!");
             return 0;
         }
-        USB_ISTR &= ~(USB_ISTR_EP_ID_MASK);
-        USB_ISTR |= (iEndPoint);
-        if (((USB_CNTR & USB_ISTR) & (USB_CNTR_CTRM)) != 0) {           // if correct transfer interrupt enabled and interrupt source pending
-            if (0 == 1) {                                               // osochronous or double-buffered endpoint
-                if (fnGenInt(irq_USB_HP_CAN_TX_ID) != 0) {              // if high priority USB interrupt is not disabled in core
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    ptrVect->processor_interrupts.irq_USB_HP_CAN1_TX(); // call the high priority interrupt handler
-                }
-            }
-            else {
-                if (fnGenInt(irq_USB_LP_CAN_RX0_ID) != 0) {             // if low priority USB interrupt is not disabled in core
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    ptrVect->processor_interrupts.irq_USB_LP_CAN1_RX0();// call the low priority interrupt handler
-                    if (iReset != 0) {
-                    }
-                }
-            }
-        }
+        fnUSB_device_transfer_interrupt(iEndPoint);
     }
 #elif defined USB_OTG_AVAILABLE
     if (ptrDebugIn == 0) {
@@ -2547,32 +2579,56 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
 extern void fnCheckUSBOut(int iDevice, int iEndpoint)
 {
 #if defined USB_DEVICE_AVAILABLE
+    volatile unsigned long *ptrEndpointControl = USB_EP0R_ADD;
+    unsigned long *ptrUSB_data;
+    USB_BD_TABLE *ptrBD = (USB_BD_TABLE *)(USB_CAN_SRAM_ADDR + USB_BTABLE); // the start of the buffer descripter table
+    unsigned char ucTxBufferData[1024];
+    ptrEndpointControl += iEndpoint;
+    ptrBD += iEndpoint;
+    FOREVER_LOOP() {                                                     // allow handling multiple transmissions
+        switch (*ptrEndpointControl & USB_EPR_CTR_STAT_TX_MASK) {
+        case USB_EPR_CTR_STAT_TX_VALID:                                  // transmission is set up
+            ptrUSB_data = (unsigned long *)(USB_CAN_SRAM_ADDR + USB_BTABLE);
+            ptrUSB_data += (ptrBD->usUSB_ADDR_TX / 2);
+            fnReadUSB_data(ptrUSB_data, ucTxBufferData, ptrBD->usUSB_COUNT_TX_0);
+            fnLogUSB(iEndpoint, 0, ptrBD->usUSB_COUNT_TX_0, ucTxBufferData, 1 /* data toggle needs to be monitored */);
+            *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_TX_MASK);          // disable transmitter state
+            *ptrEndpointControl |= (USB_EPR_CTR_CTR_TX | USB_EPR_CTR_STAT_TX_NAK);
+            USB_ISTR &= ~(USB_ISTR_DIR);
+            USB_ISTR |= (USB_CNTR_CTRM);
+            fnUSB_device_transfer_interrupt(iEndpoint);
+            break;
+        case USB_EPR_CTR_STAT_TX_STALL:
+        default:
+            return;
+        }
+    }
 #elif defined USB_OTG_AVAILABLE
     unsigned short usUSBLength;
     switch (iEndpoint) {
     case 0:
-        if (OTG_FS_DIEPCTL0 & OTG_FS_DIEPCTL_EPENA) {
+        if ((OTG_FS_DIEPCTL0 & OTG_FS_DIEPCTL_EPENA) != 0) {
             usUSBLength = (unsigned short)(OTG_FS_DIEPTSIZ0 & OTG_FS_DIEPTSIZ_XFRSIZ_MASK); // length of data in FIFO
             fnLogUSB(iEndpoint, 0, usUSBLength, (unsigned char *)OTG_FS_DFIFO0_ADDR, 1 /* data toggle needs to be monitored */);
             OTG_FS_DIEPCTL0 &= ~(OTG_FS_DIEPCTL_EPENA);                  // disable the endpoint after transmission
         }
         break;
     case 1:
-        if (OTG_FS_DIEPCTL1 & OTG_FS_DIEPCTL_EPENA) {
+        if ((OTG_FS_DIEPCTL1 & OTG_FS_DIEPCTL_EPENA) != 0) {
             usUSBLength = (unsigned short)(OTG_FS_DIEPTSIZ1 & OTG_FS_DIEPTSIZ_XFRSIZ_MASK); // length of data in FIFO
             fnLogUSB(iEndpoint, 0, usUSBLength, (unsigned char *)OTG_FS_DFIFO1_ADDR, 1 /* data toggle needs to be monitored */);
             OTG_FS_DIEPCTL1 &= ~(OTG_FS_DIEPCTL_EPENA);                  // disable the endpoint after transmission
         }
         break;
     case 2:
-        if (OTG_FS_DIEPCTL2 & OTG_FS_DIEPCTL_EPENA) {
+        if ((OTG_FS_DIEPCTL2 & OTG_FS_DIEPCTL_EPENA) != 0) {
             usUSBLength = (unsigned short)(OTG_FS_DIEPTSIZ2 & OTG_FS_DIEPTSIZ_XFRSIZ_MASK); // length of data in FIFO
             fnLogUSB(iEndpoint, 0, usUSBLength, (unsigned char *)OTG_FS_DFIFO2_ADDR, 1 /* data toggle needs to be monitored */);
             OTG_FS_DIEPCTL2 &= ~(OTG_FS_DIEPCTL_EPENA);                  // disable the endpoint after transmission
         }
         break;
     case 3:
-        if (OTG_FS_DIEPCTL3 & OTG_FS_DIEPCTL_EPENA) {
+        if ((OTG_FS_DIEPCTL3 & OTG_FS_DIEPCTL_EPENA) != 0) {
             usUSBLength = (unsigned short)(OTG_FS_DIEPTSIZ3 & OTG_FS_DIEPTSIZ_XFRSIZ_MASK); // length of data in FIFO
             fnLogUSB(iEndpoint, 0, usUSBLength, (unsigned char *)OTG_FS_DFIFO3_ADDR, 1 /* data toggle needs to be monitored */);
             OTG_FS_DIEPCTL3 &= ~(OTG_FS_DIEPCTL_EPENA);                  // disable the endpoint after transmission

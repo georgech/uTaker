@@ -11,7 +11,7 @@
     File:      application_lcd.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     06.08.2009 Add OLED graphical demo                                    {1}
     11.08.2009 Add line and rectangle drawing tests                       {2}
@@ -198,7 +198,7 @@ extern void fnDoLCD_com_text(unsigned char ucType, unsigned char *ptrInput, unsi
     ucMessage[MSG_SOURCE_NODE]      = INTERNAL_ROUTE;                    // own node
     ucMessage[MSG_DESTINATION_TASK] = TASK_LCD;                          // destination task
     ucMessage[MSG_SOURCE_TASK]      = OWN_TASK;                          // own task
-    ucMessage[MSG_CONTENT_LENGTH]   = ucLength+1;                        // message length
+    ucMessage[MSG_CONTENT_LENGTH]   = (ucLength + 1);                    // message length
     ucMessage[MSG_CONTENT_COMMAND]  = ucType;                            // command(s) or text for LCD
 
     if (fnWrite(INTERNAL_ROUTE, ucMessage, 0) != 0) {                    // send message header

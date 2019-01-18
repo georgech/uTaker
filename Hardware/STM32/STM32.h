@@ -206,7 +206,6 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define USB_DEVICE_AVAILABLE
     #define USB_CAN_SRAM_SIZE       256                                  // 1024 bytes (structed as 256 short words in long words)
     #define USB_DEVICE_T_STARTUP    10                                   // 1us (10 used for safety)
-    #define USB_NON_LINEAR_BUFFER                                        // USB data is stored in a buffer that is not linear and thus requires software support to extract data
 #else
     #define USB_OTG_AVAILABLE
 #endif
@@ -249,11 +248,22 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define USARTS_AVAILABLE   1
     #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  0
+#elif defined _STM32F103X
+    #define USARTS_AVAILABLE   3
+    #define UARTS_AVAILABLE    0
+    #define LPUARTS_AVAILABLE  0
 #else                                                                    // _STM32F4XX
     #define USARTS_AVAILABLE   4                                         // numbering is USART1, USART2, USART3, USART6
     #define UARTS_AVAILABLE    2                                         // numbering is UART4, UART5
     #define LPUARTS_AVAILABLE  0
 #endif
+
+#define STM32_UART_1          0
+#define STM32_UART_2          1
+#define STM32_UART_3          2
+#define STM32_UART_4          3
+#define STM32_UART_5          4
+#define STM32_UART_6          5
 
 // ADC configuration
 //
@@ -4348,6 +4358,8 @@ typedef struct stSTM32_ADC_REGS
             #define FLASH_OPTCR1_nWRP11  0x08000000                      // sector 23 not write protected
             #define DEFAULT_FLASH_OPTION_SETTING_1     (FLASH_OPTCR1_nWRP0 | FLASH_OPTCR1_nWRP1 | FLASH_OPTCR1_nWRP2 | FLASH_OPTCR1_nWRP3 | FLASH_OPTCR1_nWRP4 | FLASH_OPTCR1_nWRP5 | FLASH_OPTCR1_nWRP6 | FLASH_OPTCR1_nWRP7 | FLASH_OPTCR1_nWRP8 | FLASH_OPTCR1_nWRP9 | FLASH_OPTCR1_nWRP10 | FLASH_OPTCR1_nWRP11)
             #define FLASH_OPTCR1_SETTING_MASK          (DEFAULT_FLASH_OPTION_SETTING_1)
+    #else
+            #define DEFAULT_FLASH_OPTION_SETTING_1      0
     #endif
 #endif
 

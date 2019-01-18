@@ -11,7 +11,7 @@
     File:      STM32_ports.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.09.2012 Add additional functions                                  {1}
     18.10.2012 Increase buffer protection size (for VS2008+)             {2}
@@ -49,7 +49,9 @@
     #include "STM32F41X_port.h"
 #elif defined _STM32F107X || defined _STM32F105X
     #include "STM32F105X_107X_port.h"
-#elif defined _STM32F100X || defined _STM32F103X
+#elif defined _STM32F103X
+    #include "STM32F103X_port.h"
+#elif defined _STM32F100X 
     #include "STM32F100X_port.h"
 #endif
 
@@ -132,7 +134,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
     }
     STRCAT(cPortDetails, "} ");
 
-    if (ulPortPeripheral[iPort] & (0x01 << iBit)) {
+    if ((ulPortPeripheral[iPort] & (0x01 << iBit)) != 0) {               // if peripheral function selected
         unsigned char *ptrList = _ptrPerFunctions;
         int _iPort = iPort;
         int _iBit = iBit;
@@ -156,7 +158,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         STRCAT(cPortDetails, cBuf);
     }
     else {
-        if (ulPortFunction[iPort] & (0x01 << iBit)) {
+        if ((ulPortFunction[iPort] & (0x01 << iBit)) != 0) {
             STRCAT(cPortDetails, " Output");
         }
         else {

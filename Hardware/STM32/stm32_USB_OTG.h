@@ -566,27 +566,27 @@ fnAddUSB_event(0x55550002, ulInterrupts);
             }
         }
         else {
-            if (ulInterrupts & OTG_FS_GINTSTS_RXFLVL) {                  // there is a reception in the RxFIFO
+            if ((ulInterrupts & OTG_FS_GINTSTS_RXFLVL) != 0) {           // there is a reception in the RxFIFO
 fnAddUSB_event(0x55550003, ulInterrupts);
                 fnGetRx(&usb_hardware);                                  // check the RxFIFO event and read the content to local linear buffer if there is setup or endpoint out data
             }
-            else if (ulInterrupts & OTG_FS_GINTSTS_IEPINT) {             // IN interrupt
+            else if ((ulInterrupts & OTG_FS_GINTSTS_IEPINT) != 0) {      // IN interrupt
                 unsigned long ulEp_int = (OTG_FS_DAINT & OTG_FS_DAINTMSK); // unmasked interrupt
 fnAddUSB_event(0x55550004, ulInterrupts);
                 _CLEAR_USB_INT(OTG_FS_GINTSTS_IEPINT);                   // clear the interrupt
-                if (ulEp_int & OTG_FS_DAINT_IEPINT0) {                   // if IN interrupt on endpoint 0
-                    if (OTG_FS_DIEPINT0 & OTG_FS_DIEPINT_XFRC) {         // transfer complete interrupt
+                if ((ulEp_int & OTG_FS_DAINT_IEPINT0) != 0) {            // if IN interrupt on endpoint 0
+                    if ((OTG_FS_DIEPINT0 & OTG_FS_DIEPINT_XFRC) != 0) {  // transfer complete interrupt
                         fnUSB_handle_frame(USB_TX_ACKED, 0, 0, &usb_hardware); // handle ack event
-                    //    OTG_FS_DOEPTSIZ0 = (OTG_FS_DOEPTSIZ_STUPCNT_3 | OTG_FS_DOEPTSIZ_PKTCNT | (3 * 8));
+                    //   OTG_FS_DOEPTSIZ0 = (OTG_FS_DOEPTSIZ_STUPCNT_3 | OTG_FS_DOEPTSIZ_PKTCNT | (3 * 8));
                     //  OTG_FS_DOEPCTL0 = (OTG_FS_DOEPCTL_EPENA | OTG_FS_DOEPCTL_CNAK); // allow ACK of zero data frame
                         _CLEAR_EP_INT(I, 0, OTG_FS_DIEPINT_XFRC);        // clear interrupt
                     }
                 }
-                else if (ulEp_int & OTG_FS_DAINT_IEPINT1) {              // if IN interrupt on endpoint 1
-                    if (OTG_FS_DIEPINT1 & OTG_FS_DIEPINT_ITTXFE) {       // IN token received when Tx FIFO empty
+                else if ((ulEp_int & OTG_FS_DAINT_IEPINT1) != 0) {       // if IN interrupt on endpoint 1
+                    if ((OTG_FS_DIEPINT1 & OTG_FS_DIEPINT_ITTXFE) != 0) {// IN token received when Tx FIFO empty
                         _CLEAR_EP_INT(I, 1, OTG_FS_DIEPINT_ITTXFE);
                     }
-                    if (OTG_FS_DIEPINT1 & OTG_FS_DIEPINT_XFRC) {         // transfer complete
+                    if ((OTG_FS_DIEPINT1 & OTG_FS_DIEPINT_XFRC) != 0) {  // transfer complete
                         fnUSB_handle_frame(USB_TX_ACKED, 0, 1, &usb_hardware); // handle ack event
                         _CLEAR_EP_INT(I, 1, OTG_FS_DIEPINT_XFRC);
                     }

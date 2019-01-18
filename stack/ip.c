@@ -11,7 +11,7 @@
     File:      ip.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     08.04.2007 Add SUPPORT_SUBNET_BROADCAST - new function fnSubnetBroadcast() {1}
     25.08.2007 Use static RAM for code from RAM since uMalloc may not always be ready {2}
@@ -559,7 +559,7 @@ extern int fnHandleIPv4(ETHERNET_FRAME *frame)                           // {9}
         && (uMemcmp(received_ip_packet->destination_IP_address, cucBroadcast, IPV4_LENGTH) != 0) // check for non-broadcast
         #endif
     #endif
-    #if defined USE_IGMP                                                 // {19}{20}
+    #if defined USE_IGMP || defined SUPPORT_MULTICAST_RX                 // {19}
         && ((received_ip_packet->destination_IP_address[0] < 224) || (received_ip_packet->destination_IP_address[0] > 239)) // not multicast address range
     #endif
         ) {
@@ -848,7 +848,7 @@ extern signed short fnSendIPv4(unsigned char *prIP_to, unsigned char ucProtType,
         #endif
     #endif
     uMemcpy(&ucData[0], ptrARP->ucMac, MAC_LENGTH);                      // add datalink (Ethernet addresses) information
-    uMemcpy(&ucData[MAC_LENGTH], &network[_NETWORK_ID].ucOurMAC[0], MAC_LENGTH);
+    uMemcpy(&ucData[MAC_LENGTH], &network[_NETWORK_ID].ucOurMAC[0], MAC_LENGTH); // our unicast MAC address
     uMemcpy(&ucData[2 * MAC_LENGTH], ucIP_ProtV4, sizeof(ucIP_ProtV4));
     #if defined IPV4_SUPPORT_TX_FRAGMENTATION                            // {24}
     do {                                                                 // send as many fragments as required

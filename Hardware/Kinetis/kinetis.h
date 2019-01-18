@@ -9454,8 +9454,13 @@ typedef struct stFLEX_TIMER_MODULE
     #endif
       #define ADC_SC2_REFSEL_REF 0x00000000                                  // voltage reference selection - reference pair (VREFH and VREFL)
       #define ADC_SC2_REFSEL_ALT 0x00000001                                  // voltage reference selection - alternative reference pair (VALTH and VALTL)
+    #if defined KINETIS_KE04
+      #define ADC_SC2_FFUL       0x00000004                                  // FIFO full
+      #define ADC_SC2_FEMPTY     0x00000008                                  // FIFO empty
+    #else
       #define ADC_SC2_DMAEN      0x00000004                                  // DMA enabled
       #define ADC_SC2_ACREN      0x00000008                                  // compare function range enable
+    #endif
       #define ADC_SC2_ACFGT      0x00000010                                  // compare function greater than enable
       #define ADC_SC2_ACFE       0x00000020                                  // compare function enable
       #define ADC_SC2_ADTRG_SW   0x00000000                                  // conversion trigger select - software

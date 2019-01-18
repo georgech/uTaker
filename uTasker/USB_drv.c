@@ -84,10 +84,6 @@ static void fnError(int iErrorNumber)
 #if defined USB_FIFO && !defined _WINDOWS                                // {1}
     #define GET_USB_DATA()         (unsigned char)(*(volatile unsigned char *)ptrData) // get from a fifo
     #define GET_USB_DATA_NO_INC()  (unsigned char)(*(volatile unsigned char *)ptrData)
-#elif defined USB_NON_LINEAR_BUFFER
-    extern unsigned char fnGetUSB_data(unsigned char **ptrData, int iInc);
-    #define GET_USB_DATA()         fnGetUSB_data(&ptrData, 1)            // get from a non-linear buffer and increment the pointer
-    #define GET_USB_DATA_NO_INC()  fnGetUSB_data(&ptrData, 0)            // get from a non-linear buffer without incrementing the pointer
 #else
     #define GET_USB_DATA()         *ptrData++                            // get from a linear buffer
     #define GET_USB_DATA_NO_INC()  *ptrData
@@ -1189,8 +1185,7 @@ extern int fnUSB_handle_frame(unsigned char ucType, unsigned char *ptrData, int 
 #endif
 #if defined USB_DEVICE_SUPPORT                                           // {29}
                     if ((tx_queue->usCompleteMessage % tx_queue->usMax_frame_length) == 0) { // if the transmitted data length was divisible by the frame length
-                        if ((tx_queue->usLimitLength != tx_queue->usCompleteMessage) || (fnControlEndpoint(iEndpoint, (USB_ENDPOINT_TERMINATES)) != 0)) // {26}
-                        {
+                        if ((tx_queue->usLimitLength != tx_queue->usCompleteMessage) || (fnControlEndpoint(iEndpoint, (USB_ENDPOINT_TERMINATES)) != 0)) { // {26}
                             FNSEND_ZERO_DATA(ptrUSB_HW, iEndpoint);      // send a zero frame to terminate status stage
                         }
                     }

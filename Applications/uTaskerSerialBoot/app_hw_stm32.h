@@ -409,7 +409,7 @@
   //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
 
     #if defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL
-        #define LOADER_UART    2                                         // use UART channel 2 (USART 3 since ST USARTs count from 1)
+        #define LOADER_UART    (STM32_UART_3)                            // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined STM3240G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK
         #define LOADER_UART    2                                         // use UART channel 2 (USART 3 since ST USARTs count from 1) - the board can't use USART 4 and SD card at the same time so needs a modification for this
       //#define LOADER_UART    3                                         // use UART channel 3 (USART 4 since ST USARTs count from 1)
@@ -426,7 +426,7 @@
     #define USART2_REMAP                                                 // use USART2 on remapped pins (note that this is channel 1)
     #if defined STM32_P207 || defined STM32F407ZG_SK
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
-    #elif !defined STM3240G_EVAL
+    #elif !defined STM3240G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)
     #endif
   //#define USART3_FULL_REMAP                                            // use USART3 on second set of remapped pins (note that this is channel 2)

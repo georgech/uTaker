@@ -11,7 +11,7 @@
     File:      STM32F100X_port.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2014
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************/
 
 #if PIN_COUNT == PIN_COUNT_100_PIN
@@ -29,105 +29,6 @@
 #endif
 
 #define ALTERNATIVE_FUNCTIONS   6                                        // GPIO plus 6 possible peripheral functions
-
-
-static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][1 + ALTERNATIVE_FUNCTIONS] = {
-    {
-        //                                                               GPIO A
-        {  "PA0", "-",              "-",           "-",          "USART2_CTS", "TIM2_CH1_ETR","ADC1_IN0" }, // PA0
-        {  "PA1", "-",              "-",           "TIM2_CH2",   "USART2_RTS", "-",        "ADC1_IN1"  }, // PA1
-        {  "PA2", "-",              "-",           "TIM2_CH3",   "USART2_TX",  "TIM15_CH1","ADC1_IN2"  }, // PA2
-        {  "PA3", "-",              "-",           "TIM2_CH4",   "USART2_RX",  "TIM15_CH2","ADC1_IN3"  }, // PA3
-        {  "PA4", "SPI1_NSS",       "-",           "-",          "USART2_CK",  "DAC1_OUT", "ADC1_IN4"  }, // PA4
-        {  "PA5", "SPI1_SCK",       "-",           "-",          "-",          "DAC2_OUT", "ADC1_IN5"  }, // PA5
-        {  "PA6", "SPI1_MISO",      "TIM3_CH1",    "TIM1_BKIN",  "-",          "TIM16_CH1","ADC1_IN6"  }, // PA6
-        {  "PA7", "SPI1_MOSI",      "TIM3_CH2",    "TIM1_CH1N",  "-",          "TIM17_CH1","ADC1_IN7"  }, // PA7
-        {  "PA8", "MCO",            "TIM1_CH1",    "-",          "USART1_CK",  "-",        "-"         }, // PA8
-        {  "PA9", "TIM1_CH2",       "USART1_TX",   "-",          "-",          "TIM15_BKIN","-"        }, // PA9
-        {  "PA10","TIM1_CH3",       "USART1_RX",   "-",          "-",          "TIM17_BKIN","-"        }, // PA10
-        {  "PA11","TIM1_CH4",       "USART1_CTS",  "-",          "-",          "-",        "-"         }, // PA11
-        {  "PA12","TIM1_ETR",       "USART1_RTS",  "-",          "-",          "-",        "-"         }, // PA12
-        {  "PA13","-",              "-",           "-",          "JTMS-SWDIO", "-",        "-"         }, // PA13
-        {  "PA14","-",              "-",           "-",          "JTCK-SWCLK", "-",        "-"         }, // PA14
-        {  "PA15","-",              "-",           "TIM2_CH1_ETR","JTDI",      "-",        "-"         }  // PA15
-    },
-    {
-        //                                                               GPIO B
-        {  "PB0", "-",              "TIM3_CH3",    "TIM1_CH2N",  "-",          "-",        "ADC1_IN8"  }, // PB0
-        {  "PB1", "-",              "TIM3_CH4",    "-",          "-",          "TIM1_CH3N","ADC1_IN9"  }, // PB1
-        {  "PB2", "-",              "-",           "-",          "BOOT1",      "-",        "-"         }, // PB2
-        {  "PB3", "-",              "-",           "-",          "JTDO",       "TRACESWO", "SPI1_SCK"  }, // PB3
-        {  "PB4", "TIM3_CH1",       "SPI1_MISO",   "-",          "NJTRST",     "-",        "-"         }, // PB4
-        {  "PB5", "-",              "TIM3_CH2",    "SPI1_MOSI",  "TIM16_BKIN", "I2C1_SMBA","-"         }, // PB5
-        {  "PB6", "I2C1_SCL",       "USART1_TX",   "TIM4_CH1",   "TIM16_CH1N", "-",        "-"         }, // PB6
-        {  "PB7", "I2C1_SDA",       "USART1_RX",   "TIM4_CH2",   "TIM17_CH1N", "-",        "-"         }, // PB7
-        {  "PB8", "-",              "-",           "TIM4_CH3",   "I2C1_SCL",   "TIM16_CH1","CEC"       }, // PB8
-        {  "PB9", "-",              "-",           "TIM4_CH4",   "I2C1_SDA",   "TIM17_CH1","-"         }, // PB9
-        {  "PB10","-",              "USART3_TX",   "TIM2_CH3",   "I2C2_SCL",   "-",        "CEC"       }, // PB10
-        {  "PB11","-",              "USART3_RX",   "TIM2_CH4",   "I2C2_SDA",   "-",        "-"         }, // PB11
-        {  "PB12","-",              "USART3_CK",   "TIM1_BKIN",  "SPI2_NSS",   "I2C2_SMBA", "-"        }, // PB12
-        {  "PB13","-",              "USART3_CTS",  "TIM1_CH1N",  "SPI2_SCK",   "-",        "-"         }, // PB13
-        {  "PB14","SPI2_MISO",      "USART3_RTS",  "TIM1_CH2N",  "-",          "-",        "-"         }, // PB14
-        {  "PB15","-",              "-",           "TIM1_CH3N",  "SPI2_MOSI",  "TIM15_CH1N","TIM15_CH2"}  // PB15
-    },
-    {
-        //                                                               GPIO C
-        {  "PC0", "-",              "-",           "-",          "-",          "-",        "ADC1_IN10" }, // PC0
-        {  "PC1", "-",              "-",           "-",          "-",          "-",        "ADC1_IN11" }, // PC1
-        {  "PC2", "-",              "-",           "-",          "-",          "-",        "ADC1_IN12" }, // PC2
-        {  "PC3", "-",              "-",           "-",          "-",          "-",        "ADC1_IN13" }, // PC3
-        {  "PC4", "-",              "-",           "-",          "-",          "-",        "ADC1_IN14" }, // PC4
-        {  "PC5", "-",              "-",           "-",          "-",          "-",        "ADC1_IN15" }, // PC5
-        {  "PC6", "TIM3_CH1",       "-",           "-",          "-",          "-",        "-"         }, // PC6
-        {  "PC7", "TIM3_CH2",       "-",           "-",          "-",          "-",        "-"         }, // PC7
-        {  "PC8", "TIM3_CH3",       "-",           "-",          "-",          "-",        "-"         }, // PC8
-        {  "PC9", "TIM3_CH4",       "-",           "-",          "-",          "-",        "-"         }, // PC9
-        {  "PC10","USART3_TX",      "-",           "-",          "-",          "-",        "-"         }, // PC10
-        {  "PC11","USART3_RX",      "-",           "-",          "-",          "-",        "-"         }, // PC11
-        {  "PC12","USART3_CK",      "-",           "-",          "-",          "-",        "-"         }, // PC12
-        {  "PC13","-",              "TAMPER-RTC",  "-",          "-",          "-",        "-"         }, // PC13
-        {  "PC14","-",              "OSC32_IN",    "-",          "-",          "-",        "-"         }, // PC14
-        {  "PC15","-",              "OSC32_OUT",   "-",          "-",          "-",        "-"         }  // PC15
-    },
-    {
-        //                                                               GPIO D
-        {  "PD0", "-",              "-",           "OSC_IN",     "CAN1_RX",    "-",        "-"         }, // PD0
-        {  "PD1", "-",              "-",           "OSC_OUT",    "CAN1_TX",    "-",        "-"         }, // PD1
-        {  "PD2", "UART5_RX",       "TIM3_ETR",    "-",          "-",          "-",        "-"         }, // PD2
-        {  "PD3", "-",              "USART2_CTS",  "-",          "-",          "-",        "-"         }, // PD3
-        {  "PD4", "-",              "USART2_RTS",  "-",          "-",          "-",        "-"         }, // PD4
-        {  "PD5", "-",              "USART2_TX",   "-",          "-",          "-",        "-"         }, // PD5
-        {  "PD6", "-",              "USART2_RX",   "-",          "-",          "-",        "-"         }, // PD6
-        {  "PD7", "-",              "USART2_CK",   "-",          "-",          "-",        "-"         }, // PD7
-        {  "PD8", "ETH_MII_RX_DV",  "USART3_TX",   "-",          "-",          "-",        "-"         }, // PD8
-        {  "PD9", "ETH_MII_RXD0",   "USART3_RX",   "-",          "-",          "-",        "-"         }, // PD9
-        {  "PD10","ETH_MII_RXD1",   "USART3_CK",   "-",          "-",          "-",        "-"         }, // PD10
-        {  "PD11","ETH_MII_RXD2",   "USART3_CTS",  "-",          "-",          "-",        "-"         }, // PD11
-        {  "PD12","ETH_MII_RXD3",   "USART3_RTS",  "TIM4_CH1",   "-",          "-",        "-"         }, // PD12
-        {  "PD13","-",              "-",           "TIM4_CH2",   "-",          "-",        "-"         }, // PD13
-        {  "PD14","-",              "-",           "TIM4_CH3",   "-",          "-",        "-"         }, // PD14
-        {  "PD15","-",              "-",           "TIM4_CH4",   "-",          "-",        "-"         }  // PD15
-    },
-    {
-        // GPIO E
-        {  "PE0", "TIM4_ETR",       "-",           "-",          "-",          "-",        "-"         }, // PE0
-        {  "PE1", "-",              "-",           "-",          "-",          "-",        "-"         }, // PE1
-        {  "PE2", "-",              "-",           "-",          "-",          "TRACECK",  "-"         }, // PE2
-        {  "PE3", "-",              "-",           "-",          "-",          "TRACED0",  "-"         }, // PE3
-        {  "PE4", "-",              "-",           "-",          "-",          "TRACED1",  "-"         }, // PE4
-        {  "PE5", "-",              "-",           "-",          "-",          "TRACED2",  "-"         }, // PE5
-        {  "PE6", "-",              "-",           "-",          "-",          "TRACED3",  "-"         }, // PE6
-        {  "PE7", "TIM1_ETR",       "-",           "-",          "-",          "-",        "-"         }, // PE7
-        {  "PE8", "TIM1_CH1N",      "-",           "-",          "-",          "-",        "-"         }, // PE8
-        {  "PE9", "TIM1_CH1",       "-",           "-",          "-",          "-",        "-"         }, // PE9
-        {  "PE10","TIM1_CH2N",      "-",           "-",          "-",          "-",        "-"         }, // PE10
-        {  "PE11","TIM1_CH2",       "-",           "-",          "-",          "-",        "-"         }, // PE11
-        {  "PE12","TIM1_CH3N",      "-",           "-",          "-",          "-",        "-"         }, // PE12
-        {  "PE13","TIM1_CH3",       "-",           "-",          "-",          "-",        "-"         }, // PE13
-        {  "PE14","TIM1_CH4",       "-",           "-",          "-",          "-",        "-"         }, // PE14
-        {  "PE15","TIM1_BKIN",      "-",           "-",          "-",          "-",        "-"         }  // PE15
-    }
-};
 
 
 static const char *cPinNumber[PORTS_AVAILABLE][PORT_WIDTH][4] = {
@@ -230,4 +131,102 @@ static const char *cPinNumber[PORTS_AVAILABLE][PORT_WIDTH][4] = {
         {  "45",    "-",    "-",   "-"   },                              // PE14
         {  "46",    "-",    "-",   "-"   },                              // PE15
     },
+};
+
+static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][1 + ALTERNATIVE_FUNCTIONS] = {
+    {
+        //                                                               GPIO A
+        {  "PA0", "-",              "-",           "-",          "USART2_CTS", "TIM2_CH1_ETR","ADC1_IN0" }, // PA0
+        {  "PA1", "-",              "-",           "TIM2_CH2",   "USART2_RTS", "-",        "ADC1_IN1"  }, // PA1
+        {  "PA2", "-",              "-",           "TIM2_CH3",   "USART2_TX",  "TIM15_CH1","ADC1_IN2"  }, // PA2
+        {  "PA3", "-",              "-",           "TIM2_CH4",   "USART2_RX",  "TIM15_CH2","ADC1_IN3"  }, // PA3
+        {  "PA4", "SPI1_NSS",       "-",           "-",          "USART2_CK",  "DAC1_OUT", "ADC1_IN4"  }, // PA4
+        {  "PA5", "SPI1_SCK",       "-",           "-",          "-",          "DAC2_OUT", "ADC1_IN5"  }, // PA5
+        {  "PA6", "SPI1_MISO",      "TIM3_CH1",    "TIM1_BKIN",  "-",          "TIM16_CH1","ADC1_IN6"  }, // PA6
+        {  "PA7", "SPI1_MOSI",      "TIM3_CH2",    "TIM1_CH1N",  "-",          "TIM17_CH1","ADC1_IN7"  }, // PA7
+        {  "PA8", "MCO",            "TIM1_CH1",    "-",          "USART1_CK",  "-",        "-"         }, // PA8
+        {  "PA9", "TIM1_CH2",       "USART1_TX",   "-",          "-",          "TIM15_BKIN","-"        }, // PA9
+        {  "PA10","TIM1_CH3",       "USART1_RX",   "-",          "-",          "TIM17_BKIN","-"        }, // PA10
+        {  "PA11","TIM1_CH4",       "USART1_CTS",  "-",          "-",          "-",        "-"         }, // PA11
+        {  "PA12","TIM1_ETR",       "USART1_RTS",  "-",          "-",          "-",        "-"         }, // PA12
+        {  "PA13","-",              "-",           "-",          "JTMS-SWDIO", "-",        "-"         }, // PA13
+        {  "PA14","-",              "-",           "-",          "JTCK-SWCLK", "-",        "-"         }, // PA14
+        {  "PA15","-",              "-",           "TIM2_CH1_ETR","JTDI",      "-",        "-"         }  // PA15
+    },
+    {
+        //                                                               GPIO B
+        {  "PB0", "-",              "TIM3_CH3",    "TIM1_CH2N",  "-",          "-",        "ADC1_IN8"  }, // PB0
+        {  "PB1", "-",              "TIM3_CH4",    "-",          "-",          "TIM1_CH3N","ADC1_IN9"  }, // PB1
+        {  "PB2", "-",              "-",           "-",          "BOOT1",      "-",        "-"         }, // PB2
+        {  "PB3", "-",              "-",           "-",          "JTDO",       "TRACESWO", "SPI1_SCK"  }, // PB3
+        {  "PB4", "TIM3_CH1",       "SPI1_MISO",   "-",          "NJTRST",     "-",        "-"         }, // PB4
+        {  "PB5", "-",              "TIM3_CH2",    "SPI1_MOSI",  "TIM16_BKIN", "I2C1_SMBA","-"         }, // PB5
+        {  "PB6", "I2C1_SCL",       "USART1_TX",   "TIM4_CH1",   "TIM16_CH1N", "-",        "-"         }, // PB6
+        {  "PB7", "I2C1_SDA",       "USART1_RX",   "TIM4_CH2",   "TIM17_CH1N", "-",        "-"         }, // PB7
+        {  "PB8", "-",              "-",           "TIM4_CH3",   "I2C1_SCL",   "TIM16_CH1","CEC"       }, // PB8
+        {  "PB9", "-",              "-",           "TIM4_CH4",   "I2C1_SDA",   "TIM17_CH1","-"         }, // PB9
+        {  "PB10","-",              "USART3_TX",   "TIM2_CH3",   "I2C2_SCL",   "-",        "CEC"       }, // PB10
+        {  "PB11","-",              "USART3_RX",   "TIM2_CH4",   "I2C2_SDA",   "-",        "-"         }, // PB11
+        {  "PB12","-",              "USART3_CK",   "TIM1_BKIN",  "SPI2_NSS",   "I2C2_SMBA", "-"        }, // PB12
+        {  "PB13","-",              "USART3_CTS",  "TIM1_CH1N",  "SPI2_SCK",   "-",        "-"         }, // PB13
+        {  "PB14","SPI2_MISO",      "USART3_RTS",  "TIM1_CH2N",  "-",          "-",        "-"         }, // PB14
+        {  "PB15","-",              "-",           "TIM1_CH3N",  "SPI2_MOSI",  "TIM15_CH1N","TIM15_CH2"}  // PB15
+    },
+    {
+        //                                                               GPIO C
+        {  "PC0", "-",              "-",           "-",          "-",          "-",        "ADC1_IN10" }, // PC0
+        {  "PC1", "-",              "-",           "-",          "-",          "-",        "ADC1_IN11" }, // PC1
+        {  "PC2", "-",              "-",           "-",          "-",          "-",        "ADC1_IN12" }, // PC2
+        {  "PC3", "-",              "-",           "-",          "-",          "-",        "ADC1_IN13" }, // PC3
+        {  "PC4", "-",              "-",           "-",          "-",          "-",        "ADC1_IN14" }, // PC4
+        {  "PC5", "-",              "-",           "-",          "-",          "-",        "ADC1_IN15" }, // PC5
+        {  "PC6", "TIM3_CH1",       "-",           "-",          "-",          "-",        "-"         }, // PC6
+        {  "PC7", "TIM3_CH2",       "-",           "-",          "-",          "-",        "-"         }, // PC7
+        {  "PC8", "TIM3_CH3",       "-",           "-",          "-",          "-",        "-"         }, // PC8
+        {  "PC9", "TIM3_CH4",       "-",           "-",          "-",          "-",        "-"         }, // PC9
+        {  "PC10","USART3_TX",      "-",           "-",          "-",          "-",        "-"         }, // PC10
+        {  "PC11","USART3_RX",      "-",           "-",          "-",          "-",        "-"         }, // PC11
+        {  "PC12","USART3_CK",      "-",           "-",          "-",          "-",        "-"         }, // PC12
+        {  "PC13","-",              "TAMPER-RTC",  "-",          "-",          "-",        "-"         }, // PC13
+        {  "PC14","-",              "OSC32_IN",    "-",          "-",          "-",        "-"         }, // PC14
+        {  "PC15","-",              "OSC32_OUT",   "-",          "-",          "-",        "-"         }  // PC15
+    },
+    {
+        //                                                               GPIO D
+        {  "PD0", "-",              "-",           "OSC_IN",     "CAN1_RX",    "-",        "-"         }, // PD0
+        {  "PD1", "-",              "-",           "OSC_OUT",    "CAN1_TX",    "-",        "-"         }, // PD1
+        {  "PD2", "UART5_RX",       "TIM3_ETR",    "-",          "-",          "-",        "-"         }, // PD2
+        {  "PD3", "-",              "USART2_CTS",  "-",          "-",          "-",        "-"         }, // PD3
+        {  "PD4", "-",              "USART2_RTS",  "-",          "-",          "-",        "-"         }, // PD4
+        {  "PD5", "-",              "USART2_TX",   "-",          "-",          "-",        "-"         }, // PD5
+        {  "PD6", "-",              "USART2_RX",   "-",          "-",          "-",        "-"         }, // PD6
+        {  "PD7", "-",              "USART2_CK",   "-",          "-",          "-",        "-"         }, // PD7
+        {  "PD8", "ETH_MII_RX_DV",  "USART3_TX",   "-",          "-",          "-",        "-"         }, // PD8
+        {  "PD9", "ETH_MII_RXD0",   "USART3_RX",   "-",          "-",          "-",        "-"         }, // PD9
+        {  "PD10","ETH_MII_RXD1",   "USART3_CK",   "-",          "-",          "-",        "-"         }, // PD10
+        {  "PD11","ETH_MII_RXD2",   "USART3_CTS",  "-",          "-",          "-",        "-"         }, // PD11
+        {  "PD12","ETH_MII_RXD3",   "USART3_RTS",  "TIM4_CH1",   "-",          "-",        "-"         }, // PD12
+        {  "PD13","-",              "-",           "TIM4_CH2",   "-",          "-",        "-"         }, // PD13
+        {  "PD14","-",              "-",           "TIM4_CH3",   "-",          "-",        "-"         }, // PD14
+        {  "PD15","-",              "-",           "TIM4_CH4",   "-",          "-",        "-"         }  // PD15
+    },
+    {
+        // GPIO E
+        {  "PE0", "TIM4_ETR",       "-",           "-",          "-",          "-",        "-"         }, // PE0
+        {  "PE1", "-",              "-",           "-",          "-",          "-",        "-"         }, // PE1
+        {  "PE2", "-",              "-",           "-",          "-",          "TRACECK",  "-"         }, // PE2
+        {  "PE3", "-",              "-",           "-",          "-",          "TRACED0",  "-"         }, // PE3
+        {  "PE4", "-",              "-",           "-",          "-",          "TRACED1",  "-"         }, // PE4
+        {  "PE5", "-",              "-",           "-",          "-",          "TRACED2",  "-"         }, // PE5
+        {  "PE6", "-",              "-",           "-",          "-",          "TRACED3",  "-"         }, // PE6
+        {  "PE7", "TIM1_ETR",       "-",           "-",          "-",          "-",        "-"         }, // PE7
+        {  "PE8", "TIM1_CH1N",      "-",           "-",          "-",          "-",        "-"         }, // PE8
+        {  "PE9", "TIM1_CH1",       "-",           "-",          "-",          "-",        "-"         }, // PE9
+        {  "PE10","TIM1_CH2N",      "-",           "-",          "-",          "-",        "-"         }, // PE10
+        {  "PE11","TIM1_CH2",       "-",           "-",          "-",          "-",        "-"         }, // PE11
+        {  "PE12","TIM1_CH3N",      "-",           "-",          "-",          "-",        "-"         }, // PE12
+        {  "PE13","TIM1_CH3",       "-",           "-",          "-",          "-",        "-"         }, // PE13
+        {  "PE14","TIM1_CH4",       "-",           "-",          "-",          "-",        "-"         }, // PE14
+        {  "PE15","TIM1_BKIN",      "-",           "-",          "-",          "-",        "-"         }  // PE15
+    }
 };

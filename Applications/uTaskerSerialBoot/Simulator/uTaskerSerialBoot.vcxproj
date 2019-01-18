@@ -811,6 +811,7 @@ Build_STM32.bat
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\STM32F103X_port.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F105X_107X_port.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>

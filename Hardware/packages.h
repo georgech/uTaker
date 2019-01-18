@@ -11,7 +11,7 @@ www.uTasker.com    Skype: M_J_Butcher
 File:      packages.h
 Project:   Single Chip Embedded Internet
 ---------------------------------------------------------------------
-Copyright (C) M.J.Butcher Consulting 2004..2018
+Copyright (C) M.J.Butcher Consulting 2004..2019
 *********************************************************************
 */
 
@@ -45,3 +45,4 @@ Copyright (C) M.J.Butcher Consulting 2004..2018
 #define PACKAGE_QFN             3
 #define PACKAGE_WLCSP           4
 #define PACKAGE_LGA             5
+#define PACKAGE_UFBGA           6

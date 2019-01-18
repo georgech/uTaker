@@ -11,7 +11,7 @@
     File:      config.h
     Project:   Serial Loader (SREC/iHex serial, USB-MSD, memory stick, SD card, ethernet, Modbus, I2C slave)
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     05.10.2017 Add modbus configuration
@@ -813,7 +813,7 @@
     #define TARGET_HW            "BLUE PILL (STM32F103C8T6)"
     #define _STM32F103X                                                  // part group
     #define DEVICE_WITHOUT_ETHERNET                                      // STM32F103 doesn't have Ethernet
-    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((2 * 1024) * MEM_FACTOR)
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((6 * 1024) * MEM_FACTOR)
 #elif defined STM32_P207
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define TARGET_HW       "STM32-P207"
@@ -937,7 +937,7 @@
 
 
 #if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22 && !(defined FRDM_KL27Z && defined _DEV2)
-  //#define SERIAL_INTERFACE                                             // enable serial interface driver
+    #define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS
