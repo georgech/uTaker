@@ -1,0 +1,104 @@
+#/*
+# * File:       M5208EVB_SDRAM.lcf
+# * Purpose:    Linker file for the M5208EVB running from SDRAM
+# *
+
+MEMORY
+{
+    vectorram(RWX) : ORIGIN = 0x40020000, LENGTH = 0x00000200
+    sdram   (RWX)  : ORIGIN = 0x40020200, LENGTH = 0x00fdfe00
+    sram    (RWX)  : ORIGIN = 0x80000000, LENGTH = 0x00004000
+    ipsbar  (RWX)  : ORIGIN = 0x40000000, LENGTH = 0x0    
+}
+
+
+SECTIONS 
+{   
+	.ipsbar	 : {} > ipsbar
+	.vectorram :
+	{
+ 		. = ALIGN(0x10);	
+		Startup.s (.text)
+		. 			   = ALIGN(0x10);
+
+    } > vectorram    
+    
+	.sdram :
+	{
+		. 			   = ALIGN(0x10);
+		*(.text)
+		. 			   = ALIGN(0x10);
+		*(.rodata)
+		. 			   = ALIGN(0x10);		
+		___DATA_ROM	   = .;	
+		. 			   = ALIGN(0x10);
+    } > sdram       
+    
+    .data : AT(___DATA_ROM) 
+	{
+		___DATA_RAM    = . ;
+ 		. = ALIGN(0x10);		
+
+        *(.exception)	
+		.              = ALIGN(0x10);	
+		__exception_table_start__ = .;
+	    EXCEPTION
+		__exception_table_end__   = .;
+
+		___sinit__     = .;
+	    STATICINIT
+
+        *(.data)
+		.              = ALIGN (0x10);
+		___DATA_END    = .;
+
+		__START_SDATA  = .;
+        *(.sdata)
+		.              = ALIGN (0x10);
+		__END_SDATA    = .;
+
+		__SDA_BASE     = .;
+		.              = ALIGN(0x10);
+	} >> sdram
+
+	.bss :
+	{
+		. = ALIGN(0x10);
+		__START_SBSS = .;
+		*(.sbss)
+		*(SCOMMON)
+		__END_SBSS   = .;
+
+		. = ALIGN(0x10);
+		__START_BSS  = .;
+		*(.bss)
+		*(COMMON)
+		__END_BSS    = .;	
+        ___BSS_START = __START_SBSS;
+        ___BSS_END   = __END_BSS;
+        . = ALIGN(0x10);
+
+	} >> sdram
+
+	___FLASH		= 0x00000000;
+	___FLASH_SIZE	= 0x00040000;
+	___SDRAM		= 0x40020000;
+	___SDRAM_SIZE	= 0x00fdfc00;	
+	___SRAM			= 0x80000000;
+	___SRAM_SIZE	= 0x00004000;
+
+	___VECTOR_RAM	= ___SRAM;
+	___IPSBAR		= ADDR(.ipsbar);
+
+    __S_romp        = 0; 
+
+       HEAP_SIZE    = 0;                                                  /* {1} This can be left as zero if only uMalloc is used */
+	___HEAP_START	= .;
+	___HEAP_END	= ___HEAP_START + HEAP_SIZE;
+	___SP_INIT	= ___SRAM + ___SRAM_SIZE - 4;
+	___PC_INIT      = ___SDRAM + 0x8;	
+	
+  	___heap_addr 	= ___HEAP_START;
+	___heap_size 	= ___HEAP_END - ___HEAP_START ;
+	__SP_INIT 		= ___SP_INIT;
+}

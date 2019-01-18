@@ -1,0 +1,566 @@
+// Memory Configuration File
+//
+// Description:
+//  A memory configuration file contains commands that define the legally accessible
+//  areas of memory for your specific board. Useful for example when the debugger
+//  tries to display the content of a "char *" variable, that has not yet been initialized.
+//  In this case the debugger may try to read from a bogus address, which could cause a
+//  bus error.
+//
+// Board:
+//  Freescale M5208EVB
+//
+// Reference:
+//  M5208EVBUM-RevA.pdf
+
+
+// All reserved ranges read back 0xBABA...
+reservedchar 0xBA
+
+
+//         Memory Map:
+//         ----------------------------------------------------------------------
+range      0x00000000 0x003FFFFF 4 Read         // 2 MByte Flash
+range      0x10000000 0x17FFFFFF 1 ReadWrite    // LED und Anderes OUT
+range      0x18000000 0x1FFFFFFF 1 ReadWrite    // Taste IN
+reserved   0x20000000 0x200FFFFF 1 ReadWrite    // SRAM
+range      0x40000000 0x40FFFFFF 1 ReadWrite    // 32 MBytes DDR SDRAM
+reserved   0x41000000 0x7FFFFFFF
+range      0x80000000 0x80003FFF 1 ReadWrite    // 16 KBytes Internal SRAM
+reserved   0x80004000 0xFBFFFFFF
+reserved   0xFC100000 0xFFFFFFFF
+
+
+//         Memory Mapped Registers:
+//         ----------------------------------------------------------------------
+
+// System Control Module Registers
+range      0xFC000000 0xFC000003 4 ReadWrite    // MPR
+reserved   0xFC000004 0xFC00001F
+range      0xFC000020 0xFC000023 4 ReadWrite    // PACRA
+range      0xFC000024 0xFC000027 4 ReadWrite    // PACRB
+range      0xFC000028 0xFC00002B 4 ReadWrite    // PACRC
+range      0xFC00002C 0xFC00002F 4 ReadWrite    // PACRD
+reserved   0xFC000030 0xFC00003F
+range      0xFC000040 0xFC000043 4 ReadWrite    // PACRE
+range      0xFC000044 0xFC000047 4 ReadWrite    // PACRF
+reserved   0xFC000048 0xFC0040FF
+
+// Cross-Bar Switch Module Registers
+range      0xFC004100 0xFC004103 4 ReadWrite    // XBS_PRS1
+reserved   0xFC004104 0xFC00410F
+range      0xFC004110 0xFC004113 4 ReadWrite    // XBS_CRS1
+reserved   0xFC004114 0xFC0043FF
+range      0xFC004400 0xFC004403 4 ReadWrite    // XBS_PRS4
+reserved   0xFC004404 0xFC00440F
+range      0xFC004410 0xFC004413 4 ReadWrite    // XBS_CRS4
+reserved   0xFC004414 0xFC0046FF
+range      0xFC004700 0xFC004703 4 ReadWrite    // XBS_PRS7
+reserved   0xFC004704 0xFC00470F
+range      0xFC004710 0xFC004713 4 ReadWrite    // XBS_CRS7
+reserved   0xFC004714 0xFC007FFF
+
+// Chip Select Module Registers
+range      0xFC008000 0xFC008003 4 ReadWrite    // CSAR0
+range      0xFC008004 0xFC008007 4 ReadWrite    // CSMR0
+range      0xFC008008 0xFC00800B 4 ReadWrite    // CSCR0
+range      0xFC00800C 0xFC00800F 4 ReadWrite    // CSAR1
+range      0xFC008010 0xFC008013 4 ReadWrite    // CSMR1
+range      0xFC008014 0xFC008017 4 ReadWrite    // CSCR1
+range      0xFC008018 0xFC00801B 4 ReadWrite    // CSAR2
+range      0xFC00801C 0xFC00801F 4 ReadWrite    // CSMR2
+range      0xFC008020 0xFC008023 4 ReadWrite    // CSCR2
+range      0xFC008024 0xFC008027 4 ReadWrite    // CSAR3
+range      0xFC008028 0xFC00802B 4 ReadWrite    // CSMR3
+range      0xFC00802C 0xFC00802F 4 ReadWrite    // CSCR3
+range      0xFC008030 0xFC008033 4 ReadWrite    // CSAR4
+range      0xFC008034 0xFC008037 4 ReadWrite    // CSMR4
+range      0xFC008038 0xFC00803B 4 ReadWrite    // CSCR4
+range      0xFC00803C 0xFC00803F 4 ReadWrite    // CSAR5
+range      0xFC008040 0xFC008043 4 ReadWrite    // CSMR5
+range      0xFC008044 0xFC008047 4 ReadWrite    // CSCR5
+reserved   0xFC008048 0xFC030003
+
+// Fast Ethernet Controller Registers
+range      0xFC030004 0xFC030007 4 ReadWrite    // EIR
+range      0xFC030008 0xFC03000B 4 ReadWrite    // EIMR
+reserved   0xFC03000C 0xFC03000F
+range      0xFC030010 0xFC030013 4 ReadWrite    // RDAR
+range      0xFC030014 0xFC030017 4 ReadWrite    // TDAR
+reserved   0xFC030018 0xFC030023
+range      0xFC030024 0xFC030027 4 ReadWrite    // ECR
+reserved   0xFC030028 0xFC03003F
+range      0xFC030040 0xFC030043 4 ReadWrite    // MMFR
+range      0xFC030044 0xFC030047 4 ReadWrite    // MSCR
+reserved   0xFC030048 0xFC030063
+range      0xFC030064 0xFC030067 4 ReadWrite    // MIBC
+reserved   0xFC030068 0xFC030083
+range      0xFC030084 0xFC030087 4 ReadWrite    // RCR
+reserved   0xFC030088 0xFC0300C3
+range      0xFC0300C4 0xFC0300C7 4 ReadWrite    // TCR
+reserved   0xFC0300C8 0xFC0300E3
+range      0xFC0300E4 0xFC0300E7 4 ReadWrite    // PALR
+range      0xFC0300E8 0xFC0300EB 4 ReadWrite    // PAUR
+range      0xFC0300EC 0xFC0300EF 4 ReadWrite    // OPD
+reserved   0xFC0300F0 0xFC030117
+range      0xFC030118 0xFC03011B 4 ReadWrite    // IAUR
+range      0xFC03011C 0xFC03011F 4 ReadWrite    // IALR
+range      0xFC030120 0xFC030123 4 ReadWrite    // GAUR
+range      0xFC030124 0xFC030127 4 ReadWrite    // GALR
+reserved   0xFC030128 0xFC030143
+range      0xFC030144 0xFC030147 4 ReadWrite    // TFWR
+reserved   0xFC030148 0xFC03014B
+range      0xFC03014C 0xFC03014F 4 ReadWrite    // FRBR
+range      0xFC030150 0xFC030153 4 ReadWrite    // FRSR
+reserved   0xFC030154 0xFC03017F
+range      0xFC030180 0xFC030183 4 ReadWrite    // ERDSR
+range      0xFC030184 0xFC030187 4 ReadWrite    // ETDSR
+range      0xFC030188 0xFC03018B 4 ReadWrite    // EMRBR
+reserved   0xFC03018C 0xFC040012
+
+// Power Management Registers
+range      0xFC040013 0xFC040013 1 ReadWrite    // WCR (ReadWrite)
+reserved   0xFC040014 0xFC040015
+
+// System Control Module Registers
+range      0xFC040016 0xFC040017 2 ReadWrite    // CWCR
+reserved   0xFC040018 0xFC04001A
+range      0xFC04001B 0xFC04001C 2 ReadWrite    // CWSR
+reserved   0xFC04001D 0xFC04001E
+range      0xFC04001F 0xFC04001F 1 ReadWrite    // SCMIR
+reserved   0xFC040020 0xFC04002B
+
+// Power Management Registers
+range      0xFC04002C 0xFC04002C 1 Write        // PPMSR0
+range      0xFC04002D 0xFC04002D 1 Write        // PPMCR0
+range      0xFC04002E 0xFC04002E 1 Write        // PPMSR1
+range      0xFC04002F 0xFC04002F 1 Write        // PPMCR1
+range      0xFC040030 0xFC040033 4 ReadWrite    // PPMHR0
+range      0xFC040034 0xFC040037 4 ReadWrite    // PPMLR0
+range      0xFC040038 0xFC04003B 4 ReadWrite    // PPMHR1
+reserved   0xFC04003C 0xFC04006F
+
+// System Control Module Registers
+range      0xFC040070 0xFC040073 4 Read         // CFADR
+reserved   0xFC040074 0xFC040074
+range      0xFC040075 0xFC040075 1 ReadWrite    // CFIER
+range      0xFC040076 0xFC040076 1 Read         // CFLOC
+range      0xFC040077 0xFC040077 1 Read         // CFATR
+range      0xFC040078 0xFC04007B 4 Read         // CFDTRH
+range      0xFC04007C 0xFC04007F 4 Read         // CFDTRL
+reserved   0xFC040080 0xFC043FFF
+
+// eDMA Registers
+range      0xFC044000 0xFC044003 4 ReadWrite    // EDMA_CR
+range      0xFC044004 0xFC044007 4 Read         // EDMA_ES
+reserved   0xFC044008 0xFC04400D
+range      0xFC04400E 0xFC04400F 2 ReadWrite    // EDMA_ERQ
+reserved   0xFC044010 0xFC044015
+range      0xFC044016 0xFC044017 2 ReadWrite    // EDMA_EEI
+range      0xFC044018 0xFC044018 1 Write        // EDMA_SERQ
+range      0xFC044019 0xFC044019 1 Write        // EDMA_CERQ
+range      0xFC04401A 0xFC04401A 1 Write        // EDMA_SEEI
+range      0xFC04401B 0xFC04401B 1 Write        // EDMA_CEEI
+range      0xFC04401C 0xFC04401C 1 Write        // EDMA_CINT
+range      0xFC04401D 0xFC04401D 1 Write        // EDMA_CERR
+range      0xFC04401E 0xFC04401E 1 Write        // EDMA_SSRT
+range      0xFC04401F 0xFC04401F 1 Write        // EDMA_CDNE
+reserved   0xFC044020 0xFC044025
+range      0xFC044026 0xFC044027 2 ReadWrite    // EDMA_INT
+reserved   0xFC044028 0xFC04402D
+range      0xFC04402E 0xFC04402F 2 ReadWrite    // EDMA_ERR
+reserved   0xFC044030 0xFC0440FF
+range      0xFC044100 0xFC044100 1 ReadWrite    // DCHPRI0
+range      0xFC044101 0xFC044101 1 ReadWrite    // DCHPRI1
+range      0xFC044102 0xFC044102 1 ReadWrite    // DCHPRI2
+range      0xFC044103 0xFC044103 1 ReadWrite    // DCHPRI3
+range      0xFC044104 0xFC044104 1 ReadWrite    // DCHPRI4
+range      0xFC044105 0xFC044105 1 ReadWrite    // DCHPRI5
+range      0xFC044106 0xFC044106 1 ReadWrite    // DCHPRI6
+range      0xFC044107 0xFC044107 1 ReadWrite    // DCHPRI7
+range      0xFC044108 0xFC044108 1 ReadWrite    // DCHPRI8
+range      0xFC044109 0xFC044109 1 ReadWrite    // DCHPRI9
+range      0xFC04410A 0xFC04410A 1 ReadWrite    // DCHPRI10
+range      0xFC04410B 0xFC04410B 1 ReadWrite    // DCHPRI11
+range      0xFC04410C 0xFC04410C 1 ReadWrite    // DCHPRI12
+range      0xFC04410D 0xFC04410D 1 ReadWrite    // DCHPRI13
+range      0xFC04410E 0xFC04410E 1 ReadWrite    // DCHPRI14
+range      0xFC04410F 0xFC04410F 1 ReadWrite    // DCHPRI15
+reserved   0xFC044110 0xFC047FFF
+
+// Interrupt Controller Module 0 Registers
+range      0xFC048000 0xFC048003 4 Read         // IPRH
+range      0xFC048004 0xFC048007 4 Read         // IPRL
+range      0xFC048008 0xFC04800B 4 ReadWrite    // IMRH
+range      0xFC04800C 0xFC04800F 4 ReadWrite    // IMRL
+range      0xFC048010 0xFC048013 4 ReadWrite    // INTFRCH
+range      0xFC048014 0xFC048017 4 Read         // INTFRCL
+reserved   0xFC048018 0xFC048019
+range      0xFC04801A 0xFC04801B 2 ReadWrite    // ICONFIG
+range      0xFC04801C 0xFC04801C 1 Write        // SIMR
+range      0xFC04801D 0xFC04801D 1 Write        // CIMR
+range      0xFC04801E 0xFC04801E 1 ReadWrite    // CLMASK
+range      0xFC04801F 0xFC04801F 1 ReadWrite    // SLMASK
+reserved   0xFC048020 0xFC048040
+range      0xFC048041 0xFC048041 1 Read         // ICR01
+range      0xFC048042 0xFC048042 1 Read         // ICR02
+range      0xFC048043 0xFC048043 1 Read         // ICR03
+range      0xFC048044 0xFC048044 1 Read         // ICR04
+range      0xFC048045 0xFC048045 1 Read         // ICR05
+range      0xFC048046 0xFC048046 1 Read         // ICR06
+range      0xFC048047 0xFC048047 1 Read         // ICR07
+range      0xFC048048 0xFC048048 1 ReadWrite    // ICR08
+range      0xFC048049 0xFC048049 1 ReadWrite    // ICR09
+range      0xFC04804A 0xFC04804A 1 ReadWrite    // ICR10
+range      0xFC04804B 0xFC04804B 1 ReadWrite    // ICR11
+range      0xFC04804C 0xFC04804C 1 ReadWrite    // ICR12
+range      0xFC04804D 0xFC04804D 1 ReadWrite    // ICR13
+range      0xFC04804E 0xFC04804E 1 ReadWrite    // ICR14
+range      0xFC04804F 0xFC04804F 1 ReadWrite    // ICR15
+range      0xFC048050 0xFC048050 1 ReadWrite    // ICR16
+range      0xFC048051 0xFC048051 1 ReadWrite    // ICR17
+range      0xFC048052 0xFC048052 1 ReadWrite    // ICR18
+range      0xFC048053 0xFC048053 1 ReadWrite    // ICR19
+range      0xFC048054 0xFC048054 1 ReadWrite    // ICR20
+range      0xFC048055 0xFC048055 1 ReadWrite    // ICR21
+range      0xFC048056 0xFC048056 1 ReadWrite    // ICR22
+range      0xFC048057 0xFC048057 1 ReadWrite    // ICR23
+range      0xFC048058 0xFC048058 1 ReadWrite    // ICR24
+range      0xFC048059 0xFC048059 1 ReadWrite    // ICR25
+range      0xFC04805A 0xFC04805A 1 ReadWrite    // ICR26
+range      0xFC04805B 0xFC04805B 1 ReadWrite    // ICR27
+range      0xFC04805C 0xFC04805C 1 ReadWrite    // ICR28
+range      0xFC04805D 0xFC04805D 1 ReadWrite    // ICR29
+range      0xFC04805E 0xFC04805E 1 ReadWrite    // ICR30
+range      0xFC04805F 0xFC04805F 1 ReadWrite    // ICR31
+range      0xFC048060 0xFC048060 1 ReadWrite    // ICR32
+range      0xFC048061 0xFC048061 1 ReadWrite    // ICR33
+range      0xFC048062 0xFC048062 1 ReadWrite    // ICR34
+range      0xFC048063 0xFC048063 1 ReadWrite    // ICR35
+range      0xFC048064 0xFC048064 1 ReadWrite    // ICR36
+range      0xFC048065 0xFC048065 1 ReadWrite    // ICR37
+range      0xFC048066 0xFC048066 1 ReadWrite    // ICR38
+range      0xFC048067 0xFC048067 1 ReadWrite    // ICR39
+range      0xFC048068 0xFC048068 1 ReadWrite    // ICR40
+range      0xFC048069 0xFC048069 1 ReadWrite    // ICR41
+range      0xFC04806A 0xFC04806A 1 ReadWrite    // ICR42
+range      0xFC04806B 0xFC04806B 1 ReadWrite    // ICR43
+range      0xFC04806C 0xFC04806C 1 ReadWrite    // ICR44
+range      0xFC04806D 0xFC04806D 1 ReadWrite    // ICR45
+range      0xFC04806E 0xFC04806E 1 ReadWrite    // ICR46
+range      0xFC04806F 0xFC04806F 1 ReadWrite    // ICR47
+range      0xFC048070 0xFC048070 1 ReadWrite    // ICR48
+range      0xFC048071 0xFC048071 1 ReadWrite    // ICR49
+range      0xFC048072 0xFC048072 1 ReadWrite    // ICR50
+range      0xFC048073 0xFC048073 1 ReadWrite    // ICR51
+range      0xFC048074 0xFC048074 1 ReadWrite    // ICR52
+range      0xFC048075 0xFC048075 1 ReadWrite    // ICR53
+range      0xFC048076 0xFC048076 1 ReadWrite    // ICR54
+range      0xFC048077 0xFC048077 1 ReadWrite    // ICR55
+range      0xFC048078 0xFC048078 1 ReadWrite    // ICR56
+range      0xFC048079 0xFC048079 1 ReadWrite    // ICR57
+range      0xFC04807A 0xFC04807A 1 ReadWrite    // ICR58
+range      0xFC04807B 0xFC04807B 1 ReadWrite    // ICR59
+range      0xFC04807C 0xFC04807C 1 ReadWrite    // ICR60
+range      0xFC04807D 0xFC04807D 1 ReadWrite    // ICR61
+range      0xFC04807E 0xFC04807E 1 ReadWrite    // ICR62
+range      0xFC04807F 0xFC04807F 1 ReadWrite    // ICR63
+reserved   0xFC048080 0xFC0480DF
+range      0xFC0480E0 0xFC0480E0 1 Read         // SWIACK
+reserved   0xFC0480E1 0xFC0480E3
+range      0xFC0480E4 0xFC0480E4 1 Read         // L1IACK
+reserved   0xFC0480E5 0xFC0480E7
+range      0xFC0480E8 0xFC0480E8 1 Read         // L2IACK
+reserved   0xFC0480E9 0xFC0480EB
+range      0xFC0480EC 0xFC0480EC 1 Read         // L3IACK
+reserved   0xFC0480ED 0xFC0480EF
+range      0xFC0480F0 0xFC0480F0 1 Read         // L4IACK
+reserved   0xFC0480F1 0xFC0480F3
+range      0xFC0480F4 0xFC0480F4 1 Read         // L5IACK
+reserved   0xFC0480F5 0xFC0480F7
+range      0xFC0480F8 0xFC0480F8 1 Read         // L6IACK
+reserved   0xFC0480F9 0xFC0480FB
+range      0xFC0480FC 0xFC0480FC 1 Read         // L7IACK
+reserved   0xFC0480FD 0xFC0540DF
+
+// Global Interrupt Acknowledge Cycle Registers
+range      0xFC0540E0 0xFC0540E0 1 Read         // GSWIACK
+reserved   0xFC0540E1 0xFC0540E3
+range      0xFC0540E4 0xFC0540E4 1 ReadWrite    // GL1ACKR
+reserved   0xFC0540E5 0xFC0540E7
+range      0xFC0540E8 0xFC0540E8 1 ReadWrite    // GL2ACKR
+reserved   0xFC0540E9 0xFC0540EB
+range      0xFC0540EC 0xFC0540EC 1 ReadWrite    // GL3ACKR
+reserved   0xFC0540ED 0xFC0540EF
+range      0xFC0540F0 0xFC0540F0 1 ReadWrite    // GL4ACKR
+reserved   0xFC0540F1 0xFC0540F3
+range      0xFC0540F4 0xFC0540F4 1 ReadWrite    // GL5ACKR
+reserved   0xFC0540F5 0xFC0540F7
+range      0xFC0540F8 0xFC0540F8 1 ReadWrite    // GL6ACKR
+reserved   0xFC0540F9 0xFC0540FB
+range      0xFC0540FC 0xFC0540FC 1 ReadWrite    // GL7ACKR
+reserved   0xFC0540FD 0xFC057FFF
+
+// I2C Registers
+range      0xFC058000 0xFC058000 1 ReadWrite    // I2ADR
+reserved   0xFC058001 0xFC058003
+range      0xFC058004 0xFC058004 1 ReadWrite    // I2FDR
+reserved   0xFC058005 0xFC058007
+range      0xFC058008 0xFC058008 1 ReadWrite    // I2CR
+reserved   0xFC058009 0xFC05800B
+range      0xFC05800C 0xFC05800C 1 ReadWrite    // I2SR
+reserved   0xFC05800D 0xFC05800F
+range      0xFC058010 0xFC058010 1 ReadWrite    // I2DR
+reserved   0xFC058011 0xFC05BFFF
+
+// Queued Serial Peripheral Interface Module Registers
+range      0xFC05C000 0xFC05C001 2 ReadWrite    // QMR
+reserved   0xFC05C002 0xFC05C003
+range      0xFC05C004 0xFC05C005 2 ReadWrite    // QDLYR
+reserved   0xFC05C006 0xFC05C007
+range      0xFC05C008 0xFC05C009 2 ReadWrite    // QWR
+reserved   0xFC05C00A 0xFC05C00B
+range      0xFC05C00C 0xFC05C00D 2 ReadWrite    // QIR
+reserved   0xFC05C00E 0xFC05C00F
+range      0xFC05C010 0xFC05C011 2 ReadWrite    // QAR
+reserved   0xFC05C012 0xFC05C013
+range      0xFC05C014 0xFC05C015 2 ReadWrite    // QDR
+reserved   0xFC05C016 0xFC05FFFF
+
+// UART0 Registers
+range      0xFC060000 0xFC060000 1 ReadWrite    // UMR20 (ReadWrite) / UMR10 (ReadWrite)
+reserved   0xFC060001 0xFC060003
+range      0xFC060004 0xFC060004 1 ReadWrite    // UCSR0 (Write) / USR0 (Read)
+reserved   0xFC060005 0xFC060007
+range      0xFC060008 0xFC060008 1 Write        // UCR0
+reserved   0xFC060009 0xFC06000B
+range      0xFC06000C 0xFC06000C 1 ReadWrite    // URB0 (Read) / UTB0 (Write)
+reserved   0xFC06000D 0xFC06000F
+range      0xFC060010 0xFC060010 1 ReadWrite    // UIPCR0 (Read) / UACR0 (Write)
+reserved   0xFC060011 0xFC060013
+range      0xFC060014 0xFC060014 1 ReadWrite    // UISR0 (Read) / UIMR0 (Write)
+reserved   0xFC060015 0xFC060017
+range      0xFC060018 0xFC060018 1 Write        // UBG10
+reserved   0xFC060019 0xFC06001B
+range      0xFC06001C 0xFC06001C 1 Write        // UBG20
+reserved   0xFC06001D 0xFC060033
+range      0xFC060034 0xFC060034 1 Read         // UIP0
+reserved   0xFC060035 0xFC060037
+range      0xFC060038 0xFC060038 1 Write        // UOP10
+reserved   0xFC060039 0xFC06003B
+range      0xFC06003C 0xFC06003C 1 Write        // UOP00
+reserved   0xFC06003D 0xFC063FFF
+
+// UART1 Registers
+range      0xFC064000 0xFC064000 1 ReadWrite    // UMR21 (ReadWrite) / UMR11 (ReadWrite)
+reserved   0xFC064001 0xFC064003
+range      0xFC064004 0xFC064004 1 ReadWrite    // USR1 (Read) / UCSR1 (Write)
+reserved   0xFC064005 0xFC064007
+range      0xFC064008 0xFC064008 1 Write        // UCR1
+reserved   0xFC064009 0xFC06400B
+range      0xFC06400C 0xFC06400C 1 ReadWrite    // UTB1 (Write) / URB1 (Read)
+reserved   0xFC06400D 0xFC06400F
+range      0xFC064010 0xFC064010 1 ReadWrite    // UIPCR1 (Read) / UACR1 (Write)
+reserved   0xFC064011 0xFC064013
+range      0xFC064014 0xFC064014 1 ReadWrite    // UISR1 (Read) / UIMR1 (Write)
+reserved   0xFC064015 0xFC064017
+range      0xFC064018 0xFC064018 1 Write        // UBG11
+reserved   0xFC064019 0xFC06401B
+range      0xFC06401C 0xFC06401C 1 Write        // UBG21
+reserved   0xFC06401D 0xFC064033
+range      0xFC064034 0xFC064034 1 Read         // UIP1
+reserved   0xFC064035 0xFC064037
+range      0xFC064038 0xFC064038 1 Write        // UOP11
+reserved   0xFC064039 0xFC06403B
+range      0xFC06403C 0xFC06403C 1 Write        // UOP01
+reserved   0xFC06403D 0xFC067FFF
+
+// UART2 Registers
+range      0xFC068000 0xFC068000 1 ReadWrite    // UMR12 (ReadWrite) / UMR22 (ReadWrite)
+reserved   0xFC068001 0xFC068003
+range      0xFC068004 0xFC068004 1 ReadWrite    // UCSR2 (Write) / USR2 (Read)
+reserved   0xFC068005 0xFC068007
+range      0xFC068008 0xFC068008 1 Write        // UCR2
+reserved   0xFC068009 0xFC06800B
+range      0xFC06800C 0xFC06800C 1 ReadWrite    // UTB2 (Write) / URB2 (Read)
+reserved   0xFC06800D 0xFC06800F
+range      0xFC068010 0xFC068010 1 ReadWrite    // UACR2 (Write) / UIPCR2 (Read)
+reserved   0xFC068011 0xFC068013
+range      0xFC068014 0xFC068014 1 ReadWrite    // UIMR2 (Write) / UISR2 (Read)
+reserved   0xFC068015 0xFC068017
+range      0xFC068018 0xFC068018 1 Write        // UBG12
+reserved   0xFC068019 0xFC06801B
+range      0xFC06801C 0xFC06801C 1 Write        // UBG22
+reserved   0xFC06801D 0xFC068033
+range      0xFC068034 0xFC068034 1 Read         // UIP2
+reserved   0xFC068035 0xFC068037
+range      0xFC068038 0xFC068038 1 Write        // UOP12
+reserved   0xFC068039 0xFC06803B
+range      0xFC06803C 0xFC06803C 1 Write        // UOP02
+reserved   0xFC06803D 0xFC06FFFF
+
+// DMA Timer Module 0 Registers
+range      0xFC070000 0xFC070001 2 ReadWrite    // DTMR0
+range      0xFC070002 0xFC070002 1 ReadWrite    // DTXMR0
+range      0xFC070003 0xFC070003 1 ReadWrite    // DTER0
+range      0xFC070004 0xFC070007 4 ReadWrite    // DTRR0
+range      0xFC070008 0xFC07000B 4 ReadWrite    // DTCR0
+range      0xFC07000C 0xFC07000F 4 ReadWrite    // DTCN0
+reserved   0xFC070010 0xFC073FFF
+
+// DMA Timer Module 1 Registers
+range      0xFC074000 0xFC074001 2 ReadWrite    // DTMR1
+range      0xFC074002 0xFC074002 1 ReadWrite    // DTXMR1
+range      0xFC074003 0xFC074003 1 ReadWrite    // DTER1
+range      0xFC074004 0xFC074007 4 ReadWrite    // DTRR1
+range      0xFC074008 0xFC07400B 4 ReadWrite    // DTCR1
+range      0xFC07400C 0xFC07400F 4 ReadWrite    // DTCN1
+reserved   0xFC074010 0xFC077FFF
+
+// DMA Timer Module 2 Registers
+range      0xFC078000 0xFC078001 2 ReadWrite    // DTMR2
+range      0xFC078002 0xFC078002 1 ReadWrite    // DTXMR2
+range      0xFC078003 0xFC078003 1 ReadWrite    // DTER2
+range      0xFC078004 0xFC078007 4 ReadWrite    // DTRR2
+range      0xFC078008 0xFC07800B 4 ReadWrite    // DTCR2
+range      0xFC07800C 0xFC07800F 4 ReadWrite    // DTCN2
+reserved   0xFC078010 0xFC07BFFF
+
+// DMA Timer Module 3 Registers
+range      0xFC07C000 0xFC07C001 2 ReadWrite    // DTMR3
+range      0xFC07C002 0xFC07C002 1 ReadWrite    // DTXMR3
+range      0xFC07C003 0xFC07C003 1 ReadWrite    // DTER3
+range      0xFC07C004 0xFC07C007 4 ReadWrite    // DTRR3
+range      0xFC07C008 0xFC07C00B 4 ReadWrite    // DTCR3
+range      0xFC07C00C 0xFC07C00F 4 ReadWrite    // DTCN3
+reserved   0xFC07C010 0xFC07FFFF
+
+// Programmable Interrupt Timer 0 Modules Registers
+range      0xFC080000 0xFC080001 2 ReadWrite    // PCSR0
+range      0xFC080002 0xFC080003 2 ReadWrite    // PMR0
+range      0xFC080004 0xFC080005 2 Read         // PCNTR0
+reserved   0xFC080006 0xFC083FFF
+
+// Programmable Interrupt Timer 1 Modules Registers
+range      0xFC084000 0xFC084001 2 ReadWrite    // PCSR1
+range      0xFC084002 0xFC084003 2 ReadWrite    // PMR1
+range      0xFC084004 0xFC084005 2 Read         // PCNTR1
+reserved   0xFC084006 0xFC087FFF
+
+// Edge Port Registers
+range      0xFC088000 0xFC088001 2 ReadWrite    // EPPAR
+range      0xFC088002 0xFC088002 1 ReadWrite    // EPDDR
+range      0xFC088003 0xFC088003 1 ReadWrite    // EPIER
+range      0xFC088004 0xFC088004 1 ReadWrite    // EPDR
+range      0xFC088005 0xFC088005 1 ReadWrite    // EPPDR
+range      0xFC088006 0xFC088006 1 ReadWrite    // EPFR
+reserved   0xFC088007 0xFC08BFFF
+
+// Watchdog Timer Module Registers
+range      0xFC08C000 0xFC08C001 2 ReadWrite    // WCR
+range      0xFC08C002 0xFC08C003 2 ReadWrite    // WMR
+range      0xFC08C004 0xFC08C005 2 ReadWrite    // WCNTR
+range      0xFC08C006 0xFC08C007 2 ReadWrite    // WSR
+reserved   0xFC08C008 0xFC08FFFF
+
+// Clock Module Registers
+range      0xFC090000 0xFC090000 1 ReadWrite    // PODR
+reserved   0xFC090001 0xFC090001
+range      0xFC090002 0xFC090002 1 ReadWrite    // PCR
+reserved   0xFC090003 0xFC090003
+range      0xFC090004 0xFC090004 1 ReadWrite    // PMDR
+reserved   0xFC090005 0xFC090005
+range      0xFC090006 0xFC090006 1 ReadWrite    // PFDR
+reserved   0xFC090007 0xFC09FFFF
+
+// Reset controller Module Registers
+range      0xFC0A0000 0xFC0A0000 1 ReadWrite    // RCR
+range      0xFC0A0001 0xFC0A0001 1 Read         // RSR
+reserved   0xFC0A0002 0xFC0A0003
+
+// Chip Configuration Module Registers
+range      0xFC0A0004 0xFC0A0005 2 Read         // CCR
+reserved   0xFC0A0006 0xFC0A0006
+
+// Power Management Registers
+range      0xFC0A0007 0xFC0A0007 1 ReadWrite    // LPCR
+
+// Chip Configuration Module Registers
+range      0xFC0A0008 0xFC0A0009 2 Read         // RCON
+range      0xFC0A000A 0xFC0A000B 2 Read         // CIR
+reserved   0xFC0A000C 0xFC0A000F
+
+// Power Management Registers
+range      0xFC0A0010 0xFC0A0011 2 ReadWrite    // MISCCR
+reserved   0xFC0A0012 0xFC0A3FFF
+
+// GPIO Registers
+range      0xFC0A4000 0xFC0A4000 1 ReadWrite    // PODR_BUSCTL
+range      0xFC0A4001 0xFC0A4001 1 ReadWrite    // PODR_BE
+range      0xFC0A4002 0xFC0A4002 1 ReadWrite    // PODR_CS
+range      0xFC0A4003 0xFC0A4003 1 ReadWrite    // PODR_FECI2C
+range      0xFC0A4004 0xFC0A4004 1 ReadWrite    // PODR_QSPI
+range      0xFC0A4005 0xFC0A4005 1 ReadWrite    // PODR_TIMER
+range      0xFC0A4006 0xFC0A4006 1 ReadWrite    // PODR_UART
+range      0xFC0A4007 0xFC0A4007 1 ReadWrite    // PODR_FECH
+range      0xFC0A4008 0xFC0A4008 1 ReadWrite    // PODR_FECL
+reserved   0xFC0A4009 0xFC0A400B
+range      0xFC0A400C 0xFC0A400C 1 ReadWrite    // PDDR_BUSCTL
+range      0xFC0A400D 0xFC0A400D 1 ReadWrite    // PDDR_BE
+range      0xFC0A400E 0xFC0A400E 1 ReadWrite    // PDDR_CS
+range      0xFC0A400F 0xFC0A400F 1 ReadWrite    // PDDR_FECI2C
+range      0xFC0A4010 0xFC0A4010 1 ReadWrite    // PDDR_QSPI
+range      0xFC0A4011 0xFC0A4011 1 ReadWrite    // PDDR_TIMER
+range      0xFC0A4012 0xFC0A4012 1 ReadWrite    // PDDR_UART
+range      0xFC0A4013 0xFC0A4013 1 ReadWrite    // PDDR_FECH
+range      0xFC0A4014 0xFC0A4014 1 ReadWrite    // PDDR_FECL
+reserved   0xFC0A4015 0xFC0A4017
+range      0xFC0A4018 0xFC0A4018 1 ReadWrite    // PPDSDR_BUSCTL
+range      0xFC0A4019 0xFC0A4019 1 ReadWrite    // PPDSDR_BE
+range      0xFC0A401A 0xFC0A401A 1 ReadWrite    // PPDSDR_CS
+range      0xFC0A401B 0xFC0A401B 1 ReadWrite    // PPDSDR_FECI2C
+range      0xFC0A401C 0xFC0A401C 1 ReadWrite    // PPDSDR_QSPI
+range      0xFC0A401D 0xFC0A401D 1 ReadWrite    // PPDSDR_TIMER
+range      0xFC0A401E 0xFC0A401E 1 ReadWrite    // PPDSDR_UART
+range      0xFC0A401F 0xFC0A401F 1 ReadWrite    // PPDSDR_FECH
+range      0xFC0A4020 0xFC0A4020 1 ReadWrite    // PPDSDR_FECL
+reserved   0xFC0A4021 0xFC0A4023
+range      0xFC0A4024 0xFC0A4024 1 ReadWrite    // PCLRR_BUSCTL
+range      0xFC0A4025 0xFC0A4025 1 ReadWrite    // PCLRR_BE
+range      0xFC0A4026 0xFC0A4026 1 ReadWrite    // PCLRR_CS
+range      0xFC0A4027 0xFC0A4027 1 ReadWrite    // PCLRR_FECI2C
+range      0xFC0A4028 0xFC0A4028 1 ReadWrite    // PCLRR_QSPI
+range      0xFC0A4029 0xFC0A4029 1 ReadWrite    // PCLRR_TIMER
+range      0xFC0A402A 0xFC0A402A 1 ReadWrite    // PCLRR_UART
+range      0xFC0A402B 0xFC0A402B 1 ReadWrite    // PCLRR_FECH
+range      0xFC0A402C 0xFC0A402C 1 ReadWrite    // PCLRR_FECL
+reserved   0xFC0A402D 0xFC0A402F
+range      0xFC0A4030 0xFC0A4030 1 ReadWrite    // PAR_BUSCTL
+range      0xFC0A4031 0xFC0A4031 1 ReadWrite    // PAR_BE
+range      0xFC0A4032 0xFC0A4032 1 ReadWrite    // PAR_CS
+range      0xFC0A4033 0xFC0A4033 1 ReadWrite    // PAR_FECI2C
+range      0xFC0A4034 0xFC0A4034 1 ReadWrite    // PAR_QSPI
+range      0xFC0A4035 0xFC0A4035 1 ReadWrite    // PAR_TIMER
+range      0xFC0A4036 0xFC0A4037 2 ReadWrite    // PAR_UART
+range      0xFC0A4038 0xFC0A4038 1 ReadWrite    // PAR_FEC
+range      0xFC0A4039 0xFC0A4039 1 ReadWrite    // PAR_IRQ
+range      0xFC0A403A 0xFC0A403A 1 ReadWrite    // MSCR_FLEXBUS
+range      0xFC0A403B 0xFC0A403B 1 ReadWrite    // MSCR_SDRAM
+range      0xFC0A403C 0xFC0A403C 1 ReadWrite    // DSCR_I2C
+range      0xFC0A403D 0xFC0A403D 1 ReadWrite    // DSCR_MISC
+range      0xFC0A403E 0xFC0A403E 1 ReadWrite    // DSCR_FEC
+range      0xFC0A403F 0xFC0A403F 1 ReadWrite    // DSCR_UART
+range      0xFC0A4040 0xFC0A4040 1 ReadWrite    // DSCR_QSPI
+reserved   0xFC0A4041 0xFC0A7FFF
+
+// SDRAM Registers
+range      0xFC0A8000 0xFC0A8003 4 ReadWrite    // SDMR
+range      0xFC0A8004 0xFC0A8007 4 ReadWrite    // SDCR
+range      0xFC0A8008 0xFC0A800B 4 ReadWrite    // SDCFG0
+range      0xFC0A800C 0xFC0A800F 4 ReadWrite    // SDCFG1
+reserved   0xFC0A8010 0xFC0A807F
+range      0xFC0A8080 0xFC0A8083 4 ReadWrite    // needed for LIMP mode errata
+reserved   0xFC0A8084 0xFC0A810F
+range      0xFC0A8110 0xFC0A8113 4 ReadWrite    // SDCS0
+range      0xFC0A8114 0xFC0A8117 4 ReadWrite    // SDCS1
+reserved   0xFC0A8118 0xFC0FFFFF

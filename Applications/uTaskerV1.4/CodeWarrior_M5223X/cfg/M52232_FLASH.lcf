@@ -1,0 +1,116 @@
+#/*
+# * File:       M52232_FLASH.lcf
+# * Purpose:    Linker file for the M52235EVB
+# *
+#  NOTE: The debugger uses the Illegal Instruction Vector to stop.
+#  A small subroutine is written at the location VBR+0x408-VBR+0x40B
+#  to handle the exception.  The Illegal Instruction Vector in
+#  the the vector table at VBR+0x10 is then pointed to it.  When the
+#  debugger encounters an illegal instruction, it jumps to this 
+#  subroutine, which ends with an RTE, then exits.
+#  Do not overwrite this area of memory otherwise the debugger may not 
+#  exit properly.
+# */
+
+MEMORY
+{
+    flash1  (RX)   : ORIGIN = 0x00000000, LENGTH = 0x000400
+    flashconfig   (RX)   : ORIGIN = 0x00000400, LENGTH = 0x00000018  
+    flash2  (RX)   : ORIGIN = 0x00000420, LENGTH = 0x001FBE0
+    vectorram(RWX) : ORIGIN = 0x20000000, LENGTH = 0x00000400
+    sram    (RWX)  : ORIGIN = 0x20000400, LENGTH = 0x00007C00	
+    ipsbar  (RWX)  : ORIGIN = 0x40000000, LENGTH = 0x0
+}
+
+
+SECTIONS 
+{
+	.ipsbar	 : {} > ipsbar
+    
+	.flash1 :
+	{
+		Startup.s (.text)
+		. 			   = ALIGN(0x10);
+
+    } > flash1
+    
+	.flashconfig :
+	{
+		flash_config.s (.text)				
+    } > flashconfig     
+    
+	.flash2 :
+	{
+		. 			   = ALIGN(0x10);
+		*(.text)
+		. 			   = ALIGN(0x10);
+
+		*(.rodata)
+		___DATA_ROM	   = .;		
+    } > flash2       
+    
+    .data : AT(___DATA_ROM) 
+	{
+		___DATA_RAM    = . ;
+
+        *(.exception)	
+		.              = ALIGN(0x10);	
+		__exception_table_start__ = .;
+	    EXCEPTION
+		__exception_table_end__   = .;
+
+		___sinit__     = .;
+	    STATICINIT
+
+        *(.data)
+		.              = ALIGN (0x10);
+		___DATA_END    = .;
+
+		__START_SDATA  = .;
+        *(.sdata)
+		.              = ALIGN (0x10);
+		__END_SDATA    = .;
+
+		__SDA_BASE     = .;
+		.              = ALIGN(0x10);
+	} > sram
+
+	.bss :
+	{
+		. = ALIGN(0x10);
+		__START_SBSS = .;
+		*(.sbss)
+		*(SCOMMON)
+		__END_SBSS   = .;
+
+		. = ALIGN(0x10);
+		__START_BSS  = .;
+		*(.bss)
+		*(COMMON)
+		__END_BSS    = .;	
+        ___BSS_START = __START_SBSS;
+        ___BSS_END   = __END_BSS;
+        . = ALIGN(0x10);
+
+	} >> sram
+
+	___FLASH		= ADDR(.flash1);
+	___FLASH_SIZE	= 0x00020000;
+	___SRAM			= 0x20000000;
+	___SRAM_SIZE	= 0x00008000;
+
+	___VECTOR_RAM	= ___SRAM;
+	___IPSBAR		= ADDR(.ipsbar);
+
+    __S_romp        = 0; 
+
+       HEAP_SIZE    = 0;                                                 /* This can be left as zero if only uMalloc is used */
+	___HEAP_START	= .;
+	___HEAP_END	= ___HEAP_START + HEAP_SIZE;
+	___SP_INIT	= ___SRAM + ___SRAM_SIZE - 4;
+	___PC_INIT      = ___FLASH + 0x8;	
+	
+  	___heap_addr 	= ___HEAP_START;
+	___heap_size 	= ___HEAP_END - ___HEAP_START ;
+	__SP_INIT 		= ___SP_INIT;
+}
