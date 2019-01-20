@@ -11,7 +11,7 @@
     File:      ADC_Timers.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     29.08.2009 Add timer frequency and PWM output tests                  {1}
     08.09.2009 Add INTERNAL_TEMP option for Luminary                     {2}
@@ -1398,9 +1398,9 @@ static void test_timer_int(void)
     fnConfigureInterrupt((void *)&pit_setup);                            // enter interrupt for PIT1 test
 }
     #elif defined TEST_PIT_PERIODIC && !defined TEST_DMA_DAC
-static void test_nmi(void)
+static __callback_interrupt void test_nmi(void)
 {
-    TOGGLE_TEST_OUTPUT();
+    TOGGLE_TEST_OUTPUT();                                                // toggle to show periodic interrupt
 }
     #endif
 

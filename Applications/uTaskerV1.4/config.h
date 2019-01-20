@@ -11,13 +11,14 @@
     File:      config.h
     Project:   uTaskerV1.4 project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     **********************************************************************
     02.02.2017 Adapt for us tick resolution (_TICK_RESOLUTION)
     11.04.2018 Merge with STM32 project
     01.05.2018 Merge with Luminary project
     06.06.2018 Merge with coldfire project
     06.10.2018 Merge with AVR32 project
+    27.12.2018 Add iMX configuration
     
 */
 
@@ -28,6 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
 //#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+#define HELLO_WORLD                                                      // gives the classic first step project with just a message on a UART start and echos back input afterwards [enter key shows memory use] (also blinks LED and is identical with or without BLINKY enabled)
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 //#define EXTERNAL_TEST
@@ -42,7 +44,7 @@
 
 #define USE_CORTEX_CYCLE_COUNTER                                         // enable cycle counter (Cortex-M4/M7 only) - read with "time_stamp = DWT_CYCCNT"
 
-//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation and use demonstration to ensure that port configuration and use doesn't conflict with specific application development (exception is blink LED)
+//#define REMOVE_PORT_INITIALISATIONS                                    // remove port initialisation from demonstration to ensure that port configurations don't conflict with specific application developments (exception is blink LED)
 //#define NO_PERIPHERAL_DEMONSTRATIONS                                   // disable peripheral demonstration code (ADC/I2C/CAN/port interrupts/etc.) so that they can't interfere with new application developments
 
 #define USE_MAINTENANCE                                                  // include the command line shell (on UART, USB-CDC and/or Telnet) with maintenance support for the application (remove to reduce project size for special tests or possibly running from limited RAM)
@@ -159,10 +161,10 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
-    //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
+      #define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
@@ -202,10 +204,10 @@
     //#define EK_LM3S1968                                                // LUMINARY EVAL board without Ethernet
     //#define EK_LM3S2110                                                // LUMINARY CAN DEVICE BOARD
     //#define EK_LM3S2139                                                // LUMINARY CAN DEVICE BOARD
-      #define EK_LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin) + CGLCD
+    //#define EK_LM3S3748                                                // LUMINARY EVAL board with USB HOST/DEVICE (100pin) + CGLCD
     //#define EK_LM3S3768                                                // LUMINARY EVAL board with USB HOST/DEVICE/OTG
     //#define EK_LM3S5732                                                // LUMINARY EVAL board with USB HOST/DEVICE (64pin)
-    //#define EK_LM3S6965                                                // LUMINARY EVAL board with Ethernet
+      #define EK_LM3S6965                                                // LUMINARY EVAL board with Ethernet
     //#define EK_LM3S8962                                                // LUMINARY EVAL board with Ethernet and CAN
     //#define EK_LM3S9B90                                                // LUMINARY EVAL board with Ethernet, USB-OTG, 2xCAN
     //#define EK_LM3S9B95                                                // LUMINARY EVAL board with Ethernet, USB-OTG, 2xCAN
@@ -224,18 +226,18 @@
     // Nucleo 144 range
     //
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
+    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
-    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6
+    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
-    //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
+      #define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
@@ -1434,7 +1436,7 @@
 // Serial interface (UART)
 //
 #define SERIAL_INTERFACE                                                 // enable serial interface driver
-#if !defined BLINKY && defined SERIAL_INTERFACE
+#if (!defined BLINKY && !defined HELLO_WORLD) && defined SERIAL_INTERFACE
   //#define FREEMASTER_UART                                              // UART for run-time debugging use
   //#define UART_EXTENDED_MODE                                           // required for 9-bit mode
       //#define SERIAL_MULTIDROP_TX                                      // enable 9-bit support in the transmission direction
@@ -1455,6 +1457,10 @@
   //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
   //#define SUPPORT_HW_FLOW                                              // support RTS/CTS flow control and other possible modem signals
+      //#define UART_WITHOUT_MODEM_CONTROL                               // test overriding automatic modem support
+      //#define UART_FRAME_END_COMPLETE
+      //#define USER_DEFINED_UART_TX_FRAME_COMPLETE
+      //#define LPUART0_MANUAL_RTS_CONTROL
   //#define UART_BREAK_SUPPORT                                           // support break control in the UART driver
   //#define SUPPORT_MIDI_BAUD_RATE                                       // support 31250 Baud rate standard setting
   //#define UART_TIMED_TRANSMISSION                                      // automatic timed character transmission to achive tx inter-character delay
@@ -1516,6 +1522,8 @@
       //#define USE_SLIP                                                 // use slip rather than PPP
       //#define USE_SLIP_DIAL_OUT                                        // dial-out
   //#define USE_J1708                                                    // integrate a J1708 interface
+#elif defined HELLO_WORLD
+    #define SERIAL_INTERFACE
 #else
     #define NUMBER_SERIAL              0                                 // no physical queue needed
     #define NUMBER_EXTERNAL_SERIAL     0
@@ -1537,7 +1545,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -1729,7 +1737,7 @@
   //#define NAND_FLASH_FAT                                               // NAND flash requires SDCARD_SUPPORT to also be active but takes priority over SD card
         #define VERIFY_NAND                                              // development help functions
 #endif
-#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && !defined BLINKY
+#if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined USB_MSD_HOST) && (!defined BLINKY && !defined HELLO_WORLD)
     #if defined SPI_FLASH_FAT
         #undef ONLY_INTERNAL_FLASH_STORAGE                               // allow multiple flash storage support
     #endif
@@ -1806,14 +1814,14 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z && !defined K66FX1M0
-  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
+    #define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
         #define ENC424J600_INTERFACE                                     // using ENC424J600
     #endif
 #endif
-#if (defined ETH_INTERFACE || (defined USB_CDC_RNDIS && !defined PURE_RNDIS_ETHERNET) || defined USE_PPP) && !defined BLINKY
+#if (defined ETH_INTERFACE || (defined USB_CDC_RNDIS && !defined PURE_RNDIS_ETHERNET) || defined USE_PPP) && (!defined BLINKY && !defined HELLO_WORLD)
     #define MAC_DELIMITER  '-'                                           // used for display and entry of mac addresses
     #define IPV6_DELIMITER ':'                                           // used for display and entry of IPV6 addresses
     #define NUMBER_LAN     1                                             // one physical interface needed for LAN
@@ -2610,11 +2618,13 @@
 //#define PERIODIC_TIMER_EVENT                                           // delayed and periodic tasks are schedule with timer events if enabled (otherwise they are simply scheduled)
 
 
-#if defined BLINKY                                                       // if the BLINKY operation is defined we ensure that the following are disabled to give simplest configuration
+#if defined BLINKY || defined HELLO_WORLD                                // if the BLINKY operation is defined we ensure that the following are disabled to give simplest configuration
+    #if !defined HELLO_WORLD
+        #undef SERIAL_INTERFACE
+    #endif
     #undef USE_MAINTENANCE
     #undef USB_INTERFACE
     #undef USB_HOST_SUPPORT
-    #undef SERIAL_INTERFACE
     #undef I2C_INTERFACE
     #undef CAN_INTERFACE
     #undef SUPPORT_KEY_SCAN

@@ -11,7 +11,7 @@
     File:      iMX.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
@@ -1366,21 +1366,7 @@ typedef struct stRESET_VECTOR
 
 // PIT configuration
 //
-#if defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KV10
-    #define KINETIS_WITHOUT_PIT
-#elif defined KINETIS_KM
-    #define PITS_AVAILABLE          2
-#elif defined KINETIS_KL || defined KINETIS_KE
-    #if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
-        #define LPITS_AVAILABLE     1
-        #define LPIT_CHANNELS       4
-        #define LPIT_INPUT_TRIGGERS 4
-    #else
-        #define PITS_AVAILABLE      2
-    #endif
-#else
-    #define PITS_AVAILABLE          4
-#endif
+#define PITS_AVAILABLE          4
 
 
 // PWT configuration
@@ -1652,32 +1638,14 @@ typedef struct stRESET_VECTOR
 
 // Define the number of ports that the processor has
 //
-#if (defined KINETIS_KE || defined KINETIS_KL || defined KINETIS_KV10) && !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KL43 && !defined KINETIS_KL46 // fast GPIO alias available
-    #define FGPIO_AVAILABLE
-#endif
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    #if defined KINETIS_KEA8
-        #define PORTS_AVAILABLE 1
-        #define PORTS_AVAILABLE_8_BIT  3
-    #elif defined KINETIS_KE06 || defined KINETIS_KEA
-        #define PORTS_AVAILABLE 3
-        #define PORTS_AVAILABLE_8_BIT  9
-    #elif (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
-        #define PORTS_AVAILABLE 1
-        #define PORTS_AVAILABLE_8_BIT  4
-    #else
-        #define PORTS_AVAILABLE 2
-        #define PORTS_AVAILABLE_8_BIT  8
-    #endif
-#elif defined KINETIS_KM34
-    #define PORTS_AVAILABLE 9
-#elif defined KINETIS_K61 || defined KINETIS_K70
-    #define PORTS_AVAILABLE 6
-#elif defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL04 || defined KINETIS_KL05
-    #define PORTS_AVAILABLE 2
-#else
-    #define PORTS_AVAILABLE 5
-#endif
+#define PORT1                0
+#define PORT2                1
+#define PORT3                2
+#define PORT4                3
+#define PORT5                4
+
+#define PORTS_AVAILABLE      5
+#define PORT_NOT_AVAILABLE   PORT4                                       // this port is not usable on this processor
 
 // Port inputs that don't support interrupts
 //
@@ -1873,1070 +1841,6 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLEXPWM2_2)(void);                                       // 139
     void  (*irq_FLEXPWM2_3)(void);                                       // 140
     void  (*irq_FLEXPWM2_Fault)(void);                                   // 141
-#elif defined KINETIS_KE15
-    void  (*irq_DMA0)(void);                                             // 0 (shared with DMA channel 4)
-    void  (*irq_DMA1)(void);                                             // 1 (shared with DMA channel 5)
-    void  (*irq_DMA2)(void);                                             // 2 (shared with DMA channel 6)
-    void  (*irq_DMA3)(void);                                             // 3 (shared with DMA channel 7)
-    void  (*irq_DMA0_ERROR)(void);                                       // 4
-    void  (*irq_Flash)(void);                                            // 5
-    void  (*irq_PMC)(void);                                              // 6
-    void  (*irq_PORTA_E)(void);                                          // 7
-    void  (*irq_LPI2C0)(void);                                           // 8
-    void  (*irq_LPI2C1)(void);                                           // 9
-    void  (*irq_LPSPI0)(void);                                           // 10
-    void  (*irq_LPSPI1)(void);                                           // 11
-    void  (*irq_LPUART0)(void);                                          // 12 status and error
-    void  (*irq_LPUART1)(void);                                          // 13 status and error
-    void  (*irq_LPUART2)(void);                                          // 14 status and error
-    void  (*irq_ADC0)(void);                                             // 15
-    void  (*CMP0)(void);                                                 // 16
-    void  (*irq_FTM0)(void);                                             // 17
-    void  (*irq_FTM1)(void);                                             // 18
-    void  (*irq_FTM2)(void);                                             // 19
-    void  (*irq_RTC_ALARM)(void);                                        // 20 single interrupt for all sources
-    void  (*irq_CMP1)(void);                                             // 21
-    void  (*irq_LPIT0)(void);                                            // 22
-    void  (*irq_FlexIO)(void);                                           // 23
-    void  (*irq_TSI)(void);                                              // 24
-    void  (*irq_PDB0)(void);                                             // 25
-    void  (*irq_PORTB_C_D)(void);                                        // 26
-    void  (*irq_SCG)(void);                                              // 27
-    void  (*irq_WDOG0)(void);                                            // 28
-    void  (*irq_LPTMR_PWT)(void);                                        // 29
-    void  (*irq_ADC1)(void);                                             // 30
-    void  (*irq_RCM)(void);                                              // 31
-#elif defined KINETIS_KE18
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    void  (*irq_DMA4)(void);                                             // 4
-    void  (*irq_DMA5)(void);                                             // 5
-    void  (*irq_DMA6)(void);                                             // 6
-    void  (*irq_DMA7)(void);                                             // 7
-    void  (*irq_DMA8)(void);                                             // 8
-    void  (*irq_DMA9)(void);                                             // 9
-    void  (*irq_DMA10)(void);                                            // 10
-    void  (*irq_DMA11)(void);                                            // 11
-    void  (*irq_DMA12)(void);                                            // 12
-    void  (*irq_DMA13)(void);                                            // 13
-    void  (*irq_DMA14)(void);                                            // 14
-    void  (*irq_DMA15)(void);                                            // 15
-    void  (*irq_DMA_ERROR)(void);                                        // 16
-    void  (*irq_MCM)(void);                                              // 17
-    void  (*irq_FLASH_CC)(void);                                         // 18
-    void  (*irq_FLASH_RC)(void);                                         // 19
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 20
-    void  (*irq_FLASH_FAULT)(void);                                      // 21
-    void  (*irq_WDOG)(void);                                             // 22
-    void  (*reserved23)(void);
-    void  (*irq_LPI2C0)(void);                                           // 24
-    void  (*irq_LPI2C1)(void);                                           // 25
-    void  (*irq_LPSPI0)(void);                                           // 26
-    void  (*irq_LPSPI1)(void);                                           // 27
-    void  (*reserved28)(void);
-    void  (*irq_PWT)(void);                                              // 29
-    void  (*reserved30)(void);
-    void  (*irq_LPUART0_TX)(void);                                       // 31
-    void  (*irq_LPUART0_RX)(void);                                       // 32
-    void  (*irq_LPUART1_TX)(void);                                       // 33
-    void  (*irq_LPUART1_RX)(void);                                       // 34
-    void  (*irq_LPUART2_TX)(void);                                       // 35
-    void  (*irq_LPUART2_RX)(void);                                       // 36
-    void  (*reserved37)(void);
-    void  (*reserved38)(void);
-    void  (*irq_ADC0)(void);                                             // 39
-    void  (*irq_CMP0)(void);                                             // 40
-    void  (*irq_CMP1)(void);                                             // 41
-    void  (*irq_FTM0)(void);                                             // 42
-    void  (*irq_FTM1)(void);                                             // 43
-    void  (*irq_FTM2)(void);                                             // 44
-    void  (*reserved45)(void);
-    void  (*irq_RTC_ALARM)(void);                                        // 46
-    void  (*irq_RTC_SECONDS)(void);                                      // 47
-    void  (*irq_LPIT0_CH0)(void);                                        // 48
-    void  (*irq_LPIT0_CH1)(void);                                        // 49
-    void  (*irq_LPIT0_CH2)(void);                                        // 50
-    void  (*irq_LPIT0_CH3)(void);                                        // 51
-    void  (*irq_PDB0)(void);                                             // 52
-    void  (*reserved53)(void);
-    void  (*reserved54)(void);
-    void  (*reserved55)(void);
-    void  (*irq_DAC0)(void);                                             // 56
-    void  (*irq_SCG_RCM)(void);                                          // 57
-    void  (*irq_LPTMR0)(void);                                           // 58
-    void  (*irq_PORTA)(void);                                            // 59 (port A)
-    void  (*irq_PORTB)(void);                                            // 60 (port B)
-    void  (*irq_PORTC)(void);                                            // 61 (port C)
-    void  (*irq_PORTD)(void);                                            // 62 (port D)
-    void  (*irq_PORTE)(void);                                            // 63 (port E)
-    void  (*irq_SW_IRQ)(void);                                           // 64
-    void  (*reserved65)(void);
-    void  (*reserved66)(void);
-    void  (*reserved67)(void);
-    void  (*irq_PDB1)(void);                                             // 68
-    void  (*irq_FlexIO)(void);                                           // 69
-    void  (*irq_CMP2)(void);                                             // 70
-    void  (*irq_FTM3)(void);                                             // 71
-    void  (*reserved72)(void);
-    void  (*irq_ADC1)(void);                                             // 73
-    void  (*irq_ADC2)(void);                                             // 74
-    void  (*reserved75)(void);
-    void  (*reserved76)(void);
-    void  (*irq_PDB2)(void);                                             // 77
-    void  (*irq_CAN0_BUS_OFF)(void);                                     // 78 (or transmit or receive warning s)
-    void  (*irq_CAN0_ERROR)(void);                                       // 79
-    void  (*irq_CAN0_WAKE_UP)(void);                                     // 80
-    void  (*irq_CAN0_MESSAGE)(void);                                     // 81
-    void  (*irq_CAN0_RESERVED)(void);                                    // 82
-    void  (*irq_CAN0_EXTENSION_32_47)(void);                             // 83
-    void  (*irq_CAN0_EXTENSION_48_63)(void);                             // 84
-    void  (*irq_CAN1_BUS_OFF)(void);                                     // 85 (or transmit or receive warning s)
-    void  (*irq_CAN1_ERROR)(void);                                       // 86
-    void  (*irq_CAN1_WAKE_UP)(void);                                     // 87
-    void  (*irq_CAN1_MESSAGE)(void);                                     // 88
-    void  (*irq_CAN1_RESERVED)(void);                                    // 89
-    void  (*irq_CAN1_EXTENSION_32_47)(void);                             // 90
-    void  (*irq_CAN1_EXTENSION_48_63)(void);                             // 91
-#elif defined KINETIS_KE                                                 // {42}
-    void  (*reserved0)(void);                                            // 0
-    void  (*reserved1)(void);                                            // 1
-    void  (*reserved2)(void);                                            // 2
-    void  (*reserved3)(void);                                            // 3
-    void  (*reserved4)(void);                                            // 4
-    void  (*irq_FTMRH)(void);                                            // 5
-    void  (*irq_PMC)(void);                                              // 6
-    void  (*irq_IRQ)(void);                                              // 7
-    void  (*irq_I2C0)(void);                                             // 8
-    void  (*irq_I2C1)(void);                                             // 9
-    void  (*irq_SPI0)(void);                                             // 10
-    void  (*irq_SPI1)(void);                                             // 11
-    void  (*irq_UART0)(void);                                            // 12 status and error
-    void  (*irq_UART1)(void);                                            // 13 status and error
-    void  (*irq_UART2)(void);                                            // 14 status and error
-    void  (*irq_ADC0)(void);                                             // 15
-    void  (*irq_CMP0)(void);                                             // 16
-    void  (*irq_FTM0)(void);                                             // 17
-    void  (*irq_FTM1)(void);                                             // 18
-    void  (*irq_FTM2)(void);                                             // 19
-    void  (*irq_RTC_OVERFLOW)(void);                                     // 20
-    void  (*irq_CMP1)(void);                                             // 21
-    void  (*irq_PIT0)(void);                                             // 22
-    void  (*irq_PIT1)(void);                                             // 23
-    void  (*irq_KBI0)(void);                                             // 24
-    void  (*irq_KBI1)(void);                                             // 25
-    void  (*reserved26)(void);                                           // 26
-    void  (*irq_ICS)(void);                                              // 27
-    void  (*irq_WDOG0)(void);                                            // 28
-#elif defined KINETIS_KM
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    void  (*irq_SPI0)(void);                                             // 4
-    void  (*irq_SPI1)(void);                                             // 5
-    void  (*irq_PMC)(void);                                              // 6
-    void  (*irq_TMR_0)(void);                                            // 7
-    void  (*irq_TMR_1)(void);                                            // 8
-    void  (*irq_TMR_2)(void);                                            // 9
-    void  (*irq_TMR_3)(void);                                            // 10
-    void  (*irq_PIT)(void);                                              // 11
-    void  (*irq_LL_wakeup)(void);                                        // 12
-    void  (*irq_FTFA)(void);                                             // 13
-    void  (*irq_CMP)(void);                                              // 14
-    void  (*irq_SLCD)(void);                                             // 15
-    void  (*irq_ADC0)(void);                                             // 16
-    void  (*irq_PT)(void);                                               // 17
-    void  (*irq_RNG)(void);                                              // 18
-    void  (*irq_UART0_1)(void);                                          // 19
-    void  (*irq_UART2_3)(void);                                          // 20
-    void  (*irq_AFE_CH0)(void);                                          // 21
-    void  (*irq_AFE_CH1)(void);                                          // 22
-    void  (*irq_AFE_CH2)(void);                                          // 23
-    void  (*irq_AFE_CH3)(void);                                          // 24
-    void  (*irq_RTC_ALARM)(void);                                        // 25 (iRTC)
-    void  (*irq_I2C0_1)(void);                                           // 26
-    void  (*irq_EWM)(void);                                              // 27
-    void  (*irq_MCG)(void);                                              // 28
-    void  (*irq_WDOG0)(void);                                            // 29
-    void  (*irq_LPTMR0)(void);                                           // 30
-    void  (*irq_XBAR)(void);                                             // 31
-#elif defined KINETIS_KV && !defined KINETIS_KV30 && !defined KINETIS_KV40 && !defined KINETIS_KV50
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    void  (*irq_DMA_error)(void);                                        // 4
-    void  (*irq_FTFA)(void);                                             // 5 (command complete and read collision combined)
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 6 low voltage detect, low-voltage warning
-    void  (*irq_LL_wakeup)(void);                                        // 7
-    void  (*irq_I2C0)(void);                                             // 8
-    void  (*irq_I2C1)(void);                                             // 9
-    void  (*irq_SPI0)(void);                                             // 10
-    void  (*irq_SPI1)(void);                                             // 11
-    void  (*irq_UART0)(void);                                            // 12 status and error
-    void  (*irq_UART1)(void);                                            // 13 status and error
-    void  (*irq_UART2)(void);                                            // 14 status and error
-    void  (*irq_ADC0)(void);                                             // 15
-    void  (*irq_ADC1)(void);                                             // 16
-    void  (*irq_FTM0)(void);                                             // 17
-    void  (*irq_FTM1)(void);                                             // 18
-    void  (*irq_FTM2)(void);                                             // 19
-    void  (*irq_CMP0)(void);                                             // 20
-    void  (*irq_CMP1)(void);                                             // 21
-    void  (*reserved22)(void);                                           // 22
-    void  (*irq_WDOG0)(void);                                            // 23
-    void  (*reserved24)(void);                                           // 24
-    void  (*irq_DAC0)(void);                                             // 25
-    void  (*reserved26)(void);                                           // 26
-    void  (*irq_MCG)(void);                                              // 27
-    void  (*irq_LPTMR0)(void);                                           // 28
-    void  (*irq_PDB0)(void);                                             // 29
-    void  (*irq_PORTA)(void);                                            // 30
-    void  (*irq_PORTB_C_D_E)(void);                                      // 31 single interrupt vector for ports B, C, D and E
-#elif defined KINETIS_KL                                                 // {42}
-    #if defined KINETIS_KL28
-        void  (*irq_DMA0)(void);                                         // 0 (shared with DMA channel 4)
-        void  (*irq_DMA1)(void);                                         // 1 (shared with DMA channel 5)
-        void  (*irq_DMA2)(void);                                         // 2 (shared with DMA channel 6)
-        void  (*irq_DMA3)(void);                                         // 3 (shared with DMA channel 7)
-        void  (*irq_DMA0_ERROR)(void);                                   // 4
-        void  (*irq_FLEXIO)(void);                                       // 5
-        void  (*irq_TPM0)(void);                                         // 6
-        void  (*irq_TPM1)(void);                                         // 7
-        void  (*irq_TPM2)(void);                                         // 8
-        void  (*irq_LPIT0)(void);                                        // 9
-        void  (*irq_LPSPI0)(void);                                       // 10
-        void  (*irq_LPSPI1)(void);                                       // 11
-        void  (*irq_LPUART0)(void);                                      // 12 status and error
-        void  (*irq_LPUART1)(void);                                      // 13 status and error
-        void  (*irq_LPI2C0)(void);                                       // 14
-        void  (*irq_LPI2C1)(void);                                       // 15
-        void  (*reserved0)(void);                                        // 16
-        void  (*irq_PORTA)(void);                                        // 17
-        void  (*irq_PORTB)(void);                                        // 18
-        void  (*irq_PORTC)(void);                                        // 19
-        void  (*irq_PORTD)(void);                                        // 20
-        void  (*irq_PORTE)(void);                                        // 21
-        void  (*irq_LL_wakeup)(void);                                    // 22
-        void  (*irq_SAI0)(void);                                         // 23
-        void  (*irq_USB_OTG)(void);                                      // 24
-        void  (*irq_ADC0)(void);                                         // 25
-        void  (*irq_LPTMR0)(void);                                       // 26
-        void  (*irq_RTC_SECONDS)(void);                                  // 27
-        void  (*irq_INTMUX0_0)(void);                                    // 28
-        void  (*irq_INTMUX0_1)(void);                                    // 29
-        void  (*irq_INTMUX0_2)(void);                                    // 30
-        void  (*irq_INTMUX0_3)(void);                                    // 31
-        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
-        void  (*reserved1)(void);                                        // 33
-        void  (*reserved2)(void);                                        // 34
-        void  (*reserved3)(void);                                        // 35
-        void  (*irq_LPSPI2)(void);                                       // 36
-        void  (*irq_LPUART2)(void);                                      // 37
-        void  (*irq_EMVSIM0)(void);                                      // 38
-        void  (*irq_LPI2C2)(void);                                       // 39
-        void  (*irq_TSI)(void);                                          // 40
-        void  (*irq_PMC)(void);                                          // 41
-        void  (*irq_FTFA)(void);                                         // 42
-        void  (*irq_SCG)(void);                                          // 43
-        void  (*irq_WDOG0)(void);                                        // 44
-        void  (*irq_DAC0)(void);                                         // 45
-        void  (*irq_TRNG0)(void);                                        // 46
-        void  (*irq_RCM)(void);                                          // 47
-        void  (*irq_CMP0)(void);                                         // 48
-        void  (*irq_CMP1)(void);                                         // 49
-        void  (*irq_RTC_Alarm)(void);                                    // 50
-    #elif defined KINETIS_KL82
-        void  (*irq_DMA0)(void);                                         // 0 (shared with DMA channel 4)
-        void  (*irq_DMA1)(void);                                         // 1 (shared with DMA channel 5)
-        void  (*irq_DMA2)(void);                                         // 2 (shared with DMA channel 6)
-        void  (*irq_DMA2)(void);                                         // 3 (shared with DMA channel 7)
-        void  (*irq_DMA0_ERROR)(void);                                   // 4
-        void  (*irq_FLEXIO)(void);                                       // 5
-        void  (*irq_TPM0)(void);                                         // 6
-        void  (*irq_TPM1)(void);                                         // 7
-        void  (*irq_TPM2)(void);                                         // 8
-        void  (*irq_PIT)(void);                                          // 9 single interrupt vector for all channels
-        void  (*irq_SPI0)(void);                                         // 10
-        void  (*irq_EMVSIM0)(void);                                      // 11
-        void  (*irq_LPUART0)(void);                                      // 12 status and error
-        void  (*irq_LPUART1)(void);                                      // 13 status and error
-        void  (*irq_I2C0)(void);                                         // 14
-        void  (*irq_QSPI0)(void);                                        // 15
-        void  (*reserved0)(void);                                        // 16
-        void  (*irq_PORTA)(void);                                        // 17
-        void  (*irq_PORTB)(void);                                        // 18
-        void  (*irq_PORTC)(void);                                        // 19
-        void  (*irq_PORTD)(void);                                        // 20
-        void  (*irq_PORTE)(void);                                        // 21
-        void  (*irq_LL_wakeup)(void);                                    // 22
-        void  (*irq_LTC0)(void);                                         // 23
-        void  (*irq_USB_OTG)(void);                                      // 24
-        void  (*irq_ADC0)(void);                                         // 25
-        void  (*irq_LPTMR0)(void);                                       // 26
-        void  (*irq_RTC_SECONDS)(void);                                  // 27
-        void  (*irq_INTMUX0_0)(void);                                    // 28
-        void  (*irq_INTMUX0_1)(void);                                    // 29
-        void  (*irq_INTMUX0_2)(void);                                    // 30
-        void  (*irq_INTMUX0_3)(void);                                    // 31
-        void  (*irq_LPTMR1)(void);                                       // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
-        void  (*reserved1)(void);                                        // 33
-        void  (*reserved2)(void);                                        // 34
-        void  (*reserved3)(void);                                        // 35
-        void  (*irq_SPI1)(void);                                         // 36
-        void  (*irq_LPUART2)(void);                                      // 37
-        void  (*irq_EMVSIM1)(void);                                      // 38
-        void  (*irq_I2C1)(void);                                         // 39
-        void  (*irq_TSI)(void);                                          // 40
-        void  (*irq_PMC)(void);                                          // 41
-        void  (*irq_FTFA)(void);                                         // 42
-        void  (*irq_MCG)(void);                                          // 43
-        void  (*irq_WDOG0)(void);                                        // 44
-        void  (*irq_DAC0)(void);                                         // 45
-        void  (*irq_TRNG0)(void);                                        // 46
-        void  (*reserved4)(void);                                        // 47
-        void  (*irq_CMP0)(void);                                         // 48
-        void  (*reserved5)(void);                                        // 49
-        void  (*irq_RTC_Alarm)(void);                                    // 50
-        void  (*reserved6)(void);                                        // 51
-        void  (*reserved7)(void);                                        // 52
-        void  (*reserved8)(void);                                        // 53
-        void  (*reserved9)(void);                                        // 54
-        void  (*reserved10)(void);                                       // 55
-        void  (*irq_DMA0_4)(void);                                       // 56
-        void  (*irq_DMA0_5)(void);                                       // 57
-        void  (*irq_DMA0_6)(void);                                       // 58
-        void  (*irq_DMA0_7)(void);                                       // 59
-    #else
-        #if defined DEVICE_WITHOUT_DMA
-            void  (*reserved0)(void);                                    // 0
-            void  (*reserved1)(void);                                    // 1
-            void  (*reserved2)(void);                                    // 2
-            void  (*reserved3)(void);                                    // 3
-        #else
-            void  (*irq_DMA0)(void);                                     // 0
-            void  (*irq_DMA1)(void);                                     // 1
-            void  (*irq_DMA2)(void);                                     // 2
-            void  (*irq_DMA3)(void);                                     // 3
-        #endif
-        void  (*reserved4)(void);                                        // 4
-        void  (*irq_FTFA)(void);                                         // 5 (command complete and read collision combined)
-        void  (*irq_LOW_VOLTAGE)(void);                                  // 6 low voltage detect, low-voltage warning
-        void  (*irq_LL_wakeup)(void);                                    // 7
-        void  (*irq_I2C0)(void);                                         // 8
-        void  (*irq_I2C1)(void);                                         // 9
-        void  (*irq_SPI0)(void);                                         // 10
-        void  (*irq_SPI1)(void);                                         // 11
-        #if LPUARTS_AVAILABLE > 0
-            void  (*irq_LPUART0)(void);                                  // 12 status and error
-        #else
-            void  (*irq_UART0)(void);                                    // 12 status and error
-        #endif
-        #if LPUARTS_AVAILABLE > 1
-            void  (*irq_LPUART1)(void);                                  // 13 status and error
-        #else
-            void  (*irq_UART1)(void);                                    // 13 status and error
-        #endif
-        void  (*irq_UART2)(void);                                        // 14 status and error
-        void  (*irq_ADC0)(void);                                         // 15
-        void  (*irq_CMP0)(void);                                         // 16
-        void  (*irq_TPM0)(void);                                         // 17
-        void  (*irq_TPM1)(void);                                         // 18
-        void  (*irq_TPM2)(void);                                         // 19
-        #if defined KINETIS_KL02
-            void  (*reserved20)(void);                                   // 20
-            void  (*reserved21)(void);                                   // 21
-        #else
-            void  (*irq_RTC_ALARM)(void);                                // 20
-            void  (*irq_RTC_SECONDS)(void);                              // 21
-        #endif
-        void  (*irq_PIT)(void);                                          // 22 single interrupt vector for all channels
-        void  (*irq_I2S0)(void);                                         // 23 single interrupt vector for all sources
-        void  (*irq_USB_OTG)(void);                                      // 24
-        void  (*irq_DAC0)(void);                                         // 25
-        void  (*irq_TSI)(void);                                          // 26
-        void  (*irq_MCG)(void);                                          // 27
-        void  (*irq_LPTMR0)(void);                                       // 28
-        void  (*irq_SLCD)(void);                                         // 29
-        void  (*irq_PORTA)(void);                                        // 30
-        #if (PORTS_AVAILABLE == 2)
-        void  (*irq_PORTB)(void);                                        // 31
-        #elif (defined KINETIS_KL17 || defined KINETIS_KL27) && (SIZE_OF_FLASH <= (64 * 1024))
-        void  (*irq_PORTBCD_E)(void);                                    // 31 single interrupt vector for ports B, C, D and E
-        #else
-        void  (*irq_PORTC_D)(void);                                      // 31 single interrupt vector for ports C and D
-        #endif
-    #endif
-#elif defined KINETIS_K21                                                // {44}
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    void  (*irq_DMA4)(void);                                             // 4
-    void  (*irq_DMA5)(void);                                             // 5
-    void  (*irq_DMA6)(void);                                             // 6
-    void  (*irq_DMA7)(void);                                             // 7
-    void  (*irq_DMA8)(void);                                             // 8
-    void  (*irq_DMA9)(void);                                             // 9
-    void  (*irq_DMA10)(void);                                            // 10
-    void  (*irq_DMA11)(void);                                            // 11
-    void  (*irq_DMA12)(void);                                            // 12
-    void  (*irq_DMA13)(void);                                            // 13
-    void  (*irq_DMA14)(void);                                            // 14
-    void  (*irq_DMA15)(void);                                            // 15
-    void  (*irq_DMA_ERROR)(void);                                        // 16
-    void  (*irq_MCM)(void);                                              // 17
-    void  (*irq_FLASH_CC)(void);                                         // 18
-    void  (*irq_FLASH_RC)(void);                                         // 19
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 20
-    void  (*irq_LL_wakeup)(void);                                        // 21
-    void  (*irq_WDOG0)(void);                                            // 22
-    void  (*irq_RNGB)(void);                                             // 23
-    void  (*irq_I2C0)(void);                                             // 24
-    void  (*irq_I2C1)(void);                                             // 25
-    void  (*irq_SPI0)(void);                                             // 26
-    void  (*irq_SPI1)(void);                                             // 27
-    void  (*irq_I2S0)(void);                                             // 28
-    void  (*irq_I2S1)(void);                                             // 29
-    #if defined KINETIS_K_FPU
-        void  (*irq_UART0_LON)(void);                                    // 30
-    #else
-        void  (*reserved30)(void);                                       // 30
-    #endif
-    void  (*irq_UART0)(void);                                            // 31
-    void  (*irq_UART0_ERROR)(void);                                      // 32
-    void  (*irq_UART1)(void);                                            // 33
-    void  (*irq_UART1_ERROR)(void);                                      // 34
-    void  (*irq_UART2)(void);                                            // 35
-    void  (*irq_UART2_ERROR)(void);                                      // 36
-    void  (*irq_UART3)(void);                                            // 37
-    void  (*irq_UART3_ERROR)(void);                                      // 38
-    void  (*irq_ADC0)(void);                                             // 39
-    void  (*irq_CMP0)(void);                                             // 40
-    void  (*irq_CMP1)(void);                                             // 41
-    void  (*irq_FTM0)(void);                                             // 42
-    void  (*irq_FTM1)(void);                                             // 43
-    void  (*irq_FTM2)(void);                                             // 44
-    void  (*irq_CMT)(void);                                              // 45
-    void  (*irq_RTC_ALARM)(void);                                        // 46
-    void  (*irq_RTC_SECONDS)(void);                                      // 47
-    void  (*irq_PIT0)(void);                                             // 48
-    void  (*irq_PIT1)(void);                                             // 49
-    void  (*irq_PIT2)(void);                                             // 50
-    void  (*irq_PIT3)(void);                                             // 51
-    void  (*irq_PDB0)(void);                                             // 52
-    void  (*irq_USB_OTG)(void);                                          // 53
-    void  (*irq_USB_CD)(void);                                           // 54
-    void  (*reserved55)(void);                                           // 55
-    void  (*irq_DAC0)(void);                                             // 56
-    void  (*irq_MCG)(void);                                              // 57
-    void  (*irq_LPTMR0)(void);                                           // 58
-    void  (*irq_PORTA)(void);                                            // 59
-    void  (*irq_PORTB)(void);                                            // 60
-    void  (*irq_PORTC)(void);                                            // 61
-    void  (*irq_PORTD)(void);                                            // 62
-    void  (*irq_PORTE)(void);                                            // 63
-    void  (*irq_SW_IRQ)(void);                                           // 64
-    #if defined KINETIS_K_FPU
-        void  (*irq_SPI2)(void);                                         // 65
-        void  (*irq_UART4)(void);                                        // 66
-        void  (*irq_UART4_ERROR)(void);                                  // 67
-        void  (*irq_UART5)(void);                                        // 68
-        void  (*irq_UART6_ERROR)(void);                                  // 69
-        void  (*irq_CMP2)(void);                                         // 70
-        void  (*irq_FTM3)(void);                                         // 71
-        void  (*irq_DAC1)(void);                                         // 72
-        void  (*irq_ADC1)(void);                                         // 73
-        void  (*irq_I2C2)(void);                                         // 74
-        void  (*irq_CAN0_MESSAGE)(void);                                 // 75
-        void  (*irq_CAN0_BUS_OFF)(void);                                 // 76
-        void  (*irq_CAN0_ERROR)(void);                                   // 77
-        void  (*irq_CAN0_TX)(void);                                      // 78
-        void  (*irq_CAN0_RX)(void);                                      // 79
-        void  (*irq_CAN0_WAKE_UP)(void);                                 // 80
-        void  (*irq_SDHC)(void);                                         // 81
-    #endif
-#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X && !defined KINETIS_K12
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    void  (*irq_DMA_ERROR)(void);                                        // 4
-    void  (*reserved5)(void);                                            // 5
-    void  (*irq_FLASH_CC)(void);                                         // 6
-    void  (*irq_FLASH_RC)(void);                                         // 7
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 8
-    void  (*irq_LL_wakeup)(void);                                        // 9
-    void  (*irq_WDOG0)(void);                                            // 10
-    void  (*irq_I2C0)(void);                                             // 11
-    void  (*irq_SPI0)(void);                                             // 12
-    void  (*irq_I2S0_TX)(void);                                          // 13
-    void  (*irq_I2S0_RX)(void);                                          // 14
-    void  (*irq_UART0_LON)(void);                                        // 15
-    void  (*irq_UART0)(void);                                            // 16
-    void  (*irq_UART0_ERROR)(void);                                      // 17
-    void  (*irq_UART1)(void);                                            // 18
-    void  (*irq_UART1_ERROR)(void);                                      // 19
-    void  (*irq_UART2)(void);                                            // 20
-    void  (*irq_UART2_ERROR)(void);                                      // 21
-    void  (*irq_ADC0)(void);                                             // 22
-    void  (*irq_CMP0)(void);                                             // 23
-    void  (*irq_CMP1)(void);                                             // 24
-    void  (*irq_FTM0)(void);                                             // 25
-    void  (*irq_FTM1)(void);                                             // 26
-    void  (*irq_CMT)(void);                                              // 27
-    void  (*irq_RTC_ALARM)(void);                                        // 28
-    void  (*irq_RTC_SECONDS)(void);                                      // 29
-    void  (*irq_PIT0)(void);                                             // 30
-    void  (*irq_PIT1)(void);                                             // 31
-    void  (*irq_PIT2)(void);                                             // 32
-    void  (*irq_PIT3)(void);                                             // 33
-    void  (*irq_PDB0)(void);                                             // 34
-    void  (*irq_USB_OTG)(void);                                          // 35
-    void  (*irq_USB_CD)(void);                                           // 36
-    void  (*irq_TSI)(void);                                              // 37
-    void  (*irq_MCG)(void);                                              // 38
-    void  (*irq_LPTMR0)(void);                                           // 39
-    void  (*irq_PORTA)(void);                                            // 40
-    void  (*irq_PORTB)(void);                                            // 41
-    void  (*irq_PORTC)(void);                                            // 42
-    void  (*irq_PORTD)(void);                                            // 43
-    void  (*irq_PORTE)(void);                                            // 44
-    void  (*irq_SW_IRQ)(void);                                           // 45
-#else
-    void  (*irq_DMA0)(void);                                             // 0
-    void  (*irq_DMA1)(void);                                             // 1
-    void  (*irq_DMA2)(void);                                             // 2
-    void  (*irq_DMA3)(void);                                             // 3
-    #if defined KINETIS_K02
-        void  (*irq_res_4)(void);                                        // 4
-        void  (*irq_res_5)(void);                                        // 5
-        void  (*irq_res_6)(void);                                        // 6
-        void  (*irq_res_7)(void);                                        // 7
-        void  (*irq_res_8)(void);                                        // 8
-        void  (*irq_res_9)(void);                                        // 9
-        void  (*irq_res_10)(void);                                       // 10
-        void  (*irq_res_11)(void);                                       // 11
-        void  (*irq_res_12)(void);                                       // 12
-        void  (*irq_res_13)(void);                                       // 13
-        void  (*irq_res_14)(void);                                       // 14
-        void  (*irq_res_15)(void);                                       // 15
-    #else
-        void  (*irq_DMA4)(void);                                         // 4
-        void  (*irq_DMA5)(void);                                         // 5
-        void  (*irq_DMA6)(void);                                         // 6
-        void  (*irq_DMA7)(void);                                         // 7
-        void  (*irq_DMA8)(void);                                         // 8
-        void  (*irq_DMA9)(void);                                         // 9
-        void  (*irq_DMA10)(void);                                        // 10
-        void  (*irq_DMA11)(void);                                        // 11
-        void  (*irq_DMA12)(void);                                        // 12
-        void  (*irq_DMA13)(void);                                        // 13
-        void  (*irq_DMA14)(void);                                        // 14
-        void  (*irq_DMA15)(void);                                        // 15
-    #endif
-    void  (*irq_DMA_ERROR)(void);                                        // 16
-    void  (*irq_MCM)(void);                                              // 17
-    void  (*irq_FLASH_CC)(void);                                         // 18
-    void  (*irq_FLASH_RC)(void);                                         // 19
-    void  (*irq_LOW_VOLTAGE)(void);                                      // 20
-    void  (*irq_LL_wakeup)(void);                                        // 21
-    void  (*irq_WDOG0)(void);                                            // 22
-    #if defined RNG_AVAILABLE
-        void  (*irq_RNG)(void);                                          // 23
-    #else
-        void  (*irq_res_23)(void);                                       // 23
-    #endif
-    void  (*irq_I2C0)(void);                                             // 24
-    #if I2C_AVAILABLE > 1
-        void  (*irq_I2C1)(void);                                         // 25
-    #else
-        void  (*irq_res_25)(void);                                       // 25
-    #endif
-    void  (*irq_SPI0)(void);                                             // 26
-    #if SPI_AVAILABLE > 1
-        void  (*irq_SPI1)(void);                                         // 27
-    #else
-        void  (*irq_res_27)(void);                                       // 27
-    #endif
-    #if defined KINETIS_KV40 || defined KINETIS_KV50
-        #if (UARTS_AVAILABLE > 5)
-        void  (*irq_UART5)(void);                                        // 28
-        void  (*irq_UART5_ERROR)(void);                                  // 29
-        #else
-        void  (*irq_res_28)(void);                                       // 28
-        void  (*irq_res_29)(void);                                       // 29
-        #endif
-        void  (*irq_res_30)(void);                                       // 30
-        void  (*irq_UART0)(void);                                        // 31
-        void  (*irq_UART0_ERROR)(void);                                  // 32
-        void  (*irq_UART1)(void);                                        // 33
-        void  (*irq_UART1_ERROR)(void);                                  // 34
-        #if (UARTS_AVAILABLE > 2)
-        void  (*irq_UART2)(void);                                        // 35
-        void  (*irq_UART2_ERROR)(void);                                  // 36
-        #else
-            void  (*irq_res_35)(void);                                   // 35
-            void  (*irq_res_36)(void);                                   // 36
-        #endif
-        #if defined KINETIS_KV40
-            void  (*irq_res_37)(void);                                   // 37
-            void  (*irq_ADC_ERR_A_B)(void);                              // 38
-            void  (*irq_ADCA)(void);                                     // 39
-            void  (*irq_CMP0)(void);                                     // 40
-            void  (*irq_CMP1)(void);                                     // 41
-            void  (*irq_FTM0)(void);                                     // 42
-            void  (*irq_FTM1)(void);                                     // 43
-            void  (*irq_res_44)(void);                                   // 44
-            void  (*irq_res_45)(void);                                   // 45
-            void  (*irq_res_46)(void);                                   // 46
-            void  (*irq_res_47)(void);                                   // 47
-        #else
-            void  (*irq_ADC0)(void);                                     // 37
-            void  (*irq_HSADC0_1)(void);                                 // 38
-            void  (*irq_HSADC0A)(void);                                  // 39
-            void  (*irq_CMP0)(void);                                     // 40
-            void  (*irq_CMP1)(void);                                     // 41
-            void  (*irq_FTM0)(void);                                     // 42
-            void  (*irq_FTM1)(void);                                     // 43
-            void  (*irq_UART3)(void);                                    // 44
-            void  (*irq_UART3_ERROR)(void);                              // 45
-            void  (*irq_UART4)(void);                                    // 46
-            void  (*irq_UART4_ERROR)(void);                              // 47
-        #endif
-        void  (*irq_PIT0)(void);                                         // 48
-        void  (*irq_PIT1)(void);                                         // 49
-        void  (*irq_PIT2)(void);                                         // 50
-        void  (*irq_PIT3)(void);                                         // 51
-        void  (*irq_PDB0)(void);                                         // 52
-        #if defined NO_FLEX_TIMER_2
-            void  (*irq_res_53)(void);                                   // 53
-        #else
-            void  (*irq_FTM2)(void);                                     // 53
-        #endif
-        void  (*irq_XBARA)(void);                                        // 54
-        void  (*irq_PDB1)(void);                                         // 55
-        void  (*irq_DAC0)(void);                                         // 56
-        void  (*irq_MCG)(void);                                          // 57
-        void  (*irq_LPTMR0)(void);                                       // 58
-        void  (*irq_PORTA)(void);                                        // 59
-        void  (*irq_PORTB)(void);                                        // 60
-        void  (*irq_PORTC)(void);                                        // 61
-        void  (*irq_PORTD)(void);                                        // 62
-        void  (*irq_PORTE)(void);                                        // 63
-        void  (*irq_SOFTWARE)(void);                                     // 64
-        #if SPI_AVAILABLE > 2
-            void  (*irq_SPI2)(void);                                     // 65
-        #else
-            void  (*irq_res_65)(void);                                   // 65
-        #endif
-        void  (*irq_ENC_Compare)(void);                                  // 66
-        void  (*irq_ENC_Home)(void);                                     // 67
-        void  (*irq_ENC_WDOG)(void);                                     // 68
-        void  (*irq_ENC_Index_Roll)(void);                               // 69
-        void  (*irq_CMP2)(void);                                         // 70
-        void  (*irq_FTM3)(void);                                         // 71
-        void  (*irq_res_72)(void);                                       // 72
-        #if defined KINETIS_KV40
-            void  (*irq_ADCB)(void);                                     // 73
-            void  (*irq_res_74)(void);                                   // 74
-        #else
-            void  (*irq_HSADC0B)(void);                                  // 73
-            void  (*irq_HSADC1_A)(void);                                 // 74
-        #endif
-        void  (*irq_CAN0_MESSAGE)(void);                                 // 75
-        void  (*irq_CAN0_BUS_OFF)(void);                                 // 76
-        void  (*irq_CAN0_ERROR)(void);                                   // 77
-        void  (*irq_CAN0_TX)(void);                                      // 78
-        void  (*irq_CAN0_RX)(void);                                      // 79
-        void  (*irq_CAN0_WAKE_UP)(void);                                 // 80
-        void  (*irq_PWM0_0_Compare)(void);                               // 81
-        void  (*irq_PWM0_0_Reload)(void);                                // 82
-        void  (*irq_PWM0_1_Compare)(void);                               // 83
-        void  (*irq_PWM0_1_Reload)(void);                                // 84
-        void  (*irq_PWM0_2_Compare)(void);                               // 85
-        void  (*irq_PWM0_2_Reload)(void);                                // 86
-        void  (*irq_PWM0_3_Compare)(void);                               // 87
-        void  (*irq_PWM0_3_Reload)(void);                                // 88
-        void  (*irq_PWM0_Captures)(void);                                // 89
-        void  (*irq_PWM0_Reload_Error)(void);                            // 90
-        void  (*irq_PWM0_Fault)(void);                                   // 91
-        void  (*irq_CMP3)(void);                                         // 92
-        #if defined KINETIS_KV50
-            void  (*irq_HSADC1_B)(void);                                 // 93
-        #else
-            void  (*irq_res_93)(void);                                   // 93
-        #endif
-        void  (*irq_CAN1_MESSAGE)(void);                                 // 94
-        void  (*irq_CAN1_BUS_OFF)(void);                                 // 95
-        void  (*irq_CAN1_ERROR)(void);                                   // 96
-        void  (*irq_CAN1_TX)(void);                                      // 97
-        void  (*irq_CAN1_RX)(void);                                      // 98
-        void  (*irq_CAN1_WAKE_UP)(void);                                 // 99
-        #if defined KINETIS_KV50
-            void  (*irq_ETH_IEEE1588)(void);                             // 100
-            void  (*irq_ETH_TX)(void);                                   // 101
-            void  (*irq_ETH_RX)(void);                                   // 102
-            void  (*irq_ETH_ERR_MISC)(void);                             // 103
-            void  (*irq_PWM1_0_Compare)(void);                           // 104
-            void  (*irq_PWM1_0_Reload)(void);                            // 105
-            void  (*irq_PWM1_1_Compare)(void);                           // 106
-            void  (*irq_PWM1_1_Reload)(void);                            // 107
-            void  (*irq_PWM1_2_Compare)(void);                           // 108
-            void  (*irq_PWM1_2_Reload)(void);                            // 109
-            void  (*irq_PWM1_3_Compare)(void);                           // 110
-            void  (*irq_PWM1_3_Reload)(void);                            // 111
-            void  (*irq_PWM1_Captures)(void);                            // 112
-            void  (*irq_PWM1_Reload_Error)(void);                        // 113
-            void  (*irq_PWM1_Fault)(void);                               // 114
-            void  (*irq_CAN2_MESSAGE)(void);                             // 115
-            void  (*irq_CAN2_BUS_OFF)(void);                             // 116
-            void  (*irq_CAN2_ERROR)(void);                               // 117
-            void  (*irq_CAN2_TX)(void);                                  // 118
-            void  (*irq_CAN2_RX)(void);                                  // 119
-            void  (*irq_CAN2_WAKE_UP)(void);                             // 120
-        #endif
-    #elif defined KINETIS_K80
-        void  (*irq_I2S0_TX)(void);                                      // 28
-        void  (*irq_I2S0_RX)(void);                                      // 29
-        void  (*irq_LPUART0)(void);                                      // 30
-        void  (*irq_LPUART1)(void);                                      // 31
-        void  (*irq_LPUART2)(void);                                      // 32
-        void  (*irq_LPUART3)(void);                                      // 33
-        void  (*irq_LPUART4)(void);                                      // 34
-        void  (*irq_res_35)(void);                                       // 35
-        void  (*irq_res_36)(void);                                       // 36
-        void  (*irq_EVMSIM0)(void);                                      // 37
-        void  (*irq_EVMSIM1)(void);                                      // 38
-        void  (*irq_ADC0)(void);                                         // 39
-        void  (*irq_CMP0)(void);                                         // 40
-        void  (*irq_CMP1)(void);                                         // 41
-        void  (*irq_FTM0)(void);                                         // 42
-        void  (*irq_FTM1)(void);                                         // 43
-        void  (*irq_FTM2)(void);                                         // 44
-        void  (*irq_CMT)(void);                                          // 45
-        void  (*irq_RTC_ALARM)(void);                                    // 46
-        void  (*irq_RTC_SECONDS)(void);                                  // 47
-        void  (*irq_PIT0)(void);                                         // 48
-        void  (*irq_PIT1)(void);                                         // 49
-        void  (*irq_PIT2)(void);                                         // 50
-        void  (*irq_PIT3)(void);                                         // 51
-        void  (*irq_PDB0)(void);                                         // 52
-        void  (*irq_USB_OTG)(void);                                      // 53
-        void  (*irq_USB_CD)(void);                                       // 54
-        void  (*irq_res_55)(void);
-        void  (*irq_DAC0)(void);                                         // 56
-        void  (*irq_MCG)(void);                                          // 57
-        void  (*irq_LPTMR0)(void);                                       // 58
-        void  (*irq_PORTA)(void);                                        // 59
-        void  (*irq_PORTB)(void);                                        // 60
-        void  (*irq_PORTC)(void);                                        // 61
-        void  (*irq_PORTD)(void);                                        // 62
-        void  (*irq_PORTE)(void);                                        // 63
-        void  (*irq_SOFTWARE)(void);                                     // 64
-        void  (*irq_SPI2)(void);                                         // 65
-        void  (*irq_res_66)(void);                                       // 66
-        void  (*irq_res_67)(void);                                       // 67
-        void  (*irq_res_68)(void);                                       // 68
-        void  (*irq_res_69)(void);                                       // 69
-        void  (*irq_FLEXIO)(void);                                       // 70
-        void  (*irq_FTM3)(void);                                         // 71
-        void  (*irq_res_72)(void);                                       // 72
-        void  (*irq_res_73)(void);                                       // 73
-        void  (*irq_I2C2)(void);                                         // 74
-        void  (*irq_res_75)(void);                                       // 75
-        void  (*irq_res_76)(void);                                       // 76
-        void  (*irq_res_77)(void);                                       // 77
-        void  (*irq_res_78)(void);                                       // 78
-        void  (*irq_res_79)(void);                                       // 79
-        void  (*irq_res_80)(void);                                       // 80
-        void  (*irq_SDHC)(void);                                         // 81
-        void  (*irq_res_82)(void);                                       // 82
-        void  (*irq_res_83)(void);                                       // 83
-        void  (*irq_res_84)(void);                                       // 84
-        void  (*irq_res_85)(void);                                       // 85
-        void  (*irq_res_86)(void);                                       // 86
-        void  (*irq_TSI0)(void);                                         // 87
-        void  (*irq_TPM1)(void);                                         // 88
-        void  (*irq_TPM2)(void);                                         // 89
-        void  (*irq_res_90)(void);                                       // 90
-        void  (*irq_I2C3)(void);                                         // 91
-        void  (*irq_res_92)(void);                                       // 92
-        void  (*irq_res_93)(void);                                       // 93
-        void  (*irq_res_94)(void);                                       // 94
-        void  (*irq_res_95)(void);                                       // 95
-        void  (*irq_res_96)(void);                                       // 96
-        void  (*irq_res_97)(void);                                       // 97
-        void  (*irq_res_98)(void);                                       // 98
-        void  (*irq_res_99)(void);                                       // 99
-        void  (*irq_QSPI)(void);                                         // 100
-    #elif defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
-            void  (*irq_I2S0_TX)(void);                                  // 28
-            void  (*irq_I2S0_RX)(void);                                  // 29
-            void  (*irq_res_30)(void);                                   // 30
-        #else
-            #if defined I2S_AVAILABLE > 1
-                void  (*irq_I2S1_TX)(void);                              // 28
-            #else
-                void  (*irq_res_28)(void);                               // 28
-            #endif
-            #if defined I2S_AVAILABLE > 1
-                void  (*irq_I2S1_RX)(void);                              // 29
-            #else
-                void  (*irq_res_29)(void);                               // 29
-            #endif
-            #if LPUARTS_AVAILABLE > 0
-                void  (*irq_LPUART0)(void);                              // 30
-            #else
-                void  (*irq_res_30)(void);                               // 30
-            #endif
-        #endif
-        void  (*irq_UART0)(void);                                        // 31
-        void  (*irq_UART0_ERROR)(void);                                  // 32
-        void  (*irq_UART1)(void);                                        // 33
-        void  (*irq_UART1_ERROR)(void);                                  // 34
-        #if UARTS_AVAILABLE > 2
-            void  (*irq_UART2)(void);                                    // 35
-            void  (*irq_UART2_ERROR)(void);                              // 36
-        #else
-            void  (*irq_res_35)(void);                                   // 35
-            void  (*irq_res_36)(void);                                   // 36
-        #endif
-        #if UARTS_AVAILABLE > 3
-            void  (*irq_UART3)(void);                                    // 37
-            void  (*irq_UART3_ERROR)(void);                              // 38
-        #else
-            void  (*irq_res_37)(void);                                   // 37
-            void  (*irq_res_38)(void);                                   // 38
-        #endif
-        void  (*irq_ADC0)(void);                                         // 39
-        void  (*irq_CMP0)(void);                                         // 40
-        void  (*irq_CMP1)(void);                                         // 41
-        void  (*irq_FTM0)(void);                                         // 42
-        void  (*irq_FTM1)(void);                                         // 43
-        void  (*irq_FTM2)(void);                                         // 44
-        void  (*irq_CMT)(void);                                          // 45
-        #if defined KINETIS_KV30 || defined KINETIS_K02
-            void  (*irq_res_46)(void);                                   // 46
-            void  (*irq_res_47)(void);                                   // 47
-        #else
-            void  (*irq_RTC_ALARM)(void);                                // 46
-            void  (*irq_RTC_SECONDS)(void);                              // 47
-        #endif
-        void  (*irq_PIT0)(void);                                         // 48
-        void  (*irq_PIT1)(void);                                         // 49
-        void  (*irq_PIT2)(void);                                         // 50
-        void  (*irq_PIT3)(void);                                         // 51
-        void  (*irq_PDB0)(void);                                         // 52
-        void  (*irq_USB_OTG)(void);                                      // 53
-        void  (*irq_USB_CD)(void);                                       // 54
-        void  (*irq_res_55)(void);
-        void  (*irq_DAC0)(void);                                         // 56
-        void  (*irq_MCG)(void);                                          // 57
-        void  (*irq_LPTMR0)(void);                                       // 58
-        void  (*irq_PORTA)(void);                                        // 59
-        void  (*irq_PORTB)(void);                                        // 60
-        void  (*irq_PORTC)(void);                                        // 61
-        void  (*irq_PORTD)(void);                                        // 62
-        void  (*irq_PORTE)(void);                                        // 63
-        void  (*irq_SOFTWARE)(void);                                     // 64
-        #if !defined KINETIS_K02 && !defined KINETIS_KW2X && !defined KINETIS_K12
-            void  (*irq_SPI2)(void);                                     // 65
-            #if UARTS_AVAILABLE > 4
-                void  (*irq_UART4)(void);                                // 66
-                void  (*irq_UART4_ERROR)(void);                          // 67
-            #else
-                void  (*irq_res_66)(void);                               // 66
-                void  (*irq_res_67)(void);                               // 67
-            #endif
-            #if UARTS_AVAILABLE > 5
-                void  (*irq_UART5)(void);                                // 68
-                void  (*irq_UART5_ERROR)(void);                          // 69
-            #else
-                void  (*irq_res_68)(void);                               // 68
-                void  (*irq_res_69)(void);                               // 69
-            #endif
-            #if NUMBER_OF_COMPARATORS > 2
-                void  (*irq_CMP2)(void);                                 // 70
-            #else
-                void  (*irq_res_70)(void);                               // 70
-            #endif
-            void  (*irq_FTM3)(void);                                     // 71
-            #if DAC_CONTROLLERS > 1
-                void  (*irq_DAC1)(void);                                 // 72
-            #else
-                void  (*irq_res_72)(void);                               // 72
-            #endif
-            void  (*irq_ADC1)(void);                                     // 73
-            #if defined KINETIS_K24 && ((SIZE_OF_FLASH == 256 * 1024))
-                void  (*irq_I2C2)(void);                                 // 74
-            #elif !defined KINETIS_KV30 && !defined KINETIS_K22
-                void  (*irq_I2C2)(void);                                 // 74
-                #if NUMBER_OF_CAN_INTERFACES > 0
-                    void  (*irq_CAN0_MESSAGE)(void);                     // 75
-                    void  (*irq_CAN0_BUS_OFF)(void);                     // 76
-                    void  (*irq_CAN0_ERROR)(void);                       // 77
-                    void  (*irq_CAN0_TX)(void);                          // 78
-                    void  (*irq_CAN0_RX)(void);                          // 79
-                    void  (*irq_CAN0_WAKE_UP)(void);                     // 80
-                #else
-                    void  (*irq_res_75)(void);                           // 75
-                    void  (*irq_res_76)(void);                           // 76
-                    void  (*irq_res_77)(void);                           // 77
-                    void  (*irq_res_78)(void);                           // 78
-                    void  (*irq_res_79)(void);                           // 79
-                    void  (*irq_res_80)(void);                           // 80
-                #endif
-                #if NUMBER_OF_SDHC > 0
-                    void  (*irq_SDHC)(void);                             // 81
-                #else
-                    void  (*irq_res_81)(void);                           // 81
-                #endif
-                #if !defined KINETIS_K24
-                    void  (*irq_ETH_IEEE1588)(void);                     // 82
-                    void  (*irq_ETH_TX)(void);                           // 83
-                    void  (*irq_ETH_RX)(void);                           // 84
-                    void  (*irq_ETH_ERR_MISC)(void);                     // 85
-                #endif
-                #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
-                    void  (*irq_LPUART0)(void);                          // 86
-                    void  (*irq_TSI0)(void);                             // 87
-                    void  (*irq_TPM1)(void);                             // 88
-                    void  (*irq_TPM2)(void);                             // 89
-                    void  (*irq_USBHS_DCD_PHY)(void);                    // 90
-                    void  (*irq_I2C3)(void);                             // 91
-                    void  (*irq_CMP3)(void);                             // 92
-                    void  (*irq_USB_HS)(void);                           // 93
-                    void  (*irq_CAN1_MESSAGE)(void);                     // 94
-                    void  (*irq_CAN1_BUS_OFF)(void);                     // 95
-                    void  (*irq_CAN1_ERROR)(void);                       // 96
-                    void  (*irq_CAN1_TX)(void);                          // 97
-                    void  (*irq_CAN1_RX)(void);                          // 98
-                    void  (*irq_CAN1_WAKE_UP)(void);                     // 99
-                #endif
-            #endif
-        #endif
-    #else
-        void  (*irq_SPI2)(void);                                         // 28
-        void  (*irq_CAN0_MESSAGE)(void);                                 // 29
-        void  (*irq_CAN0_BUS_OFF)(void);                                 // 30
-        void  (*irq_CAN0_ERROR)(void);                                   // 31
-        void  (*irq_CAN0_TX)(void);                                      // 32
-        void  (*irq_CAN0_RX)(void);                                      // 33
-        void  (*irq_CAN0_WAKE_UP)(void);                                 // 34
-        #if defined KINETIS_K20 && defined KINETIS_REVISION_2
-            void (*irq_I2S0_TRANSMIT_ID)(void);                          // 35
-            void (*irq_I2S0_RECEIVE_ID)(void);                           // 36
-        #else
-            void  (*irq_CAN0_IMEU)(void);                                // 35
-            void  (*irq_CAN0_LOST_RX)(void);                             // 36
-        #endif
-        void  (*irq_CAN1_MESSAGE)(void);                                 // 37
-        void  (*irq_CAN1_BUS_OFF)(void);                                 // 38
-        void  (*irq_CAN1_ERROR)(void);                                   // 39
-        void  (*irq_CAN1_TX)(void);                                      // 40
-        void  (*irq_CAN1_RX)(void);                                      // 41
-        void  (*irq_CAN1_WAKE_UP)(void);                                 // 42
-        #if defined KINETIS_K20 && KINETIS_MAX_SPEED > 100000000
-            void  (*irq_res_43)(void);                                   // 43
-            void  (*irq_UART0_LON)(void);                                // 44
-        #else
-            void  (*irq_CAN1_IMEU)(void);                                // 43
-            void  (*irq_CAN1_LOST_RX)(void);                             // 44
-        #endif
-        void  (*irq_UART0)(void);                                        // 45
-        void  (*irq_UART0_ERROR)(void);                                  // 46
-        void  (*irq_UART1)(void);                                        // 47
-        void  (*irq_UART1_ERROR)(void);                                  // 48
-        void  (*irq_UART2)(void);                                        // 49
-        void  (*irq_UART2_ERROR)(void);                                  // 50
-        void  (*irq_UART3)(void);                                        // 51
-        void  (*irq_UART3_ERROR)(void);                                  // 52
-        void  (*irq_UART4)(void);                                        // 53
-        void  (*irq_UART4_ERROR)(void);                                  // 54
-        void  (*irq_UART5)(void);                                        // 55
-        void  (*irq_UART5_ERROR)(void);                                  // 56
-        void  (*irq_ADC0)(void);                                         // 57
-        void  (*irq_ADC1)(void);                                         // 58
-        void  (*irq_CMP0)(void);                                         // 59
-        void  (*irq_CMP1)(void);                                         // 60
-        void  (*irq_CMP2)(void);                                         // 61
-        void  (*irq_FTM0)(void);                                         // 62
-        void  (*irq_FTM1)(void);                                         // 63
-        void  (*irq_FTM2)(void);                                         // 64
-        void  (*irq_CMT)(void);                                          // 65
-        void  (*irq_RTC_ALARM)(void);                                    // 66
-        #if defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED <= 50000000)
-            void  (*irq_RTC_SECONDS)(void);                              // 67
-        #else
-            void  (*irq_res_67)(void);                                   // 67
-        #endif
-        void  (*irq_PIT0)(void);                                         // 68
-        void  (*irq_PIT1)(void);                                         // 69
-        void  (*irq_PIT2)(void);                                         // 70
-        void  (*irq_PIT3)(void);                                         // 71
-        void  (*irq_PDB0)(void);                                         // 72
-        void  (*irq_USB_OTG)(void);                                      // 73
-        void  (*irq_USB_CD)(void);                                       // 74
-        #if defined ETHERNET_AVAILABLE
-            void  (*irq_ETH_IEEE1588)(void);                             // 75
-            void  (*irq_ETH_TX)(void);                                   // 76
-            void  (*irq_ETH_RX)(void);                                   // 77
-            void  (*irq_ETH_ERR_MISC)(void);                             // 78
-        #else
-            void  (*irq_res_75)(void);                                   // 75
-            void  (*irq_res_76)(void);                                   // 76
-            void  (*irq_res_77)(void);                                   // 77
-            void  (*irq_res_78)(void);                                   // 78
-        #endif
-        void  (*irq_I2S)(void);                                          // 79
-        void  (*irq_SDHC)(void);                                         // 80
-        void  (*irq_DAC0)(void);                                         // 81
-        void  (*irq_DAC1)(void);                                         // 82
-        void  (*irq_TSI)(void);                                          // 83
-        void  (*irq_MCG)(void);                                          // 84
-        void  (*irq_LPTMR0)(void);                                       // 85
-        void  (*reserved86)(void);                                       // 86
-        void  (*irq_PORTA)(void);                                        // 87
-        void  (*irq_PORTB)(void);                                        // 88
-        void  (*irq_PORTC)(void);                                        // 89
-        void  (*irq_PORTD)(void);                                        // 90
-        void  (*irq_PORTE)(void);                                        // 91
-        #if defined KINETIS_K61 || defined KINETIS_K70
-            void  (*irq_PORTF)(void);                                    // 92
-            void  (*irq_DDR)(void);                                      // 93
-            void  (*irq_SOFTWARE)(void);                                 // 94
-            void  (*irq_NFC)(void);                                      // 95
-            void  (*irq_USB_HS)(void);                                   // 96
-            void  (*irq_GLCD)(void);                                     // 97
-            void  (*irq_CMP3)(void);                                     // 98
-            void  (*irq_TAMPER)(void);                                   // 99
-            void  (*reserved100)(void);                                  // 100
-            void  (*irq_FTM3)(void);                                     // 101
-            void  (*irq_ADC2)(void);                                     // 102
-            void  (*irq_ADC3)(void);                                     // 103
-            void  (*irq_I2S1_TX)(void);                                  // 104
-            void  (*irq_I2S1_RX)(void);                                  // 105
-        #elif (defined KINETIS_K60 || defined KINETIS_K20) && (KINETIS_MAX_SPEED > 100000000)
-            void  (*irq_PORTF)(void);                                    // 92
-            void  (*reserved93)(void);                                   // 93
-            void  (*irq_SOFTWARE)(void);                                 // 94
-            void  (*irq_NFC)(void);                                      // 95
-            void  (*irq_USB_HS)(void);                                   // 96
-            void  (*reserved97)(void);                                   // 97
-            void  (*irq_CMP3)(void);                                     // 98
-            void  (*reserved99)(void);                                   // 99
-            void  (*reserved100)(void);                                  // 100
-            void  (*irq_FTM3)(void);                                     // 101
-            void  (*irq_ADC2)(void);                                     // 102
-            void  (*irq_ADC3)(void);                                     // 103
-            void  (*irq_I2S1_TX)(void);                                  // 104
-            void  (*irq_I2S1_RX)(void);                                  // 105
-        #endif
-    #endif
 #endif
 } PROCESSOR_IRQ;
 
@@ -3100,912 +2004,6 @@ typedef struct stVECTOR_TABLE
     #define irq_FLEXPWM2_2_ID             139
     #define irq_FLEXPWM2_3_ID             140
     #define irq_FLEXPWM2_Fault_ID         141
-#elif defined KINETIS_KE15
-    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
-    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
-    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
-    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
-    #define irq_DMA0_ERROR_ID             4                              // 4
-    #define irq_FLASH_ID                  5                              // 5
-    #define irq_PMC_ID                    6                              // 6
-    #define irq_PORT_A_E_ID               7                              // 7
-    #define irq_LPI2C0_ID                 8                              // 8
-    #define irq_LPI2C1_ID                 9                              // 9
-    #define irq_LPSPI0_ID                 10                             // 10
-    #define irq_LPSPI1_ID                 11                             // 11
-    #define irq_LPUART0_ID                12                             // 12
-    #define irq_LPUART1_ID                13                             // 13
-    #define irq_LPUART2_ID                14                             // 14
-    #define irq_ADC0_ID                   15                             // 15
-    #define irq_CMP0_ID                   16                             // 16
-    #define irq_FTM0_ID                   17                             // 17
-    #define irq_FTM1_ID                   18                             // 18
-    #define irq_FTM2_ID                   19                             // 19
-    #define irq_RTC_ALARM_ID              20                             // 20
-    #define irq_CMP1_ID                   21                             // 21
-    #define irq_LPIT0_ID                  22                             // 22
-    #define irq_FLEXIO_ID                 23                             // 23
-    #define irq_TSI_ID                    24                             // 24
-    #define irq_PDB0_ID                   25                             // 25
-    #define irq_PORT_B_C_D_ID             26                             // 26
-    #define irq_SCG_ID                    27                             // 27
-    #define irq_WDOG0_ID                  28                             // 28
-    #define irq_LPTMR_PWT_ID              29                             // 29
-    #define irq_ADC1_ID                   30                             // 30
-    #define irq_RCM_ID                    31                             // 31
-#elif defined KINETIS_KE18
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #define irq_DMA4_ID                   4                              // 4
-    #define irq_DMA5_ID                   5                              // 5
-    #define irq_DMA6_ID                   6                              // 6
-    #define irq_DMA7_ID                   7                              // 7
-    #define irq_DMA8_ID                   8                              // 8
-    #define irq_DMA9_ID                   9                              // 9
-    #define irq_DMA10_ID                  10                             // 10
-    #define irq_DMA11_ID                  11                             // 11
-    #define irq_DMA12_ID                  12                             // 12
-    #define irq_DMA13_ID                  13                             // 13
-    #define irq_DMA14_ID                  14                             // 14
-    #define irq_DMA15_ID                  15                             // 15
-    #define irq_DMA_ERROR_ID              16                             // 16
-    #define irq_MCM_ID                    17                             // 17
-    #define irq_FLASH_CC_ID               18                             // 18
-    #define irq_FLASH_RC_ID               19                             // 19
-    #define irq_LOW_VOLTAGE_ID            20                             // 20
-    #define irq_FLASH_FAULT_ID            21                             // 21
-    #define irq_WDOG_ID                   22                             // 22
-    #define irq_LPI2C0_ID                 24                             // 24
-    #define irq_LPI2C1_ID                 25                             // 25
-    #define irq_LPSPI0_ID                 26                             // 26
-    #define irq_LPSPI1_ID                 27                             // 27
-    #define irq_PWT_ID                    29                             // 29
-    #define irq_LPUART0_TX_ID             31                             // 31
-    #define irq_LPUART0_RX_ID             32                             // 32
-    #define irq_LPUART1_TX_ID             33                             // 33
-    #define irq_LPUART1_RX_ID             34                             // 34
-    #define irq_LPUART2_TX_ID             35                             // 35
-    #define irq_LPUART2_RX_ID             36                             // 36
-    #define irq_ADC0_ID                   39                             // 39
-    #define irq_CMP0_ID                   40                             // 40
-    #define irq_CMP1_ID                   41                             // 41
-    #define irq_FTM0_ID                   42                             // 42
-    #define irq_FTM1_ID                   43                             // 43
-    #define irq_FTM2_ID                   44                             // 44
-    #define irq_RTC_ALARM_ID              46                             // 46
-    #define irq_RTC_SECONDS_ID            47                             // 47
-    #define irq_LPIT0_CH0_ID              48                             // 48
-    #define irq_LPIT0_CH1_ID              49                             // 49
-    #define irq_LPIT0_CH2_ID              50                             // 50
-    #define irq_LPIT0_CH3_ID              51                             // 51
-    #define irq_PIT0_ID                   irq_LPIT0_CH0_ID               // for compatibility
-    #define irq_PIT1_ID                   irq_LPIT0_CH1_ID
-    #define irq_PIT2_ID                   irq_LPIT0_CH2_ID
-    #define irq_PIT3_ID                   irq_LPIT0_CH3_ID
-    #define irq_PDB0_ID                   52                             // 52
-    #define irq_DAC0_ID                   56                             // 56
-    #define irq_SCG_RCM_ID                57                             // 57
-    #define irq_LPTMR0_ID                 58                             // 58
-    #define irq_PORTA_ID                  59                             // 59 (port A)
-    #define irq_PORTB_ID                  60                             // 60 (port B)
-    #define irq_PORTC_ID                  61                             // 61 (port C)
-    #define irq_PORTD_ID                  62                             // 62 (port D)
-    #define irq_PORTE_ID                  63                             // 63 (port E)
-    #define irq_SW_IRQ_ID                 64                             // 64
-    #define irq_PDB1_ID                   68                             // 68
-    #define irq_FlexIO_ID                 69                             // 69
-    #define irq_CMP2_ID                   70                             // 70
-    #define irq_FTM3_ID                   71                             // 71
-    #define irq_ADC1_ID                   73                             // 73
-    #define irq_ADC2_ID                   74                             // 74
-    #define irq_PDB2_ID                   77                             // 77
-    #define irq_CAN0_BUS_OFF_ID           78                             // 78 (or transmit or receive warning s)
-    #define irq_CAN0_ERROR_ID             79                             // 79
-    #define irq_CAN0_WAKE_UP_ID           80                             // 80
-    #define irq_CAN0_MESSAGE_ID           81                             // 81
-    #define irq_CAN0_RESERVED_ID          82                             // 82
-    #define irq_CAN0_EXTENSION_32_47_ID   83                             // 83
-    #define irq_CAN0_EXTENSION_48_63_ID   84                             // 84
-    #define irq_CAN1_BUS_OFF_ID           85                             // 85 (or transmit or receive warning s)
-    #define irq_CAN1_ERROR_ID             86                             // 86
-    #define irq_CAN1_WAKE_UP_ID           87                             // 87
-    #define irq_CAN1_MESSAGE_ID           88                             // 88
-    #define irq_CAN1_RESERVED_ID          89                             // 89
-    #define irq_CAN1_EXTENSION_32_47_ID   90                             // 90
-    #define irq_CAN1_EXTENSION_48_63_ID   91                             // 91
-#elif defined KINETIS_KE                                                 // {42}
-    #define irq_FTMRH_ID                  5                              // 5
-    #define irq_PMC_ID                    6                              // 6
-    #define irq_IRQ_ID                    7                              // 7
-    #define irq_I2C0_ID                   8                              // 8
-  #if defined KINETIS_KE04 || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    #define irq_I2C1_ID                   9                              // 9
-  #endif
-    #define irq_SPI0_ID                   10                             // 10
-    #define irq_SPI1_ID                   11                             // 11
-    #define irq_UART0_ID                  12                             // 12
-    #define irq_UART1_ID                  13                             // 13
-    #define irq_UART2_ID                  14                             // 14
-    #define irq_ADC0_ID                   15                             // 15
-    #define irq_CMP0_ID                   16                             // 16
-    #define irq_FTM0_ID                   17                             // 17
-    #define irq_FTM1_ID                   18                             // 18
-    #define irq_FTM2_ID                   19                             // 19
-    #define irq_RTC_OVERFLOW_ID           20                             // 20
-    #define irq_CMP1_ID                   21                             // 21
-    #define irq_PIT0_ID                   22                             // 22
-    #define irq_PIT1_ID                   23                             // 23
-    #define irq_KBI0_ID                   24                             // 24
-    #define irq_KBI1_ID                   25                             // 25
-
-    #define irq_ICS_ID                    27                             // 27
-    #define irq_WDOG_ID                   28                             // 28
-#elif defined KINETIS_KM
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #define irq_SPI0_ID                   4                              // 4
-    #define irq_SPI1_ID                   5                              // 5
-    #define irq_PMC_ID                    6                              // 6
-    #define irq_TMR_0_ID                  7                              // 7
-    #define irq_TMR_1_ID                  8                              // 8
-    #define irq_TMR_2_ID                  9                              // 9
-    #define irq_TMR_3_ID                  10                             // 10
-    #define irq_PIT_ID                    11                             // 11
-    #define irq_LL_wakeup_ID              12                             // 12
-    #define irq_FTFA_ID                   13                             // 13
-    #define irq_CMP_ID                    14                             // 14
-    #define irq_SLCD_ID                   15                             // 15
-    #define irq_ADC0_ID                   16                             // 16
-    #define irq_PT_ID                     17                             // 17
-    #define irq_RNG_ID                    18                             // 18
-    #define irq_UART0_1_ID                19                             // 19
-    #define irq_UART2_3_ID                20                             // 20
-    #define irq_AFE_CH0_ID                21                             // 21
-    #define irq_AFE_CH1_ID                22                             // 22
-    #define irq_AFE_CH2_ID                23                             // 23
-    #define irq_AFE_CH3_ID                24                             // 24
-    #define irq_RTC_ALARM_ID              25                             // 25 (iRTC)
-    #define irq_I2C0_1_ID                 26                             // 26
-    #define irq_EWM_ID                    27                             // 27
-    #define irq_MCG_ID                    28                             // 28
-    #define irq_WDOG_ID                   29                             // 29
-    #define irq_LPTMR0_ID                 30                             // 30
-    #define irq_XBAR_ID                   31                             // 31
-#elif defined KINETIS_KV && !defined KINETIS_KV30 && !defined KINETIS_KV40 && !defined KINETIS_KV50
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #define irq_DMAERROR_ID               4                              // 4
-    #define irq_FTFA_ID                   5                              // 5
-    #define irq_LOW_VOLTAGE_ID            6                              // 6
-    #define irq_LL_wakeup_ID              7                              // 7
-    #define irq_I2C0_ID                   8                              // 8
-    #define irq_I2C1_ID                   9                              // 9
-    #define irq_SPI0_ID                   10                             // 10
-    #define irq_SPI1_ID                   11                             // 11
-    #define irq_UART0_ID                  12                             // 12
-    #define irq_UART1_ID                  13                             // 13
-    #define irq_UART2_ID                  14                             // 14
-    #define irq_ADC0_ID                   15                             // 15
-    #define irq_ADC1_ID                   16                             // 16
-    #define irq_FTM0_ID                   17                             // 17
-    #define irq_FTM1_ID                   18                             // 18
-    #define irq_FTM2_ID                   19                             // 19
-    #define irq_MP0_ID                    20                             // 20
-    #define irq_CMP1_ID                   21                             // 21
-
-    #define irq_WDOG_EWM_ID               23                             // 23
-
-    #define irq_DAC0_ID                   25                             // 25
-
-    #define irq_MCG_ID                    27                             // 27
-    #define irq_LPTMR0_ID                 28                             // 28
-    #define irq_PDB0_ID                   29                             // 29
-    #define irq_PORTA_ID                  30                             // 30
-    #define irq_PORTB_C_D_E_ID            31                             // 31 (ports B, C, D and E share an interrupt)
-#elif defined KINETIS_KL28
-    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
-    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
-    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
-    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
-    #define irq_DMA0_ERROR_ID             4                              // 4
-    #define irq_FLEXIO_ID                 5                              // 5
-    #define irq_TPM0_ID                   6                              // 6
-    #define irq_TPM1_ID                   7                              // 7
-    #define irq_TPM2_ID                   8                              // 8
-    #define irq_LPIT0_ID                  9                              // 9
-    #define irq_LPSPI0_ID                 10                             // 10
-    #define irq_LPSPI1_ID                 11                             // 11
-    #define irq_LPUART0_ID                12                             // 12
-    #define irq_LPUART1_ID                13                             // 13
-    #define irq_LPI2C0_ID                 14                             // 14
-    #define irq_LPI2C1_ID                 15                             // 15
-
-    #define irq_PORTA_ID                  17                             // 17 (port A)
-    #define irq_PORTB_ID                  18                             // 18 (port B)
-    #define irq_PORTC_ID                  19                             // 19 (port C)
-    #define irq_PORTD_ID                  20                             // 20 (port D)
-    #define irq_PORTE_ID                  21                             // 21 (port E)
-    #define irq_LL_wakeup_ID              22                             // 22
-    #define irq_SAI0_ID                   23                             // 23
-    #define irq_USB_OTG_ID                24                             // 24
-    #define irq_ADC0_ID                   25                             // 25
-    #define irq_LPTMR0_ID                 26                             // 26
-    #define irq_RTC_SECONDS_ID            27                             // 27
-    #define irq_INTMUX0_0_ID              28                             // 28
-    #define irq_INTMUX0_1_ID              29                             // 29
-    #define irq_INTMUX0_2_ID              30                             // 30
-    #define irq_INTMUX0_3_ID              31                             // 31
-    #define irq_LPTMR1_EXTENDED_ID        32                             // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
-    #define irq_LPSPI2_EXTENDED_ID        36                             // 36
-    #define irq_LPUART2_EXTENDED_ID       37                             // 37
-    #define irq_EMVSIM0_EXTENDED_ID       38                             // 38
-    #define irq_LPI2C2_EXTENDED_ID        39                             // 39
-    #define irq_TSI_EXTENDED_ID           40                             // 40
-    #define irq_PMC_EXTENDED_ID           41                             // 41
-    #define irq_FTFA_EXTENDED_ID          42                             // 42
-    #define irq_SCG_EXTENDED_ID           43                             // 43
-    #define irq_WDOG0_EXTENDED_ID         44                             // 44
-    #define irq_DAC0_EXTENDED_ID          45                             // 45
-    #define irq_TRNG0_EXTENDED_ID         46                             // 46
-    #define irq_RCM_EXTENDED_ID           47                             // 47
-    #define irq_CMP0_EXTENDED_ID          48                             // 48
-    #define irq_CMP1_EXTENDED_ID          49                             // 49
-    #define irq_RTC_Alarm_EXTENDED_ID     50                             // 50
-#elif defined KINETIS_KL82
-    #define irq_DMA0_ID                   0                              // 0 (shared with DMA 4 interrupt)
-    #define irq_DMA1_ID                   1                              // 1 (shared with DMA 5 interrupt)
-    #define irq_DMA2_ID                   2                              // 2 (shared with DMA 6 interrupt)
-    #define irq_DMA3_ID                   3                              // 3 (shared with DMA 7 interrupt)
-    #define irq_DMA0_ERROR_ID             4                              // 4
-    #define irq_FLEXIO_ID                 5                              // 5
-    #define irq_TPM0_ID                   6                              // 6
-    #define irq_TPM1_ID                   7                              // 7
-    #define irq_TPM2_ID                   8                              // 8
-    #define irq_PIT_ID                    9                              // 9
-    #define irq_SPI0_ID                   10                             // 10
-    #define irq_EVMSIM0_ID                11                             // 11
-    #define irq_LPUART0_ID                12                             // 12
-    #define irq_LPUART1_ID                13                             // 13
-    #define irq_I2C0_ID                   14                             // 14
-    #define irq_QSPI0_ID                  15                             // 15
-
-    #define irq_PORTA_ID                  17                             // 17 (port A)
-    #define irq_PORTB_ID                  18                             // 18 (port B)
-    #define irq_PORTC_ID                  19                             // 19 (port C)
-    #define irq_PORTD_ID                  20                             // 20 (port D)
-    #define irq_PORTE_ID                  21                             // 21 (port E)
-    #define irq_LL_wakeup_ID              22                             // 22
-    #define irq_LTC0_ID                   23                             // 23
-    #define irq_USB_OTG_ID                24                             // 24
-    #define irq_ADC0_ID                   25                             // 25
-    #define irq_LPTMR0_ID                 26                             // 26
-    #define irq_RTC_SECONDS_ID            27                             // 27
-    #define irq_INTMUX0_0_ID              28                             // 28
-    #define irq_INTMUX0_1_ID              29                             // 29
-    #define irq_INTMUX0_2_ID              30                             // 30
-    #define irq_INTMUX0_3_ID              31                             // 31
-    #define irq_LPTMR1_EXTENDED_ID        32                             // 32 - extended using INTMUX0 (lower interrupt vector numbers have higher priority in each INTMUX0 channel)
-
-    #define irq_SPI1_EXTENDED_ID          36                             // 36
-    #define irq_LPUART2_EXTENDED_ID       37                             // 37
-    #define irq_EMVSIM1_EXTENDED_ID       38                             // 38
-    #define irq_I2C1_EXTENDED_ID          39                             // 39
-    #define irq_TSI_EXTENDED_ID           40                             // 40
-    #define irq_PMC_EXTENDED_ID           41                             // 41
-    #define irq_FTFA_EXTENDED_ID          42                             // 42
-    #define irq_MCG_EXTENDED_ID           43                             // 43
-    #define irq_WDOG0_EXTENDED_ID         44                             // 44
-    #define irq_DAC0_EXTENDED_ID          45                             // 45
-    #define irq_TRNG0_EXTENDED_ID         46                             // 46
-
-    #define irq_CMP0_EXTENDED_ID          48                             // 48
-
-    #define irq_RTC_Alarm_EXTENDED_ID     50                             // 50
-
-    #define irq_DMA0_4_EXTENDED_ID        56                             // 56
-    #define irq_DMA0_5_EXTENDED_ID        57                             // 57
-    #define irq_DMA0_6_EXTENDED_ID        58                             // 58
-    #define irq_DMA0_7_EXTENDED_ID        59                             // 59
-#elif defined KINETIS_KL                                                 // {42}
-    #if !defined DEVICE_WITHOUT_DMA
-        #define irq_DMA0_ID               0                              // 0
-        #define irq_DMA1_ID               1                              // 1
-        #define irq_DMA2_ID               2                              // 2
-        #define irq_DMA3_ID               3                              // 3
-    #endif
-
-    #define irq_FTFA_ID                   5                              // 5
-    #define irq_LOW_VOLTAGE_ID            6                              // 6
-    #define irq_LL_wakeup_ID              7                              // 7
-    #define irq_I2C0_ID                   8                              // 8
-    #define irq_I2C1_ID                   9                              // 9
-    #define irq_SPI0_ID                   10                             // 10
-    #define irq_SPI1_ID                   11                             // 11
-    #if LPUARTS_AVAILABLE > 0
-        #define irq_LPUART0_ID            12                             // 12
-        #define irq_LPUART1_ID            13                             // 13
-    #else
-        #define irq_UART0_ID              12                             // 12
-        #define irq_UART1_ID              13                             // 13
-    #endif
-    #define irq_UART2_ID                  14                             // 14
-    #define irq_ADC0_ID                   15                             // 15
-    #define irq_CMP0_ID                   16                             // 16
-    #define irq_TPM0_ID                   17                             // 17
-    #define irq_TPM1_ID                   18                             // 18
-    #define irq_TPM2_ID                   19                             // 19
-    #if !defined KINETIS_KL02
-        #define irq_RTC_ALARM_ID          20                             // 20
-        #define irq_RTC_SECONDS_ID        21                             // 21
-    #endif
-    #if !defined KINETIS_KL03
-        #define irq_PIT_ID                22                             // 22
-        #define irq_I2S0_ID               23                             // 23
-        #define irq_USB_OTG_ID            24                             // 24
-        #define irq_DAC0_ID               25                             // 25
-        #define irq_TSI_ID                26                             // 26
-        #define irq_MCG_ID                27                             // 27
-    #endif
-    #define irq_LPTMR0_ID                 28                             // 28
-    #define irq_SLCD_ID                   29                             // 29
-    #define irq_PORTA_ID                  30                             // 30 (port A)
-  #if (PORTS_AVAILABLE == 2)
-    #define irq_PORTB_ID                  31                             // 31 (port B)
-  #elif (defined KINETIS_KL17 || defined KINETIS_KL27) && (SIZE_OF_FLASH <= (64 * 1024))
-    #define irq_PORTBCD_E_ID              31                             // 31 (ports B, C D and E share an interrupt)
-  #elif defined KINETIS_KL25
-    #define irq_PORTD_ID                  31                             // 31 (port D)
-  #else
-    #define irq_PORTC_D_ID                31                             // 31 (port B doesn't support interrupts and ports C and D share an interrupt)
-  #endif
-#elif defined KINETIS_K21                                                // {44}
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #define irq_DMA4_ID                   4                              // 4
-    #define irq_DMA5_ID                   5                              // 5
-    #define irq_DMA6_ID                   6                              // 6
-    #define irq_DMA7_ID                   7                              // 7
-    #define irq_DMA8_ID                   8                              // 8
-    #define irq_DMA9_ID                   9                              // 9
-    #define irq_DMA10_ID                  10                             // 10
-    #define irq_DMA11_ID                  11                             // 11
-    #define irq_DMA12_ID                  12                             // 12
-    #define irq_DMA13_ID                  13                             // 13
-    #define irq_DMA14_ID                  14                             // 14
-    #define irq_DMA15_ID                  15                             // 15
-    #define irq_DMA_ERROR_ID              16                             // 16
-    #define irq_MCM_ID                    17                             // 17
-    #define irq_FLASH_CC_ID               18                             // 18
-    #define irq_FLASH_RC_ID               19                             // 19
-    #define irq_LOW_VOLTAGE_ID            20                             // 20
-    #define irq_LL_wakeup_ID              21                             // 21
-    #define irq_WDOG_ID                   22                             // 22
-    #define irq_RNG_ID                    23                             // 23
-    #define irq_I2C0_ID                   24                             // 24
-    #define irq_I2C1_ID                   25                             // 25
-    #define irq_SPI0_ID                   26                             // 26
-    #define irq_SPI1_ID                   27                             // 27
-    #define irq_I2S0_ID                   28                             // 28
-    #define irq_I2S1_ID                   29                             // 29
-    #if defined KINETIS_K_FPU
-        #define irq_UART0_LON_ID          30                             // 30
-    #endif
-    #define irq_UART0_ID                  31                             // 31
-    #define irq_UART0_ERROR_ID            32                             // 32
-    #define irq_UART1_ID                  33                             // 33
-    #define irq_UART1_ERROR_ID            34                             // 34
-    #define irq_UART2_ID                  35                             // 35
-    #define irq_UART2_ERROR_ID            36                             // 36
-    #define irq_UART3_ID                  37                             // 37
-    #define irq_UART3_ERROR_ID            38                             // 38
-    #define irq_ADC0_ID                   39                             // 39
-    #define irq_CMP0_ID                   40                             // 40
-    #define irq_CMP1_ID                   41                             // 41
-    #define irq_FTM0_ID                   42                             // 42
-    #define irq_FTM1_ID                   43                             // 43
-    #define irq_FTM2_ID                   44                             // 44
-    #define irq_CMT_ID                    45                             // 45
-    #define irq_RTC_ALARM_ID              46                             // 46
-    #define irq_RTC_SECONDS_ID            47                             // 47
-    #define irq_PIT0_ID                   48                             // 48
-    #define irq_PIT1_ID                   49                             // 49
-    #define irq_PIT2_ID                   50                             // 50
-    #define irq_PIT3_ID                   51                             // 51
-    #define irq_PDB0_ID                   52                             // 52
-    #define irq_USB_OTG_ID                53                             // 53
-    #define irq_USB_CD_ID                 54                             // 54
-
-    #define irq_DAC0_ID                   56                             // 56
-    #define irq_MCG_ID                    57                             // 57
-    #define irq_LPTMR0_ID                 58                             // 58
-    #define irq_PORTA_ID                  59                             // 59
-    #define irq_PORTB_ID                  60                             // 60
-    #define irq_PORTC_ID                  61                             // 61
-    #define irq_PORTD_ID                  62                             // 62
-    #define irq_PORTE_ID                  63                             // 63
-    #define irq_SW_IRQ_ID                 64                             // 64
-    #if defined KINETIS_K_FPU
-        #define irq_SPI2_ID               65                             // 65
-        #define irq_UART4_ID              66                             // 66
-        #define irq_UART4_ERROR_ID        67                             // 67
-        #define irq_UART5_ID              68                             // 68
-        #define irq_UART5_ERROR_ID        69                             // 69
-        #define irq_CMP2_ID               70                             // 70
-        #define irq_FTM3_ID               71                             // 71
-        #define irq_DAC1_ID               72                             // 72
-        #define irq_ADC1_ID               73                             // 73
-        #define irq_I2C2_ID               74                             // 74
-        #define irq_CAN0_MESSAGE_ID       75                             // 75
-        #define irq_CAN0_BUS_OFF_ID       76                             // 76
-        #define irq_CAN0_ERROR_ID         77                             // 77
-        #define irq_CAN0_TX_ID            78                             // 78
-        #define irq_CAN0_RX_ID            79                             // 79
-        #define irq_CAN0_WAKE_UP_ID       80                             // 80
-        #define irq_SDHC_ID               81                             // 81
-    #endif
-#elif (KINETIS_MAX_SPEED <= 50000000) && !defined KINETIS_KW2X && !defined KINETIS_K12
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #define irq_DMA_ERROR_ID              4                              // 4
-
-    #define irq_FLASH_CC_ID               6                              // 6
-    #define irq_FLASH_RC_ID               7                              // 7
-    #define irq_LOW_VOLTAGE_ID            8                              // 8
-    #define irq_LL_wakeup_ID              9                              // 9
-    #define irq_WDOG_ID                   10                             // 10
-    #define irq_I2C0_ID                   11                             // 11
-    #define irq_SPI0_ID                   12                             // 12
-    #define irq_I2S0_TX_ID                13                             // 13
-    #define irq_I2S0_RX_ID                14                             // 14
-    #define irq_UART0_LON_ID              15                             // 15
-    #define irq_UART0_ID                  16                             // 16
-    #define irq_UART0_ERROR_ID            17                             // 17
-    #define irq_UART1_ID                  18                             // 18
-    #define irq_UART1_ERROR_ID            19                             // 19
-    #define irq_UART2_ID                  20                             // 20
-    #define irq_UART2_ERROR_ID            21                             // 21
-    #define irq_ADC0_ID                   22                             // 22
-    #define irq_CMP0_ID                   23                             // 23
-    #define irq_CMP1_ID                   24                             // 24
-    #define irq_FTM0_ID                   25                             // 25
-    #define irq_FTM1_ID                   26                             // 26
-    #define irq_CMT_ID                    27                             // 27
-    #define irq_RTC_ALARM_ID              28                             // 28
-    #define irq_RTC_SECONDS_ID            29                             // 29
-    #define irq_PIT0_ID                   30                             // 30
-    #define irq_PIT1_ID                   31                             // 31
-    #define irq_PIT2_ID                   32                             // 32
-    #define irq_PIT3_ID                   33                             // 33
-    #define irq_PDB0_ID                   34                             // 34
-    #define irq_USB_OTG_ID                35                             // 35
-    #define irq_USB_CD_ID                 36                             // 36
-    #define irq_TSI_ID                    37                             // 37
-    #define irq_MCG_ID                    38                             // 38
-    #define irq_LPTMR0_ID                 39                             // 39
-    #define irq_PORTA_ID                  40                             // 40
-    #define irq_PORTB_ID                  41                             // 41
-    #define irq_PORTC_ID                  42                             // 43
-    #define irq_PORTD_ID                  43                             // 43
-    #define irq_PORTE_ID                  44                             // 44
-    #define irq_SW_IRQ_ID                 45                             // 45
-#else
-    #define irq_DMA0_ID                   0                              // 0
-    #define irq_DMA1_ID                   1                              // 1
-    #define irq_DMA2_ID                   2                              // 2
-    #define irq_DMA3_ID                   3                              // 3
-    #if !defined KINETIS_K02
-        #define irq_DMA4_ID               4                              // 4
-        #define irq_DMA5_ID               5                              // 5
-        #define irq_DMA6_ID               6                              // 6
-        #define irq_DMA7_ID               7                              // 7
-        #define irq_DMA8_ID               8                              // 8
-        #define irq_DMA9_ID               9                              // 9
-        #define irq_DMA10_ID              10                             // 10
-        #define irq_DMA11_ID              11                             // 11
-        #define irq_DMA12_ID              12                             // 12
-        #define irq_DMA13_ID              13                             // 13
-        #define irq_DMA14_ID              14                             // 14
-        #define irq_DMA15_ID              15                             // 15
-    #endif
-    #define irq_DMA_ERROR_ID              16                             // 16
-    #define irq_MCM_ID                    17                             // 17
-    #define irq_FLASH_CC_ID               18                             // 18
-    #define irq_FLASH_RC_ID               19                             // 19
-    #define irq_LOW_VOLTAGE_ID            20                             // 20
-    #define irq_LL_wakeup_ID              21                             // 21
-    #define irq_WDOG_ID                   22                             // 22
-    #if defined RNG_AVAILABLE
-        #define irq_RNG_ID                23                             // 23
-    #endif
-    #define irq_I2C0_ID                   24                             // 24
-    #if I2C_AVAILABLE > 1
-        #define irq_I2C1_ID               25                             // 25
-    #endif
-    #define irq_SPI0_ID                   26                             // 26
-    #if SPI_AVAILABLE > 1
-        #define irq_SPI1_ID               27                             // 27
-    #endif
-    #if defined KINETIS_KV40 || defined KINETIS_KV50
-        #if (UARTS_AVAILABLE > 5)
-            #define irq_UART5_ID          28                             // 28
-            #define irq_UART5_ERROR_ID     29                             // 29
-        #endif
-        #define irq_UART0_ID              31                             // 31
-        #define irq_UART0_ERROR_ID        32                             // 32
-        #define irq_UART1_ID              33                             // 33
-        #define irq_UART1_ERROR_ID        34                             // 34
-        #if (UARTS_AVAILABLE > 2)
-            #define irq_UART2_ID          35                             // 35
-            #define irq_UART2_ERROR_ID    36                             // 36
-        #endif
-        #if defined KINETIS_KV40
-            #define irq_ADC_ERR_A_B_ID    38                             // 38
-            #define irq_ADCA_ID           39                             // 39
-            #define irq_CMP0_ID           40                             // 40
-            #define irq_CMP1_ID           41                             // 41
-            #define irq_FTM0_ID           42                             // 42
-            #define irq_FTM1_ID           43                             // 43
-        #else
-            #define irq_ADC0_ID           37                             // 37
-            #define irq_HSADC0_1_ID       38                             // 38
-            #define irq_HSADC0A_ID        39                             // 39
-            #define irq_CMP0_ID           40                             // 40
-            #define irq_CMP1_ID           41                             // 41
-            #define irq_FTM0_ID           42                             // 42
-            #define irq_FTM1_ID           43                             // 43
-            #define irq_UART3_ID          44                             // 44
-            #define irq_UART3_ERROR_ID    45                             // 45
-            #define irq_UART4_ID          46                             // 46
-            #define irq_UART4_ERROR_ID    47                             // 47
-        #endif
-        #define irq_PIT0_ID               48                             // 48
-        #define irq_PIT1_ID               49                             // 49
-        #define irq_PIT2_ID               50                             // 50
-        #define irq_PIT3_ID               51                             // 51
-        #define irq_PDB0_ID               52                             // 52
-        #if !defined NO_FLEX_TIMER_2
-            #define irq_FTM2_ID           53                             // 53
-        #endif
-        #define irq_XBARA_ID              54                             // 54
-        #define irq_PDB1_ID               55                             // 55
-        #define irq_DAC0_ID               56                             // 56
-        #define irq_MCG_ID                57                             // 57
-        #define irq_LPTMR0_ID             58                             // 58
-        #define irq_PORTA_ID              59                             // 59
-        #define irq_PORTB_ID              60                             // 60
-        #define irq_PORTC_ID              61                             // 61
-        #define irq_PORTD_ID              62                             // 62
-        #define irq_PORTE_ID              63                             // 63
-        #define irq_SOFTWARE_ID           64                             // 64
-        #if SPI_AVAILABLE > 2
-            #define irq_SPI2_ID           65                             // 65
-        #endif
-        #define irq_ENC_Compare_ID        66                             // 66
-        #define irq_ENC_Home_ID           67                             // 67
-        #define irq_ENC_WDOG_ID           68                             // 68
-        #define irq_ENC_Index_Roll_ID     69                             // 69
-        #define irq_CMP2_ID               70                             // 70
-        #define irq_FTM3_ID               71                             // 71
-        #if defined KINETIS_KV40
-            #define irq_ADCB_ID           73                             // 73
-        #else
-            #define irq_HSADC0B_ID        73                             // 73
-            #define irq_HSADC1_A_ID       74                             // 74
-        #endif
-        #define irq_CAN0_MESSAGE_ID       75                             // 75
-        #define irq_CAN0_BUS_OFF_ID       76                             // 76
-        #define irq_CAN0_ERROR_ID         77                             // 77
-        #define irq_CAN0_TX_ID            78                             // 78
-        #define irq_CAN0_RX_ID            79                             // 79
-        #define irq_CAN0_WAKE_UP_ID       80                             // 80
-        #define irq_PWM0_0_Compare_ID     81                             // 81
-        #define irq_PWM0_0_Reload_ID      82                             // 82
-        #define irq_PWM0_1_Compare_ID     83                             // 83
-        #define irq_PWM0_1_Reload_ID      84                             // 84
-        #define irq_PWM0_2_Compare_ID     85                             // 85
-        #define irq_PWM0_2_Reload_ID      86                             // 86
-        #define irq_PWM0_3_Compare_ID     87                             // 87
-        #define irq_PWM0_3_Reload_ID      88                             // 88
-        #define irq_PWM0_Captures_ID      89                             // 89
-        #define irq_PWM0_Reload_Error_ID  90                             // 90
-        #define irq_PWM0_Fault_ID         91                             // 91
-        #define irq_CMP3_ID               92                             // 92
-        #if defined KINETIS_KV50
-            #define irq_HSADC1_B_ID       93                             // 93
-        #endif
-        #define irq_CAN1_MESSAGE_ID       94                             // 94
-        #define irq_CAN1_BUS_OFF_ID       95                             // 95
-        #define irq_CAN1_ERROR_ID         96                             // 96
-        #define irq_CAN1_TX_ID            97                             // 97
-        #define irq_CAN1_RX_ID            98                             // 98
-        #define irq_CAN1_WAKE_UP_ID       99                             // 99
-        #if defined KINETIS_KV50
-            #define irq_ETH_IEEE1588_ID       100                        // 100
-            #define irq_ETH_TX_ID             101                        // 101
-            #define irq_ETH_RX_ID             102                        // 102
-            #define irq_ETH_ERR_MISC_ID       103                        // 103
-            #define irq_PWM1_0_Compare_ID     104                        // 104
-            #define irq_PWM1_0_Reload_ID      105                        // 105
-            #define irq_PWM1_1_Compare_ID     106                        // 106
-            #define irq_PWM1_1_Reload_ID      107                        // 107
-            #define irq_PWM1_2_Compare_ID     108                        // 108
-            #define irq_PWM1_2_Reload_ID      109                        // 109
-            #define irq_PWM1_3_Compare_ID     110                        // 110
-            #define irq_PWM1_3_Reload_ID      111                        // 111
-            #define irq_PWM1_Captures_ID      112                        // 112
-            #define irq_PWM1_Reload_Error_ID  113                        // 113
-            #define irq_PWM1_Fault_ID         114                        // 114
-            #define irq_CAN2_MESSAGE_ID       115                        // 115
-            #define irq_CAN2_BUS_OFF_ID       116                        // 116
-            #define irq_CAN2_ERROR_ID         117                        // 117
-            #define irq_CAN2_TX_ID            118                        // 118
-            #define irq_CAN2_RX_ID            119                        // 119
-            #define irq_CAN2_WAKE_UP_ID       120                        // 120
-        #endif
-    #elif defined KINETIS_K80
-        #define irq_I2S0_TX_ID            28                             // 28
-        #define irq_I2S0_RX_ID            29                             // 29
-        #define irq_LPUART0_ID            30                             // 30
-        #define irq_LPUART1_ID            31                             // 31
-        #define irq_LPUART2_ID            32                             // 32
-        #define irq_LPUART3_ID            33                             // 33
-        #define irq_LPUART4_ID            34                             // 34
-
-        #define irq_EVMSIM0_ID            37                             // 37
-        #define irq_EVMSIM1_ID            38                             // 38
-        #define irq_ADC0_ID               39                             // 39
-        #define irq_CMP0_ID               40                             // 40
-        #define irq_CMP1_ID               41                             // 41
-        #define irq_FTM0_ID               42                             // 42
-        #define irq_FTM1_ID               43                             // 43
-        #define irq_FTM2_ID               44                             // 44
-        #define irq_CMT_ID                45                             // 45
-        #define irq_RTC_ALARM_ID          46                             // 46
-        #define irq_RTC_SECONDS_ID        47                             // 47
-        #define irq_PIT0_ID               48                             // 48
-        #define irq_PIT1_ID               49                             // 49
-        #define irq_PIT2_ID               50                             // 50
-        #define irq_PIT3_ID               51                             // 51
-        #define irq_PDB0_ID               52                             // 52
-        #define irq_USB_OTG_ID            53                             // 53
-        #define irq_USB_CD_ID             54                             // 54
-
-        #define irq_DAC0_ID               56                             // 56
-        #define irq_MCG_ID                57                             // 57
-        #define irq_LPTMR0_ID             58                             // 58
-        #define irq_PORTA_ID              59                             // 59
-        #define irq_PORTB_ID              60                             // 60
-        #define irq_PORTC_ID              61                             // 61
-        #define irq_PORTD_ID              62                             // 62
-        #define irq_PORTE_ID              63                             // 63
-        #define irq_SOFTWARE_ID           64                             // 64
-        #define irq_SPI2_ID               65                             // 65
-
-        #define irq_FLEXIO_ID             70                             // 70
-        #define irq_FTM3_ID               71                             // 71
-
-        #define irq_I2C2_ID               74                             // 74
-
-        #define irq_SDHC_ID               81                             // 81
-
-        #define irq_TSI0_ID               87                             // 87
-        #define irq_TPM1_ID               88                             // 88
-        #define irq_TPM2_ID               89                             // 89
-
-        #define irq_I2C3_ID               91                             // 91
-
-        #define irq_QSPI_ID               100                            // 100
-    #elif defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
-            #define irq_I2S0_TX_ID        28                             // 28
-            #define irq_I2S0_RX_ID        29                             // 29
-        #else
-            #define irq_I2S1_TX_ID        28                             // 28
-            #define irq_I2S1_RX_ID        29                             // 29
-            #define irq_LPUART0_ID        30                             // 30
-        #endif
-        #define irq_UART0_ID              31                             // 31
-        #define irq_UART0_ERROR_ID        32                             // 32
-        #define irq_UART1_ID              33                             // 33
-        #define irq_UART1_ERROR_ID        34                             // 34
-        #define irq_UART2_ID              35                             // 35
-        #define irq_UART2_ERROR_ID        36                             // 36
-        #if !defined KINETIS_KW2X
-            #define irq_UART3_ID          37                             // 37
-            #define irq_UART3_ERROR_ID    38                             // 38
-        #endif
-        #define irq_ADC0_ID               39                             // 39
-        #define irq_CMP0_ID               40                             // 40
-        #define irq_CMP1_ID               41                             // 41
-        #define irq_FTM0_ID               42                             // 42
-        #define irq_FTM1_ID               43                             // 43
-        #define irq_FTM2_ID               44                             // 44
-        #define irq_CMT_ID                45                             // 45
-        #if !defined KINETIS_KV30
-            #define irq_RTC_ALARM_ID      46                             // 46
-            #define irq_RTC_SECONDS_ID    47                             // 47
-        #endif
-        #define irq_PIT0_ID               48                             // 48
-        #define irq_PIT1_ID               49                             // 49
-        #define irq_PIT2_ID               50                             // 50
-        #define irq_PIT3_ID               51                             // 51
-        #define irq_PDB0_ID               52                             // 52
-        #define irq_USB_OTG_ID            53                             // 53
-        #define irq_USB_CD_ID             54                             // 54
-
-        #define irq_DAC0_ID               56                             // 56
-        #define irq_MCG_ID                57                             // 57
-        #define irq_LPTMR0_ID             58                             // 58
-        #define irq_PORTA_ID              59                             // 59
-        #define irq_PORTB_ID              60                             // 60
-        #define irq_PORTC_ID              61                             // 61
-        #define irq_PORTD_ID              62                             // 62
-        #define irq_PORTE_ID              63                             // 63
-        #define irq_SOFTWARE_ID           64                             // 64
-        #if !defined KINETIS_K02 && !defined KINETIS_KW2X && !defined KINETIS_K12
-            #define irq_SPI2_ID           65                             // 65
-            #if UARTS_AVAILABLE > 4
-                #define irq_UART4_ID          66                         // 66
-                #define irq_UART4_ERROR_ID    67                         // 67
-            #endif
-            #if UARTS_AVAILABLE > 5
-                #define irq_UART5_ID          68                         // 68
-                #define irq_UART5_ERROR_ID    69                         // 69
-            #endif
-            #define irq_CMP2_ID           70                             // 70
-            #define irq_FTM3_ID           71                             // 71
-            #define irq_DAC1_ID           72                             // 72
-            #define irq_ADC1_ID           73                             // 73
-            #if !defined KINETIS_KV30 && !defined KINETIS_K22
-                #define irq_I2C2_ID           74                         // 74
-                #define irq_CAN0_MESSAGE_ID   75                         // 75
-                #define irq_CAN0_BUS_OFF_ID   76                         // 76
-                #define irq_CAN0_ERROR_ID     77                         // 77
-                #define irq_CAN0_TX_ID        78                         // 78
-                #define irq_CAN0_RX_ID        79                         // 79
-                #define irq_CAN0_WAKE_UP_ID   80                         // 80
-                #define irq_SDHC_ID           81                         // 81
-                #define irq_ETH_IEEE1588_ID   82                         // 82
-                #define irq_ETH_TX_ID         83                         // 83
-                #define irq_ETH_RX_ID         84                         // 84
-                #define irq_ETH_ERR_MISC_ID   85                         // 85
-                #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
-                    #define irq_LPUART0_ID    86                         // 86
-                    #define irq_TSI0_ID       87                         // 87
-                    #define irq_TPM1_ID       88                         // 88
-                    #define irq_TPM2_ID       89                         // 89
-                    #define irq_USBHS_DCD_PHY_ID 90                      // 90
-                    #define irq_I2C3_ID       91                         // 91
-                    #define irq_CMP3_ID       92                         // 92
-                    #define irq_USB_HS_ID     93                         // 93
-                    #define irq_CAN1_MESSAGE_ID  94                      // 94
-                    #define irq_CAN1_BUS_OFF_ID  95                      // 95
-                    #define irq_CAN1_ERROR_ID    96                      // 96
-                    #define irq_CAN1_TX_ID       97                      // 97
-                    #define irq_CAN1_RX_ID       98                      // 98
-                    #define irq_CAN1_WAKE_UP_ID  99                      // 99
-                #endif
-            #endif
-        #endif
-    #else
-        #define irq_SPI2_ID               28                             // 28
-        #define irq_CAN0_MESSAGE_ID       29                             // 29
-        #define irq_CAN0_BUS_OFF_ID       30                             // 30
-        #define irq_CAN0_ERROR_ID         31                             // 31
-        #define irq_CAN0_TX_ID            32                             // 32
-        #define irq_CAN0_RX_ID            33                             // 33
-        #define irq_CAN0_WAKE_UP_ID       34                             // 34
-        #if defined KINETIS_K20 && defined KINETIS_REVISION_2
-            #define irq_I2S0_TRANSMIT_ID  35                             // 35
-            #define irq_I2S0_RECEIVE_ID   36                             // 36
-        #else
-            #define irq_CAN0_IMEU_ID      35                             // 35
-            #define irq_CAN0_LOST_RX_ID   36                             // 36
-        #endif
-        #define irq_CAN1_MESSAGE_ID       37                             // 37
-        #define irq_CAN1_BUS_OFF_ID       38                             // 38
-        #define irq_CAN1_ERROR_ID         39                             // 39
-        #define irq_CAN1_TX_ID            40                             // 40
-        #define irq_CAN1_RX_ID            41                             // 41
-        #define irq_CAN1_WAKE_UP_ID       42                             // 42
-        #if defined KINETIS_K20 && KINETIS_MAX_SPEED > 100000000
-
-            #define irq_UART0_LON_ID      44                             // 44
-        #else
-            #define irq_CAN1_IMEU_ID      43                             // 43
-            #define irq_CAN1_LOST_RX_ID   44                             // 44
-        #endif
-        #define irq_UART0_ID              45                             // 45
-        #define irq_UART0_ERROR_ID        46                             // 46
-        #define irq_UART1_ID              47                             // 47
-        #define irq_UART1_ERROR_ID        48                             // 48
-        #define irq_UART2_ID              49                             // 49
-        #define irq_UART2_ERROR_ID        50                             // 50
-        #define irq_UART3_ID              51                             // 51
-        #define irq_UART3_ERROR_ID        52                             // 52
-        #define irq_UART4_ID              53                             // 53
-        #define irq_UART4_ERROR_ID        54                             // 54
-        #define irq_UART5_ID              55                             // 55
-        #define irq_UART5_ERROR_ID        56                             // 56
-        #define irq_ADC0_ID               57                             // 57
-        #define irq_ADC1_ID               58                             // 58
-        #define irq_CMP0_ID               59                             // 59
-        #define irq_CMP1_ID               60                             // 60
-        #define irq_CMP2_ID               61                             // 61
-        #define irq_FTM0_ID               62                             // 62
-        #define irq_FTM1_ID               63                             // 63
-        #define irq_FTM2_ID               64                             // 64
-        #define irq_CMT_ID                65                             // 65
-        #define irq_RTC_ALARM_ID          66                             // 66
-        #if defined KINETIS_REVISION_2
-            #define irq_RTC_SECONDS_ID    67                             // 67
-        #endif
-        #define irq_PIT0_ID               68                             // 68
-        #define irq_PIT1_ID               69                             // 69
-        #define irq_PIT2_ID               70                             // 70
-        #define irq_PIT3_ID               71                             // 71
-        #define irq_PDB0_ID               72                             // 72
-        #define irq_USB_OTG_ID            73                             // 73
-        #define irq_USB_CD_ID             74                             // 74
-        #if defined ETHERNET_AVAILABLE
-            #define irq_ETH_IEEE1588_ID   75                             // 75
-            #define irq_ETH_TX_ID         76                             // 76
-            #define irq_ETH_RX_ID         77                             // 77
-            #define irq_ETH_ERR_MISC_ID   78                             // 78
-        #endif
-        #define irq_I2S_ID                79                             // 79
-        #define irq_SDHC_ID               80                             // 80
-        #define irq_DAC0_ID               81                             // 81
-        #define irq_DAC1_ID               82                             // 82
-        #define irq_TSI_ID                83                             // 83
-        #define irq_MCG_ID                84                             // 84
-        #define irq_LPTMR0_ID             85                             // 85
-
-        #define irq_PORTA_ID              87                             // 87
-        #define irq_PORTB_ID              88                             // 88
-        #define irq_PORTC_ID              89                             // 89
-        #define irq_PORTD_ID              90                             // 90
-        #define irq_PORTE_ID              91                             // 91
-        #if defined KINETIS_K61 || defined KINETIS_K70
-            #define irq_PORTF_ID          92                             // 92
-            #define irq_DDR_ID            93                             // 93
-            #define irq_SOFTWARE_ID       94                             // 94
-            #define irq_NFC_ID            95                             // 95
-            #define irq_USB_HS_ID         96                             // 96
-            #define irq_GLCD_ID           97                             // 97
-            #define irq_CMP3_ID           98                             // 98
-            #define irq_TAMPER_ID         99                             // 99
-            #define irq_FTM3_ID           101                            // 101
-            #define irq_ADC2_ID           102                            // 102
-            #define irq_ADC3_ID           103                            // 103
-            #define irq_I2S1_TX_ID        104                            // 104
-            #define irq_I2S1_RX_ID        104                            // 105
-        #elif (defined KINETIS_K60 || defined KINETIS_K20) && (KINETIS_MAX_SPEED > 100000000)
-            #define irq_PORTF_ID          92                             // 92
-
-            #define irq_SOFTWARE_ID       94                             // 94
-            #define irq_NFC_ID            95                             // 95
-            #define irq_USB_HS_ID         96                             // 96
-
-            #define irq_CMP3_ID           98                             // 98
-
-            #define irq_FTM3_ID           101                            // 101
-            #define irq_ADC2_ID           102                            // 102
-            #define irq_ADC3_ID           103                            // 103
-            #define irq_I2S1_TX_ID        104                            // 104
-            #define irq_I2S1_RX_ID        105                            // 105
-        #endif
-    #endif
 #endif
 
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
@@ -4013,78 +2011,6 @@ typedef struct stVECTOR_TABLE
 #if defined _iMX
     #define LAST_PROCESSOR_IRQ     irq_FLEXPWM2_Fault
     #define CHECK_VECTOR_SIZE                632                         // (16 + 141 + 1) = 158) * 4 - adequate for this processor [0x278]
-#elif defined KINETIS_KE15
-    #define LAST_PROCESSOR_IRQ     irq_RCM
-    #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
-#elif defined KINETIS_KE18
-    #define LAST_PROCESSOR_IRQ     irq_CAN1_EXTENSION_48_63
-    #define CHECK_VECTOR_SIZE                432                         // (16 + 91 + 1) = 108) * 4 - adequate for this processor [0x1b0]
-#elif defined KINETIS_KE                                                 // {42}
-    #define LAST_PROCESSOR_IRQ     irq_WDOG0
-    #define CHECK_VECTOR_SIZE                180                         // (16 + 28 + 1) = 45) * 4 - adequate for this processor [0xb4]
-#elif defined KINETIS_K02 || defined KINETIS_KW2X || defined KINETIS_K12
-    #define LAST_PROCESSOR_IRQ     irq_SOFTWARE
-    #define CHECK_VECTOR_SIZE                324                         // (16 + 64 + 1) = 81) * 4 - adequate for this processor [0x144]
-#elif defined KINETIS_KV40
-    #define LAST_PROCESSOR_IRQ     irq_CAN1_WAKE_UP
-    #define CHECK_VECTOR_SIZE                464                         // (16 + 99 + 1) = 116) * 4 - adequate for this processor [0x1d0]
-#elif defined KINETIS_KV50
-    #define LAST_PROCESSOR_IRQ     irq_CAN2_WAKE_UP
-    #define CHECK_VECTOR_SIZE                548                         // (16 + 120 + 1) = 137) * 4 - adequate for this processor [0x224]
-#elif defined KINETIS_KV30 || defined KINETIS_K22
-    #define LAST_PROCESSOR_IRQ     irq_ADC1
-    #define CHECK_VECTOR_SIZE                360                         // (16 + 73 + 1) = 90) * 4 - adequate for this processor [0x168]
-#elif defined KINETIS_KV
-    #define LAST_PROCESSOR_IRQ     irq_PORTB_C_D_E
-    #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
-#elif defined KINETIS_KL28
-    #define LAST_PROCESSOR_IRQ     irq_RTC_Alarm
-    #define CHECK_VECTOR_SIZE                268                         // (16 + 31 + 19 + 1) = 67) * 4 - adequate for this processor [0x10c]
-#elif defined KINETIS_KL82
-    #define LAST_PROCESSOR_IRQ     irq_DMA0_7
-    #define CHECK_VECTOR_SIZE                304                         // (16 + 32 + 28) = 76) * 4 - adequate for this processor [0x130]
-#elif defined KINETIS_KM
-    #define LAST_PROCESSOR_IRQ     irq_XBAR
-    #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
-#elif defined KINETIS_KL                                                 // {42}
-  #if (PORTS_AVAILABLE == 2)
-    #define LAST_PROCESSOR_IRQ     irq_PORTB
-  #elif defined irq_PORTBCD_E_ID
-    #define LAST_PROCESSOR_IRQ     irq_PORTBCD_E
-  #else
-    #define LAST_PROCESSOR_IRQ     irq_PORTC_D
-  #endif
-    #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
-#elif defined KINETIS_K21 && defined KINETIS_K_FPU
-    #define LAST_PROCESSOR_IRQ     irq_SDHC
-    #define CHECK_VECTOR_SIZE                392                         // (16 + 81 + 1) = 98) * 4 - adequate for this processor [0x188]
-#elif defined KINETIS_K21                                                // {44}
-    #define LAST_PROCESSOR_IRQ     irq_SW_IRQ
-    #define CHECK_VECTOR_SIZE                324                         // (16 + 64 + 1) = 81) * 4 - adequate for this processor [0x144]
-#elif defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))
-    #define LAST_PROCESSOR_IRQ     irq_SDHC
-    #define CHECK_VECTOR_SIZE                392                         // (16 + 81 + 1) = 98) * 4 - adequate for this processor [0x188]
-#elif defined KINETIS_K24
-    #define LAST_PROCESSOR_IRQ     irq_I2C2
-    #define CHECK_VECTOR_SIZE                364                         // (16 + 74 + 1) = 91) * 4 - adequate for this processor [0x16c]
-#elif defined KINETIS_K64                                                // {46}
-    #define LAST_PROCESSOR_IRQ     irq_ETH_ERR_MISC
-    #define CHECK_VECTOR_SIZE                408                         // (16 + 85 + 1) = 102) * 4 - adequate for this processor [0x198]
-#elif KINETIS_MAX_SPEED <= 50000000
-    #define LAST_PROCESSOR_IRQ     irq_SW_IRQ
-    #define CHECK_VECTOR_SIZE                248                         // (16 + 45 + 1) = 62) * 4 - adequate for this processor [0xf8]
-#elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
-    #define LAST_PROCESSOR_IRQ     irq_CAN1_WAKE_UP
-    #define CHECK_VECTOR_SIZE                464                         // (16 + 99 + 1) = 116) * 4 - adequate for this processor [0x1d0]
-#elif defined KINETIS_K61 || defined KINETIS_K70 || ((defined KINETIS_K60 || defined KINETIS_K20) && KINETIS_MAX_SPEED > 100000000)
-    #define LAST_PROCESSOR_IRQ     irq_I2S1_RX
-    #define CHECK_VECTOR_SIZE                488                         // (16 + 105 + 1) = 122) * 4 - adequate for this processor [0x1e8]
-#elif defined KINETIS_K80
-    #define LAST_PROCESSOR_IRQ     irq_QSPI
-    #define CHECK_VECTOR_SIZE                468                         // (16 + 100 + 1) = 117    ) * 4 - adequate for this processor [0x1e8]
-#else
-    #define LAST_PROCESSOR_IRQ     irq_PORTE
-    #define CHECK_VECTOR_SIZE                432                         // (16 + 91 + 1) = 108) * 4 - adequate for this processor  [0x1b0]
 #endif
 
 
@@ -4120,7 +2046,10 @@ typedef struct stVECTOR_TABLE
     #define IOMUXC_BLOCK                       ((unsigned char *)(&iMX.IOMUXC)) // IOMUX controller
     #define IOMUXC_SW_BLOCK                    ((unsigned char *)(&iMX.IOMUXC_SW)) // IOMUXC SW control
 
-    #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[5])) // GPIO
+    #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[0])) // GPIO
+    #define GPIO2_BLOCK                        ((unsigned char *)(&iMX.GPIO[1])) // GPIO
+    #define GPIO3_BLOCK                        ((unsigned char *)(&iMX.GPIO[2])) // GPIO
+    #define GPIO5_BLOCK                        ((unsigned char *)(&iMX.GPIO[4])) // GPIO
 
     #define CCM_BLOCK                          ((unsigned char *)(&iMX.CCM)) // clock control module
 
@@ -4583,10 +2512,8 @@ typedef struct stVECTOR_TABLE
             #else
                 #define LPIT0_BLOCK            0x40030000                // {101} LPITs
             #endif
-        #elif defined KINETIS_KM
-            #define PIT_BLOCK                  0x4002d000                // PITs
         #else
-            #define PIT_BLOCK                  0x40037000                // PITs
+            #define PIT_BLOCK                  0x40084000                // PITs
         #endif
     #endif
     #if defined KINETIS_KL28
@@ -8836,33 +6763,29 @@ typedef struct st_KINETIS_DSPI
         #define PIT_MCR             *(volatile unsigned long *)(PIT_BLOCK + 0x000) // PIT module control register
           #define PIT_MCR_FRZ       0x00000001                           // timers are stopped in debug mode
           #define PIT_MCR_MDIS      0x00000002                           // clock for PIT timers is disabled
-        #if defined KINETIS_KL                                           // {47}
-            #define PIT_LTMR64H     *(volatile unsigned long *)(PIT_BLOCK + 0x0e0) // PIT Upper Lifetime Timer Register (read-only)
-            #define PIT_LTMR64L     *(volatile unsigned long *)(PIT_BLOCK + 0x0e4) // PIT Lower Lifetime Timer Register (read-only)
-        #endif
+        #define PIT_LTMR64H         *(volatile unsigned long *)(PIT_BLOCK + 0x0e0) // PIT Upper Lifetime Timer Register (read-only)
+        #define PIT_LTMR64L         *(volatile unsigned long *)(PIT_BLOCK + 0x0e4) // PIT Lower Lifetime Timer Register (read-only)
         #define PIT_CTL_ADD         (unsigned long *)(PIT_BLOCK + 0x100)
         #define PIT_LDVAL0          *(unsigned long *)(PIT_BLOCK + 0x100)// PIT 0 Timer Load Value Register
         #define PIT_CVAL0           *(volatile unsigned long *)(PIT_BLOCK + 0x104) // PIT 0 Current Timer Value Register
-        #define PIT_TCTRL0          *(volatile unsigned long *)(PIT_BLOCK + 0x108) // {5} PIT 0 Timer Control Register
+        #define PIT_TCTRL0          *(volatile unsigned long *)(PIT_BLOCK + 0x108) // PIT 0 Timer Control Register
           #define PIT_TCTRL_TEN     0x00000001                           // timer enable
           #define PIT_TCTRL_TIE     0x00000002                           // timer interrupt enable
-        #if defined KINETIS_KL                                           // {47}
-            #define PIT_TCTRL_CHN   0x00000004                           // chain mode
-        #endif
+          #define PIT_TCTRL_CHN     0x00000004                           // chain mode
         #define PIT_TFLG0           *(volatile unsigned long *)(PIT_BLOCK + 0x10c) // PIT 0 Timer Flag Register
           #define PIT_TFLG_TIF      0x00000001                           // time out has occurred (write 1 to clear)
         #define PIT_LDVAL1          *(unsigned long *)(PIT_BLOCK + 0x110)// PIT 1 Timer Load Value Register
         #define PIT_CVAL1           *(volatile unsigned long *)(PIT_BLOCK + 0x114) // PIT 1 Current Timer Value Register
-        #define PIT_TCTRL1          *(volatile unsigned long *)(PIT_BLOCK + 0x118) // {5} PIT 1 Timer Control Register
-        #define PIT_TFLG1           *(volatile unsigned long *)(PIT_BLOCK + 0x11c) // PIT 1 Timer Flag Register
+        #define PIT_TCTRL1          *(volatile unsigned long *)(PIT_BLOCK + 0x118) // PIT 1 Timer Control Register
+        #define PIT_TFLG1           *(volatile unsigned long *)(PIT_BLOCK + 0x11c) // 1 Timer Flag Register
         #if PITS_AVAILABLE == 4
             #define PIT_LDVAL2      *(unsigned long *)(PIT_BLOCK + 0x120)// PIT 2 Timer Load Value Register
             #define PIT_CVAL2       *(volatile unsigned long *)(PIT_BLOCK + 0x124) // PIT 2 Current Timer Value Register
-            #define PIT_TCTRL2      *(volatile unsigned long *)(PIT_BLOCK + 0x128) // {5} PIT 2 Timer Control Register
+            #define PIT_TCTRL2      *(volatile unsigned long *)(PIT_BLOCK + 0x128) // PIT 2 Timer Control Register
             #define PIT_TFLG2       *(volatile unsigned long *)(PIT_BLOCK + 0x12c) // PIT 2 Timer Flag Register
             #define PIT_LDVAL3      *(unsigned long *)(PIT_BLOCK + 0x130)// PIT 3 Timer Load Value Register
             #define PIT_CVAL3       *(volatile unsigned long *)(PIT_BLOCK + 0x134) // PIT 3 Current Timer Value Register
-            #define PIT_TCTRL3      *(volatile unsigned long *)(PIT_BLOCK + 0x138) // {5} PIT 3 Timer Control Register
+            #define PIT_TCTRL3      *(volatile unsigned long *)(PIT_BLOCK + 0x138) // PIT 3 Timer Control Register
             #define PIT_TFLG3       *(volatile unsigned long *)(PIT_BLOCK + 0x13c) // PIT 3 Timer Flag Register
         #endif
 
@@ -19115,104 +17038,7 @@ typedef struct stDAC_REGS                                                // {23}
     } FGPIO_REGS;
 #endif
 
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-  #define PORT_WIDTH                     8                               // 8 bit ports according to KE convention
-
-  #define KE_PORTA                       0
-  #define KE_PORTB                       0
-  #define KE_PORTC                       0
-  #define KE_PORTD                       0
-
-  #define KE_PORTE                       1
-  #define KE_PORTF                       1
-  #define KE_PORTG                       1
-  #define KE_PORTH                       1
-
-  #define KE_PORTI                       2
-
-  #define KE_PORTA_BIT0                  0x00000001
-  #define KE_PORTA_BIT1                  0x00000002
-  #define KE_PORTA_BIT2                  0x00000004
-  #define KE_PORTA_BIT3                  0x00000008
-  #define KE_PORTA_BIT4                  0x00000010
-  #define KE_PORTA_BIT5                  0x00000020
-  #define KE_PORTA_BIT6                  0x00000040
-  #define KE_PORTA_BIT7                  0x00000080
-
-  #define KE_PORTB_BIT0                  0x00000100
-  #define KE_PORTB_BIT1                  0x00000200
-  #define KE_PORTB_BIT2                  0x00000400
-  #define KE_PORTB_BIT3                  0x00000800
-  #define KE_PORTB_BIT4                  0x00001000
-  #define KE_PORTB_BIT5                  0x00002000
-  #define KE_PORTB_BIT6                  0x00004000
-  #define KE_PORTB_BIT7                  0x00008000
-
-  #define KE_PORTC_BIT0                  0x00010000
-  #define KE_PORTC_BIT1                  0x00020000
-  #define KE_PORTC_BIT2                  0x00040000
-  #define KE_PORTC_BIT3                  0x00080000
-  #define KE_PORTC_BIT4                  0x00100000
-  #define KE_PORTC_BIT5                  0x00200000
-  #define KE_PORTC_BIT6                  0x00400000
-  #define KE_PORTC_BIT7                  0x00800000
-
-  #define KE_PORTD_BIT0                  0x01000000
-  #define KE_PORTD_BIT1                  0x02000000
-  #define KE_PORTD_BIT2                  0x04000000
-  #define KE_PORTD_BIT3                  0x08000000
-  #define KE_PORTD_BIT4                  0x10000000
-  #define KE_PORTD_BIT5                  0x20000000
-  #define KE_PORTD_BIT6                  0x40000000
-  #define KE_PORTD_BIT7                  0x80000000
-
-  #define KE_PORTE_BIT0                  0x00000001
-  #define KE_PORTE_BIT1                  0x00000002
-  #define KE_PORTE_BIT2                  0x00000004
-  #define KE_PORTE_BIT3                  0x00000008
-  #define KE_PORTE_BIT4                  0x00000010
-  #define KE_PORTE_BIT5                  0x00000020
-  #define KE_PORTE_BIT6                  0x00000040
-  #define KE_PORTE_BIT7                  0x00000080
-
-  #define KE_PORTF_BIT0                  0x00000100
-  #define KE_PORTF_BIT1                  0x00000200
-  #define KE_PORTF_BIT2                  0x00000400
-  #define KE_PORTF_BIT3                  0x00000800
-  #define KE_PORTF_BIT4                  0x00001000
-  #define KE_PORTF_BIT5                  0x00002000
-  #define KE_PORTF_BIT6                  0x00004000
-  #define KE_PORTF_BIT7                  0x00008000
-
-  #define KE_PORTG_BIT0                  0x00010000
-  #define KE_PORTG_BIT1                  0x00020000
-  #define KE_PORTG_BIT2                  0x00040000
-  #define KE_PORTG_BIT3                  0x00080000
-  #define KE_PORTG_BIT4                  0x00100000
-  #define KE_PORTG_BIT5                  0x00200000
-  #define KE_PORTG_BIT6                  0x00400000
-  #define KE_PORTG_BIT7                  0x00800000
-
-  #define KE_PORTH_BIT0                  0x01000000
-  #define KE_PORTH_BIT1                  0x02000000
-  #define KE_PORTH_BIT2                  0x04000000
-  #define KE_PORTH_BIT3                  0x08000000
-  #define KE_PORTH_BIT4                  0x10000000
-  #define KE_PORTH_BIT5                  0x20000000
-  #define KE_PORTH_BIT6                  0x40000000
-  #define KE_PORTH_BIT7                  0x80000000
-
-  #define KE_PORTI_BIT0                  0x00000001
-  #define KE_PORTI_BIT1                  0x00000002
-  #define KE_PORTI_BIT2                  0x00000004
-  #define KE_PORTI_BIT3                  0x00000008
-  #define KE_PORTI_BIT4                  0x00000010
-  #define KE_PORTI_BIT5                  0x00000020
-  #define KE_PORTI_BIT6                  0x00000040
-  #define KE_PORTI_BIT7                  0x00000080
-#else
-  #define PORT_WIDTH                     32
-#endif
+#define PORT_WIDTH                       32
 
 #define PORT_BIT0                        0x00000001
 #define PORT_BIT1                        0x00000002
@@ -19247,211 +17073,171 @@ typedef struct stDAC_REGS                                                // {23}
 #define PORT_BIT30                       0x40000000
 #define PORT_BIT31                       0x80000000
 
-#define PORTA_BIT0                       0x00000001
-#define PORTA_BIT1                       0x00000002
-#define PORTA_BIT2                       0x00000004
-#define PORTA_BIT3                       0x00000008
-#define PORTA_BIT4                       0x00000010
-#define PORTA_BIT5                       0x00000020
-#define PORTA_BIT6                       0x00000040
-#define PORTA_BIT7                       0x00000080
-#define PORTA_BIT8                       0x00000100
-#define PORTA_BIT9                       0x00000200
-#define PORTA_BIT10                      0x00000400
-#define PORTA_BIT11                      0x00000800
-#define PORTA_BIT12                      0x00001000
-#define PORTA_BIT13                      0x00002000
-#define PORTA_BIT14                      0x00004000
-#define PORTA_BIT15                      0x00008000
-#define PORTA_BIT16                      0x00010000
-#define PORTA_BIT17                      0x00020000
-#define PORTA_BIT18                      0x00040000
-#define PORTA_BIT19                      0x00080000
-#define PORTA_BIT20                      0x00100000
-#define PORTA_BIT21                      0x00200000
-#define PORTA_BIT22                      0x00400000
-#define PORTA_BIT23                      0x00800000
-#define PORTA_BIT24                      0x01000000
-#define PORTA_BIT25                      0x02000000
-#define PORTA_BIT26                      0x04000000
-#define PORTA_BIT27                      0x08000000
-#define PORTA_BIT28                      0x10000000
-#define PORTA_BIT29                      0x20000000
-#define PORTA_BIT30                      0x40000000
-#define PORTA_BIT31                      0x80000000
+#define PORT1_BIT0                       0x00000001
+#define PORT1_BIT1                       0x00000002
+#define PORT1_BIT2                       0x00000004
+#define PORT1_BIT3                       0x00000008
+#define PORT1_BIT4                       0x00000010
+#define PORT1_BIT5                       0x00000020
+#define PORT1_BIT6                       0x00000040
+#define PORT1_BIT7                       0x00000080
+#define PORT1_BIT8                       0x00000100
+#define PORT1_BIT9                       0x00000200
+#define PORT1_BIT10                      0x00000400
+#define PORT1_BIT11                      0x00000800
+#define PORT1_BIT12                      0x00001000
+#define PORT1_BIT13                      0x00002000
+#define PORT1_BIT14                      0x00004000
+#define PORT1_BIT15                      0x00008000
+#define PORT1_BIT16                      0x00010000
+#define PORT1_BIT17                      0x00020000
+#define PORT1_BIT18                      0x00040000
+#define PORT1_BIT19                      0x00080000
+#define PORT1_BIT20                      0x00100000
+#define PORT1_BIT21                      0x00200000
+#define PORT1_BIT22                      0x00400000
+#define PORT1_BIT23                      0x00800000
+#define PORT1_BIT24                      0x01000000
+#define PORT1_BIT25                      0x02000000
+#define PORT1_BIT26                      0x04000000
+#define PORT1_BIT27                      0x08000000
+#define PORT1_BIT28                      0x10000000
+#define PORT1_BIT29                      0x20000000
+#define PORT1_BIT30                      0x40000000
+#define PORT1_BIT31                      0x80000000
 
-#define PORTB_BIT0                       0x00000001
-#define PORTB_BIT1                       0x00000002
-#define PORTB_BIT2                       0x00000004
-#define PORTB_BIT3                       0x00000008
-#define PORTB_BIT4                       0x00000010
-#define PORTB_BIT5                       0x00000020
-#define PORTB_BIT6                       0x00000040
-#define PORTB_BIT7                       0x00000080
-#define PORTB_BIT8                       0x00000100
-#define PORTB_BIT9                       0x00000200
-#define PORTB_BIT10                      0x00000400
-#define PORTB_BIT11                      0x00000800
-#define PORTB_BIT12                      0x00001000
-#define PORTB_BIT13                      0x00002000
-#define PORTB_BIT14                      0x00004000
-#define PORTB_BIT15                      0x00008000
-#define PORTB_BIT16                      0x00010000
-#define PORTB_BIT17                      0x00020000
-#define PORTB_BIT18                      0x00040000
-#define PORTB_BIT19                      0x00080000
-#define PORTB_BIT20                      0x00100000
-#define PORTB_BIT21                      0x00200000
-#define PORTB_BIT22                      0x00400000
-#define PORTB_BIT23                      0x00800000
-#define PORTB_BIT24                      0x01000000
-#define PORTB_BIT25                      0x02000000
-#define PORTB_BIT26                      0x04000000
-#define PORTB_BIT27                      0x08000000
-#define PORTB_BIT28                      0x10000000
-#define PORTB_BIT29                      0x20000000
-#define PORTB_BIT30                      0x40000000
-#define PORTB_BIT31                      0x80000000
+#define PORT2_BIT0                       0x00000001
+#define PORT2_BIT1                       0x00000002
+#define PORT2_BIT2                       0x00000004
+#define PORT2_BIT3                       0x00000008
+#define PORT2_BIT4                       0x00000010
+#define PORT2_BIT5                       0x00000020
+#define PORT2_BIT6                       0x00000040
+#define PORT2_BIT7                       0x00000080
+#define PORT2_BIT8                       0x00000100
+#define PORT2_BIT9                       0x00000200
+#define PORT2_BIT10                      0x00000400
+#define PORT2_BIT11                      0x00000800
+#define PORT2_BIT12                      0x00001000
+#define PORT2_BIT13                      0x00002000
+#define PORT2_BIT14                      0x00004000
+#define PORT2_BIT15                      0x00008000
+#define PORT2_BIT16                      0x00010000
+#define PORT2_BIT17                      0x00020000
+#define PORT2_BIT18                      0x00040000
+#define PORT2_BIT19                      0x00080000
+#define PORT2_BIT20                      0x00100000
+#define PORT2_BIT21                      0x00200000
+#define PORT2_BIT22                      0x00400000
+#define PORT2_BIT23                      0x00800000
+#define PORT2_BIT24                      0x01000000
+#define PORT2_BIT25                      0x02000000
+#define PORT2_BIT26                      0x04000000
+#define PORT2_BIT27                      0x08000000
+#define PORT2_BIT28                      0x10000000
+#define PORT2_BIT29                      0x20000000
+#define PORT2_BIT30                      0x40000000
+#define PORT2_BIT31                      0x80000000
 
-#if defined KINETIS_KW2X
-    #define RST_B                        PORTB_BIT19                     // MCU output is internally connected to modem reset line
-    #define IRQ_B                        PORTB_BIT3                      // MCU input is internally connected to modem IRQ line
-    #define GPIO3                        PORTC_BIT3
-    #define GPIO4                        PORTC_BIT1
-    #define GPIO5                        PORTC_BIT0
-#endif
+#define PORT3_BIT0                       0x00000001
+#define PORT3_BIT1                       0x00000002
+#define PORT3_BIT2                       0x00000004
+#define PORT3_BIT3                       0x00000008
+#define PORT3_BIT4                       0x00000010
+#define PORT3_BIT5                       0x00000020
+#define PORT3_BIT6                       0x00000040
+#define PORT3_BIT7                       0x00000080
+#define PORT3_BIT8                       0x00000100
+#define PORT3_BIT9                       0x00000200
+#define PORT3_BIT10                      0x00000400
+#define PORT3_BIT11                      0x00000800
+#define PORT3_BIT12                      0x00001000
+#define PORT3_BIT13                      0x00002000
+#define PORT3_BIT14                      0x00004000
+#define PORT3_BIT15                      0x00008000
+#define PORT3_BIT16                      0x00010000
+#define PORT3_BIT17                      0x00020000
+#define PORT3_BIT18                      0x00040000
+#define PORT3_BIT19                      0x00080000
+#define PORT3_BIT20                      0x00100000
+#define PORT3_BIT21                      0x00200000
+#define PORT3_BIT22                      0x00400000
+#define PORT3_BIT23                      0x00800000
+#define PORT3_BIT24                      0x01000000
+#define PORT3_BIT25                      0x02000000
+#define PORT3_BIT26                      0x04000000
+#define PORT3_BIT27                      0x08000000
+#define PORT3_BIT28                      0x10000000
+#define PORT3_BIT29                      0x20000000
+#define PORT3_BIT30                      0x40000000
+#define PORT3_BIT31                      0x80000000
 
-#define PORTC_BIT0                       0x00000001
-#define PORTC_BIT1                       0x00000002
-#define PORTC_BIT2                       0x00000004
-#define PORTC_BIT3                       0x00000008
-#define PORTC_BIT4                       0x00000010
-#define PORTC_BIT5                       0x00000020
-#define PORTC_BIT6                       0x00000040
-#define PORTC_BIT7                       0x00000080
-#define PORTC_BIT8                       0x00000100
-#define PORTC_BIT9                       0x00000200
-#define PORTC_BIT10                      0x00000400
-#define PORTC_BIT11                      0x00000800
-#define PORTC_BIT12                      0x00001000
-#define PORTC_BIT13                      0x00002000
-#define PORTC_BIT14                      0x00004000
-#define PORTC_BIT15                      0x00008000
-#define PORTC_BIT16                      0x00010000
-#define PORTC_BIT17                      0x00020000
-#define PORTC_BIT18                      0x00040000
-#define PORTC_BIT19                      0x00080000
-#define PORTC_BIT20                      0x00100000
-#define PORTC_BIT21                      0x00200000
-#define PORTC_BIT22                      0x00400000
-#define PORTC_BIT23                      0x00800000
-#define PORTC_BIT24                      0x01000000
-#define PORTC_BIT25                      0x02000000
-#define PORTC_BIT26                      0x04000000
-#define PORTC_BIT27                      0x08000000
-#define PORTC_BIT28                      0x10000000
-#define PORTC_BIT29                      0x20000000
-#define PORTC_BIT30                      0x40000000
-#define PORTC_BIT31                      0x80000000
+#define PORT4_BIT0                       0x00000001
+#define PORT4_BIT1                       0x00000002
+#define PORT4_BIT2                       0x00000004
+#define PORT4_BIT3                       0x00000008
+#define PORT4_BIT4                       0x00000010
+#define PORT4_BIT5                       0x00000020
+#define PORT4_BIT6                       0x00000040
+#define PORT4_BIT7                       0x00000080
+#define PORT4_BIT8                       0x00000100
+#define PORT4_BIT9                       0x00000200
+#define PORT4_BIT10                      0x00000400
+#define PORT4_BIT11                      0x00000800
+#define PORT4_BIT12                      0x00001000
+#define PORT4_BIT13                      0x00002000
+#define PORT4_BIT14                      0x00004000
+#define PORT4_BIT15                      0x00008000
+#define PORT4_BIT16                      0x00010000
+#define PORT4_BIT17                      0x00020000
+#define PORT4_BIT18                      0x00040000
+#define PORT4_BIT19                      0x00080000
+#define PORT4_BIT20                      0x00100000
+#define PORT4_BIT21                      0x00200000
+#define PORT4_BIT22                      0x00400000
+#define PORT4_BIT23                      0x00800000
+#define PORT4_BIT24                      0x01000000
+#define PORT4_BIT25                      0x02000000
+#define PORT4_BIT26                      0x04000000
+#define PORT4_BIT27                      0x08000000
+#define PORT4_BIT28                      0x10000000
+#define PORT4_BIT29                      0x20000000
+#define PORT4_BIT30                      0x40000000
+#define PORT4_BIT31                      0x80000000
 
-#define PORTD_BIT0                       0x00000001
-#define PORTD_BIT1                       0x00000002
-#define PORTD_BIT2                       0x00000004
-#define PORTD_BIT3                       0x00000008
-#define PORTD_BIT4                       0x00000010
-#define PORTD_BIT5                       0x00000020
-#define PORTD_BIT6                       0x00000040
-#define PORTD_BIT7                       0x00000080
-#define PORTD_BIT8                       0x00000100
-#define PORTD_BIT9                       0x00000200
-#define PORTD_BIT10                      0x00000400
-#define PORTD_BIT11                      0x00000800
-#define PORTD_BIT12                      0x00001000
-#define PORTD_BIT13                      0x00002000
-#define PORTD_BIT14                      0x00004000
-#define PORTD_BIT15                      0x00008000
-#define PORTD_BIT16                      0x00010000
-#define PORTD_BIT17                      0x00020000
-#define PORTD_BIT18                      0x00040000
-#define PORTD_BIT19                      0x00080000
-#define PORTD_BIT20                      0x00100000
-#define PORTD_BIT21                      0x00200000
-#define PORTD_BIT22                      0x00400000
-#define PORTD_BIT23                      0x00800000
-#define PORTD_BIT24                      0x01000000
-#define PORTD_BIT25                      0x02000000
-#define PORTD_BIT26                      0x04000000
-#define PORTD_BIT27                      0x08000000
-#define PORTD_BIT28                      0x10000000
-#define PORTD_BIT29                      0x20000000
-#define PORTD_BIT30                      0x40000000
-#define PORTD_BIT31                      0x80000000
+#define PORT5_BIT0                       0x00000001
+#define PORT5_BIT1                       0x00000002
+#define PORT5_BIT2                       0x00000004
+#define PORT5_BIT3                       0x00000008
+#define PORT5_BIT4                       0x00000010
+#define PORT5_BIT5                       0x00000020
+#define PORT5_BIT6                       0x00000040
+#define PORT5_BIT7                       0x00000080
+#define PORT5_BIT8                       0x00000100
+#define PORT5_BIT9                       0x00000200
+#define PORT5_BIT10                      0x00000400
+#define PORT5_BIT11                      0x00000800
+#define PORT5_BIT12                      0x00001000
+#define PORT5_BIT13                      0x00002000
+#define PORT5_BIT14                      0x00004000
+#define PORT5_BIT15                      0x00008000
+#define PORT5_BIT16                      0x00010000
+#define PORT5_BIT17                      0x00020000
+#define PORT5_BIT18                      0x00040000
+#define PORT5_BIT19                      0x00080000
+#define PORT5_BIT20                      0x00100000
+#define PORT5_BIT21                      0x00200000
+#define PORT5_BIT22                      0x00400000
+#define PORT5_BIT23                      0x00800000
+#define PORT5_BIT24                      0x01000000
+#define PORT5_BIT25                      0x02000000
+#define PORT5_BIT26                      0x04000000
+#define PORT5_BIT27                      0x08000000
+#define PORT5_BIT28                      0x10000000
+#define PORT5_BIT29                      0x20000000
+#define PORT5_BIT30                      0x40000000
+#define PORT5_BIT31                      0x80000000
 
-#define PORTE_BIT0                       0x00000001
-#define PORTE_BIT1                       0x00000002
-#define PORTE_BIT2                       0x00000004
-#define PORTE_BIT3                       0x00000008
-#define PORTE_BIT4                       0x00000010
-#define PORTE_BIT5                       0x00000020
-#define PORTE_BIT6                       0x00000040
-#define PORTE_BIT7                       0x00000080
-#define PORTE_BIT8                       0x00000100
-#define PORTE_BIT9                       0x00000200
-#define PORTE_BIT10                      0x00000400
-#define PORTE_BIT11                      0x00000800
-#define PORTE_BIT12                      0x00001000
-#define PORTE_BIT13                      0x00002000
-#define PORTE_BIT14                      0x00004000
-#define PORTE_BIT15                      0x00008000
-#define PORTE_BIT16                      0x00010000
-#define PORTE_BIT17                      0x00020000
-#define PORTE_BIT18                      0x00040000
-#define PORTE_BIT19                      0x00080000
-#define PORTE_BIT20                      0x00100000
-#define PORTE_BIT21                      0x00200000
-#define PORTE_BIT22                      0x00400000
-#define PORTE_BIT23                      0x00800000
-#define PORTE_BIT24                      0x01000000
-#define PORTE_BIT25                      0x02000000
-#define PORTE_BIT26                      0x04000000
-#define PORTE_BIT27                      0x08000000
-#define PORTE_BIT28                      0x10000000
-#define PORTE_BIT29                      0x20000000
-#define PORTE_BIT30                      0x40000000
-#define PORTE_BIT31                      0x80000000
-  
-#define PORTF_BIT0                       0x00000001                      // {18}
-#define PORTF_BIT1                       0x00000002
-#define PORTF_BIT2                       0x00000004
-#define PORTF_BIT3                       0x00000008
-#define PORTF_BIT4                       0x00000010
-#define PORTF_BIT5                       0x00000020
-#define PORTF_BIT6                       0x00000040
-#define PORTF_BIT7                       0x00000080
-#define PORTF_BIT8                       0x00000100
-#define PORTF_BIT9                       0x00000200
-#define PORTF_BIT10                      0x00000400
-#define PORTF_BIT11                      0x00000800
-#define PORTF_BIT12                      0x00001000
-#define PORTF_BIT13                      0x00002000
-#define PORTF_BIT14                      0x00004000
-#define PORTF_BIT15                      0x00008000
-#define PORTF_BIT16                      0x00010000
-#define PORTF_BIT17                      0x00020000
-#define PORTF_BIT18                      0x00040000
-#define PORTF_BIT19                      0x00080000
-#define PORTF_BIT20                      0x00100000
-#define PORTF_BIT21                      0x00200000
-#define PORTF_BIT22                      0x00400000
-#define PORTF_BIT23                      0x00800000
-#define PORTF_BIT24                      0x01000000
-#define PORTF_BIT25                      0x02000000
-#define PORTF_BIT26                      0x04000000
-#define PORTF_BIT27                      0x08000000
-#define PORTF_BIT28                      0x10000000
-#define PORTF_BIT29                      0x20000000
-#define PORTF_BIT30                      0x40000000
-#define PORTF_BIT31                      0x80000000
 
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics);
 extern void fnSimPers(void);
@@ -19459,139 +17245,62 @@ extern void fnSimPers(void);
 // Port macros
 //
 
-// Configure pins as output, including enabling clock to specified port eg. _CONFIG_PORT_OUTPUT(A, PORTA_BIT16, (PORT_SRE_FAST | PORT_DSE_LOW));
+// Configure pins as output, including enabling clock to specified port eg. _CONFIG_PORT_OUTPUT(1, PORT1_BIT16, (PORT_SRE_FAST | PORT_DSE_LOW));
 //
-#if defined KINETIS_WITH_PCC
-    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
-#elif defined KINETIS_KE
-    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_OUTPUT(ref, pins, chars)
-    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_OUTPUT(ref, pins, chars)
-#else
-    #define _CONFIG_PORT_OUTPUT(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_LOW(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); SIM_SCGC5 |= SIM_SCGC5_PORT##ref; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_OUTPUT_FAST_HIGH(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {65}
-#endif
+#define _CONFIG_PORT_OUTPUT(ref, pins, chars) fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
 
-// Configure pins as Input, including enabling clock to specified port eg. _CONFIG_PORT_INPUT(A, PORTA_BIT4, PORT_PS_UP_ENABLE);
+// Configure pins as Input, including enabling clock to specified port eg. _CONFIG_PORT_INPUT(1, PORT1_BIT4, PORT_PS_UP_ENABLE);
 //
-#if defined KINETIS_WITH_PCC
-    #define _CONFIG_PORT_INPUT(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) PCC_PORT##ref |= PCC_CGC; GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-#elif defined KINETIS_KE
-    #define _CONFIG_PORT_INPUT(ref, pins, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  _CONFIG_PORT_INPUT(ref, pins, chars)
-    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) _CONFIG_PORT_INPUT(ref, pins, chars)
-#else
-    #define _CONFIG_PORT_INPUT(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~(pins); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_LOW(ref, pins, chars)  POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~((pins) & 0x0000ffff); PORT##ref##_GPCLR = (((pins) << 16) | chars | PORT_MUX_GPIO);  _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_PORT_INPUT_FAST_HIGH(ref, pins, chars) POWER_UP_ATOMIC(5, PORT##ref); GPIO##ref##_PDDR &= ~((pins) & 0xffff0000); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | chars | PORT_MUX_GPIO); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-#endif
+#define _CONFIG_PORT_INPUT(ref, pins, chars)  fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_GDIR &= ~(pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 
 // Configure a peripheral function eg. _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | PORT_SRE_FAST | PORT_DSE_HIGH));
 //
-#if defined KINETIS_WITH_PCC
-    #define _CONFIG_PERIPHERAL(port, pin, function) PCC_PORT##port |= PCC_CGC; PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
-#elif defined KINETIS_KE
-    #define _CONFIG_PERIPHERAL(port, pin, function) _SIM_PER_CHANGE      // dummy since the peripherals automatically configures their peripheral pins
-#else
-    #define _CONFIG_PERIPHERAL(port, pin, function) POWER_UP_ATOMIC(5, PORT##port); PORT##port##_PCR##pin = function; _SIM_PER_CHANGE
-#define _CONFIG_PERIPHERAL_iMX(port, function, chars) IOMUXC_SW_MUX_CTL_PAD_##port = ##port##_##function; _SIM_PER_CHANGE
-#endif
+#define _CONFIG_PERIPHERAL(port, function, chars) IOMUXC_SW_MUX_CTL_PAD_##port = ##port##_##function; _SIM_PER_CHANGE
 
-// Write to a port with a mask eg. eg. _WRITE_PORT_MASK(C, 0x1234,  0x0000ffff)
+// Write to a port with a mask eg. eg. _WRITE_PORT_MASK(1, 0x1234,  0x0000ffff)
 //
-#if defined FGPIO_AVAILABLE
-    #define _WRITE_PORT_MASK(ref, value, mask) FGPIO##ref##_PDOR = ((FGPIO##ref##_PDOR & ~(mask)) | (value)); _SIM_PORT_CHANGE
-#else
-    #define _WRITE_PORT_MASK(ref, value, mask) GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(mask)) | (value)); _SIM_PORT_CHANGE
-#endif
+#define _WRITE_PORT_MASK(ref, value, mask) GPIO##ref##_PD = ((GPIO##ref##_PD & ~(mask)) | (value)); _SIM_PORT_CHANGE
 
-// Write full port width eg. _WRITE_PORT_MASK(C, 0x12345678)
+// Write full port width eg. _WRITE_PORT_MASK(1, 0x12345678)
 //
-#if defined FGPIO_AVAILABLE
-    #define _WRITE_PORT(ref, value)        FGPIO##ref##_PDOR = (value); _SIM_PORT_CHANGE
-#else
-    #define _WRITE_PORT(ref, value)        GPIO##ref##_PDOR = (value); _SIM_PORT_CHANGE
-#endif
+#define _WRITE_PORT(ref, value)            GPIO##ref##_PDO = (value); _SIM_PORT_CHANGE
 
-// Toggle a port with a mask eg. _TOGGLE_PORT(D, PORTD_BIT3)
+// Toggle a port with a mask eg. _TOGGLE_PORT(1, PORT1_BIT3)
 //
-#if defined KINETIS_KM
-    #define _TOGGLE_PORT(ref, mask)        GPIO##ref##_PDOR ^= (mask); _SIM_PORT_CHANGE
-#elif defined FGPIO_AVAILABLE
-    #define _TOGGLE_PORT(ref, mask)        FGPIO##ref##_PTOR = (mask); _SIM_PORT_CHANGE
-#else
-    #define _TOGGLE_PORT(ref, mask)        GPIO##ref##_PTOR = (mask); _SIM_PORT_CHANGE
-#endif
+#define _TOGGLE_PORT(ref, mask)            GPIO##ref##_DR_TOGGLE = (mask); _SIM_PORT_CHANGE
 
-// Read full port width eg. _READ_PORT(A)
+// Read full port width eg. _READ_PORT(1)
 //
-#define _READ_PORT(ref)                    (GPIO##ref##_PDIR)
+#define _READ_PORT(ref)                    (GPIO##ref##_PSR)
 
-// Read from a port with a mask eg. _READ_PORT(D, (PORTD_BIT3 | PORTD_BIT0))
+// Read from a port with a mask eg. _READ_PORT(1, (PORT1_BIT3 | PORT1_BIT0))
 //
-#define _READ_PORT_MASK(ref, mask)         (GPIO##ref##_PDIR & (mask))
+#define _READ_PORT_MASK(ref, mask)         (GPIO##ref##_PSR & (mask))
 
 // Configure outputs, including enabling clock to specified port, and then set a value to them - this device sets the value and then drives
-// eg. _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT13), (PORTC_BIT13), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+// eg. _CONFIG_DRIVE_PORT_OUTPUT_VALUE(1, (PORT1_BIT13), (PORT1_BIT13), (PORT_SRE_SLOW | PORT_DSE_HIGH))
 //
-#if defined KINETIS_WITH_PCC
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) PCC_PORT##ref |= PCC_CGC; PORT##ref##_GPCHR = (((pins) & 0xffff0000) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0xffff0000)) | ((value) & 0xffff0000)); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}{39}
-
-#elif defined KINETIS_KE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) GPIO##ref##_PIDR &= ~(pins); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars)
-#else
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_LOW(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCLR = (((pins) << 16) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0x0000ffff)) | ((value) & 0x0000ffff)); GPIO##ref##_PDDR |= ((pins) & 0x0000ffff); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}
-    #define _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(ref, pins, value, chars) POWER_UP_ATOMIC(5, PORT##ref); PORT##ref##_GPCHR = (((pins) & 0xffff0000) | (chars | PORT_MUX_GPIO)); GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~((pins) & 0xffff0000)) | ((value) & 0xffff0000)); GPIO##ref##_PDDR |= ((pins) & 0xffff0000); _SIM_PORT_CHANGE; _SIM_PER_CHANGE // {12}{39}
-#endif
+#define _CONFIG_DRIVE_PORT_OUTPUT_VALUE(ref, pins, value, chars) fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_DR = ((GPIO##ref##_DR & ~(pins)) | (value)); GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 
 // Set from inputs to outputs and set a value to them - this is equivalent to _CONFIG_DRIVE_PORT_OUTPUT_VALUE on this device
 //
-#if defined FGPIO_AVAILABLE
-    #define _DRIVE_PORT_OUTPUT_VALUE(ref, pins, value)  FGPIO##ref##_PDOR = ((FGPIO##ref##_PDOR & ~(pins)) | (value)); FGPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE
-#else
-    #define _DRIVE_PORT_OUTPUT_VALUE(ref, pins, value)  GPIO##ref##_PDOR = ((GPIO##ref##_PDOR & ~(pins)) | (value)); GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE
-#endif
+#define _DRIVE_PORT_OUTPUT_VALUE(ref, pins, value)  GPIO##ref##_DR = ((GPIO##ref##_DR & ~(pins)) | (value)); GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE
 
-// Set from outputs to inputs eg. _FLOAT_PORT(A, LCD_BUS_BITS)
+// Set from outputs to inputs eg. _FLOAT_PORT(1, LCD_BUS_BITS)
 //
-#if defined FGPIO_AVAILABLE
-    #define _FLOAT_PORT(ref, pins)         FGPIO##ref##_PDDR &= ~(pins); _SIM_PORT_CHANGE
-#else
-    #define _FLOAT_PORT(ref, pins)         GPIO##ref##_PDDR &= ~(pins); _SIM_PORT_CHANGE
-#endif
+#define _FLOAT_PORT(ref, pins)           GPIO##ref##_GDIR &= ~(pins); _SIM_PORT_CHANGE
 
-// Set from inputs to outputs eg. _DRIVE_PORT_OUTPUT(A, LCD_BUS_BITS)
+// Set from inputs to outputs eg. _DRIVE_PORT_OUTPUT(1, LCD_BUS_BITS)
 //
-#if defined FGPIO_AVAILABLE
-    #define _DRIVE_PORT_OUTPUT(ref, pins)  FGPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE
-#else
-    #define _DRIVE_PORT_OUTPUT(ref, pins)  GPIO##ref##_PDDR |= (pins); _SIM_PORT_CHANGE
-#endif
-// Set and clear individual bits of a port eg. _SETBITS(B, (PORTB_BIT5 | PORTB_BIT19)) / _CLEARBITS(B, (PORTB_BIT5 | PORTB_BIT19))
+#define _DRIVE_PORT_OUTPUT(ref, pins)    GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE
+
+// Set and clear individual bits of a port eg. _SETBITS(1, (PORT1_BIT5 | PORT1_BIT19)) / _CLEARBITS(1, (PORT1_BIT5 | PORT1_BIT19))
 //
-#if defined KINETIS_KM
-    #define _SETBITS(ref, pins)            FGPIO##ref##_PDOR |= (pins); _SIM_PORT_CHANGE
-    #define _CLEARBITS(ref, pins)          FGPIO##ref##_PDOR &= ~(pins); _SIM_PORT_CHANGE
-#elif defined FGPIO_AVAILABLE
-    #define _SETBITS(ref, pins)            FGPIO##ref##_PSOR = (pins); _SIM_PORT_CHANGE
-    #define _CLEARBITS(ref, pins)          FGPIO##ref##_PCOR = (pins); _SIM_PORT_CHANGE
-#else
-    #define _SETBITS(ref, pins)            GPIO##ref##_PSOR = (pins); _SIM_PORT_CHANGE
-    #define _CLEARBITS(ref, pins)          GPIO##ref##_PCOR = (pins); _SIM_PORT_CHANGE
-#endif
+#define _SETBITS(ref, pins)              GPIO##ref##_DR_SET = (pins); _SIM_PORT_CHANGE
+#define _CLEARBITS(ref, pins)            GPIO##ref##_DR_CLEAR = (pins); _SIM_PORT_CHANGE
 
 
-// Miscellaneous Control Module                                          {29}
+// Miscellaneous Control Module
 //
 #define MCM_PLASC                        *(volatile unsigned short *)(MCM_BLOCK + 0x08)   // crossbar switch (AXBS) slave configuration (read-only)
 #define MCM_PLAMC                        *(volatile unsigned short *)(MCM_BLOCK + 0x0a)   // crossbar switch (AXBS) master configuration (read-only)
@@ -20122,6 +17831,7 @@ typedef struct stTIMER_INTERRUPT_SETUP
     unsigned char    capture_channel;                                    // {97}
 } TIMER_INTERRUPT_SETUP;
 
+
 #define PORTA                0
 #define PORTB                1
 #define PORTC                2
@@ -20569,6 +18279,7 @@ typedef struct stPDB_SETUP                                               // {37}
 
 // i.MX IOMUXC SNVS
 //
+#define IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD     (unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0000)
 #define IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP         *(unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0000) // SW_MUX_CTL_PAD_WAKEUP SW MUX control register
     #define PAD_WAKEUP_GPIO5_IO00                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define PAD_WAKEUP_NMI_GLUE_NMI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
@@ -20886,6 +18597,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_EMC_31_GPIO2_IO31                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_EMC_31_GPT2_CLK                   (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_EMC_31_FLEXPWM1_PWMX03            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+#define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0094)
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0094) // SW_MUX_CTL_PAD_GPIO_EMC_32 SW MUX control register [GPIO3-00]
     #define GPIO_EMC_32_SEMC_DATA08                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_EMC_32_QTIMER1_TIMER0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
@@ -21585,6 +19297,7 @@ typedef struct stPDB_SETUP                                               // {37}
 #define IOMUXC_XBAR1_IN18_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04bc) // XBAR1_IN18_SELECT_INPUT DAISY register
 #define IOMUXC_XBAR1_IN19_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04c0) // XBAR1_IN19_SELECT_INPUT DAISY register
 
+    #define PAD_MUX_MODE_GPIO           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5) // GPIO mode is always thsi value
 
 // i.MX GPIO
 //
@@ -21597,9 +19310,9 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO1_ISR                       *(volatile unsigned long *)(GPIO1_BLOCK + 0x0018) // GPIO1 interrupt status register
 #define GPIO1_EDGE_SEL                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x001c) // GPIO1 edge select register
 
-#define GPIO1_DR_SET                    *(volatile unsigned long *)(GPIO1_BLOCK + 0x0084) // GPIO1 data register set
-#define GPIO1_DR_CLEAR                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x0088) // GPIO1 data register clear
-#define GPIO1_DR_TOGGLE                 *(volatile unsigned long *)(GPIO1_BLOCK + 0x008c) // GPIO1 data register toggle
+#define GPIO1_DR_SET                    *(volatile unsigned long *)(GPIO1_BLOCK + 0x0084) // GPIO1 data register set - write-only (reads alwayss 0)
+#define GPIO1_DR_CLEAR                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x0088) // GPIO1 data register clear - write-only (reads alwayss 0)
+#define GPIO1_DR_TOGGLE                 *(volatile unsigned long *)(GPIO1_BLOCK + 0x008c) // GPIO1 data register toggle - write-only (reads alwayss 0)
 
 
 #define GPIO2_DR                        *(volatile unsigned long *)(GPIO2_BLOCK + 0x0000) // GPIO2 data register
@@ -21611,9 +19324,9 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO2_ISR                       *(volatile unsigned long *)(GPIO2_BLOCK + 0x0018) // GPIO2 interrupt status register
 #define GPIO2_EDGE_SEL                  *(volatile unsigned long *)(GPIO2_BLOCK + 0x001c) // GPIO2 edge select register
 
-#define GPIO2_DR_SET                    *(volatile unsigned long *)(GPIO2_BLOCK + 0x0084) // GPIO2 data register set
-#define GPIO2_DR_CLEAR                  *(volatile unsigned long *)(GPIO2_BLOCK + 0x0088) // GPIO2 data register clear
-#define GPIO2_DR_TOGGLE                 *(volatile unsigned long *)(GPIO2_BLOCK + 0x008c) // GPIO2 data register toggle
+#define GPIO2_DR_SET                    *(volatile unsigned long *)(GPIO2_BLOCK + 0x0084) // GPIO2 data register set - write-only (reads alwayss 0)
+#define GPIO2_DR_CLEAR                  *(volatile unsigned long *)(GPIO2_BLOCK + 0x0088) // GPIO2 data register clear - write-only (reads alwayss 0)
+#define GPIO2_DR_TOGGLE                 *(volatile unsigned long *)(GPIO2_BLOCK + 0x008c) // GPIO2 data register toggle - write-only (reads alwayss 0)
 
 
 #define GPIO3_DR                        *(volatile unsigned long *)(GPIO3_BLOCK + 0x0000) // GPIO3 data register
@@ -21625,9 +19338,9 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO3_ISR                       *(volatile unsigned long *)(GPIO3_BLOCK + 0x0018) // GPIO3 interrupt status register
 #define GPIO3_EDGE_SEL                  *(volatile unsigned long *)(GPIO3_BLOCK + 0x001c) // GPIO3 edge select register
 
-#define GPIO3_DR_SET                    *(volatile unsigned long *)(GPIO3_BLOCK + 0x0084) // GPIO3 data register set
-#define GPIO3_DR_CLEAR                  *(volatile unsigned long *)(GPIO3_BLOCK + 0x0088) // GPIO3 data register clear
-#define GPIO3_DR_TOGGLE                 *(volatile unsigned long *)(GPIO3_BLOCK + 0x008c) // GPIO3 data register toggle
+#define GPIO3_DR_SET                    *(volatile unsigned long *)(GPIO3_BLOCK + 0x0084) // GPIO3 data register set - write-only (reads alwayss 0)
+#define GPIO3_DR_CLEAR                  *(volatile unsigned long *)(GPIO3_BLOCK + 0x0088) // GPIO3 data register clear - write-only (reads alwayss 0)
+#define GPIO3_DR_TOGGLE                 *(volatile unsigned long *)(GPIO3_BLOCK + 0x008c) // GPIO3 data register toggle - write-only (reads alwayss 0)
 
 
 #define GPIO5_DR                        *(volatile unsigned long *)(GPIO5_BLOCK + 0x0000) // GPIO5 data register
@@ -21639,9 +19352,9 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO5_ISR                       *(volatile unsigned long *)(GPIO5_BLOCK + 0x0018) // GPIO5 interrupt status register
 #define GPIO5_EDGE_SEL                  *(volatile unsigned long *)(GPIO5_BLOCK + 0x001c) // GPIO5 edge select register
 
-#define GPIO5_DR_SET                    *(volatile unsigned long *)(GPIO5_BLOCK + 0x0084) // GPIO5 data register set
-#define GPIO5_DR_CLEAR                  *(volatile unsigned long *)(GPIO5_BLOCK + 0x0088) // GPIO5 data register clear
-#define GPIO5_DR_TOGGLE                 *(volatile unsigned long *)(GPIO5_BLOCK + 0x008c) // GPIO5 data register toggle
+#define GPIO5_DR_SET                    *(volatile unsigned long *)(GPIO5_BLOCK + 0x0084) // GPIO5 data register set - write-only (reads alwayss 0)
+#define GPIO5_DR_CLEAR                  *(volatile unsigned long *)(GPIO5_BLOCK + 0x0088) // GPIO5 data register clear - write-only (reads alwayss 0)
+#define GPIO5_DR_TOGGLE                 *(volatile unsigned long *)(GPIO5_BLOCK + 0x008c) // GPIO5 data register toggle - write-only (reads alwayss 0)
 
 
 
@@ -21667,7 +19380,7 @@ typedef struct stPDB_SETUP                                               // {37}
 #define CCM_CIMR                        *(unsigned long *)(CCM_BLOCK + 0x005c) // CCM interrupt mask register
 #define CCM_CCOSR                       *(unsigned long *)(CCM_BLOCK + 0x0060) // CCM clock output source register
 #define CCM_CGPR                        *(unsigned long *)(CCM_BLOCK + 0x0064) // CCM general purpose register
-#define CCM_CCGR0                       *(unsigned long *)(CCM_BLOCK + 0x0068) // CCM clock gating register 0
+#define CCM_CCGR0                       *(volatile unsigned long *)(CCM_BLOCK + 0x0068) // CCM clock gating register 0
     #define CCM_CCGR0_GPIO2_CLOCKS_MASK          0xc0000000
     #define CCM_CCGR0_GPIO2_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
     #define CCM_CCGR0_GPIO2_CLOCKS_RUN           0x40000000              // clock is on in RUN mode but off in WAIT and STOP modes
@@ -21684,10 +19397,10 @@ typedef struct stPDB_SETUP                                               // {37}
     #define CCM_CCGR0_GPT2_BUS_CLOCKS_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
     #define CCM_CCGR0_GPT2_BUS_CLOCKS_RUN        0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
     #define CCM_CCGR0_GPT2_BUS_CLOCKS_STOP       0x03000000              // clock is on during all modes except STOP mode
-    #define CCM_CCGR0_GPT2_TRACE_CLOCK_MASK      0x00c00000
-    #define CCM_CCGR0_GPT2_TRACE_CLOCK_OFF       0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
-    #define CCM_CCGR0_GPT2_TRACE_CLOCK_RUN       0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
-    #define CCM_CCGR0_GPT2_TRACE_CLOCK_STOP      0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR0_TRACE_CLOCK_MASK           0x00c00000
+    #define CCM_CCGR0_TRACE_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR0_TRACE_CLOCK_RUN            0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR0_TRACE_CLOCK_STOP           0x00c00000              // clock is on during all modes except STOP mode
     #define CCM_CCGR0_CAN2_SERIAL_CLOCK_MASK     0x00300000
     #define CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF      0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
     #define CCM_CCGR0_CAN2_SERIAL_CLOCK_RUN      0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
@@ -21732,13 +19445,323 @@ typedef struct stPDB_SETUP                                               // {37}
     #define CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
     #define CCM_CCGR0_AIPS_TZ1_CLOCK2_RUN        0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
     #define CCM_CCGR0_AIPS_TZ1_CLOCK2_STOP       0x00000003              // clock is on during all modes except STOP mode
-#define CCM_CCGR1                       *(unsigned long *)(CCM_BLOCK + 0x006c) // CCM clock gating register 1
-#define CCM_CCGR2                       *(unsigned long *)(CCM_BLOCK + 0x0070) // CCM clock gating register 2
-#define CCM_CCGR3                       *(unsigned long *)(CCM_BLOCK + 0x0074) // CCM clock gating register 3
-#define CCM_CCGR4                       *(unsigned long *)(CCM_BLOCK + 0x0078) // CCM clock gating register 4
-#define CCM_CCGR5                       *(unsigned long *)(CCM_BLOCK + 0x007c) // CCM clock gating register 5
-#define CCM_CCGR6                       *(unsigned long *)(CCM_BLOCK + 0x0080) // CCM clock gating register 6
+#define CCM_CCGR1                       *(volatile unsigned long *)(CCM_BLOCK + 0x006c) // CCM clock gating register 1
+    #define CCM_CCGR1_CSU_CLOCK_MASK             0x30000000
+    #define CCM_CCGR1_CSU_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_CSU_CLOCK_RUN              0x10000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_CSU_CLOCK_STOP             0x30000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_GPIO1_CLOCKS_MASK          0x0c000000
+    #define CCM_CCGR1_GPIO1_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_GPIO1_CLOCKS_RUN           0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_GPIO1_CLOCKS_STOP          0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_LPUART4_CLOCK_MASK         0x03000000
+    #define CCM_CCGR1_LPUART4_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_LPUART4_CLOCK_RUN          0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_LPUART4_CLOCK_STOP         0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_GPT1_SERIAL_CLOCK_MASK     0x00c00000
+    #define CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF      0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_GPT1_SERIAL_CLOCK_RUN      0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_GPT1_SERIAL_CLOCK_STOP     0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_GPT1_BUS_CLOCK_MASK        0x00300000
+    #define CCM_CCGR1_GPT1_BUS_CLOCK_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_GPT1_BUS_CLOCK_RUN         0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_GPT1_BUS_CLOCK_STOP        0x00300000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_SEMC_EXSC_CLOCK_MASK       0x000c0000
+    #define CCM_CCGR1_SEMC_EXSC_CLOCK_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_SEMC_EXSC_CLOCK_RUN        0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_SEMC_EXSC_CLOCK_STOP       0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_ADC1_CLOCK_MASK            0x0000c000
+    #define CCM_CCGR1_ADC1_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_ADC1_CLOCK_RUN             0x00004000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_ADC1_CLOCK_STOP            0x0000c000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_PIT_CLOCKS_MASK            0x00003000
+    #define CCM_CCGR1_PIT_CLOCKS_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_PIT_CLOCKS_RUN             0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_PIT_CLOCKS_STOP            0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_ENET_CLOCK_MASK            0x00000c00
+    #define CCM_CCGR1_ENET_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_ENET_CLOCK_RUN             0x00000400              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_ENET_CLOCK_STOP            0x00000c00              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_ADC2_CLOCK_MASK            0x00000300
+    #define CCM_CCGR1_ADC2_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_ADC2_CLOCK_RUN             0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_ADC2_CLOCK_STOP            0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_LPSPI4_CLOCKS_MASK         0x000000c0
+    #define CCM_CCGR1_LPSPI4_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_LPSPI4_CLOCKS_RUN          0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_LPSPI4_CLOCKS_STOP         0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_LPSPI3_CLOCKS_MASK         0x00000030
+    #define CCM_CCGR1_LPSPI3_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_LPSPI3_CLOCKS_RUN          0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_LPSPI3_CLOCKS_STOP         0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_LPSPI2_CLOCKS_MASK         0x0000000c
+    #define CCM_CCGR1_LPSPI2_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_LPSPI2_CLOCKS_RUN          0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_LPSPI2_CLOCKS_STOP         0x0000000c              // clock is on during all modes except STOP mode
+    #define CCM_CCGR1_LPSPI1_CLOCKS_MASK         0x00000003
+    #define CCM_CCGR1_LPSPI1_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR1_LPSPI1_CLOCKS_RUN          0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR1_LPSPI1_CLOCKS_STOP         0x00000003              // clock is on during all modes except STOP mode
+#define CCM_CCGR2                       *(volatile unsigned long *)(CCM_BLOCK + 0x0070) // CCM clock gating register 2
+    #define CCM_CCGR2_GPIO3_CLOCKS_MASK          0x0c000000
+    #define CCM_CCGR2_GPIO3_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_GPIO3_CLOCKS_RUN           0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_GPIO3_CLOCKS_STOP          0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_XBAR2_CLOCK_MASK           0x03000000
+    #define CCM_CCGR2_XBAR2_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_XBAR2_CLOCK_RUN            0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_XBAR2_CLOCK_STOP           0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_XBAR1_CLOCK_MASK           0x00c00000
+    #define CCM_CCGR2_XBAR1_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_XBAR1_CLOCK_RUN            0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_XBAR1_CLOCK_STOP           0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_OCOTP_CTRL_CLOCK_MASK      0x00003000
+    #define CCM_CCGR2_OCOTP_CTRL_CLOCK_OFF       0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_OCOTP_CTRL_CLOCK_RUN       0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_OCOTP_CTRL_CLOCK_STOP      0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_LPI2C3_CLOCK_MASK          0x00000c00
+    #define CCM_CCGR2_LPI2C3_CLOCK_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_LPI2C3_CLOCK_RUN           0x00000400              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_LPI2C3_CLOCK_STOP          0x00000c00              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_LPI2C2_CLOCK_MASK          0x00000300
+    #define CCM_CCGR2_LPI2C2_CLOCK_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_LPI2C2_CLOCK_RUN           0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_LPI2C2_CLOCK_STOP          0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_LPI2C1_CLOCK_MASK          0x000000c0
+    #define CCM_CCGR2_LPI2C1_CLOCK_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_LPI2C1_CLOCK_RUN           0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_LPI2C1_CLOCK_STOP          0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_IMUX_SNVS_CLOCK_MASK       0x00000030
+    #define CCM_CCGR2_IMUX_SNVS_CLOCK_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_IMUX_SNVS_CLOCK_RUN        0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_IMUX_SNVS_CLOCK_STOP       0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR2_OCRAM_EXSC_CLOCK_MASK      0x00000003
+    #define CCM_CCGR2_OCRAM_EXSC_CLOCK_OFF       0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR2_OCRAM_EXSC_CLOCK_RUN       0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR2_OCRAM_EXSC_CLOCK_STOP      0x00000003              // clock is on during all modes except STOP mode
+#define CCM_CCGR3                       *(volatile unsigned long *)(CCM_BLOCK + 0x0074) // CCM clock gating register 3
+    #define CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_MASK   0xc0000000
+    #define CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF    0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_RUN    0x40000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_STOP   0xc0000000              // clock is on during all modes except STOP mode
+    // Note that the OCRAM clock cannot be turned off when the CM cache is running on this device
+    //
+    #define CCM_CCGR3_OCRAM_CLOCK_MASK           0x30000000
+    #define CCM_CCGR3_OCRAM_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_OCRAM_CLOCK_RUN            0x10000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_OCRAM_CLOCK_STOP           0x30000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_ACMP4_CLOCKS_MASK          0x0c000000
+    #define CCM_CCGR3_ACMP4_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_ACMP4_CLOCKS_RUN           0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_ACMP4_CLOCKS_STOP          0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_ACMP3_CLOCKS_MASK          0x03000000
+    #define CCM_CCGR3_ACMP3_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_ACMP3_CLOCKS_RUN           0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_ACMP3_CLOCKS_STOP          0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_ACMP2_CLOCKS_MASK          0x00c00000
+    #define CCM_CCGR3_ACMP2_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_ACMP2_CLOCKS_RUN           0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_ACMP2_CLOCKS_STOP          0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_ACMP1_CLOCKS_MASK          0x00300000
+    #define CCM_CCGR3_ACMP1_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_ACMP1_CLOCKS_RUN           0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_ACMP1_CLOCKS_STOP          0x00300000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_FLEXRAM1_CLOCK_MASK        0x000c0000
+    #define CCM_CCGR3_FLEXRAM1_CLOCK_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_FLEXRAM1_CLOCK_RUN         0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_FLEXRAM1_CLOCK_STOP        0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_WDOG1_CLOCK_MASK           0x00030000
+    #define CCM_CCGR3_WDOG1_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_WDOG1_CLOCK_RUN            0x00010000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_WDOG1_CLOCK_STOP           0x00030000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_EWM_CLOCK_MASK             0x0000c000
+    #define CCM_CCGR3_EWM_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_EWM_CLOCK_RUN              0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_EWM_CLOCK_STOP             0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_AOI1_CLOCK_MASK            0x00000300
+    #define CCM_CCGR3_AOI1_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_AOI1_CLOCK_RUN             0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_AOI1_CLOCK_STOP            0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_LPUART6_CLOCK_MASK         0x000000c0
+    #define CCM_CCGR3_LPUART6_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_LPUART6_CLOCK_RUN          0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_LPUART6_CLOCK_STOP         0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_SEMC_CLOCKS_MASK           0x00000030
+    #define CCM_CCGR3_SEMC_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_SEMC_CLOCKS_RUN            0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_SEMC_CLOCKS_STOP           0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR3_LPUART5_CLOCK_MASK         0x0000000c
+    #define CCM_CCGR3_LPUART5_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_LPUART5_CLOCK_RUN          0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_LPUART5_CLOCK_STOP         0x0000000c              // clock is on during all modes except STOP mode
+#define CCM_CCGR4                       *(volatile unsigned long *)(CCM_BLOCK + 0x0078) // CCM clock gating register 4
+    #define CCM_CCGR4_ENC2_CLOCKS_MASK           0x0c000000
+    #define CCM_CCGR4_ENC2_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_ENC2_CLOCKS_RUN            0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_ENC2_CLOCKS_STOP           0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_ENC1_CLOCKS_MASK           0x03000000
+    #define CCM_CCGR4_ENC1_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_ENC1_CLOCKS_RUN            0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_ENC1_CLOCKS_STOP           0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_PWM2_CLOCKS_MASK           0x000c0000
+    #define CCM_CCGR4_PWM2_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_PWM2_CLOCKS_RUN            0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_PWM2_CLOCKS_STOP           0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_PWM1_CLOCKS_MASK           0x00030000
+    #define CCM_CCGR4_PWM1_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_PWM1_CLOCKS_RUN            0x00010000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_PWM1_CLOCKS_STOP           0x00030000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_SIM_EMS_CLOCKS_MASK        0x0000c000
+    #define CCM_CCGR4_SIM_EMS_CLOCKS_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_SIM_EMS_CLOCKS_RUN         0x00004000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_SIM_EMS_CLOCKS_STOP        0x0000c000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_SIM_M_CLOCKS_MASK          0x00003000
+    #define CCM_CCGR4_SIM_M_CLOCKS_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_SIM_M_CLOCKS_RUN           0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_SIM_M_CLOCKS_STOP          0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_SIM_M7_CLOCK_MASK          0x00000300
+    #define CCM_CCGR4_SIM_M7_CLOCK_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_SIM_M7_CLOCK_RUN           0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_SIM_M7_CLOCK_STOP          0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_BEE_CLOCK_MASK             0x000000c0
+    #define CCM_CCGR4_BEE_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_BEE_CLOCK_RUN              0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_BEE_CLOCK_STOP             0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_IOMUX_GRP_CLOCK_MASK       0x00000030
+    #define CCM_CCGR4_IOMUX_GRP_CLOCK_OFF        0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_IOMUX_GRP_CLOCK_RUN        0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_IOMUX_GRP_CLOCK_STOP       0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_IOMUX_CLOCK_MASK           0x0000000c
+    #define CCM_CCGR4_IOMUX_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_IOMUX_CLOCK_RUN            0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_IOMUX_CLOCK_STOP           0x0000000c              // clock is on during all modes except STOP mode
+    #define CCM_CCGR4_SIM_M7_CLK_R_MASK          0x00000003
+    #define CCM_CCGR4_SIM_M7_CLK_R_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR4_SIM_M7_CLK_R_RUN           0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR4_SIM_M7_CLK_R_STOP          0x00000003              // clock is on during all modes except STOP mode
+#define CCM_CCGR5                       *(volatile unsigned long *)(CCM_BLOCK + 0x007c) // CCM clock gating register 5
+    #define CCM_CCGR5_SNVS_LP_CLOCK_MASK         0xc0000000
+    #define CCM_CCGR5_SNVS_LP_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SNVS_LP_CLOCK_RUN          0x40000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SNVS_LP_CLOCK_STOP         0xc0000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_SNVS_HP_CLOCK_MASK         0x30000000
+    #define CCM_CCGR5_SNVS_HP_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SNVS_HP_CLOCK_RUN          0x10000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SNVS_HP_CLOCK_STOP         0x30000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_LPUART7_CLOCK_MASK         0x0c000000
+    #define CCM_CCGR5_LPUART7_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_LPUART7_CLOCK_RUN          0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_LPUART7_CLOCK_STOP         0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_LPUART1_CLOCK_MASK         0x03000000
+    #define CCM_CCGR5_LPUART1_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_LPUART1_CLOCK_RUN          0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_LPUART1_CLOCK_STOP         0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_SAI3_CLOCK_MASK            0x00c00000
+    #define CCM_CCGR5_SAI3_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SAI3_CLOCK_RUN             0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SAI3_CLOCK_STOP            0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_SAI2_CLOCK_MASK            0x00300000
+    #define CCM_CCGR5_SAI2_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SAI2_CLOCK_RUN             0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SAI2_CLOCK_STOP            0x00300000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_SAI1_CLOCK_MASK            0x000c0000
+    #define CCM_CCGR5_SAI1_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SAI1_CLOCK_RUN             0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SAI1_CLOCK_STOP            0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_SPDIF_CLOCK_MASK           0x0000c000
+    #define CCM_CCGR5_SPDIF_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_SPDIF_CLOCK_RUN            0x00004000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_SPDIF_CLOCK_STOP           0x0000c000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_AIPSTZ4_CLOCKS_MASK        0x00003000
+    #define CCM_CCGR5_AIPSTZ4_CLOCKS_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_AIPSTZ4_CLOCKS_RUN         0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_AIPSTZ4_CLOCKS_STOP        0x00003000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_WDOG2_CLOCK_MASK           0x00000c00
+    #define CCM_CCGR5_WDOG2_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_WDOG2_CLOCK_RUN            0x00000400              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_WDOG2_CLOCK_STOP           0x00000c00              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_KPP_CLOCK_MASK             0x00000300
+    #define CCM_CCGR5_KPP_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_KPP_CLOCK_RUN              0x00000100              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_KPP_CLOCK_STOP             0x00000300              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_DMA_CLOCK_MASK             0x000000c0
+    #define CCM_CCGR5_DMA_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_DMA_CLOCK_RUN              0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_DMA_CLOCK_STOP             0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_WDOG3_CLOCK_MASK           0x00000030
+    #define CCM_CCGR5_WDOG3_CLOCK_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_WDOG3_CLOCK_RUN            0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_WDOG3_CLOCK_STOP           0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_FLEXIO1_CLOCK_MASK         0x0000000c
+    #define CCM_CCGR5_FLEXIO1_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_FLEXIO1_CLOCK_RUN          0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_FLEXIO1_CLOCK_STOP         0x0000000c              // clock is on during all modes except STOP mode
+    #define CCM_CCGR5_ROM_CLOCK_MASK             0x00000003
+    #define CCM_CCGR5_ROM_CLOCK_OFF              0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR5_ROM_CLOCK_RUN              0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR5_ROM_CLOCK_STOP             0x00000003              // clock is on during all modes except STOP mode
+#define CCM_CCGR6                       *(volatile unsigned long *)(CCM_BLOCK + 0x0080) // CCM clock gating register 6
+    #define CCM_CCGR6_TIMER2_CLOCKS_MASK         0x30000000
+    #define CCM_CCGR6_TIMER2_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_TIMER2_CLOCKS_RUN          0x10000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_TIMER2_CLOCKS_STOP         0x30000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_TIMER1_CLOCKS_MASK         0x0c000000
+    #define CCM_CCGR6_TIMER1_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_TIMER1_CLOCKS_RUN          0x04000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_TIMER1_CLOCKS_STOP         0x0c000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_LPI2C4_SERIAL_CLOCK_MASK   0x03000000
+    #define CCM_CCGR6_LPI2C4_SERIAL_CLOCK_OFF    0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_LPI2C4_SERIAL_CLOCK_RUN    0x01000000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_LPI2C4_SERIAL_CLOCK_STOP   0x03000000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_ANADIG_CLOCKS_MASK         0x00c00000
+    #define CCM_CCGR6_ANADIG_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_ANADIG_CLOCKS_RUN          0x00400000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_ANADIG_CLOCKS_STOP         0x00c00000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_SIM_PER_CLOCK_MASK         0x00300000
+    #define CCM_CCGR6_SIM_PER_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_SIM_PER_CLOCK_RUN          0x00100000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_SIM_PER_CLOCK_STOP         0x00300000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_AIPS_TZ3_CLOCK_MASK        0x000c0000
+    #define CCM_CCGR6_AIPS_TZ3_CLOCK_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_AIPS_TZ3_CLOCK_RUN         0x00040000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_AIPS_TZ3_CLOCK_STOP        0x000c0000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_LPUART8_CLOCK_MASK         0x0000c000
+    #define CCM_CCGR6_LPUART8_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_LPUART8_CLOCK_RUN          0x00004000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_LPUART8_CLOCK_STOP         0x0000c000              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_TRNG_CLOCK_MASK            0x00003000
+    #define CCM_CCGR6_TRNG_CLOCK_OFF             0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_TRNG_CLOCK_RUN             0x00001000              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_TRNG_CLOCK_STOP            0x00003000              // clock is on during all modes except STOP mode
+    // Note that SIM_EMS_CLK_ENABLE must also be cleared when flexspi_clk_enable is cleared
+    //
+    #define CCM_CCGR6_FLEXSPI_CLOCKS_MASK        0x00000c00
+    #define CCM_CCGR6_FLEXSPI_CLOCKS_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_FLEXSPI_CLOCKS_RUN         0x00000400              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_FLEXSPI_CLOCKS_STOP        0x00000c00              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_DCDC_CLOCKS_MASK           0x000000c0
+    #define CCM_CCGR6_DCDC_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_DCDC_CLOCKS_RUN            0x00000040              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_DCDC_CLOCKS_STOP           0x000000c0              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_USDHC2_CLOCKS_MASK         0x00000030
+    #define CCM_CCGR6_USDHC2_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_USDHC2_CLOCKS_RUN          0x00000010              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_USDHC2_CLOCKS_STOP         0x00000030              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_USDHC1_CLOCKS_MASK         0x0000000c
+    #define CCM_CCGR6_USDHC1_CLOCKS_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_USDHC1_CLOCKS_RUN          0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_USDHC1_CLOCKS_STOP         0x0000000c              // clock is on during all modes except STOP mode
+    #define CCM_CCGR6_USBOH3_CLOCK_MASK          0x00000003
+    #define CCM_CCGR6_USBOH3_CLOCK_OFF           0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR6_USBOH3_CLOCK_RUN           0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR6_USBOH3_CLOCK_STOP          0x00000003              // clock is on during all modes except STOP mode
 #define CCM_CMEOR                       *(unsigned long *)(CCM_BLOCK + 0x0088) // CCM module enable overide register
+    #define CCM_CMEOR_MOD_EN_OV_CAN1_CPI         0x40000000              // override clock enable signal from CAN1 (enable_clk_cpi)
+    #define CCM_CMEOR_MOD_EN_OV_CAN2_CPI         0x10000000              // override clock enable signal from CAN2 (enable_clk_cpi)
+    #define CCM_CMEOR_MOD_EN_OV_TRNG             0x00000200              // override clock enable signal from TRNG
+    #define CCM_CMEOR_MOD_EN_USDHC               0x00000080              // override clock enable signal from USDHC
+    #define CCM_CMEOR_MOD_EN_OV_PIT              0x00000040              // override clock enable signal from PIT (ipg_enable_clk)
+    #define CCM_CMEOR_MOD_EN_OV_GPT              0x00000020              // override clock enable signal from GPT (ipg_enable_clk)
 
 
 

@@ -1081,7 +1081,7 @@
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(B, LED2)
 
-    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(C, (USR_BUTTON), (INPUT_PULL_DOWN)) // PC13 configured as input with pull-down (USER_BUTTON)
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(C, (USR_BUTTON), (INPUT_PULL_DOWN)) // PC13 configured as input with pull-down (USR_BUTTON)
     #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(C, (USR_BUTTON))) != 0)
 
     #define KEYPAD "KeyPads/NUCLEO-L4XX.bmp"

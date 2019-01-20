@@ -11,7 +11,7 @@
     File:      app_hw_kinetis.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.03.2012 Add TWR_K70F120M and defined TWR_K53N512 support
     12.03.2012 Add ADC setup                                             {1}
@@ -654,7 +654,7 @@
         #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
         #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)
     #elif defined RUN_FROM_LIRC
-        #define RUN_FROM_LIRC_2M                                         // selet 2MHz rather than 8MHz
+        #define RUN_FROM_LIRC_2M                                         // select 2MHz rather than 8MHz
         #define SLOW_CLOCK_DIVIDE    1                                   // optionally divide the slow clock output (1, 2, 4, 8, 16, 32, 64 or 128)
         #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
         #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)
@@ -4112,7 +4112,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
   //#define NO_INTERRUPT_DISABLE_DURING_FLASH_OPERATIONS                 // when flash operations are not in the same plane as the code interrupts can be left open when they are performed
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
-    #define LED_RED            (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+  //#define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
+    #if defined SD_CONTROLLER_AVAILABLE
+        #define LED_RED        (PORTC_BIT5)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #else
+        #define LED_RED        (PORTC_BIT4)                              // 10
+    #endif
 
     #define SWITCH_1           (PORTC_BIT1)                              // switch 1 [pin pad 22] - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_2           (PORTC_BIT2)                              // switch 2 [pin pad 23] - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -4124,7 +4129,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_3         (PORTC_BIT7)
     #define DEMO_LED_4         (PORTC_BIT8)
 
-    #define SHIFT_DEMO_LED_1    5                                       // since the port bits may be spread out shift each to the lowest 2 bits
+    #if defined SD_CONTROLLER_AVAILABLE                                 // since the port bits may be spread out shift each to the lowest 4 bits
+        #define SHIFT_DEMO_LED_1    5
+    #else
+        #define SHIFT_DEMO_LED_1    4
+    #endif
     #define SHIFT_DEMO_LED_2    5
     #define SHIFT_DEMO_LED_3    5
     #define SHIFT_DEMO_LED_4    5
@@ -4150,7 +4159,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
 
-    #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
     #if defined SD_CONTROLLER_AVAILABLE
         #define SET_SD_CS_HIGH()                                         // dummy with SDHC controller
         #define SET_SD_CS_LOW()                                          // dummy with SDHC controller
@@ -4164,6 +4172,40 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
         #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+    #else                                                                // note that PORTB_BIT7 is held high due to this requirement in a special application
+        #define SPI_CS4_0             PORTD_BIT4
+        #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
+                _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
+                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_SIN | PORT_PS_UP_ENABLE)); \
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, SPI_CS4_0, SPI_CS4_0, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
+                _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT7, PORTB_BIT7, (PORT_SRE_SLOW | PORT_DSE_LOW)); \
+                SPI0_MCR |= SPI_MCR_HALT; \
+                SPI0_CTAR0 = (SPI_CTAR_ASC_6 | SPI_CTAR_FMSZ_8 | SPI_CTAR_CPHA | SPI_CTAR_CPOL | SPI_CTAR_BR_128); \
+                SPI0_MCR = (SPI_MCR_HALT | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)); \
+                SPI0_MCR = (0 | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5));
+
+		#define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS4_0)              // force DI and CS lines high ready for the initialisation sequence
+		#define SET_SD_CS_LOW()      _CLEARBITS(D, SPI_CS4_0)            // assert the CS line of the SD card to be read
+		#define SET_SD_CS_HIGH()     _SETBITS(D, SPI_CS4_0)              // negate the CS line of the SD card to be read
+
+		#define ENABLE_SPI_SD_OPERATION()
+		#define SET_SD_CARD_MODE()
+
+		// Set maximum speed
+		//
+		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
+		#if defined _WINDOWS
+			#define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#else
+			#define WRITE_SPI_CMD(byte)    SPI0_SR = (SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0) // clear flags before transmitting (and receiving) a single byte
+			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) {}
+			#define READ_SPI_DATA()        (unsigned char)SPI0_POPR
+		#endif
+		#define POWER_UP_SD_CARD()
+        #define UREVERSEMEMCPY                                           // required when SD card used in SPI mode
     #endif
 
     #define POWER_DOWN_SD_CARD()                                         // remove power from SD card interface
@@ -10784,7 +10826,7 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define fnFPGA_RD(addr)                *((volatile unsigned char*)FPGA_ADDR + addr)
 #endif
 
-#if defined BLINKY                                                       // remove peripheral support when BLINKY is used
+#if defined BLINKY || defined HELLO_WORLD                                // remove peripheral support when BLINKY/HELLO_WORLD is used
     #undef SUPPORT_PITS
     #undef SUPPORT_KEYBOARD_INTERRUPTS
     #undef SUPPORT_RTC

@@ -11,7 +11,7 @@
     File:      sim_iMX.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */  
@@ -4402,27 +4402,13 @@ typedef struct stKINETIS_PERIPH
 extern iMX_PERIPH  iMX;
 extern KINETIS_PERIPH kinetis;
 
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    #define _PORTS_AVAILABLE_   PORTS_AVAILABLE_8_BIT
-#else
-    #define _PORTS_AVAILABLE_   PORTS_AVAILABLE
-#endif
+#define _PORTS_AVAILABLE_   PORTS_AVAILABLE
 
 #define _PORT1                  0
 #define _PORT2                  1
 #define _PORT3                  2
 #define _PORT4                  3
 #define _PORT5                  4
-
-#define _PORTA                  0
-#define _PORTB                  1
-#define _PORTC                  2
-#define _PORTD                  3
-#define _PORTE                  4
-#define _PORTF                  5
-#define _PORTG                  6
-#define _PORTH                  7
-#define _PORTI                  8
 
 #define _GPIO_ADC               (_PORTS_AVAILABLE_)                      // dedicated ADC pins
 

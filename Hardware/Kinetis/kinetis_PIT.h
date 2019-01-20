@@ -26,6 +26,7 @@
     26.09.2017 Add LPIT support                                          {9}
     28.11.2017 Add configuration of LPIT behaviour in doze and debug modes {10}
     05.01.2018 Check whether PIT module is powered up before disabling individual PIT channel {11}
+    20.01.2019 Share PIT driver with iMX project
 
 */
 
@@ -72,7 +73,7 @@ static int fnHandleLPIT(int iChannel)
 }
 #endif
 
-    #if defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18)
+    #if defined _iMX || defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18)
 // KL device PIT, and LPIT, have a single interrupt which is shared by all PIT channels
 //
 static __interrupt void _PIT_Interrupt(void)
@@ -240,7 +241,7 @@ static void fnDisablePIT(int iPIT)
         PIT_MCR = 0;                                                     // ensure the PIT module is clocked
     #endif
         if (PIT_settings->int_handler != 0) {                            // if an interrupt is required
-    #if defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18) // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
+    #if defined _iMX || defined KINETIS_KL || defined KINETIS_KM || (defined LPITS_AVAILABLE && !defined KINETIS_KE18) // {3} KL, and LPIT, devices have a single interrupt from the PIT channels
             fnEnterInterrupt(irq_PIT_ID, PIT_settings->int_priority, _PIT_Interrupt); // ensure that the handler for the PIT module is entered
     #else
             switch (PIT_settings->ucPIT) {

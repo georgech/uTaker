@@ -8,99 +8,178 @@
     www.uTasker.com    Skype: M_J_Butcher
     
     ---------------------------------------------------------------------
-    File:      kinetis_PORTS.h
+    File:      iMX_PORTS.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
-    24.09.2012 Ensure port interrupt handler is entered before configuring interrupt {26}
-    18.02.2015 fnConnectGPIO() modified to allow modifying only parts of pin characteristics {115}
-    05.10.2015 Add port interrupt support on ports B, C, D and E for devices that share a single interrupt {1}
-    11.12.2015 Add port F                                                {2}
-    11.12.2015 Add DMA trigger option                                    {3}
-    11.12.2015 Add keep peripheral setting option                        {4}
-    31.07.2017 Add IRQ_DISABLE_INT support                               {5}
-    12.10.2017 When shared port interrupts are handed, skip checking ports that are not powered up {6}
-    12.07.2018 Add option to use single callback per port, with pin reference as callback parameter (PORT_INTERRUPT_USER_DISPATCHER)
-    19.07.2018 Modify port characteristics mask to allow interrupt fields to be disabled {7}
 
     See the following video showing port interrupt operation on a KL27: https://youtu.be/CubinvMuTwU
 
 */
 
 #if defined _PORT_MUX_CODE
-// This routine is used to connect one or more pins to their GPIO function with defined characteristics
+// This routine is used to connect one or more pins to their GPIO function with defined characteristics (it also powers the port in question)
 //
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics)
 {
-    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    unsigned long ulHighDrive = 0;
-    unsigned long *ptrPullup = (PORT_PUEL_ADD + iPortRef);
-    if (ulCharacteristics & PORT_PS_UP_ENABLE) {
-        *ptrPullup |= ulPortBits;
-    }
-    else {
-        *ptrPullup &= ~ulPortBits;
-    }
-    if (iPortRef == 0) {                                                 // KE ports A, B, C and D
-        if ((ulPortBits & KE_PORTB_BIT4) != 0) {
-            ulHighDrive |= 0x01;
-        }
-        if ((ulPortBits & KE_PORTB_BIT5) != 0) {
-            ulHighDrive |= 0x02;
-        }
-        if ((ulPortBits & KE_PORTD_BIT0) != 0) {
-            ulHighDrive |= 0x04;
-        }
-        if ((ulPortBits & KE_PORTD_BIT1) != 0) {
-            ulHighDrive |= 0x08;
-        }
-    }
-    else {                                                               // KE ports E, F, G and H
-        if ((ulPortBits & KE_PORTE_BIT0) != 0) {
-            ulHighDrive |= 0x10;
-        }
-        if ((ulPortBits & KE_PORTE_BIT1) != 0) {
-            ulHighDrive |= 0x20;
-        }
-        if ((ulPortBits & KE_PORTH_BIT0) != 0) {
-            ulHighDrive |= 0x40;
-        }
-        if ((ulPortBits & KE_PORTH_BIT1) != 0) {
-            ulHighDrive |= 0x80;
-        }
-    }
-    if ((ulCharacteristics & PORT_DSE_HIGH) != 0) {                      // if high drive strength is requested filter the pins that support it and set the approriate control bit(s)
-        PORT_HDRVE |= ulHighDrive;
-    }
-    else {
-        PORT_HDRVE &= ulHighDrive;
-    }
-    #else
     register unsigned long ulMask;
     unsigned long ulBit = 0x00000001;
-    volatile unsigned long *ptrPCR = (volatile unsigned long *)(PORT0_BLOCK + (iPortRef * 0x1000));
-        #if defined _WINDOWS
-    if (iPortRef >= PORTS_AVAILABLE) {                                   // trying to configure a port that is not available
+    unsigned long *ptrGPIO;
+
+    switch (iPortRef) {
+    case PORT1:
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00_ADD;
+        CCM_CCGR1 &= ~(CCM_CCGR1_GPIO1_CLOCKS_MASK);
+        CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCKS_STOP);
+        //CCM_CCGR1  |= (CCM_CCGR1_GPIO1_CLOCKS_RUN);
+        break;
+    case PORT2:
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
+        CCM_CCGR0 &= ~(CCM_CCGR0_GPIO2_CLOCKS_MASK);
+        CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCKS_STOP);
+      //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCKS_RUN);
+        break;
+    case PORT3:
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
+        CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCKS_MASK);
+        CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCKS_STOP);
+        //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCKS_RUN);
+        break;
+    case PORT5:
+        ptrGPIO = IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD;
+        break;
+    default:
         _EXCEPTION("The port that is being accessed is not available on this processor!!");
+        return;
     }
-        #endif
-    if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) != 0) {    // {115} don't allow the multiplexer setting to be changed so that peripheral function setting is not modified
+
+    // Complete set of GPIO pins as reference
+    //
+    /*
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_00, GPIO1_IO00, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_01, GPIO1_IO01, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_02, GPIO1_IO02, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_03, GPIO1_IO03, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_04, GPIO1_IO04, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_05, GPIO1_IO05, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_06, GPIO1_IO06, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_07, GPIO1_IO07, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_08, GPIO1_IO08, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_09, GPIO1_IO09, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_10, GPIO1_IO10, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_11, GPIO1_IO11, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_12, GPIO1_IO12, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_13, GPIO1_IO13, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_14, GPIO1_IO14, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B0_15, GPIO1_IO15, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_00, GPIO1_IO16, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_01, GPIO1_IO17, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_02, GPIO1_IO18, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_03, GPIO1_IO19, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_04, GPIO1_IO20, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_05, GPIO1_IO21, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_06, GPIO1_IO22, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_07, GPIO1_IO23, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_08, GPIO1_IO24, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_09, GPIO1_IO25, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_10, GPIO1_IO26, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_11, GPIO1_IO27, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_12, GPIO1_IO28, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_13, GPIO1_IO29, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_14, GPIO1_IO30, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_AD_B1_15, GPIO1_IO31, UART_PULL_UPS);
+
+    _CONFIG_PERIPHERAL(GPIO_EMC_00, GPIO2_IO00, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_01, GPIO2_IO01, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_02, GPIO2_IO02, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_03, GPIO2_IO03, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_04, GPIO2_IO04, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_05, GPIO2_IO05, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_06, GPIO2_IO06, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_07, GPIO2_IO07, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_08, GPIO2_IO08, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_09, GPIO2_IO09, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_10, GPIO2_IO10, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_11, GPIO2_IO11, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_12, GPIO2_IO12, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_13, GPIO2_IO13, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_14, GPIO2_IO14, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_15, GPIO2_IO15, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_16, GPIO2_IO16, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_17, GPIO2_IO17, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_18, GPIO2_IO18, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_19, GPIO2_IO19, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_20, GPIO2_IO20, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_21, GPIO2_IO21, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_22, GPIO2_IO22, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_23, GPIO2_IO23, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_24, GPIO2_IO24, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_25, GPIO2_IO25, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_26, GPIO2_IO26, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_27, GPIO2_IO27, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_28, GPIO2_IO28, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_29, GPIO2_IO29, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_30, GPIO2_IO30, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_31, GPIO2_IO31, UART_PULL_UPS);
+
+    _CONFIG_PERIPHERAL(GPIO_EMC_32, GPIO3_IO00, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_33, GPIO3_IO01, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_34, GPIO3_IO02, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_35, GPIO3_IO03, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_36, GPIO3_IO04, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_37, GPIO3_IO05, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_38, GPIO3_IO06, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_39, GPIO3_IO07, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_40, GPIO3_IO08, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_EMC_41, GPIO3_IO09, UART_PULL_UPS);
+
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_00, GPIO3_IO13, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_01, GPIO3_IO14, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_02, GPIO3_IO15, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_03, GPIO3_IO16, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_04, GPIO3_IO17, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_05, GPIO3_IO18, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B0_06, GPIO3_IO19, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_00, GPIO3_IO20, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_01, GPIO3_IO21, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_02, GPIO3_IO22, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_03, GPIO3_IO23, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_04, GPIO3_IO24, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_05, GPIO3_IO25, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_06, GPIO3_IO26, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_07, GPIO3_IO27, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_08, GPIO3_IO28, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_09, GPIO3_IO29, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_10, GPIO3_IO30, UART_PULL_UPS);
+    _CONFIG_PERIPHERAL(GPIO_SD_B1_11, GPIO3_IO31, UART_PULL_UPS);
+
+    // Exceptions
+    //
+    IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP = PAD_WAKEUP_GPIO5_IO00;
+    IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_ON_REQ = PAD_PMIC_ON_REQ_GPIO5_IO01:
+    IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_STBY_REQ = PAD_PMIC_STBY_REQ_GPIO5_IO02
+    */
+
+
+
+    if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) != 0) {    // don't allow the multiplexer setting to be changed so that peripheral function setting is not modified
         ulCharacteristics &= (PORT_IRQC_INT_MASK | PORT_LOCK | PORT_PS_UP_ENABLE); // {7} allow only these field to be set
-        ulMask = (PORT_IRQC_INT_MASK | PORT_PS_UP_ENABLE);               // {7} allow only these fields to be reset
+        ulMask = (PORT_IRQC_INT_MASK | PORT_PS_UP_ENABLE);               // allow only these fields to be reset
     }
     else {
         ulMask = (PORT_IRQC_INT_MASK | PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE); // {7} allow all fields to be modified (set or reset)
     }
+
     while (ulPortBits != 0) {                                            // for each specified pin
-        if ((ulPortBits & ulBit) != 0) {
-            *ptrPCR = ((*ptrPCR & ~ulMask) | ulCharacteristics);         // {115} set the GPIO characteristics for each port pin
+        if ((ulPortBits & ulBit) != 0) {                                 // if this port bit is to be set as GPIO
+            *ptrGPIO = PAD_MUX_MODE_GPIO;                                // set the GPIO mode for this pin
+          //*ptrGPIO = PAD_MUX_MODE_GPIO;                                // set the GPIO characteristics for each port pin
             ulPortBits &= ~(ulBit);                                      // pin has been set
         }
-        ptrPCR++;
+        ptrGPIO++;
         ulBit <<= 1;
     }
-    #endif
     _SIM_PER_CHANGE;
 }
 #endif

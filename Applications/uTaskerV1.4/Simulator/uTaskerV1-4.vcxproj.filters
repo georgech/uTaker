@@ -1561,9 +1561,6 @@
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_PDB.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PIT.h">
-      <Filter>Hardware\iMX</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_PWM.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
@@ -1665,6 +1662,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F103X_port.h">
       <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PORTS.h">
+      <Filter>Hardware\iMX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

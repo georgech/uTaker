@@ -11,7 +11,7 @@
     File:      uTaskerBootLoader.c [FREESCALE/NXP Coldfire, SAM7X, LPC23XX, LM3Sxxxx, STR91XF, AVR32, RX6XX, Kinetis]
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     27.02.2007 Changed header interpretation so that it is endian-independent {1}
     29.03.2007 Added decryption support                                  {2}
@@ -547,11 +547,11 @@ extern MAIN_FUNCTION_TYPE uTaskerBoot(void)
 #else
     #if defined _STM32 && defined FLASH_PROGRAMMING_OPTION_SETTING
         #if defined FLASH_PROGRAMMING_OPTION_SETTING_1 && defined FLASH_OPTCR1
-            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, FLASH_PROGRAMMING_OPTION_SETTING_1);
+            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, FLASH_PROGRAMMING_OPTION_SETTING_1, FLASH_PROGRAMMING_OPTION_MASK);
         #elif defined FLASH_OPTCR1
-            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1);
+            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, DEFAULT_FLASH_OPTION_SETTING_1, FLASH_PROGRAMMING_OPTION_MASK);
         #else
-            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, 0);
+            fnSetFlashOption(FLASH_PROGRAMMING_OPTION_SETTING, 0, FLASH_PROGRAMMING_OPTION_MASK);
         #endif
     #endif
             uFileErase((unsigned char *)UTASKER_APP_START, UTASK_APP_LENGTH); // valid code is waiting to be loaded so first delete the old code

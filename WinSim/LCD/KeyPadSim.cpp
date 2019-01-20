@@ -11,7 +11,7 @@
     File:      KeyPadSim.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     02.11.2009 Remove pressed key filtering and add display of keypad LEDs {1}
     01.05.2010 Add local define _EXCLUDE_WINDOWS_
@@ -80,7 +80,7 @@ USER_KEY user_keys[] = {
 #endif
 
 #if defined BUTTON_KEY_DEFINITIONS                                       // {3}
-    typedef struct stUSER_BUTTON
+    typedef struct st_USER_BUTTON
     {
         int        iPort_Ref;
         unsigned long  Port_Bit;
@@ -89,14 +89,14 @@ USER_KEY user_keys[] = {
         int        iInverted;                                            // pressing the button has an inverted effect
         int        iInitiallyOn;                                         // thsi can be set to represent a initially pressed state
     #endif
-    } USER_BUTTON;
+    } _USER_BUTTON;
 
 
-    USER_BUTTON user_buttons[] = {
+    _USER_BUTTON user_buttons[] = {
         BUTTON_KEY_DEFINITIONS
     };
 
-    static int iUserButtonStates[(sizeof(user_buttons)/sizeof(USER_BUTTON))] = {0};
+    static int iUserButtonStates[(sizeof(user_buttons)/sizeof(_USER_BUTTON))] = {0};
 #endif
 
 
@@ -232,7 +232,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
     #endif
 #endif
 #if defined BUTTON_KEY_DEFINITIONS                                       // {3}
-    for (i = 0; i < (sizeof(user_buttons)/sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (iUserButtonStates[i] != 0) {                                 // if presently pressed
             MoveToEx(hdc, (user_buttons[i].button_area.left + kb_rect.left), (user_buttons[i].button_area.top + kb_rect.top), NULL);
             LineTo(hdc, (user_buttons[i].button_area.right + kb_rect.left), (user_buttons[i].button_area.top + kb_rect.top));
@@ -377,7 +377,7 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
         memset(iKeyStates, 0, sizeof(iKeyStates));
 #endif
 #if defined BUTTON_KEY_DEFINITIONS                                       // {6}
-    for (i = 0; i < (sizeof(user_buttons)/sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (iUserButtonStates[i] != 0) {                                 // originally pressed
     #if defined STICKY_BUTTONS                                           // {11}
             if (fnStickyButton(i) == 0) {
@@ -415,7 +415,7 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
     y -= kb_rect.top;
 
 #if defined BUTTON_KEY_DEFINITIONS                                       // {3}
-    for (i = 0; i < (sizeof(user_buttons)/sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (user_buttons[i].button_area.left <= x) {
             if (user_buttons[i].button_area.right >= x) {
                 if (user_buttons[i].button_area.top <= y) {
@@ -498,7 +498,7 @@ extern int fnCheckKeypad(int x, int y, int iPressRelease)
 extern void fnInitKeys(void)
 {
     int i;
-    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (user_buttons[i].iInitiallyOn != 0) {
             iUserButtonStates[i] = 1;                                    // pressed by default
         }
@@ -510,7 +510,7 @@ extern void fnInitKeys(void)
 extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
 {
     int i;
-    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (user_buttons[i].iPort_Ref == iPortRef) {
             if (user_buttons[i].iInitiallyOn != 0) {
                 if (user_buttons[i].iInverted != 0) {
@@ -531,7 +531,7 @@ extern unsigned long fnKeyPadState(unsigned long ulInitialState, int iPortRef)
 extern void fnSyncKeyPadState(int iPortRef, unsigned long ulInput, int iOnOff)
 {
     int i;
-    for (i = 0; i < (sizeof(user_buttons) / sizeof(USER_BUTTON)); i++) {
+    for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (user_buttons[i].iPort_Ref == iPortRef) {
             if ((user_buttons[i].Port_Bit & ulInput) != 0) {
                 iUserButtonStates[i] = iOnOff;

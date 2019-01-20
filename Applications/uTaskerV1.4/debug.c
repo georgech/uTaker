@@ -3472,45 +3472,43 @@ static CHAR *fnDisplayAscii(unsigned long ulValue, CHAR *ptrAscii, int iLength)
     }
     return ptrAscii;
 }
+#endif
 
-/************************************************************************/
+#if defined ADC_TEST_DEVELOPMENT
 #define NUMBER_OF_ANALOGUE_INPUTS 8
 signed short diInput1[NUMBER_OF_ANALOGUE_INPUTS];
 
-static const int ADC0channel[8] = {0,1,2,3,4,5,6,7}; // in reality the numbers may be mixed around
-static const int ADC1channel[8] = {0,1,2,3,4,5,6,7};
+static const int ADC0channel[8] = { 0,1,2,3,4,5,6,7 };                   // in reality the numbers may be mixed around
+static const int ADC1channel[8] = { 0,1,2,3,4,5,6,7 };
 
-void function(void) // actually an interrupt routine
+void function(void)                                                      // actually an interrupt routine
 {
-	static int iDinIndex = 0;                                            // multiplexed input index (counts 0,1,2,3,4,5,6,7,8,9,10,11)
+    static int iDinIndex = 0;                                            // multiplexed input index (counts 0,1,2,3,4,5,6,7,8,9,10,11)
 
     // Read the sampled values so that the next conversion can be performed (this clears the interrupt flag)
     //
-	diInput1[ADC0channel[iDinIndex]] = (signed short)0x0080;              // save multiplexed inputs (odd samples are generally discarded - exception monitoring inputs)
-	diInput1[ADC1channel[iDinIndex]] = (signed short)0x0080;
+    diInput1[ADC0channel[iDinIndex]] = (signed short)0x0080;             // save multiplexed inputs (odd samples are generally discarded - exception monitoring inputs)
+    diInput1[ADC1channel[iDinIndex]] = (signed short)0x0080;
 
     if (iDinIndex & 0x01) {                                              // every even sample
         register signed short usSample = diInput1[ADC0channel[iDinIndex]]; // ADC input sample
         register int iADC;
 
-        for (iADC = 0; iADC < 2; iADC++) {                           // for each ADC (2 digital channels)
-          //if (iADC == 0) {
-          //    usSample = diInput1[ADC0channel[iDinIndex]];
-          //}
+        for (iADC = 0; iADC < 2; iADC++) {                               // for each ADC (2 digital channels)
+            //if (iADC == 0) {
+            //    usSample = diInput1[ADC0channel[iDinIndex]];
+            //}
             fnDebugHex(usSample, (sizeof(usSample) | WITH_LEADIN | WITH_CR_LF));
-            usSample = diInput1[ADC1channel[iDinIndex]];             // next ADC input sample (ADC1)
+            usSample = diInput1[ADC1channel[iDinIndex]];                 // next ADC input sample (ADC1)
         }
-
         if (++iDinIndex >= 8) {
-		    iDinIndex = 0;
-	    }
-	    
+            iDinIndex = 0;
+        }
     }
     else {                                                               // odd samples
         ++iDinIndex;
     }
 }
-/************************************************************************/
 #endif
 
 #if defined PWM_MEASUREMENT_DEVELOPMENT                                  // temporary code for developing PWM measurement based on K pin change triggered DMA
@@ -8637,7 +8635,7 @@ extern int fnSaveNewPars(int iTemp)
 }
 #endif
 
-
+#if !defined HELLO_WORLD
 extern CHAR *fnShowSN(CHAR *cValue)
 {
     #if defined ETH_INTERFACE
@@ -8693,7 +8691,7 @@ extern void fnSetNewValue(int iType, CHAR *ptr_input)                    // {6}
 
 extern void fnConfigureFtpServer(unsigned short usTimeout)               // {3}{6}
 {
-#if defined USE_FTP
+    #if defined USE_FTP
     if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_SERVER) != 0) { // should the FTP server be started?
         unsigned char ucFTP_mode = 0;
         if ((temp_pars->temp_parameters.usServers[DEFAULT_NETWORK] & ACTIVE_FTP_LOGIN) != 0) {
@@ -8704,24 +8702,23 @@ extern void fnConfigureFtpServer(unsigned short usTimeout)               // {3}{
     else {
         fnStopFtp();
     }
-#endif
+    #endif
 }
-
 
 // We support the network transmit routine here
 //
 extern QUEUE_TRANSFER fnNetworkTx(unsigned char *output_buffer, QUEUE_TRANSFER nr_of_bytes)
 {
-#if defined USE_TELNET && defined USE_MAINTENANCE                        // {6} no Telnet without USE_MAINTENANCE
+    #if defined USE_TELNET && defined USE_MAINTENANCE                    // {6} no Telnet without USE_MAINTENANCE
     if (output_buffer == 0) {                                            // {18} if a check of output buffer size call the correct function
         return (fnSendBufTCP(Telnet_socket, (unsigned char *)&OurTask, nr_of_bytes, TCP_BUF_CHECK));
     }
     return (fnSendBufTCP(Telnet_socket, output_buffer, nr_of_bytes, (TCP_BUF_SEND | TCP_BUF_SEND_REPORT_COPY)));
-#else
+    #else
     return 0;
-#endif
+    #endif
 }
-
+#endif
 #if defined _KINETIS
     #include "debug_hal_kinetis.h"                                       // {53}
 #elif defined _iMX
