@@ -11,7 +11,7 @@
     File:      kinetis_ENET.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     21.04.2012 Use link-local IPv6 address for multicast configuration   {11}
     29.04.2012 Add LAN_TX_FPU_WORKAROUND to workaround a problem with the Ethernet controller missing a queued buffer when caching is enabled {12}
@@ -38,6 +38,7 @@
     08.03.2017 Add option to not initialise MII_RXER pin (NO_MII_RXER)   {103}
     07.08.2017 Add option for MDIO on port A                             {104}
     07.09.2017 Optionally manage MDIO clock in tail-tagging routine      {105}
+    20.01.2019 Share PIT driver with iMX project
 
 */
 
@@ -967,49 +968,52 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     unsigned char *ptrBuffer;
     KINETIS_FEC_BD *ptrBD;
     int i;
-    #if defined ETHERNET_RMII && !defined ETHERNET_RMII_CLOCK_INPUT      // {14} don't do this check if configured to use external reference clock on dedicated input
-        #if OSCERCLK != 50000000
-            #error Ethernet RMII operation requires a 50MHz external clock signal!!
-        #endif
-    #endif
-    POWER_UP_ATOMIC(2, ENET);                                            // power up the Ethernet controller
-    #if defined MPU_AVAILABLE
-    MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
-    #endif
-    #if defined FORCE_PHY_CONFIG
-    FNFORCE_PHY_CONFIG();                                                // drive configuration lines and reset
-    #endif
-    #if defined MDIO_ON_PORTA                                            // {104}
-        #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/5) with pullup enabled
-        #else
-    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/5)
-        #endif
-    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/5)
+    #if defined _iMX
     #else
-        #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/8) with pullup enabled
-        #else
-    _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/8)
+        #if defined ETHERNET_RMII && !defined ETHERNET_RMII_CLOCK_INPUT  // {14} don't do this check if configured to use external reference clock on dedicated input
+            #if OSCERCLK != 50000000
+                #error Ethernet RMII operation requires a 50MHz external clock signal!!
+            #endif
         #endif
+    POWER_UP_ATOMIC(2, ENET);                                            // power up the Ethernet controller
+        #if defined MPU_AVAILABLE
+    MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
+        #endif
+        #if defined FORCE_PHY_CONFIG
+    FNFORCE_PHY_CONFIG();                                                // drive configuration lines and reset
+        #endif
+        #if defined MDIO_ON_PORTA                                        // {104}
+            #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/5) with pullup enabled
+            #else
+    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/5)
+            #endif
+    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/5)
+        #else
+            #if defined ETHERNET_MDIO_WITH_PULLUPS
+    _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/8) with pullup enabled
+            #else
+    _CONFIG_PERIPHERAL(B, 0, PB_0_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/8)
+            #endif
     _CONFIG_PERIPHERAL(B, 1, PB_1_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/8)
-    #endif
+        #endif
 
-    #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
+        #if defined JTAG_DEBUG_IN_USE_ERRATA_2541
     _CONFIG_PERIPHERAL(A, 5, (PORT_PS_DOWN_ENABLE));                     // pull the optional line down to 0V to avoid disturbing JTAG_TRST - not needed when using SWD for debugging 
-    #elif !defined NO_MII_RXER                                           // {103}
+        #elif !defined NO_MII_RXER                                       // {103}
     _CONFIG_PERIPHERAL(A, 5, PA_5_MII0_RXER);                            // MII0_RXER on PA.5 (alt. function 4)
-    #endif
+        #endif
     _CONFIG_PERIPHERAL(A, 12, PA_12_MII0_RXD1);                          // MII0_RXD1 on PA.12 (alt. function 4/5)
     _CONFIG_PERIPHERAL(A, 13, PA_13_MII0_RXD0);                          // MII0_RXD0 on PA.13 (alt. function 4/5)
     _CONFIG_PERIPHERAL(A, 14, PA_14_RMII0_CRS_DV);                       // RMII0_CRS_DV/ MII0_RXDV on PA.14 (alt. function 4/5)
     _CONFIG_PERIPHERAL(A, 15, PA_15_MII0_TXEN);                          // MII0_TXEN on PA.15 (alt. function 4/5)
     _CONFIG_PERIPHERAL(A, 16, PA_16_MII0_TXD0);                          // MII0_TXD0 on PA.16 (alt. function 4/5)
     _CONFIG_PERIPHERAL(A, 17, PA_17_MII0_TXD1);                          // MII0_TXD1 on PA.17 (alt. function 4/5)
-    #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
-        #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined ETHERNET_RMII && defined ETHERNET_RMII_CLOCK_INPUT       // {14}
+            #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
     _CONFIG_PERIPHERAL(E, 26,  PE_26_ENET_1588_CLKIN);                   // select the pin function for external 50MHz clock input
     SIM_SOPT2 |= (SIM_SOPT2_RMIISRC_ENET_1588_CLKIN);                    // select the ENET_1588_CLKIN as clock source (rather than EXTAL)
+            #endif
         #endif
     #endif
     #if !defined ETHERNET_RMII                                           // additional signals used in MII mode
@@ -1249,11 +1253,15 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         ptrBuffer += pars->usSizeTx;
         ptrBD++;
     }
+    #if defined _iMX                                                     // iMX has a single interrupt vector
+    fnEnterInterrupt(irq_ETH_ID, PRIORITY_EMAC, _fec_rx_frame_isr);      // configure and enter the Ethernet rx handling interrupt routine in the vector table
+    #else
     fnEnterInterrupt(irq_ETH_RX_ID, PRIORITY_EMAC, _fec_rx_frame_isr);   // configure and enter the Ethernet rx handling interrupt routine in the vector table
     #if defined LAN_REPORT_ACTIVITY || defined LAN_TX_FPU_WORKAROUND     // {12}
     fnEnterInterrupt(irq_ETH_TX_ID, PRIORITY_EMAC, _fec_txf_isr);        // configure and enter the Ethernet tx handling interrupt routine in the vector table
     #endif
     fnEnterInterrupt(irq_ETH_ERR_MISC_ID, PRIORITY_EMAC, _fec_misc);     // configure and enter the Ethernet error and miscellaneous handling interrupt routine in the vector table
+    #endif
 
     ECR = ENABLE_ETHERNET_OPERATION;                                     // enable FEC for operation
     #if defined _KSZ8051RNL && defined ETHERNET_RMII                     // {102}

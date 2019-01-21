@@ -22,279 +22,7 @@
 
 // Define clock settings
 //
-#if defined NET_KBED || defined NET_K60                                  // {16} KBED or NETK60
-    #if !defined _BMLOADER
-        #define USER_STARTUP_CODE	PHY_RESET_20MS                       // the processor needs to be clocked form the external PHY, which is initially in reset - the PHY is taken out of reset and allowed to stabilise before switching to this clock
-    #endif
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #if defined USB_INTERFACE                                            // when using USB generate 96MHz clock so that a 48MHz clock can be generated from it
-        #define CLOCK_DIV        25                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-        #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
-    #else
-        #define CLOCK_DIV        16                                      // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-        #define CLOCK_MUL        32                                      // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
-    #endif
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined EMCRAFT_K61F150M || defined K61FN1_50M                     // {9}
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL            30                                      // PLL0 multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCC output)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
-    #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // {29} the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
-    #define CLOCK_DIV_1          5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL_1          24                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCC output)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined FRDM_K64F || defined TWR_K64F120M || defined FreeLON || defined TEENSY_3_5 || defined HEXIWEAR_K64F // {26}
-    #define MASK_1N83J
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
-  //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
-  //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
-  //#define RUN_FROM_RTC_FLL                                             // use 32.76kHz crystal clock as input to the FLL
-    #if defined RUN_FROM_DEFAULT_CLOCK
-      //#define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    1                                   // approx. 22.5MHz
-        #define FLASH_CLOCK_DIVIDE   1                                   // approx. 22.5MHz 
-        #define BUS_CLOCK_DIVIDE     1                                   // approx. 22.5MHz
-    #elif defined RUN_FROM_HIRC                                          // use IRC48M internal oscillator directly (no PLL or FLL)
-        #define FLEX_CLOCK_DIVIDE    2                                   // approx. 24MHz
-        #define FLASH_CLOCK_DIVIDE   2                                   // approx. 24MHz 
-        #define BUS_CLOCK_DIVIDE     1                                   // approx. 48MHz
-    #elif defined RUN_FROM_HIRC_FLL
-        #define EXTERNAL_CLOCK       48000000                            // this is not really external but the IRC48MCLK is otherwise selected as if it were (Ethernet not possible!)
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #elif defined RUN_FROM_RTC_FLL
-        #define EXTERNAL_CLOCK       32768
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    2                                   // 96/2 to give 48MHz
-        #define FLASH_CLOCK_DIVIDE   4                                   // 96/4 to give 24MHz
-    #elif defined RUN_FROM_HIRC_PLL
-        #define EXTERNAL_CLOCK       48000000                            // this is not really external but the IRC48MCLK is otherwise selected as if it were (Ethernet not possible!)
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define CLOCK_DIV            20                                  // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            50                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #elif defined TEENSY_3_5
-        #define CRYSTAL_FREQUENCY    16000000                            // 16 MHz crystal
-        #define OSC_LOW_GAIN_MODE
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            4                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #elif defined HEXIWEAR_K64F
-        #define CRYSTAL_FREQUENCY    12000000                            // 12 MHz crystal
-        #define OSC_LOW_GAIN_MODE
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            3                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #else                                                                // run from external clock (typical configuration when Ethernet is required)
-        #define EXTERNAL_CLOCK       50000000                            // this must be 50MHz in order to use Ethernet in RMII mode
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define CLOCK_DIV            20                                  // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            48                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define BUS_CLOCK_DIVIDE     2                                   // 120/ to give 60MHz
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #endif
-    #if defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL
-        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - this shoudl always be used if not external !!
-      //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
-    #else
-        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-      //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
-    #endif
-#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
-  //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
-  //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
-  //#define RUN_FROM_RTC_FLL                                             // use 32.76kHz crystal clock as input to the FLL
-    #if defined RUN_FROM_DEFAULT_CLOCK
-      //#define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    1                                   // approx. 22.5MHz
-        #define FLASH_CLOCK_DIVIDE   1                                   // approx. 22.5MHz 
-        #define BUS_CLOCK_DIVIDE     1                                   // approx. 22.5MHz
-    #elif defined RUN_FROM_HIRC                                          // use IRC48M internal oscillator directly (no PLL or FLL)
-        #define FLEX_CLOCK_DIVIDE    2                                   // approx. 24MHz
-        #define FLASH_CLOCK_DIVIDE   2                                   // approx. 24MHz 
-        #define BUS_CLOCK_DIVIDE     1                                   // approx. 48MHz
-    #elif defined RUN_FROM_HIRC_FLL
-        #define EXTERNAL_CLOCK       48000000                            // this is not really external but the IRC48MCLK is otherwise selected as if it were (Ethernet not possible!)
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #elif defined RUN_FROM_RTC_FLL
-        #define EXTERNAL_CLOCK       32768
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define FLL_FACTOR           2929                                // use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 96/2 to give 48MHz
-        #define FLASH_CLOCK_DIVIDE   4                                   // 96/4 to give 24MHz
-    #elif defined RUN_FROM_HIRC_PLL
-        #define EXTERNAL_CLOCK       48000000                            // this is not really external but the IRC48MCLK is otherwise selected as if it were (Ethernet not possible!)
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define CLOCK_DIV            20                                  // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            50                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #else
-        #if defined FRDM_K66F || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
-            #define CRYSTAL_FREQUENCY    12000000                        // 12 MHz crystal
-            #define CLOCK_DIV            1                               // input must be divided to 8MHz..16MHz range (/1 to /8)
-        #else
-            #define CRYSTAL_FREQUENCY    16000000                        // 16 MHz crystal
-            #define CLOCK_DIV            2                               // input must be divided to 8MHz..16MHz range (/1 to /8)
-        #endif
-        #define OSC_LOW_GAIN_MODE
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-        #if defined USE_HIGH_SPEED_RUN_MODE                              // high speed run mode allow faster operation but can't program/erase flash
-            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
-                #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined FRDM_K66F || defined TWR_K65F180M || defined K66FX1M0 || defined FRDM_K28F
-                #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #else
-                #define CLOCK_MUL        45                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #endif
-            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
-                #define BUS_CLOCK_DIVIDE     4                           // 96/4 to give 24MHz (max. 24MHz)
-                #define QSPI_CLOCK_DIVIDE    1                           // 96/1 to give 96MHz (max. 96MHz)
-                #define FLASH_CLOCK_DIVIDE   4                           // 96/4 to give 24MHz (max. ?MHz)
-            #else
-                #define BUS_CLOCK_DIVIDE     3                           // 180/3 to give 60MHz (max. 60MHz)
-                #define FLEX_CLOCK_DIVIDE    3                           // 180/3 to give 60MHz (max. 60MHz)
-                #define FLASH_CLOCK_DIVIDE   7                           // 180/7 to give 25.714MHz (max. 28MHz)
-            #endif
-        #else                                                            // run mode has no functional restrictions but can't operate as fast as high speed run mode
-            #if defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
-                #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined TEENSY_3_6 || defined TWR_K65F180M || defined K66FX1M0
-                #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #else
-                #define CLOCK_MUL        20                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #endif
-            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
-                #define SYSTEM_CLOCK_DIVIDE  2                           // 144/2 to give 72MHz
-                #define BUS_CLOCK_DIVIDE     6                           // 144/6 to give 24MHz (max. 24MHz)
-                #define QSPI_CLOCK_DIVIDE    2                           // 144/2 to give 72MHz (max. 72MHz)
-                #define FLASH_CLOCK_DIVIDE   6                           // 144/6 to give 24MHz (max. 24MHz)
-            #elif defined FRDM_K28F
-                #define BUS_CLOCK_DIVIDE     2                           // 150/3 to give 50MHz
-                #define FLEX_CLOCK_DIVIDE    3                           // 150/3 to give 50MHz
-                #define FLASH_CLOCK_DIVIDE   6                           // 150/6 to give 25MHz
-            #else
-                #define BUS_CLOCK_DIVIDE     2                           // 120/2 to give 60MHz (max. 60MHz)
-                #define FLEX_CLOCK_DIVIDE    2                           // 120/2 to give 60MHz (max. 60MHz)
-                #define FLASH_CLOCK_DIVIDE   5                           // 120/7 to give 24MHz (max. 28MHz)
-            #endif 
-        #endif
-    #endif
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-  //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 180MHz/120MHz is suitable from PLL
-#elif defined TWR_KW21D256
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
-    #if defined RUN_FROM_MODEM_CLK_OUT
-        #define EXTERNAL_CLOCK       4000000                             // 4 MHz CLK_OUT option
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define CLOCK_DIV            2                                   // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-        #define CLOCK_MUL            24                                  // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
-    #else
-        #define FLASH_CLOCK_DIVIDE   1                                   // no dividers required since the default speed is low enough
-        #define BUS_CLOCK_DIVIDE     1                                   // 
-    #endif
-#elif defined TWR_KW24D512
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
-    #if defined RUN_FROM_MODEM_CLK_OUT
-        #define EXTERNAL_CLOCK       4000000                             // 4 MHz CLK_OUT option
-        #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-        #define CLOCK_DIV            2                                   // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-        #define CLOCK_MUL            24                                  // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
-    #else
-        #define FLASH_CLOCK_DIVIDE   1                                   // no dividers required since the default speed is low enough
-        #define BUS_CLOCK_DIVIDE     1                                   // 
-    #endif
-#elif defined K02F100M
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // 32kHz IRC used as source
-    #define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
-  //#define RUN_FROM_HIRC_FLL                                            // clock from FLL derived from internal 48MHz RC clock
-    #if defined RUN_FROM_DEFAULT_CLOCK
-        #define FLL_FACTOR           1464                                // use FLL for 46..57MHz from 32kHz IRC (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define SYSTEM_CLOCK_DIVIDE  1
-        #define BUS_CLOCK_DIVIDE     2                                   // 40..50MHz
-        #define FLASH_CLOCK_DIVIDE   4                                   // 20..25MHz
-    #elif defined RUN_FROM_HIRC
-        #define FLEX_CLOCK_DIVIDE    2                                   // approx. 24MHz
-        #define FLASH_CLOCK_DIVIDE   2                                   // approx. 24MHz 
-        #define BUS_CLOCK_DIVIDE     1                                   // approx. 48MHz
-    #elif defined RUN_FROM_HIRC_FLL                                      // RUN_FROM_HIRC_FLL
-        #define FLL_FACTOR           2197                                // use FLL for 68.65MHz from 48MHz/1536 IRC (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define SYSTEM_CLOCK_DIVIDE  1
-        #define BUS_CLOCK_DIVIDE     2                                   // 48MHz
-        #define FLASH_CLOCK_DIVIDE   4                                   // 24MHz
-    #endif
-#elif defined K70F150M_12M
-    #define MASK_3N96B                                                   // mask used - this ensures that the mask's erratas are respected
-    #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #define CLOCK_MUL            25                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-    #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 150MHz is suitable from PLL1
-    #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // the clock source for the USB clock
-    #define CLOCK_DIV_1          1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL_1          20                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB and DDR2] (x16 to x47 possible - divided by 2 at VCC output)
-#elif defined TWR_KV58F220M
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-    #if defined USE_HIGH_SPEED_RUN_MODE
-        #define CLOCK_MUL                        44                      // the PLL multiplication factor to achieve operating frequency of 220MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE                4                       // 220/4 to give 55MHz
-        #define FAST_PERIPHERAL_CLOCK_DIVIDE     2                       // 220/2 to give 110MHz
-        #define FLASH_CLOCK_DIVIDE               8                       // 220/6 to give 27.5MHz
-    #else
-        #define CLOCK_MUL                        32                      // the PLL multiplication factor to achieve operating frequency of 160MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE                3                       // 160/3 to give 53.333MHz
-        #define FAST_PERIPHERAL_CLOCK_DIVIDE     2                       // 160/2 to give 80MHz
-        #define FLASH_CLOCK_DIVIDE               6                       // 160/6 to give 26.667MHz
-    #endif
-#elif defined TWR_K60F120M || defined TWR_K70F120M || defined EMCRAFT_K70F120M || defined TWR_VF65GS10 // {9}
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL            24                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 120/3 to give 40MHz
-    #define FLASH_CLOCK_DIVIDE   5                                       // 120/5 to give 24MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-    #define USB_CLOCK_SOURCE_MCGPLL0CLK                                  // the clock source for the USB clock
-#elif defined K60F150M_50M
-    #define EXTERNAL_CLOCK       50000000                                // this must be 50MHz in order to use Ethernet in RMII mode
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts)
-    #define CLOCK_MUL            30                                      // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCC output)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 150/3 to give 50MHz
-    #define FLASH_CLOCK_DIVIDE   6                                       // 150/6 to give 25MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-    #define USB_CLOCK_SOURCE_MCGPLL1CLK                                  // the clock source for the USB clock is dedicated to the FS USB interface (48MHz)
-    #define CLOCK_DIV_1          5                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for FPU parts) (Neets - BDR)
-    #define CLOCK_MUL_1          24                                      // PLL1 multiplication factor to achieve operating frequency of 120MHz [suitable for FS USB] (x16 to x47 possible - divided by 2 at VCC output) (Neets - BDR)
-#elif defined MIMXRT1020
+#if defined MIMXRT1020
   //#define USE_FAST_INTERNAL_CLOCK                                      // use 4MHz IRC as source for MCGIRCLK (otherwise 32kHz)
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
@@ -312,455 +40,6 @@
     #endif
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
     #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined TWR_K80F150M || defined FRDM_K82F
-  //#define USE_FAST_INTERNAL_CLOCK                                      // use 4MHz IRC as source for MCGIRCLK (otherwise 32kHz)
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-  //#define USE_HIGH_SPEED_RUN_MODE                                      // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-    #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 150MHz parts)
-    #if defined USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-        #define CLOCK_MUL            25                                  // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE    2                                   // 150/2 to give 75MHz
-        #define FLASH_CLOCK_DIVIDE   6                                   // 150/6 to give 25MHz
-    #else
-        #define CLOCK_MUL            20                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
-        #define FLEX_CLOCK_DIVIDE    2                                   // 120/2 to give 60MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #endif
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined TWR_K60N512 || defined TWR_K60D100M || defined KINETIS_K52 || defined TWR_K53N512 || defined KINETIS_K61 || defined KINETIS_K70
-  //#define CLOCK_FROM_RTC_OSCILLATOR                                    // clock from 32768Hz RTC oscillator circuit, either directly or from FLL (neither suitable for ethernet nor USB)
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // clock from the IRC (neither suitable for ethernet nor USB)
-    #if !defined CLOCK_FROM_RTC_OSCILLATOR && !defined RUN_FROM_DEFAULT_CLOCK
-
-
-#define CRYSTAL_FREQUENCY    8000000                                // 8 MHz crystal
-#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-
-      //#define EXTERNAL_CLOCK           50000000                        // this must be 50MHz in order to use Ethernet in RMII mode
-      //#define _EXTERNAL_CLOCK          EXTERNAL_CLOCK
-    #endif
-    #if defined RUN_FROM_DEFAULT_CLOCK
-        #define FLL_FACTOR            2929                               // use FLL [95.977MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #if defined FLL_FACTOR
-            #define SYSTEM_CLOCK_DIVIDE   1                              // 96MHz
-            #define BUS_CLOCK_DIVIDE      2
-            #define FLASH_CLOCK_DIVIDE    4
-            #define FLEX_CLOCK_DIVIDE     2
-        #else
-            #define SYSTEM_CLOCK_DIVIDE   1                              // use default FFL speed (x640)
-            #define BUS_CLOCK_DIVIDE      1
-            #define FLASH_CLOCK_DIVIDE    2
-            #define FLEX_CLOCK_DIVIDE     2
-        #endif
-    #elif defined CLOCK_FROM_RTC_OSCILLATOR
-        #define RUN_FROM_RTC_FLL                                         // use FLL
-        #define FLL_FACTOR            2929                               // use FLL [95.977MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define SYSTEM_CLOCK_DIVIDE   1                                  // 96MHz
-        #define BUS_CLOCK_DIVIDE      2
-        #define FLASH_CLOCK_DIVIDE    4
-        #define FLEX_CLOCK_DIVIDE     2
-    #else
-        #if defined USB_INTERFACE                                        // when using USB generate 96MHz clock so that a 48MHz clock can be generated from it
-            #define CLOCK_DIV        25                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-            #define CLOCK_MUL        48                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
-        #else
-          //#define CLOCK_DIV        16                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-          //#define CLOCK_MUL        32                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
-
-            #define CLOCK_DIV        2                                  // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-            #define CLOCK_MUL        24                                  // the PLL multiplication factor to achieve operating frequency of 100MHz (x24 to x55 possible)
-
-
-
-        #endif
-        #define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin
-    #endif
-#elif defined TWR_KV31F120M || defined FRDM_KV31F
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define OSC_LOW_GAIN_MODE
-        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            2                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #else
-        #define FLEX_CLOCK_DIVIDE    1                                   // 
-        #define FLASH_CLOCK_DIVIDE   1                                   // 
-        #define BUS_CLOCK_DIVIDE     1                                   // 
-    #endif
-#elif defined TWR_KV46F150M
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define OSC_LOW_GAIN_MODE
-        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            1                                   // input must be divided to 8MHz..16MHz range (/1 to /8)
-      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-        #if defined USE_HIGH_SPEED_RUN_MODE                              // 150MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
-            #define CLOCK_MUL            37                              // the PLL multiplication factor to achieve operating frequency of 150MHz (x16 to x47 possible) - VCO must be between 180MHz and 360MHz
-            #define SYSTEM_CLOCK_DIVIDE  1                               // 148MHz/1 (1..16)
-            #define FAST_PERIPHERAL_CLOCK_DIVIDE  1                      // 148MHz/1 (1..16)
-            #define FLASH_CLOCK_DIVIDE   6                               // 148/6 to give 24.667MHz (bus adn flash clock) (1..16)
-        #else
-            #define CLOCK_MUL            25                              // the PLL multiplication factor to achieve operating frequency of 100MHz (x16 to x47 possible) - VCO must be between 180MHz and 360MHz
-            #define SYSTEM_CLOCK_DIVIDE  1                               // 100MHz/1 (1..16)
-            #define FAST_PERIPHERAL_CLOCK_DIVIDE  1                      // 100MHz/1 (1..16)
-            #define FLASH_CLOCK_DIVIDE   4                               // 100MHz/4 to give 25MHz (bus and flash clock) (1..16)
-        #endif
-    #else
-        #define SYSTEM_CLOCK_DIVIDE  1
-        #define FAST_PERIPHERAL_CLOCK_DIVIDE  1
-        #define FLASH_CLOCK_DIVIDE   4
-    #endif
-#elif defined TWR_K24F120M
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define OSC_LOW_GAIN_MODE
-        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            2                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
-        #define CLOCK_MUL            30                                  // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-        #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
-    #else
-        #define FLEX_CLOCK_DIVIDE    1                                   // 
-        #define FLASH_CLOCK_DIVIDE   1                                   // 
-        #define BUS_CLOCK_DIVIDE     1                                   // 
-    #endif    
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-  //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined TWR_K21F120M
-    #define OSC_LOW_GAIN_MODE                                            // oscillator without feedback resistor or load capacitors so use low gain mode
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            2                                       // input must be divided to 2MHz..4MHz range (/1 to /24 for 120MHz parts)
-    #define CLOCK_MUL            30                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 120/3 to give 40MHz
-    #define FLASH_CLOCK_DIVIDE   5                                       // 120/5 to give 24MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined BLAZE_K22
-    #define OSC_LOW_GAIN_MODE                                            // oscillator without feedback resistor or load capacitors so use low gain mode
-    #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /24 for 120MHz parts)
-    #define CLOCK_MUL            30                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-    #define FLEX_CLOCK_DIVIDE    3                                       // 120/3 to give 40MHz
-    #define FLASH_CLOCK_DIVIDE   5                                       // 120/5 to give 24MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined FRDM_K22F || defined TWR_K22F120M || defined tinyK22
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-  //#define RUN_FROM_LIRC                                                // clock directly from internal 4MHz RC clock
-  //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
-  //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
-  //#define RUN_FROM_HIRC_FLL                                            // use 48MHz RC clock as input to the FLL
-    #if defined RUN_FROM_LIRC                                            // 4MHz
-        #define FLEX_CLOCK_DIVIDE    5                                   // 4/5 to give 800kHz
-        #define FLASH_CLOCK_DIVIDE   5                                   // 4/5 to give 800kHz
-        #define BUS_CLOCK_DIVIDE     5                                   // 4/5 to give 800kHz
-    #elif !defined RUN_FROM_DEFAULT_CLOCK
-        #define OSC_LOW_GAIN_MODE
-        #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal on board
-      //#define USE_HIGH_SPEED_RUN_MODE                                  // operate in high speed RUN mode - note that flash programing is not possible in this mode so NO_FLASH_SUPPORT should be enabled in config.h
-        #if defined USE_HIGH_SPEED_RUN_MODE                              // 120 MHz requires use of the high speed run mode (with restriction of not being able to program flash in that mode)
-            #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-            #define CLOCK_DIV            2                               // input must be divided to 2MHz..4MHz range (/1 to /24)
-            #define CLOCK_MUL            30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible) - > 80MHz requires high speed run mode, which doesn't allow flash programming
-            #define FLEX_CLOCK_DIVIDE    3                               // 120/3 to give 40MHz
-            #define FLASH_CLOCK_DIVIDE   5                               // 120/5 to give 24MHz
-            #define BUS_CLOCK_DIVIDE     2                               // 120/2 to give 60MHz
-        #elif defined RUN_FROM_HIRC                                      // use IRC48M internal oscillator directly (no PLL or FLL)
-            #define FLEX_CLOCK_DIVIDE    2                               // approx. 24MHz
-            #define FLASH_CLOCK_DIVIDE   2                               // approx. 24MHz 
-            #define BUS_CLOCK_DIVIDE     1                               // approx. 48MHz
-        #elif defined RUN_FROM_HIRC_PLL
-            #define EXTERNAL_CLOCK       48000000                        // this is not really external but the IRC48MCLK is otherwise selected as if it were
-            #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-            #define CLOCK_DIV            24                              // input must be divided to 2MHz..4MHz range (/1 to /24)
-            #define CLOCK_MUL            40                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x24 to x55 possible)
-            #define FLEX_CLOCK_DIVIDE    4                               // 80/3 to give 20MHz
-            #define FLASH_CLOCK_DIVIDE   3                               // 80/3 to give 26.7MHz
-            #define BUS_CLOCK_DIVIDE     2                               // 80/2 to give 40MHz
-        #else                                                            // fastest run mode operation of 80MHz
-            #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-            #define CLOCK_DIV            4                               // input must be divided to 2MHz..4MHz range (/1 to /24)
-            #define CLOCK_MUL            40                              // the PLL multiplication factor to achieve operating frequency of 80MHz (x24 to x55 possible) - uses normal run mode and can program flash
-            #define FLEX_CLOCK_DIVIDE    4                               // 80/3 to give 20MHz
-            #define FLASH_CLOCK_DIVIDE   3                               // 80/3 to give 26.7MHz
-            #define BUS_CLOCK_DIVIDE     2                               // 80/2 to give 40MHz
-        #endif
-    #else
-      //#define FLL_FACTOR           1280                                // optionally set different FLL factor (640 [default], 732, 1280, 1464, 1920, 2197, 2560 or 2929 are possible) - clock dividers may need to be adjusted in order to respect frequency limits if increased
-        #define SYSTEM_CLOCK_DIVIDE  1                                   // system/core clock is set to the same frequency as MCGOUTCLK
-        #define FLEX_CLOCK_DIVIDE    1                                   // flex clock is set to the same frequency as MCGOUTCLK
-        #define FLASH_CLOCK_DIVIDE   1                                   // flash clock is set to the same frequency as MCGOUTCLK
-        #define BUS_CLOCK_DIVIDE     1                                   // bus clock is set to the same frequency as MCGOUTCLK
-    #endif
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
-  //#define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-#elif defined TWR_K20D72M
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            36                                      // the PLL multiplication factor to achieve operating frequency of 48MHz (x24 to x55 possible)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined TEENSY_3_1
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            8                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            36                                      // the PLL multiplication factor to achieve operating frequency of 72MHz (x24 to x55 possible)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined TRINAMIC_LANDUNGSBRUECKE
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            8                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            48                                      // the PLL multiplication factor to achieve operating frequency of 96MHz (x24 to x55 possible)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined K20FX512_120
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-
-    #define CLOCK_DIV            1                                       // input must be divided to 8MHz..16MHz range (/1 to /8 for 120MHz parts)
-    #define CLOCK_MUL            30                                      // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible - divided by 2 at VCO output)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-    #define FLEX_CLOCK_DIVIDE    3                                       // 120/3 to give 40MHz
-    #define FLASH_CLOCK_DIVIDE   5                                       // 120/5 to give 24MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin - 120MHz is suitable
-    #define USB_CLOCK_SOURCE_MCGPLL0CLK                                  // the clock source for the USB clock
-#elif defined TWR_KL43Z48M
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
-
-    #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined FRDM_KL43Z || defined FRDM_KL27Z || defined CAPUCCINO_KL27 || defined KL33Z64
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-    #if defined _DEV2
-        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
-        #define USB_CRYSTAL_LESS                                         // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-    #else
-      //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define RUN_FROM_HIRC                                            // clock from internal 48MHz RC clock
-      //#define RUN_FROM_LIRC                                            // clock from internal 8MHz RC clock
-          //#define RUN_FROM_LIRC_2M                                     // clock from internal 2MHz RC clock
-        #define SYSTEM_CLOCK_DIVIDE  1                                   // system clock divider value (1..16)
-        #define BUS_CLOCK_DIVIDE     2                                   // bus and flash clock divider value (1..8)
-        #define USB_CRYSTAL_LESS                                         // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-    #endif
-#elif defined FRDM_KL28Z
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    32768                                   // 32kHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
-      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz (default)
-      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
-      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
-      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
-      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
-    #if defined RUN_FROM_HIRC && (defined RUN_FROM_HIRC_60MHz || defined RUN_FROM_HIRC_56MHz || defined RUN_FROM_HIRC_52MHz)
-        #define BUS_CLOCK_DIVIDE     3                                   // bus and flash clock divider value (1..16)
-    #else
-        #define BUS_CLOCK_DIVIDE     2                                   // bus and flash clock divider value (1..16)
-    #endif
-    #define USB_CRYSTAL_LESS                                             // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
-#elif defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {2}{22}{23}{24}
-    #if defined FRDM_K20D50M || defined tinyK20 || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined TWR_K21D50M
-        #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
-    #endif
-  //#define RUN_FROM_LIRC                                                // clock from internal 4MHz RC clock
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // run from FLL default setting
-  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without PLL)
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #if defined FRDM_KL46Z || defined TWR_KL46Z48M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01
-        #define CLOCK_MUL        48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible) (MCGPLLCLK/2 is 48MHz - required by USB)
-        #define SYSTEM_CLOCK_DIVIDE 2                                    // divide (1,2,3..16 possible) to get core clock of 48MHz
-        #define BUS_CLOCK_DIVIDE    2                                    // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
-        #define FLASH_CLOCK_DIVIDE  2
-    #else
-        #define CLOCK_MUL        24                                      // the PLL multiplication factor to achieve system/core operating frequency of 48MHz (x24 to x55 possible)
-    #endif
-    #if defined FRDM_K20D50M
-        #define BUS_CLOCK_DIVIDE 1
-        #define FLASH_CLOCK_DIVIDE  2
-    #endif
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined rcARM_KL26
-    #define EXTERNAL_CLOCK       10000000                                // 10 MHz external clock
-    #define _EXTERNAL_CLOCK      EXTERNAL_CLOCK
-    #define CLOCK_DIV            5                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible) (MCGPLLCLK/2 is 48MHz - required by USB)
-    #define SYSTEM_CLOCK_DIVIDE  2                                       // divide (1,2,3..16 possible) to get core clock of 48MHz
-    #define FLASH_CLOCK_DIVIDE   2                                       // divide from core clock for bus and flash clock (1,2,3..8 possible) 24MHz
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined TEENSY_LC
-    #define OSC_LOW_GAIN_MODE                                            // oscillator without feedback resistor or load capacitors so use low gain mode
-    #define CRYSTAL_FREQUENCY    16000000                                // 16 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            8                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            48                                      // the PLL multiplication factor to achieve MCGPLLCLK operating frequency of 98MHz (x24 to x55 possible)
-    #define SYSTEM_CLOCK_DIVIDE  2                                       // divide to get core clock of 48MHz (MCGPLLCLK/2 is 48MHz - required by USB)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined TWR_KV10Z32
-    #define CRYSTAL_FREQUENCY    10000000                                // 10 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
-    #define FLL_FACTOR           2197                                    // 72MHz these devices have no PLL so use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-    #define BUS_CLOCK_DIVIDE     3                                       // bus and flash clock 72MHz/3 = 24MHz
-    #define ADC_CLOCK_DIVIDE     2
-  //#define ADC_CLOCK_ENABLED
-#elif defined KWIKSTIK
-    #define CRYSTAL_FREQUENCY    4000000                                 // 4 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            2                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            48                                      // the PLL multiplication factor to achieve operating frequency of 96MHz (x24 to x55 possible)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
-#elif defined FRDM_KL03Z
-    #define CRYSTAL_FREQUENCY    32768                                   // 32768 Hz crystal (if no different clock options are set this is used directly as system clock)
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from internal 48MHz RC clock
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz/2MHz RC clock
-    #if defined RUN_FROM_HIRC
-        #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
-        #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)
-    #elif defined RUN_FROM_LIRC
-        #define RUN_FROM_LIRC_2M                                         // select 2MHz rather than 8MHz
-        #define SLOW_CLOCK_DIVIDE    1                                   // optionally divide the slow clock output (1, 2, 4, 8, 16, 32, 64 or 128)
-        #define SYSTEM_CLOCK_DIVIDE  1                                   // 1..16
-        #define BUS_CLOCK_DIVIDE     2                                   // 1..8 (valid for bus/flash and divisor is after the system clock divider)
-    #else                                                                // run from the 32kHz oscillator
-        #define SYSTEM_CLOCK_DIVIDE  1                                   // 32kHz
-        #define BUS_CLOCK_DIVIDE     1                                   // 32kHz
-    #endif
-#elif defined FRDM_KL02Z || defined FRDM_KL05Z                           // {25}
-  //#define RUN_FROM_LIRC                                                // clock from internal 4MHz RC clock
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC (31.25..39.0625kHz - factory trimmed to 32.768) is multiplied by FLL factor of 640 to obtain 20.971MHz nominal frequency (20MHz..25MHz)
-    #if defined RUN_FROM_LIRC                                            // run directly from 4MHz clock
-        #define BUS_CLOCK_DIVIDE    1
-        #define FLASH_CLOCK_DIVIDE  1
-    #elif defined RUN_FROM_DEFAULT_CLOCK                                 
-        #define FLL_FACTOR          1464                                 // set highest frequency [1464 gives 47.972MHz] (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #if defined FLL_FACTOR
-            #define FLASH_CLOCK_DIVIDE  2                                // 24MHz (valid also as bus clock divide)
-        #else
-            #define FLASH_CLOCK_DIVIDE  1
-        #endif
-    #else                                                                // use crystal oscillator as FLL source
-        #define OSC_LOW_GAIN_MODE                                        // oscillator without feedback resistor or load capacitors so use low gain mode
-        #define CRYSTAL_FREQUENCY   32768                                // 32768 Hz crystal
-        #define _EXTERNAL_CLOCK     CRYSTAL_FREQUENCY
-        #define RUN_FROM_EXTERNAL_CLOCK_FLL
-        #define FLL_FACTOR          1464                                 // 48MHz these devices have no PLL so use FLL (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-        #define FLASH_CLOCK_DIVIDE  2                                    // 24MHz
-    #endif
-#elif defined TRK_KEA64 || defined TRK_KEA8
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-    #define BUS_CLOCK_DIVIDE     2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-  //#define TIMER_CLOCK_DIVIDE_2                                         // optionally clock timers from the ICSOUTCLK/2
-#elif defined TRK_KEA128 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 48MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-    #if defined RUN_FROM_EXTERNAL_CLOCK
-        #define BUS_CLOCK_DIVIDE 1                                       // divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
-    #else
-        #define CLOCK_DIV        256                                     // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
-                                                                         // this input is multiplied by 1280 to 40MHz..50MHz at the FLL output
-        #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
-    #endif
-#elif defined FRDM_KE06Z                                                 // {30}
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from external 8MHz clock (without FLL)
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            256                                     // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
-                                                                         // this input is multiplied by 1280 to 40MHz..50MHz at the FLL output
-
-    #define ICSOUTCLK_DIVIDE     1                                       // [BDIV to give ICSOUTCLK] divide the clock output to give the system clock (maximum 48MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // [OUTDIV1 to give core clock from ICSOUTCLK] divide the clock output to give the system clock (maximum 48MHz) (/1, 2, 3, 4 possible)
-  //#define TIMER_CLOCK_DIVIDE_2                                         // optionally clock timers from the ICSOUTCLK/2
-
-    #if defined RUN_FROM_EXTERNAL_CLOCK
-        #define BUS_CLOCK_DIVIDE 1                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-    #else
-        #define BUS_CLOCK_DIVIDE 2                                       // [OUTDIV2] divide by 1 or 2 to give bus and flash clock (maximum 24MHz)
-    #endif
-#elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
-  //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
-    #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
-    #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
-        #define FRDIVIDER        256                                     // divide the crsytal input by 256 to obtain 31.25kHz
-    #endif
-    #define FLL_FACTOR           1280                                    // specify the FLL factor to use (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-
-#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
-    #define OSC_LOW_GAIN_MODE
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
-  //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
-      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
-      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
-      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
-      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
-  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
-      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
-    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
-#elif defined FRDM_KE02Z                                                 // {25}
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define CRYSTAL_FREQUENCY    10000000                            // 10 MHz crystal
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            256                                 // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
-                                                                         // this input is multiplied by 1024 to 32MHz..40MHz at the FLL output
-    #endif
-    #define SYSTEM_CLOCK_DIVIDE  2                                       // divide the FLL output to give the system clock (maximum 20MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-    #define BUS_CLOCK_DIVIDE     1                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-#elif defined FRDM_KE04Z || defined FRDM_KEAZN32Q64
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            256                                     // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the clock output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-                                                                         // this input is multiplied by 1024 to 32MHz..40MHz at the FLL output
-    #if defined RUN_FROM_EXTERNAL_CLOCK
-        #define BUS_CLOCK_DIVIDE 1                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-    #else
-        #define BUS_CLOCK_DIVIDE 2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-    #endif
-#elif defined FRDM_KE02Z40M                                              // {30}
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
-    #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define CRYSTAL_FREQUENCY    10000000                            // 10 MHz crystal
-        #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-        #define CLOCK_DIV            256                                 // input must be divided to 31.25kHz..39.06525kHz range (/1, 2, 4, 8, 16, 32, 64, 128, 256, 512 or 1024 possible)
-                                                                         // this input is multiplied by 1024 to 32MHz..40MHz at the FLL output
-    #endif
-    #define SYSTEM_CLOCK_DIVIDE  1                                       // divide the FLL output to give the system clock (maximum 40MHz) (/1, 2, 4, 8, 16, 32, 64 or 128 possible)
-    #define BUS_CLOCK_DIVIDE     2                                       // divide by 1 or 2 to give bus and flash clock (maximum 20MHz)
-#else                                                                    // TWR_K40X256 or TWR_K40D100M
-    #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
-    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define CLOCK_DIV            4                                       // input must be divided to 2MHz..4MHz range (/1 to /25 possible)
-    #define CLOCK_MUL            48                                      // the PLL multiplication factor to achieve operating frequency of 96MHz (x24 to x55 possible)
-    #define USB_CLOCK_GENERATED_INTERNALLY                               // use USB clock from internal source rather than external pin
 #endif
 
 #if !defined SYSTEM_CLOCK_DIVIDE
@@ -779,569 +58,7 @@
 
 // Default settings can be over-ridden here by adding board-specific settings at the start of the list
 //
-#if defined KINETIS_K10
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define DEVICE_80_PIN
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-    #define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH (256 program Flash / 256 Flex)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-#elif defined TWR_K20D72M
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #if defined DEV1
-        #define OSC_LOW_GAIN_MODE                                        // low gain required for oscillator circuitry
-        #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin LQFP
-        #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program FLASH
-        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32k Flex
-        #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
-        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
-    #else
-        #define PIN_COUNT           PIN_COUNT_100_PIN                    // 100 pin LQFP
-        #define PACKAGE_TYPE        PACKAGE_LQFP
-        #define SIZE_OF_FLEXFLASH   (32 * 1024)                          // 32k Flex
-        #define SIZE_OF_RAM         (64 * 1024)                          // 64k SRAM
-        #define SIZE_OF_EEPROM      (2 * 1024)                           // 2k EEPROM
-        #if defined FLEXFLASH_DATA
-            #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)   // 256k program FLASH plus data flash
-        #else
-            #define SIZE_OF_FLASH   (256 * 1024)                         // 256k program FLASH
-        #endif
-    #endif
-#elif defined TEENSY_3_1 || defined TRINAMIC_LANDUNGSBRUECKE
-    #define SUPPORT_SW_RTC                                               // support real time clock based purely on software (remove if 32kHz quarz is connected)
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #if defined TRINAMIC_LANDUNGSBRUECKE
-        #define PIN_COUNT       PIN_COUNT_100_PIN                       // 100 pin LQFP
-    #else
-        #define PIN_COUNT       PIN_COUNT_64_PIN                         // 64 pin LQFP
-    #endif
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined K20FX512_120
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_144_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_FLASH       (512 * 1024)                             // only consider program flash because flex flash is at 0x10000000
-  //#define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH (512k program Flash / 512k Flex)
-    #define SIZE_OF_FLEXFLASH   (512 * 1024)
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-    #define SIZE_OF_EEPROM      (16 * 1024)                              // 16k EEPROM
-#elif defined TWR_K24F120M
-  //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_121_PIN                        // XBGA121
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 pin LQFP
-  //#define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k program Flash
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-    #define SIZE_OF_RAM         (256 * 1024)                             // 128k SRAM
-#elif defined TWR_K21F120M
-  //#define KINETIS_FLEX
-    #define PIN_COUNT           PIN_COUNT_121_PIN                        // MAPBGA121
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k program Flash
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined FRDM_K22F || defined tinyK22
-    #define MASK_0N50M                                                   // mask relevant to this device
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined BLAZE_K22
-    #define MASK_0N50M                                                   // mask relevant to this device
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined TWR_K22F120M
-    #define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 XFBGA package
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined TWR_K21D50M
-    #define PIN_COUNT           PIN_COUNT_121_PIN                        // MAPBGA121
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-#elif defined TWR_KW21D256
-  //#define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KW24D512
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-  //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined K02F100M
-    #define MASK_0N36M                                                   // enable errata workarounds for this mask
-  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin QFN package
-  //#define PIN_COUNT           PIN_COUNT_48_PIN                         // 48 pin LQFP package
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP package
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-  //#define SIZE_OF_FLASH       (64 * 1024)                              // 64k program FLASH
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program FLASH
-#elif defined tinyK20
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define FLEXFLASH_DATA                                               // use FlexNMV in data mode
-    #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((128 * 1024) + SIZE_OF_FLEXFLASH)       // 128k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program FLASH
-    #endif
-#elif defined KINETIS_K20                                                // TWR_K20D50M/FRDM_K20D50M {2}
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-  //#define PIN_COUNT           PIN_COUNT_80_PIN                         // LQFP80
-  //#define PIN_COUNT           PIN_COUNT_81_PIN                         // MAPBGA81
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-  //#define PIN_COUNT           PIN_COUNT_144_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-    #define FLEXFLASH_DATA                                               // use FlexNMV in data mode
-    #define SIZE_OF_FLEXFLASH   (32 * 1024)                              // 32 Flex
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-    #define SIZE_OF_EEPROM      (2 * 1024)                               // 2k EEPROM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((128 * 1024) + SIZE_OF_FLEXFLASH)       // 128k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program FLASH
-    #endif
-#elif defined KINETIS_K30
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define DEVICE_80_PIN
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-    #define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined KINETIS_K40
-    #define MASK_0M33Z                                                   // enable errata workarounds for this mask
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define DEVICE_80_PIN
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-    #define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #define SIZE_OF_EEPROM      (4 * 1024)                               // 4k EEPROM
-  //#define FLEXFLASH_DATA                                               // use FlexNMV in data mode
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined KINETIS_K50
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define DEVICE_80_PIN
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-    #define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined KINETIS_K51
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define DEVICE_80_PIN
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-  //#define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined KINETIS_K52
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define DEVICE_144_PIN                                               // 144 pin package - only package available
-    #define SIZE_OF_FLEXFLASH   (256 * 1024)
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
-    #if defined FLEXFLASH_DATA
-        #define SIZE_OF_FLASH   ((256 * 1024) + SIZE_OF_FLEXFLASH)       // 256k program FLASH plus data flash
-    #else
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program FLASH
-    #endif
-#elif defined TWR_K53N512
-    #define MASK_0M33Z                                                   // enable errata workarounds for this mask
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define DEVICE_100_PIN
-  //#define DEVICE_121_PIN
-    #define DEVICE_144_PIN                                               // 144 pin package
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined KINETIS_K61
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only        
-    #define PIN_COUNT           PIN_COUNT_256_PIN                        // 256 MAPBGA pin package
-  //#define PIN_COUNT           PIN_COUNT_196_PIN                        // 196 MAPBGA pin package
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 MAPBGA pin package
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined TWR_K64F120M
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 LQFP pin package
-  //#define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 XFBGA
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
-  //#define PACKAGE_TYPE        PACKAGE_LQFP
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined FRDM_K64F || defined FreeLON
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 LQFP pin package
-  //#define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 XFBGA
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined HEXIWEAR_K64F
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP/MAPBGA pin package
-    #define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined TEENSY_3_5
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 169 pin package
-    #define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 1M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined TWR_K65F180M || defined FRDM_K66F || defined K66FX1M0 || defined FRDM_K28F
-    #define MASK_0N65N
-    #if defined FRDM_K66F || defined K66FX1M0
-        #define PIN_COUNT       PIN_COUNT_144_PIN                        // 144 pin package
-    #else
-        #define PIN_COUNT       PIN_COUNT_169_PIN                        // 169 pin package
-    #endif
-    #define PACKAGE_TYPE        PACKAGE_MAPBGA
-  //#define PACKAGE_TYPE        PACKAGE_WLCSP
-    #if defined K66FX1M0
-        #define KINETIS_FLEX                                             // X part with flex memory rather than N part with program Flash only
-    #endif
-    #if defined FRDM_K28F
-        #define SIZE_OF_FLASH       (2 * 1024 * 1024)                    // 2M FLASH
-        #define SIZE_OF_RAM         (1024 * 1024)                        // 1M SRAM
-    #else
-        #define SIZE_OF_FLASH       (2 * 1024 * 1024)                    // 2M FLASH
-        #define SIZE_OF_RAM         (256 * 1024)                         // 256k SRAM
-    #endif
-
-    #if defined KINETIS_FLEX
-        #define SIZE_OF_FLEXFLASH   (256 * 1024)
-        #define SIZE_OF_EEPROM      (4 * 1024)                           // 4k EEPROM
-        #define FLEXFLASH_DATA
-        #undef SIZE_OF_FLASH
-        #if defined FLEXFLASH_DATA
-            #define SIZE_OF_FLASH   ((1024 * 1024) + SIZE_OF_FLEXFLASH)  // 1M program FLASH plus data flash
-        #else
-            #define SIZE_OF_FLASH   (1024 * 1024)                        // 1M program FLASH
-        #endif
-    #endif
-#elif defined TEENSY_3_6
-    #define MASK_0N65N
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 169 pin package
-    #define PACKAGE_TYPE        PACKAGE_MAPBGA
-  //#define PACKAGE_TYPE        PACKAGE_LQFP
-    #define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define SIZE_OF_FLASH       (1 * 1024 * 1024)                        // 1M FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined KL33Z64
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP or MAPBGA
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-    #define SIZE_OF_RAM         (8 * 1024)                               // 32k SRAM
-#elif defined FRDM_KL43Z || defined TWR_KL43Z48M
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP or MAPBGA
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_FLASH       (128 * 1024)
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-  //#define SIZE_OF_RAM         (16 * 1024)
-#elif defined FRDM_KL46Z || defined TWR_KL46Z48M                         // {22}{23}
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-  //#define PACKAGE_TYPE        PACKAGE_BGA
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KV10Z32
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-    #define PIN_COUNT           PIN_COUNT_48_PIN                         // 48 pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_QFN
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-    #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-#elif defined TWR_KV31F120M || defined FRDM_KV31F
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
-    #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
-#elif defined TWR_KV46F150M
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-  //#define SIZE_OF_RAM         (24 * 1024)                              // 24k SRAM
-#elif defined TWR_KV58F220M
-    #define PIN_COUNT           PIN_COUNT_144_PIN
-  //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin package
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA                           // BGA
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M program Flash
-    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM (4 blocks of this size in total)
-#elif defined FRDM_KL25Z || defined TWR_KL25Z48M || defined RD_KL25_AGMP01 // {24}
-    #define MASK_2N97F
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_QFN
-  //#define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-  //#define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-  //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined FRDM_KL26Z                                                 // {24}
-  //#define PIN_COUNT           PIN_COUNT_32_PIN
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_QFN
-  //#define PACKAGE_TYPE        PACKAGE_BGA
-  //#define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-  //#define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-  //#define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-  //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined rcARM_KL26
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TEENSY_LC
-    #define PIN_COUNT           PIN_COUNT_48_PIN                         // 48 pin package
-    #define PACKAGE_TYPE        PACKAGE_QFN                              // QFN
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-    #define SIZE_OF_RAM         (8 * 1024)                               // 8k SRAM
-#elif defined FRDM_KL27Z
-    #define ERRATE_1N87M
-    #if defined _DEV2
-        #define PIN_COUNT       PIN_COUNT_48_PIN
-        #define PACKAGE_TYPE    PACKAGE_QFN
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
-        #define SIZE_OF_RAM     (32 * 1024)                              // 32k SRAM
-    #else
-      //#define PIN_COUNT           PIN_COUNT_32_PIN
-      //#define PIN_COUNT           PIN_COUNT_36_PIN
-      //#define PIN_COUNT           PIN_COUNT_48_PIN
-        #define PIN_COUNT           PIN_COUNT_64_PIN                     // 64 pin package
-        #define PACKAGE_TYPE        PACKAGE_LQFP                         // LQFP
-      //#define PACKAGE_TYPE        PACKAGE_QFN
-      //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-      //#define SIZE_OF_FLASH       (32 * 1024)                          // 32k program Flash
-        #define SIZE_OF_FLASH       (64 * 1024)                          // 64k program Flash
-      //#define SIZE_OF_FLASH       (128 * 1024)                         // 128k program Flash
-      //#define SIZE_OF_FLASH       (256 * 1024)                         // 256k program Flash
-      //#define SIZE_OF_RAM         (4 * 1024)                           // 4k SRAM
-      //#define SIZE_OF_RAM         (8 * 1024)                           // 8k SRAM
-        #define SIZE_OF_RAM         (16 * 1024)                          // 16k SRAM
-      //#define SIZE_OF_RAM         (32 * 1024)                          // 32k SRAM
-    #endif
-#elif defined CAPUCCINO_KL27
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-    #if defined DEV4
-        #define PIN_COUNT       PIN_COUNT_48_PIN                         // 48 pin package
-        #define SIZE_OF_FLASH   (128 * 1024)                             // 128k program Flash
-    #else
-        #define PIN_COUNT       PIN_COUNT_64_PIN                         // 64 pin package
-        #define SIZE_OF_FLASH   (256 * 1024)                             // 256k program Flash
-    #endif
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined FRDM_KL28Z
-    #define ERRATE_1N52N
-  //#define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 pin XFBGA package
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined FRDM_KL82Z || defined TWR_KL82Z72M
-    #define MASK_0N51R                                                   // enable errata workarounds for this mask
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin package
-  //#define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define PACKAGE_TYPE        PACKAGE_BGA
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-    #define SIZE_OF_RAM         (96 * 1024)                              // 96k SRAM
-#elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
-  //#define PIN_COUNT           PIN_COUNT_44_PIN
-  //#define PIN_COUNT           PIN_COUNT_64_PIN
-    #define PIN_COUNT           PIN_COUNT_100_PIN
-    #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
-  //#define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k program Flash
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-#elif defined TRK_KEA8
-  //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
-    #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
-    #define SIZE_OF_FLASH       (8 * 1024)                               // 8k program Flash
-    #define SIZE_OF_RAM         (1 * 1024)                               // 1k SRAM
-    #define INTERRUPT_VECTORS_IN_FLASH                                   // since RAM is limited interrupt vectors are fixed in flash
-#elif defined FRDM_KEAZN32Q64
-  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-    #define SIZE_OF_EEPROM      (256)
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_FLASH       (64 * 1024)
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined TRK_KEA64 || defined FRDM_KEAZ64Q64
-  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-  //#define SIZE_OF_FLASH       (32 * 1024)
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KE06Z || defined TRK_KEA128 || defined FRDM_KEAZ128Q80// {30}
-  //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
-  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin (L)QFP
-    #define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin LQFP
-  //#define SIZE_OF_FLASH       (64 * 1024)
-    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k Flash
-  //#define SIZE_OF_RAM         (8 * 1024)
-    #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
-  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
-  //#define SIZE_OF_FLASH       (128 * 1024)
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k Flash
-  //#define SIZE_OF_RAM         (16 * 1024)
-    #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined FRDM_KE04Z
-  //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
-  //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin SOIC
-    #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
-  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
-  //#define PIN_COUNT           PIN_COUNT_80_PIN                         // 80 pin LQFP
-  //#define SIZE_OF_FLASH       (128 * 1024)
-  //#define SIZE_OF_FLASH       (64 * 1024)
-    #define SIZE_OF_FLASH       (8 * 1024)                               // 8k program Flash
-  //#define SIZE_OF_RAM         (16 * 1024)
-  //#define SIZE_OF_RAM         (8 * 1024)
-    #define SIZE_OF_RAM         (1 * 1024)                               // 1k SRAM
-    #define INTERRUPT_VECTORS_IN_FLASH                                   // since RAM is limited interrupt vectors are fixed in flash
-#elif defined FRDM_KE02Z || defined FRDM_KE02Z40M                        // {25}{30}
-  //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin LQFP
-  //#define PIN_COUNT           PIN_COUNT_44_PIN                         // 44 pin LQFP
-    #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin QFP
-    #define SIZE_OF_EEPROM      (256)
-  //#define SIZE_OF_FLASH       (16 * 1024)
-  //#define SIZE_OF_FLASH       (32 * 1024)
-    #define SIZE_OF_FLASH       (64 * 1024)                              // 64k program Flash
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KL03Z
-    #define MASK_1N86K                                                   // enable errata workarounds for this mask
-  //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin QFN
-  //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin WLCSP
-    #define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
-  //#define SIZE_OF_FLASH       (8 * 1024)
-  //#define SIZE_OF_FLASH       (16 * 1024)
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-    #define SIZE_OF_RAM         (2 * 1024)                               // 2k SRAM
-    #define INTERRUPT_VECTORS_IN_FLASH                                   // since RAM is limited interrupt vectors are fixed in flash
-#elif defined FRDM_KL02Z                                                 // {25}
-  //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin QFN
-  //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin WLCSP
-  //#define PIN_COUNT           PIN_COUNT_24_PIN                         // 24 pin QFN
-    #define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin QFN
-  //#define SIZE_OF_FLASH       (8 * 1024)
-  //#define SIZE_OF_FLASH       (16 * 1024)
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_RAM         (1 * 1024)
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined FRDM_KL05Z                                                 // {25}
-  //#define PIN_COUNT           PIN_COUNT_24_PIN
-    #define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin package
-  //#define PIN_COUNT           PIN_COUNT_48_PIN
-    #define PACKAGE_TYPE        PACKAGE_QFN                              // QFN
-  //#define PACKAGE_TYPE        PACKAGE_LQFP
-  //#define SIZE_OF_FLASH       (8 * 1024)
-  //#define SIZE_OF_FLASH       (16 * 1024)
-    #define SIZE_OF_FLASH       (32 * 1024)                              // 32k program Flash
-  //#define SIZE_OF_RAM         (1 * 1024)
-  //#define SIZE_OF_RAM         (2 * 1024)
-    #define SIZE_OF_RAM         (4 * 1024)                               // 4k SRAM
-#elif defined TWR_K60F120M || defined K60F150M_50M
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-  //#define PIN_COUNT_100_PIN
-  //#define PIN_COUNT_121_PIN
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 MAPBGA pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-  //#define PACKAGE_TYPE        PACKAGE_MAPBGA
-    #define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 LQFP pin package
-    #define PACKAGE_TYPE        PACKAGE_LQFP
-  //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
-  //#define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-  //#define SIZE_OF_RAM         (64 * 1024)                              // 128k SRAM
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined K70F150M_12M
-    #define PIN_COUNT           PIN_COUNT_256_PIN
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined EMCRAFT_K70F120M || defined TWR_K70F120M
-    #define MASK_4N96B
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only        
-    #define PIN_COUNT           PIN_COUNT_256_PIN                        // 256 pin MAPBGA package
-  //#define PIN_COUNT           PIN_COUNT_196_PIN                        // 196 pin MAPBGA package
-    #define SIZE_OF_FLASH       (1024 * 1024)                            // 1024k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
-#elif defined TWR_K80F150M
-    #define MASK_1N03P
-  //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
-    #define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 pin XFBGA/WLCSP package
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 141 pin LQFP package
-  //#define PACKAGE_TYPE        PACKAGE_WLCSP                            // WLCSP
-    #define PACKAGE_TYPE        PACKAGE_BGA                              // XFBGA
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-#elif defined MIMXRT1020
+#if defined MIMXRT1020
   //#define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
     #define PIN_COUNT           PIN_COUNT_144_PIN                        // 141 pin LQFP package
     #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
@@ -1349,31 +66,6 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // temporary
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
     #define QSPI_FILE_SYSTEM                                             // user QSPI interface
-#elif defined FRDM_K82F
-    #define MASK_1N03P
-    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP package
-  //#define PIN_COUNT           PIN_COUNT_121_PIN                        // 121 pin XFBGA/WLCSP package
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 141 pin LQFP package
-  //#define PACKAGE_TYPE        PACKAGE_WLCSP                            // WLCSP
-  //#define PACKAGE_TYPE        PACKAGE_BGA                              // XFBGA
-    #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
-    #define QSPI_FILE_SYSTEM                                             // user QSPI interface
-#elif defined KINETIS_K60
-    #if defined TWR_K60N512
-        #define MASK_0M33Z                                               // the mask used on early devices requiring certain important workarounds
-    #endif
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
-    #define PIN_COUNT           PIN_COUNT_100_PIN
-  //#define PIN_COUNT           PIN_COUNT_121_PIN
-  //#define PIN_COUNT           PIN_COUNT_144_PIN                        // 144 MAPBGA pin package
-    #if defined NET_K60                                                  // {16}
-        #define PACKAGE_TYPE    PACKAGE_LQFP
-    #else
-        #define PACKAGE_TYPE    PACKAGE_MAPBGA
-    #endif
-    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k FLASH
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
 #endif
 
 
@@ -1662,18 +354,13 @@
 
 #define SUPPORT_PORT_INTERRUPTS                                          // support code for port interrupts (IRQ for KE/KEA devices) - see the following video showing port interrupt operation in a KL27: https://youtu.be/CubinvMuTwU
   //#define PORT_INTERRUPT_USER_DISPATCHER                               // use a single port interrupt callback since the user dispatches according to interrupted input (valid also for low-leakage wakeup interrupts)
-    #if defined FRDM_KL03Z
-        #define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-        #define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
-    #else
-        //#define NO_PORT_INTERRUPTS_PORTA                                 // remove port interrupt support from port A
-        //#define NO_PORT_INTERRUPTS_PORTB                                 // remove port interrupt support from port B
-        //#define NO_PORT_INTERRUPTS_PORTC                                 // remove port interrupt support from port C
-        //#define NO_PORT_INTERRUPTS_PORTD                                 // remove port interrupt support from port D
-        //#define NO_PORT_INTERRUPTS_PORTE                                 // remove port interrupt support from port E
-    #endif
 
-// Include the Kinetis hardware header here
+  //#define NO_PORT_INTERRUPTS_PORT1                                     // remove port interrupt support from port 1
+  //#define NO_PORT_INTERRUPTS_PORT2                                     // remove port interrupt support from port 2
+  //#define NO_PORT_INTERRUPTS_PORT3                                     // remove port interrupt support from port 3
+  //#define NO_PORT_INTERRUPTS_PORT4                                     // remove port interrupt support from port 5
+
+// Include the iMX hardware header here
 // - beware that the header delivers rules for subsequent parts of this header file but also accepts some rules from previous parts,
 // therefore its position should only be moved after careful consideration of its consequences
 //
@@ -1718,366 +405,7 @@
 // SPI FLASH system setup
 //#define SPI_FLASH_MULTIPLE_CHIPS                                       // activate when multiple physical chips are used
 
-#if defined NET_KBED                                                     // {16}
-    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
-    #if defined SPI_FLASH_S25FL1_K
-        #define CS0_LINE                    SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
-    #else
-        #define CS0_LINE                    SPI_PUSHR_PCS5               // CS5 line used when SPI FLASH is enabled
-    #endif
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define SPI_CS0_PORT                    ~(SPI0_PUSHR)                // for simulator
-    #define SPI_TX_BYTE                     SPI0_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI0_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI0)
-    #if defined SPI_FLASH_S25FL1_K                                       // use CS0 on PTC4 (no reset signal)
-        #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 7, PC_7_SPI0_SIN);\
-                                                SPI0_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                                SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-                                              //SPI0_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
-    #else                                                                // use CS5 on PTB23 (with reset signal on PTA4)
-        #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(B, 23, (PB_23_SPI0_PCS5 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 7, PC_7_SPI0_SIN);\
-											    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT4), (PORTA_BIT4), (PORT_SRE_SLOW | PORT_DSE_HIGH));\
-											    _SETBITS(A, PORTA_BIT4);\
-                                                SPI0_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                                SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-                                              //SPI0_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
-    #endif
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI0)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= SPI_MCR_CLR_RXF; SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-    #define WRITE_SPI_CMD0(byte)            SPI0_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI0_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI0_POPR
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
-#elif defined NET_K60 || defined FRDM_K64F || defined FRDM_K22F || defined TWR_K22F120M || defined FreeLON
-    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
-    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define SPI_CS0_PORT                    ~(SPI0_PUSHR)                // for simulator
-    #define SPI_TX_BYTE                     SPI0_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI0_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI0)
-    #if defined NET_K60
-        #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 4, (PC_4_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 5, (PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(C, 7, PC_7_SPI0_SIN);\
-											    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (PORTC_BIT13), (PORTC_BIT13), (PORT_SRE_SLOW | PORT_DSE_HIGH));\
-											    _SETBITS(C, PORTC_BIT13);\
-                                                SPI0_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                                SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-    #else
-        #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 0, (PD_0_SPI0_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(D, 1, (PD_1_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(D, 2, (PD_2_SPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                                _CONFIG_PERIPHERAL(D, 3, (PD_3_SPI0_SIN));\
-                                                SPI0_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                                SPI0_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-    #endif
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI0)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI0_MCR |= SPI_MCR_CLR_RXF; SPI0_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-    #define WRITE_SPI_CMD0(byte)            SPI0_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI0_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI0_POPR
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI0_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI0_SR |= SPI_SR_RFDF
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined TWR_K24F120M
-    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
-    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define SPI_CS0_PORT                    ~(SPI1_PUSHR)                // for simulator
-    #define SPI_TX_BYTE                     SPI1_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI1_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(6, SPI1)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(B, 10, (PB_10_SPI1_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(B, 11, (PB_11_SPI1_SCK | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(B, 16, (PB_16_SPI1_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(B, 17, (PB_17_SPI1_SIN)); \
-                                            SPI1_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5); \
-                                            SPI1_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(6, SPI1)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI1_MCR |= SPI_MCR_CLR_RXF; SPI1_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-    #define WRITE_SPI_CMD0(byte)            SPI1_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #define READ_SPI_FLASH_DATA()           (unsigned char)(SPI1_POPR)
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI1_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI1_SR |= SPI_SR_RFDF
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL46Z
-    // Configure to suit special connection SPI mode (SPI0) - this board has the option to solder in an AT45DB161
-    // - SPI0_CS   PTC-2
-    // - SPI0_SCK  PTC-5
-    // - SPI0_MOSI PTC-0
-    // - SPI0_MISO PTC-7
-    // - SPI Flash reset PTC-1
-    //
-    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
-    #define CS0_LINE                        PORTC_BIT2                   // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(C, ulChipSelectLine)
-    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(C, ulChipSelectLine)
-
-    #define SPI_CS0_PORT                    GPIOC_PDOR                   // for simulator
-    #define SPI_TX_BYTE                     SPI0_D                       // for simulator
-    #define SPI_RX_BYTE                     SPI0_D                       // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI0); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, PORTC_BIT1, PORTC_BIT1, (PORT_SRE_FAST | PORT_DSE_HIGH))
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK); \
-                                            _CONFIG_PERIPHERAL(C, 6, (PC_6_SPI0_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(C, 7, (PC_7_SPI0_MISO | PORT_PS_UP_ENABLE)); \
-                                            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            SPI0_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
-                                            SPI0_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
-                                            (void)SPI0_S; (void)SPI0_D
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI0)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      
-
-    #define WRITE_SPI_CMD0(byte)            SPI0_D = (byte)              // write a single byte
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI0_D = (byte)              // write final byte
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI0_D
-    #if defined _WINDOWS
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI0_S & (SPI_S_SPRF)) == 0) {SPI0_S |= SPI_S_SPRF;}
-    #else
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI0_S & (SPI_S_SPRF)) == 0) {}
-    #endif
-    #define CLEAR_RECEPTION_FLAG()          
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL28Z
-    // - LPSPI0_CS0  PTE-16 (J2-11)
-    // - LPSPI0_SCK  PTE-17 (J2-13)
-    // - LPSPI0_SOUT PTE-18 (J2-15)
-    // - LPSPI0_SIN  PTE-19 (J2-17)
-    //
-    #define SPI_FLASH_FIFO_DEPTH            SPI0_FIFO_DEPTH
-    #if defined _WINDOWS
-        #define CS0_LINE                    (1 << (12 + 0))              // make use of unused register bits to allow simulator to recognise chip select state
-        #define CS1_LINE                  //(1 << (12 + 1))              // CS1 line used when extended SPI FLASH is enabled
-        #define CS2_LINE                  //(1 << (12 + 2))              // CS2 line used when extended SPI FLASH is enabled
-        #define CS3_LINE                  //(1 << (12 + 3))              // CS3 line used when extended SPI FLASH is enabled
-    #else
-        #define CS0_LINE                    LPSPI_TCR_PCS_0              // CS0 line used when SPI FLASH is enabled
-        #define CS1_LINE                                                 // CS1 line used when extended SPI FLASH is enabled
-        #define CS2_LINE                                                 // CS2 line used when extended SPI FLASH is enabled
-        #define CS3_LINE                                                 // CS3 line used when extended SPI FLASH is enabled
-    #endif
-
-    #define SPI_CS0_PORT                    LPSPI0_TCR                   // for simulator
-    #define SPI_TX_BYTE                     LPSPI0_TDR                   // for simulator
-    #define SPI_RX_BYTE                     LPSPI0_RDR                   // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  SELECT_PCC_PERIPHERAL_SOURCE(LPSPI0, PCC_PCS_SCGFIRCLK); POWER_UP_ATOMIC(0, LPSPI0); LPSPI0_CR = (LPSPI_CR_RST)
-
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 17, PE_17_LPSPI0_SCK); \
-                                            _CONFIG_PERIPHERAL(E, 18, (PE_18_LPSPI0_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(E, 19, (PE_19_LPSPI0_SIN | PORT_PS_UP_ENABLE)); \
-                                            _CONFIG_PERIPHERAL(E, 16, (PE_16_LPSPI0_PCS0)); \
-                                            LPSPI0_CR = 0; \
-                                            LPSPI_MASTER_CLOCK_SETTING(0, 8, 8, 8, 24); \
-                                            LPSPI0_CFGR1 = (LPSPI_CFGR1_MASTER); \
-                                            LPSPI0_CR = (LPSPI_CR_MEN); \
-                                            LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | LPSPI_TCR_MSBF | LPSPI_TCR_CONT  | (8 - 1)); \
-                                            LPSPI0_CR = (LPSPI_CR_RTF | LPSPI_CR_MEN);
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(0, LPSPI0)  // power down LPSPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()
-
-    #define READ_SPI_FLASH_DATA()           (unsigned char)LPSPI0_RDR
-    #if defined _WINDOWS
-        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | (0x0000f000 & ~ulChipSelectLine) | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)) // queue assertion of CS line
-        #define WRITE_SPI_CMD0(byte)        LPSPI0_TDR = (byte)          // write a single byte
-        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TDR = (byte)          // queue negation of final byte and write final byte
-        #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {LPSPI0_RSR &= ~(LPSPI_RSR_RXEMPTY);}
-        #define NEGATE_CS_LINE(ulChipSelectLine) LPSPI0_TCR = ((LPSPI0_TCR & ~(LPSPI_TCR_CONT)) | CS0_LINE) // this is performed before queuing the final byte on the HW
-    #else
-        #define ASSERT_CS_LINE(ulChipSelectLine) LPSPI0_TCR = (LPSPI_TCR_CPOL | LPSPI_TCR_CPHA | LPSPI_TCR_PRESCALE_1 | ulChipSelectLine | LPSPI_TCR_MSBF | LPSPI_TCR_CONT | LPSPI_TCR_CONTC | (8 - 1)); 
-        #define WRITE_SPI_CMD0(byte)        LPSPI0_TDR = (byte)          // write a single byte
-        #define WRITE_SPI_CMD0_LAST(byte)   LPSPI0_TCR &= ~(LPSPI_TCR_CONT); LPSPI0_TDR = (byte);  // write final byte and queue negation of chip select line
-        #define WAIT_SPI_RECEPTION_END()    while ((LPSPI0_RSR & (LPSPI_RSR_RXEMPTY)) != 0) {}
-        #define NEGATE_CS_LINE(ulChipSelectLine)
-    #endif
-    #define CLEAR_RECEPTION_FLAG()          
-
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL26Z || defined FRDM_KL27Z || defined TEENSY_LC || defined TWR_KL46Z48M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined rcARM_KL26
-    // Configure to suit special connection SPI mode at between 100k and 400k (SPI1)
-    // - SPI1_CS   PTD-4 (J2-6) [VDD J3-4 / 0V J3-14]
-    // - SPI1_SCK  PTD-5 (J2-12)
-    // - SPI1_MOSI PTD-6 (J2-8)
-    // - SPI1_MISO PTD-7 (J2-10)
-    //
-    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
-    #define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
-    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)
-
-    #define SPI_CS0_PORT                    GPIOE_PDOR                   // for simulator
-    #define SPI_TX_BYTE                     SPI1_D                       // for simulator
-    #define SPI_RX_BYTE                     SPI1_D                       // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
-                                            _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_MISO | PORT_PS_UP_ENABLE)); \
-                                            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
-                                            SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
-                                            (void)SPI1_S; (void)SPI1_D
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      
-
-    #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)              // write a single byte
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)              // write final byte
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
-    #if defined _WINDOWS
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
-    #else
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
-    #endif
-    #define CLEAR_RECEPTION_FLAG()          
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_KL25Z
-    // - SPI1_CS   PTE-4 (J9-13)
-    // - SPI1_SCK  PTE-2 (J9-9)
-    // - SPI1_MOSI PTE-1 (J2-20)
-    // - SPI1_MISO PTE-3 (J9-11)
-    //
-    #define SPI_FLASH_FIFO_DEPTH            SPI1_FIFO_DEPTH
-    #define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
-    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)
-
-    #define SPI_CS0_PORT                    GPIOE_PDOR                   // for simulator
-    #define SPI_TX_BYTE                     SPI1_D                       // for simulator
-    #define SPI_RX_BYTE                     SPI1_D                       // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(E, 2, PE_2_SPI1_SCK); \
-                                            _CONFIG_PERIPHERAL(E, 1, (PE_1_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(E, 3, (PE_3_SPI1_MISO | PORT_PS_UP_ENABLE)); \
-                                            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
-                                            SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
-                                            (unsigned char)SPI1_S; (unsigned char)SPI1_D
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      
-
-    #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)              // write a single byte
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)              // write final byte
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
-    #if defined _WINDOWS
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
-    #else
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
-    #endif
-    #define CLEAR_RECEPTION_FLAG()          
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined CAPUCCINO_KL27
-    // - SPI1_CS   PTC-5
-    // - SPI1_SCK  PTD-5
-    // - SPI1_MOSI PTD-7
-    // - SPI1_MISO PTD-6
-    //
-    #define CS0_LINE                        PORTC_BIT5                   // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                                                     // CS1 line used when extended SPI FLASH is enabled
-    #define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-    #define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(C, ulChipSelectLine)
-    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(C, ulChipSelectLine)
-
-    #define SPI_CS0_PORT                    GPIOC_PDOR                   // for simulator
-    #define SPI_TX_BYTE                     SPI1_D                       // for simulator
-    #define SPI_RX_BYTE                     SPI1_D                       // for simulator
-
-    #if defined DEV4                                                     // hold FPGA in reset during initial operation
-        #define CS0_LINE_EEPROM             PORTE_BIT30
-        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, PORTB_BIT17, 0, (PORT_SRE_SLOW | PORT_DSE_LOW)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, CS0_LINE_EEPROM, CS0_LINE_EEPROM, (PORT_SRE_SLOW | PORT_DSE_LOW))
-        #define ASSERT_CS_LINE_EEPROM(ulChipSelectLine_eeprom) _CLEARBITS(E, ulChipSelectLine_eeprom)
-        #define NEGATE_CS_LINE_EEPROM(ulChipSelectLine_eeprom) _SETBITS(E, ulChipSelectLine_eeprom)
-    #else
-        #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(4, SPI1)
-    #endif
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 5, PD_5_SPI1_SCK); \
-                                            _CONFIG_PERIPHERAL(D, 7, (PD_7_SPI1_MOSI | PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            _CONFIG_PERIPHERAL(D, 6, (PD_6_SPI1_MISO | PORT_PS_UP_ENABLE)); \
-                                            _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, CS0_LINE, CS0_LINE, (PORT_SRE_FAST | PORT_DSE_HIGH)); \
-                                            SPI1_C1 = (SPI_C1_CPHA | SPI_C1_CPOL | SPI_C1_MSTR | SPI_C1_SPE); \
-                                            SPI1_BR = (SPI_BR_SPPR_PRE_1 | SPI_BR_SPR_DIV_2); \
-                                            (unsigned char)SPI1_S; (unsigned char)SPI1_D
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(4, SPI1)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      
-
-    #define WRITE_SPI_CMD0(byte)            SPI1_D = (byte)              // write a single byte
-    #define WRITE_SPI_CMD0_LAST(byte)       SPI1_D = (byte)              // write final byte
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI1_D
-    #if defined _WINDOWS
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {SPI1_S |= SPI_S_SPRF;}
-    #else
-        #define WAIT_SPI_RECEPTION_END()    while ((SPI1_S & (SPI_S_SPRF)) == 0) {}
-    #endif
-    #define CLEAR_RECEPTION_FLAG()          
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#elif defined FRDM_K82F || defined FRDM_KL82Z || defined TWR_KL82Z72M
+#if defined FRDM_K82F || defined FRDM_KL82Z || defined TWR_KL82Z72M
     // - SPI1_CS   PTE-5
     // - SPI1_SCK  PTE-1
     // - SPI1_SOUT PTE-2
@@ -2200,93 +528,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define SPI_CS0_PORT                ~(SPI2_PUSHR)                // for simulator
     #endif
-#elif defined TWR_K64F120M
-    #define SPI_FLASH_FIFO_DEPTH            SPI2_FIFO_DEPTH
-
-    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
-  //#define CS1_LINE                        SPI_PUSHR_PCS1               // CS1 line used when extended SPI FLASH is enabled
-  //#define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-  //#define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #define SPI_CS0_PORT                    ~(SPI2_PUSHR)                // for simulator
-    #define SPI_CS1_PORT                    ~(SPI2_PUSHR)                // for simulator
-    #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(3, SPI2)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(B, 20, (PB_20_SPI2_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(B, 21, (PB_21_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(B, 22, (PB_22_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(B, 23, PB_23_SPI2_SIN);\
-                                            SPI2_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                            SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-                                          //SPI2_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(3, SPI2)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-    #if defined MANUAL_FLASH_CS_CONTROL
-        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | 0 | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - no automatic chip select control
-        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | 0 | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - no automatic chip select control
-    #else
-        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #endif
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= SPI_SR_RFDF
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-#else                                                                    // SPI flash configuration not assigned to a specific board
-  //#define MANUAL_FLASH_CS_CONTROL
-    #define SPI_FLASH_FIFO_DEPTH            SPI2_FIFO_DEPTH
-  //#define CS0_LINE                        PORTE_BIT4                   // CS0 line used when SPI FLASH is enabled
-    #define ASSERT_CS_LINE(ulChipSelectLine) _CLEARBITS(E, ulChipSelectLine)
-    #define NEGATE_CS_LINE(ulChipSelectLine) _SETBITS(E, ulChipSelectLine)
-
-
-    #define CS0_LINE                        SPI_PUSHR_PCS0               // CS0 line used when SPI FLASH is enabled
-    #define CS1_LINE                        SPI_PUSHR_PCS1               // CS1 line used when extended SPI FLASH is enabled
-  //#define CS2_LINE                                                     // CS2 line used when extended SPI FLASH is enabled
-  //#define CS3_LINE                                                     // CS3 line used when extended SPI FLASH is enabled
-
-    #if defined MANUAL_FLASH_CS_CONTROL
-        #define SPI_CS0_PORT                GPIOE_PDOR
-    #else
-        #define SPI_CS0_PORT                ~(SPI2_PUSHR)                // for simulator
-        #define SPI_CS1_PORT                ~(SPI2_PUSHR)                // for simulator
-    #endif
-    #define SPI_TX_BYTE                     SPI2_PUSHR                   // for simulator
-    #define SPI_RX_BYTE                     SPI2_POPR                    // for simulator
-
-    #define POWER_UP_SPI_FLASH_INTERFACE()  POWER_UP_ATOMIC(3, SPI2)
-    #define CONFIGURE_SPI_FLASH_INTERFACE() _CONFIG_PERIPHERAL(D, 11, (PD_11_SPI2_PCS0 | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(D, 12, (PD_12_SPI2_SCK | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(D, 13, (PD_13_SPI2_SOUT | PORT_SRE_FAST | PORT_DSE_HIGH));\
-                                            _CONFIG_PERIPHERAL(D, 14, PD_14_SPI2_SIN);\
-                                            SPI2_MCR = (SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5);\
-                                            SPI2_CTAR0 = (SPI_CTAR_DBR | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 25MHz speed and 140ns min de-select time
-                                          //SPI2_CTAR0 = (/*SPI_CTAR_DBR | */ SPI_CTAR_BR_2 | SPI_CTAR_FMSZ_8 | SPI_CTAR_PDT_7 | SPI_CTAR_BR_2 | SPI_CTAR_CPHA | SPI_CTAR_CPOL); // for 50MHz bus, 6.25MHz speed and 140ns min de-select time (double speed bit removed and divider added)
-
-    #define POWER_DOWN_SPI_FLASH_INTERFACE() POWER_DOWN_ATOMIC(3, SPI2)  // power down SPI interface if no SPI Flash detected
-
-    #define FLUSH_SPI_FIFO_AND_FLAGS()      SPI2_MCR |= SPI_MCR_CLR_RXF; SPI2_SR = (SPI_SR_EOQF | SPI_SR_TFUF | SPI_SR_TFFF | SPI_SR_RFOF | SPI_SR_RFDF);
-
-    #if defined MANUAL_FLASH_CS_CONTROL
-        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | 0 | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - no automatic chip select control
-        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | 0 | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - no automatic chip select control
-    #else
-        #define WRITE_SPI_CMD0(byte)        SPI2_PUSHR = (byte | SPI_PUSHR_CONT | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write a single byte to the output FIFO - assert CS line
-        #define WRITE_SPI_CMD0_LAST(byte)   SPI2_PUSHR = (byte | SPI_PUSHR_EOQ  | ulChipSelectLine | SPI_PUSHR_CTAS_CTAR0) // write final byte to output FIFO - this will negate the CS line when complete
-    #endif
-    #define READ_SPI_FLASH_DATA()           (unsigned char)SPI2_POPR
-    #define WAIT_SPI_RECEPTION_END()        while ((SPI2_SR & SPI_SR_RFDF) == 0) {}
-    #define CLEAR_RECEPTION_FLAG()          SPI2_SR |= (SPI_SR_RFDF)
-            
-    #define SET_SPI_FLASH_MODE()                                         // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
-    #define REMOVE_SPI_FLASH_MODE()                                      // this can be used to change SPI settings on-the-fly when the SPI is shared with SPI Flash and other devices
 #endif
 
 #if defined SPI_FLASH_ST                                                 // ST SPI FLASH used
@@ -3263,196 +1504,119 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #endif
 //#define RUN_LOOPS_IN_RAM                                               // allow certain routines with tight loops to run from SRAM where it is generally faster than from FLASH - uses slightly more SRAM
 
-#if defined ARM_MATH_CM0PLUS
-    // Define interrupt priorities in the system (kinetis KE and KL support 0..3 - 0 is highest priority and 3 is lowest priority)
-    //
-    #define SYSTICK_PRIORITY           3                                 // lowest priority
-    #define PRIORITY_USB_HS_OTG        2
-    #define PRIORITY_UART0             2
-    #define PRIORITY_UART1             2
-    #define PRIORITY_UART2             2
-    #define PRIORITY_UART3             2
-    #define PRIORITY_UART4             2
-    #define PRIORITY_UART5             2
-    #define PRIORITY_LPUART0           2
-    #define PRIORITY_LPUART1           2
-    #define PRIORITY_LPUART2           2
-    #define PRIORITY_DMA15             2
-    #define PRIORITY_DMA14             2
-    #define PRIORITY_DMA13             2
-    #define PRIORITY_DMA12             2
-    #define PRIORITY_DMA11             2
-    #define PRIORITY_DMA10             2
-    #define PRIORITY_DMA9              2
-    #define PRIORITY_DMA8              2
-    #define PRIORITY_DMA7              2
-    #define PRIORITY_DMA6              2
-    #define PRIORITY_DMA5              2
-    #define PRIORITY_DMA4              2
-    #define PRIORITY_DMA3              2
-    #define PRIORITY_DMA2              2
-    #define PRIORITY_DMA1              2
-    #define PRIORITY_DMA0              2
-    #define LPTMR0_INTERRUPT_PRIORITY  3
-    #define LPTMR1_INTERRUPT_PRIORITY  2
-    #define PRIORITY_SPI0              3
-    #define PRIORITY_SPI1              3
-    #define PRIORITY_SPI2              3
-    #define PRIORITY_PORT_A_INT        1
-    #define PRIORITY_PORT_B_INT        1
-    #define PRIORITY_PORT_C_INT        1
-    #define PRIORITY_PORT_D_INT        1
-    #define PRIORITY_PORT_E_INT        1
-    #define PRIORITY_PHY_PORT_INT      PRIORITY_PORT_A_INT
-    #define PRIORITY_USB_OTG           3
-    #define PRIORITY_PDB               3
-    #define PRIORITY_CAN0_MESSAGE      1
-    #define PRIORITY_CAN0_BUS_OFF      1
-    #define PRIORITY_CAN0_ERROR        1
-    #define PRIORITY_CAN0_TX           1
-    #define PRIORITY_CAN0_RX           1
-    #define PRIORITY_CAN0_WAKEUP       1
-    #define PRIORITY_CAN0_IMEU         1
-    #define PRIORITY_CAN1_MESSAGE      1
-    #define PRIORITY_CAN1_BUS_OFF      1
-    #define PRIORITY_CAN1_ERROR        1
-    #define PRIORITY_CAN1_TX           1
-    #define PRIORITY_CAN1_RX           1
-    #define PRIORITY_CAN1_WAKEUP       1
-    #define PRIORITY_CAN1_IMEU         1
-    #define PRIORITY_HW_TIMER          2
-    #define PRIORITY_TIMERS            3
-    #define PRIORITY_I2C0              2
-    #define PRIORITY_I2C1              2
-    #define USB_PIT_INTERRUPT_PRIORITY 2
-    #define PIT0_INTERRUPT_PRIORITY    1
-    #define PIT1_INTERRUPT_PRIORITY    1
-    #define PIT2_INTERRUPT_PRIORITY    1
-    #define PIT3_INTERRUPT_PRIORITY    1
-    #define PRIORITY_TICK_TIMER        2
-    #define PRIORITY_COMPARATOR        2
-    #define PRIORITY_ADC               2
-    #define USB_PRIORITY               3
-    #define PRIORITY_RTC               3
-    #define PRIORITY_PORT_IRQ_INT      3
-    #define PRIORITY_KEYBOARD_INT      3
-    #if defined KINETIS_KL28 || defined KINETIS_KL82                     // devices with INTMUX to extend the number of interrupts possible - see this video for an explanation of the INTMUX module operation https://youtu.be/zKa5BoOhBrg
-        #define PRIORITY_INTMUX0_0_INT      0                            // priority of extended interrupts using INTMUX0 chnnel 0
-        #define PRIORITY_INTMUX0_1_INT      1                            // priority of extended interrupts using INTMUX0 chnnel 1
-        #define PRIORITY_INTMUX0_2_INT      2                            // priority of extended interrupts using INTMUX0 chnnel 2
-        #define PRIORITY_INTMUX0_3_INT      3                            // priority of extended interrupts using INTMUX0 chnnel 3
-        // Peripheral extended interrupt connections to INTMUX0 channels (multiple sources can be connected to each INTMUX0 channel - they are ORed and the lowest vector number has priority when more than one input is asserted)
-        //
-        #define INTMUX_WDOG0                INPUT_TO_INTMUX0_CHANNEL_0   // the WDOG extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
-        #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
-        #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
-        #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
-        #define INTMUX_SPI1                 INPUT_TO_INTMUX0_CHANNEL_2   // the SPI1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
-        #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
-    #endif
-#else
-    // Define interrupt priorities in the system (kinetis supports 0..15 - 0 is highest priority and 15 is lowest priority)
-    //
-    #define SYSTICK_PRIORITY           15                                // lowest priority
-    #define USB_PIT_INTERRUPT_PRIORITY 14                                // the PIT used by USB host must have a lower interrupt priority than the USB host itself!
-    #define PRIORITY_USB_HS_OTG        13
-    #define PRIORITY_UART0             12
-    #define PRIORITY_UART1             11
-    #define PRIORITY_UART2             10
-    #define PRIORITY_UART3             9
-    #define PRIORITY_UART4             8
-    #define PRIORITY_UART5             7
-    #define PRIORITY_LPUART0           7
-    #define PRIORITY_LPUART1           7
-    #define PRIORITY_LPUART2           7
-    #define PRIORITY_LPUART3           7
-    #define PRIORITY_LPUART4           7
-    #define PRIORITY_DMA31             7
-    #define PRIORITY_DMA30             7
-    #define PRIORITY_DMA29             7
-    #define PRIORITY_DMA28             7
-    #define PRIORITY_DMA27             7
-    #define PRIORITY_DMA26             7
-    #define PRIORITY_DMA25             7
-    #define PRIORITY_DMA24             7
-    #define PRIORITY_DMA23             7
-    #define PRIORITY_DMA22             7
-    #define PRIORITY_DMA21             7
-    #define PRIORITY_DMA20             7
-    #define PRIORITY_DMA19             7
-    #define PRIORITY_DMA18             7
-    #define PRIORITY_DMA17             7
-    #define PRIORITY_DMA16             7
-    #define PRIORITY_DMA15             7
-    #define PRIORITY_DMA14             7
-    #define PRIORITY_DMA13             7
-    #define PRIORITY_DMA12             7
-    #define PRIORITY_DMA11             7
-    #define PRIORITY_DMA10             7
-    #define PRIORITY_DMA9              7
-    #define PRIORITY_DMA8              7
-    #define PRIORITY_DMA7              7
-    #define PRIORITY_DMA6              7
-    #define PRIORITY_DMA5              7
-    #define PRIORITY_DMA4              7
-    #define PRIORITY_DMA3              7
-    #define PRIORITY_DMA2              7
-    #define PRIORITY_DMA1              7
-    #define PRIORITY_DMA0              7
-    #define LPTMR0_INTERRUPT_PRIORITY  6                                 // {28}
-    #define PRIORITY_PORT_A_INT        6
-    #define PRIORITY_PORT_B_INT        6
-    #define PRIORITY_PORT_C_INT        6
-    #define PRIORITY_PORT_D_INT        6
-    #define PRIORITY_PORT_E_INT        6
-    #define PRIORITY_PHY_PORT_INT      6
-    #define PRIORITY_USB_OTG           6
-    #define PRIORITY_PDB               6                                 // {19}
-    #define PRIORITY_CAN0_MESSAGE      5
-    #define PRIORITY_CAN0_BUS_OFF      5
-    #define PRIORITY_CAN0_ERROR        5
-    #define PRIORITY_CAN0_TX           5
-    #define PRIORITY_CAN0_RX           5
-    #define PRIORITY_CAN0_WAKEUP       5
-    #define PRIORITY_CAN0_IMEU         5
-    #define PRIORITY_CAN1_MESSAGE      5
-    #define PRIORITY_CAN1_BUS_OFF      5
-    #define PRIORITY_CAN1_ERROR        5
-    #define PRIORITY_CAN1_TX           5
-    #define PRIORITY_CAN1_RX           5
-    #define PRIORITY_CAN1_WAKEUP       5
-    #define PRIORITY_CAN1_IMEU         5
-    #define PRIORITY_CAN2_MESSAGE      5
-    #define PRIORITY_CAN2_BUS_OFF      5
-    #define PRIORITY_CAN2_ERROR        5
-    #define PRIORITY_CAN2_TX           5
-    #define PRIORITY_CAN2_RX           5
-    #define PRIORITY_CAN2_WAKEUP       5
-    #define PRIORITY_CAN2_IMEU         5
-    #define PRIORITY_HW_TIMER          5
-    #define PRIORITY_TIMERS            5
-    #define PRIORITY_I2C0              4
-    #define PRIORITY_I2C1              4
-    #define PRIORITY_I2C2              4
-    #define PRIORITY_I2C3              4
-    #define PIT0_INTERRUPT_PRIORITY    4
-    #define PIT1_INTERRUPT_PRIORITY    15
-    #define PIT2_INTERRUPT_PRIORITY    4
-    #define PIT3_INTERRUPT_PRIORITY    4
-    #define PRIORITY_TICK_TIMER        3
-    #define PRIORITY_SPI0              3
-    #define PRIORITY_SPI1              3
-    #define PRIORITY_SPI2              3
-    #define PRIORITY_COMPARATOR        3
-    #define PRIORITY_ADC               2
-    #define USB_PRIORITY               2
-    #define PRIORITY_RTC               2
-    #define PRIORITY_EMAC              1
 
-  //#define EMAC_PREEMPT_LEVEL            (PIT0_INTERRUPT_PRIORITY << __NVIC_PRIORITY_SHIFT) // don't allow interrupts of this priority and below to pre-empt Ethernet transmissions (such interrupts can then safely send Ethernet frames)
-  //#define SYSTEM_NO_DISABLE_LEVEL       (1 << __NVIC_PRIORITY_SHIFT)   // allow interrupts of higher priority than this to not be blocked in critical regions
-    #define LOWEST_PRIORITY_PREEMPT_LEVEL  0                             // normal level is for all interrupts to be able to operate
-#endif
+// Define interrupt priorities in the system (M7 supports 0..15 - 0 is highest priority and 15 is lowest priority)
+//
+#define SYSTICK_PRIORITY           15                                    // lowest priority
+#define USB_PIT_INTERRUPT_PRIORITY 14                                    // the PIT used by USB host must have a lower interrupt priority than the USB host itself!
+#define PRIORITY_USB_HS_OTG        13
+#define PRIORITY_UART0             12
+#define PRIORITY_UART1             11
+#define PRIORITY_UART2             10
+#define PRIORITY_UART3             9
+#define PRIORITY_UART4             8
+#define PRIORITY_UART5             7
+#define PRIORITY_LPUART0           7
+#define PRIORITY_LPUART1           7
+#define PRIORITY_LPUART2           7
+#define PRIORITY_LPUART3           7
+#define PRIORITY_LPUART4           7
+#define PRIORITY_DMA31             7
+#define PRIORITY_DMA30             7
+#define PRIORITY_DMA29             7
+#define PRIORITY_DMA28             7
+#define PRIORITY_DMA27             7
+#define PRIORITY_DMA26             7
+#define PRIORITY_DMA25             7
+#define PRIORITY_DMA24             7
+#define PRIORITY_DMA23             7
+#define PRIORITY_DMA22             7
+#define PRIORITY_DMA21             7
+#define PRIORITY_DMA20             7
+#define PRIORITY_DMA19             7
+#define PRIORITY_DMA18             7
+#define PRIORITY_DMA17             7
+#define PRIORITY_DMA16             7
+#define PRIORITY_DMA15             7
+#define PRIORITY_DMA14             7
+#define PRIORITY_DMA13             7
+#define PRIORITY_DMA12             7
+#define PRIORITY_DMA11             7
+#define PRIORITY_DMA10             7
+#define PRIORITY_DMA9              7
+#define PRIORITY_DMA8              7
+#define PRIORITY_DMA7              7
+#define PRIORITY_DMA6              7
+#define PRIORITY_DMA5              7
+#define PRIORITY_DMA4              7
+#define PRIORITY_DMA3              7
+#define PRIORITY_DMA2              7
+#define PRIORITY_DMA1              7
+#define PRIORITY_DMA0              7
+#define LPTMR0_INTERRUPT_PRIORITY  6
+#define PRIORITY_PORT_1_0          6                                     // port 1 bits 0..7 individual interrupt priorities
+#define PRIORITY_PORT_1_1          6
+#define PRIORITY_PORT_1_2          6
+#define PRIORITY_PORT_1_3          6
+#define PRIORITY_PORT_1_4          6
+#define PRIORITY_PORT_1_5          6
+#define PRIORITY_PORT_1_6          6
+#define PRIORITY_PORT_1_7          6
+#define PRIORITY_PORT_1_LOW        6                                     // port 1 bits 0..15 interrupt priority
+#define PRIORITY_PORT_1_HIGH       6                                     // port 1 bits 31..16 interrupt priority
+#define PRIORITY_PORT_2_LOW        6                                     // port 2 bits 0..15 interrupt priority
+#define PRIORITY_PORT_2_HIGH       6                                     // port 2 bits 31..16 interrupt priority
+#define PRIORITY_PORT_3_LOW        6                                     // port 3 bits 0..15 interrupt priority
+#define PRIORITY_PORT_3_HIGH       6                                     // port 3 bits 31..16 interrupt priority
+#define PRIORITY_PORT_5_LOW        6                                     // port 5 bits 0..15 interrupt priority
+#define PRIORITY_PORT_5_HIGH       6                                     // port 5 bits 31..16 interrupt priority
+#define PRIORITY_PHY_PORT_INT      6
+#define PRIORITY_USB_OTG           6
+#define PRIORITY_PDB               6
+#define PRIORITY_CAN0_MESSAGE      5
+#define PRIORITY_CAN0_BUS_OFF      5
+#define PRIORITY_CAN0_ERROR        5
+#define PRIORITY_CAN0_TX           5
+#define PRIORITY_CAN0_RX           5
+#define PRIORITY_CAN0_WAKEUP       5
+#define PRIORITY_CAN0_IMEU         5
+#define PRIORITY_CAN1_MESSAGE      5
+#define PRIORITY_CAN1_BUS_OFF      5
+#define PRIORITY_CAN1_ERROR        5
+#define PRIORITY_CAN1_TX           5
+#define PRIORITY_CAN1_RX           5
+#define PRIORITY_CAN1_WAKEUP       5
+#define PRIORITY_CAN1_IMEU         5
+#define PRIORITY_CAN2_MESSAGE      5
+#define PRIORITY_CAN2_BUS_OFF      5
+#define PRIORITY_CAN2_ERROR        5
+#define PRIORITY_CAN2_TX           5
+#define PRIORITY_CAN2_RX           5
+#define PRIORITY_CAN2_WAKEUP       5
+#define PRIORITY_CAN2_IMEU         5
+#define PRIORITY_HW_TIMER          5
+#define PRIORITY_TIMERS            5
+#define PRIORITY_I2C0              4
+#define PRIORITY_I2C1              4
+#define PRIORITY_I2C2              4
+#define PRIORITY_I2C3              4
+#define PIT0_INTERRUPT_PRIORITY    4
+#define PIT1_INTERRUPT_PRIORITY    15
+#define PIT2_INTERRUPT_PRIORITY    4
+#define PIT3_INTERRUPT_PRIORITY    4
+#define PRIORITY_TICK_TIMER        3
+#define PRIORITY_SPI0              3
+#define PRIORITY_SPI1              3
+#define PRIORITY_SPI2              3
+#define PRIORITY_COMPARATOR        3
+#define PRIORITY_ADC               2
+#define USB_PRIORITY               2
+#define PRIORITY_RTC               2
+#define PRIORITY_EMAC              1
+
+//#define EMAC_PREEMPT_LEVEL            (PIT0_INTERRUPT_PRIORITY << __NVIC_PRIORITY_SHIFT) // don't allow interrupts of this priority and below to pre-empt Ethernet transmissions (such interrupts can then safely send Ethernet frames)
+//#define SYSTEM_NO_DISABLE_LEVEL       (1 << __NVIC_PRIORITY_SHIFT)     // allow interrupts of higher priority than this to not be blocked in critical regions
+#define LOWEST_PRIORITY_PREEMPT_LEVEL  0                                 // normal level is for all interrupts to be able to operate
 
 #define ADC_ERR_PRIORITY           PRIORITY_ADC
 
@@ -7134,404 +5298,137 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // User port mapping
 //
-#if defined NET_KBED	                                                 // {16}
-    #define USER_OUT_1_BIT         PORTC_BIT1                            // 1...4 24V outputs if KBEDM4I4O connected     
-    #define USER_OUT_2_BIT         PORTC_BIT2
-    #define USER_OUT_3_BIT         PORTA_BIT8
-    #define USER_OUT_4_BIT         PORTA_BIT9
-    #define USER_OUT_5_BIT         PORTA_BIT10                           // relais KBEDM4I4O
-    #define USER_OUT_6_BIT         PORTA_BIT11                           // red KBED4I4O LED
-    #define USER_OUT_7_BIT         PORTC_BIT18                           // red KBEDM front LED
-    #define USER_OUT_8_BIT         0
-    #define USER_OUT_9_BIT         0
-    #define USER_OUT_10_BIT        0
-    #define USER_OUT_11_BIT        0
-    #define USER_OUT_12_BIT        0
-    #define USER_OUT_13_BIT        0
-    #define USER_OUT_14_BIT        0
-    #define USER_OUT_15_BIT        0
-    #define USER_OUT_16_BIT        0
+#define USER_PORT_1_BIT            PORT2_BIT0                             // use free pins on Eval board
+#define USER_PORT_2_BIT            PORT2_BIT1
+#define USER_PORT_3_BIT            PORT2_BIT2
+#define USER_PORT_4_BIT            PORT2_BIT3
+#define USER_PORT_5_BIT            PORT2_BIT4
+#define USER_PORT_6_BIT            PORT2_BIT5
+#define USER_PORT_7_BIT            PORT2_BIT6
+#define USER_PORT_8_BIT            PORT2_BIT7
+#define USER_PORT_9_BIT            PORT2_BIT8
+#define USER_PORT_10_BIT           PORT2_BIT9
+#define USER_PORT_11_BIT           PORT2_BIT10
+#define USER_PORT_12_BIT           PORT2_BIT11
+#define USER_PORT_13_BIT           PORT2_BIT12
+#define USER_PORT_14_BIT           PORT2_BIT13
+#define USER_PORT_15_BIT           PORT2_BIT14
+#define USER_PORT_16_BIT           PORT2_BIT15
 
-    #define USER_IN_1_BIT          PORTB_BIT4                            // 1...4 24V inputs if KBEDM4I4O connected   
-    #define USER_IN_2_BIT          PORTB_BIT5
-    #define USER_IN_3_BIT          PORTB_BIT6
-    #define USER_IN_4_BIT          PORTB_BIT7
+#define _CONFIG_OUTPUT_PORT_1()    _CONFIG_PORT_OUTPUT(2, USER_PORT_1_BIT,  (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_2()    _CONFIG_PORT_OUTPUT(2, USER_PORT_2_BIT,  (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_3()    _CONFIG_PORT_OUTPUT(2, USER_PORT_3_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(2, USER_PORT_4_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_5()    _CONFIG_PORT_OUTPUT(2, USER_PORT_5_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_6()    _CONFIG_PORT_OUTPUT(2, USER_PORT_6_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_7()    _CONFIG_PORT_OUTPUT(2, USER_PORT_7_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_8()    _CONFIG_PORT_OUTPUT(2, USER_PORT_8_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_9()    _CONFIG_PORT_OUTPUT(2, USER_PORT_9_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_10()   _CONFIG_PORT_OUTPUT(2, USER_PORT_10_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_11()   _CONFIG_PORT_OUTPUT(2, USER_PORT_11_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_12()   _CONFIG_PORT_OUTPUT(2, USER_PORT_12_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_13()   _CONFIG_PORT_OUTPUT(2, USER_PORT_13_BIT,  (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_14()   _CONFIG_PORT_OUTPUT(2, USER_PORT_14_BIT,  (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_15()   _CONFIG_PORT_OUTPUT(2, USER_PORT_15_BIT, (PORT_SRE_SLOW))
+#define _CONFIG_OUTPUT_PORT_16()   _CONFIG_PORT_OUTPUT(2, USER_PORT_16_BIT, (PORT_SRE_SLOW))
 
-    #define USER_PORT_1_BIT        PORTA_BIT24                           // 1...5 TTL I/Os     
-    #define USER_PORT_2_BIT        PORTA_BIT25
-    #define USER_PORT_3_BIT        PORTA_BIT26
-    #define USER_PORT_4_BIT        PORTA_BIT27
-    #define USER_PORT_5_BIT        PORTA_BIT28
-    #define USER_PORT_6_BIT        0
-    #define USER_PORT_7_BIT        0
-    #define USER_PORT_8_BIT        0
-    #define USER_PORT_9_BIT        0
-    #define USER_PORT_10_BIT       0
-    #define USER_PORT_11_BIT       0
-    #define USER_PORT_12_BIT       0
-    #define USER_PORT_13_BIT       0
-    #define USER_PORT_14_BIT       0
-    #define USER_PORT_15_BIT       0
-    #define USER_PORT_16_BIT       0
+// Port use definitions
+//
+#define USER_SET_PORT_1        GPIO1_DR_SET
+#define USER_CLEAR_PORT_1      GPIO1_DR_CLEAR
+#define USER_PORT_1            GPIO1_DR
+#define USER_TOGGLE_PORT_1     GPIO1_DR_TOGGLE
+#define USER_DDR_1             GPIOD_PDDR
 
-    #define _CONFIG_OUTPUT_PORT_1()    _CONFIG_PORT_OUTPUT(A, PORTA_BIT24, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_2()    _CONFIG_PORT_OUTPUT(A, PORTA_BIT25, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_3()    _CONFIG_PORT_OUTPUT(A, PORTA_BIT26, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(A, PORTA_BIT27, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_5()    _CONFIG_PORT_OUTPUT(A, PORTA_BIT28, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_6()
-    #define _CONFIG_OUTPUT_PORT_7()
-    #define _CONFIG_OUTPUT_PORT_8()
-    #define _CONFIG_OUTPUT_PORT_9()
-    #define _CONFIG_OUTPUT_PORT_10()
-    #define _CONFIG_OUTPUT_PORT_11()
-    #define _CONFIG_OUTPUT_PORT_12()
-    #define _CONFIG_OUTPUT_PORT_13()
-    #define _CONFIG_OUTPUT_PORT_14()
-    #define _CONFIG_OUTPUT_PORT_15()
-    #define _CONFIG_OUTPUT_PORT_16()
+#define USER_SET_PORT_2        GPIO1_DR_SET
+#define USER_CLEAR_PORT_2      GPIO1_DR_CLEAR
+#define USER_PORT_2            GPIO1_DR
+#define USER_TOGGLE_PORT_2     GPIO1_DR_TOGGLE
+#define USER_DDR_2             GPIOD_PDDR
 
-    // Port use definitions
-    //
-    #define USER_SET_PORT_1        GPIOA_PSOR
-    #define USER_CLEAR_PORT_1      GPIOA_PCOR
-    #define USER_PORT_1            GPIOA_PDOR
-    #define USER_TOGGLE_PORT_1     GPIOA_PTOR
-    #define USER_DDR_1             GPIOA_PDDR
+#define USER_SET_PORT_3        GPIO1_DR_SET
+#define USER_CLEAR_PORT_3      GPIO1_DR_CLEAR
+#define USER_PORT_3            GPIO1_DR
+#define USER_TOGGLE_PORT_3     GPIO1_DR_TOGGLE
+#define USER_DDR_3             GPIOD_PDDR
 
-    #define USER_SET_PORT_2        GPIOA_PSOR
-    #define USER_CLEAR_PORT_2      GPIOA_PCOR
-    #define USER_PORT_2            GPIOA_PDOR
-    #define USER_TOGGLE_PORT_2     GPIOA_PTOR
-    #define USER_DDR_2             GPIOA_PDDR
+#define USER_SET_PORT_4        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_4     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_4      GPIO1_DR
+#define USER_PORT_4            GPIO1_DR_TOGGLE
+#define USER_DDR_4             GPIOD_PDDR
 
-    #define USER_SET_PORT_3        GPIOA_PSOR
-    #define USER_CLEAR_PORT_3      GPIOA_PCOR
-    #define USER_PORT_3            GPIOA_PDOR
-    #define USER_TOGGLE_PORT_3     GPIOA_PTOR
-    #define USER_DDR_3             GPIOA_PDDR
+#define USER_SET_PORT_5        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_5     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_5      GPIO1_DR
+#define USER_PORT_5            GPIO1_DR_TOGGLE
+#define USER_DDR_5             GPIOD_PDDR
 
-    #define USER_SET_PORT_4        GPIOA_PSOR
-    #define USER_TOGGLE_PORT_4     GPIOA_PTOR
-    #define USER_CLEAR_PORT_4      GPIOA_PCOR
-    #define USER_PORT_4            GPIOA_PDOR
-    #define USER_DDR_4             GPIOA_PDDR
+#define USER_SET_PORT_6        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_6     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_6      GPIO1_DR
+#define USER_PORT_6            GPIO1_DR_TOGGLE
+#define USER_DDR_6             GPIOD_PDDR
 
-    #define USER_SET_PORT_5        GPIOA_PSOR
-    #define USER_TOGGLE_PORT_5     GPIOA_PTOR
-    #define USER_CLEAR_PORT_5      GPIOA_PCOR
-    #define USER_PORT_5            GPIOA_PDOR
-    #define USER_DDR_5             GPIOA_PDDR
+#define USER_SET_PORT_7        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_7     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_7      GPIO1_DR
+#define USER_PORT_7            GPIO1_DR_TOGGLE
+#define USER_DDR_7             GPIOD_PDDR
 
-    #define USER_SET_PORT_6        GPIOA_PSOR
-    #define USER_TOGGLE_PORT_6     GPIOA_PTOR
-    #define USER_CLEAR_PORT_6      GPIOA_PCOR
-    #define USER_PORT_6            GPIOA_PDOR
-    #define USER_DDR_6             GPIOA_PDDR
-
-    #define USER_SET_PORT_7        GPIOC_PSOR
-    #define USER_TOGGLE_PORT_7     GPIOC_PTOR
-    #define USER_CLEAR_PORT_7      GPIOC_PCOR
-    #define USER_PORT_7            GPIOC_PDOR
-    #define USER_DDR_7             GPIOC_PDDR
-#elif defined NET_K60                                                    // {16}
-    #define USER_OUT_1_BIT         PORTE_BIT6                            // 1...4 24V outputs if 3A4IO connected     
-    #define USER_OUT_2_BIT         PORTE_BIT7
-    #define USER_OUT_3_BIT         PORTE_BIT4
-    #define USER_OUT_4_BIT         PORTE_BIT5
-    #define USER_OUT_5_BIT         0
-    #define USER_OUT_6_BIT         0
-    #define USER_OUT_7_BIT         0
-    #define USER_OUT_8_BIT         0
-    #define USER_OUT_9_BIT         0
-    #define USER_OUT_10_BIT        0
-    #define USER_OUT_11_BIT        0
-    #define USER_OUT_12_BIT        0
-    #define USER_OUT_13_BIT        0
-    #define USER_OUT_14_BIT        0
-    #define USER_OUT_15_BIT        0
-    #define USER_OUT_16_BIT        0
-
-    #define _CONFIG_OUTPUT_PORT_1()    _CONFIG_PORT_OUTPUT(E, PORTE_BIT6,  (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_2()    _CONFIG_PORT_OUTPUT(E, PORTE_BIT7,  (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_3()    _CONFIG_PORT_OUTPUT(E, PORTE_BIT4,  (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(E, PORTE_BIT5,  (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_5()
-    #define _CONFIG_OUTPUT_PORT_6()
-    #define _CONFIG_OUTPUT_PORT_7()
-    #define _CONFIG_OUTPUT_PORT_8()
-    #define _CONFIG_OUTPUT_PORT_9()
-    #define _CONFIG_OUTPUT_PORT_10()
-    #define _CONFIG_OUTPUT_PORT_11()
-    #define _CONFIG_OUTPUT_PORT_12()
-    #define _CONFIG_OUTPUT_PORT_13()
-    #define _CONFIG_OUTPUT_PORT_14()
-    #define _CONFIG_OUTPUT_PORT_15()
-    #define _CONFIG_OUTPUT_PORT_16()
-
-
-    #define USER_IN_1_BIT          PORTD_BIT14                           // 1...4 24V inputs if 3A4IO connected
-    #define USER_IN_2_BIT          PORTD_BIT15
-    #define USER_IN_3_BIT          PORTD_BIT12
-    #define USER_IN_4_BIT          PORTD_BIT13
-
-    #define USER_PORT_1_BIT        0
-    #define USER_PORT_2_BIT        0
-    #define USER_PORT_3_BIT        0
-    #define USER_PORT_4_BIT        0
-    #define USER_PORT_5_BIT        0
-    #define USER_PORT_6_BIT        0
-    #define USER_PORT_7_BIT        0
-    #define USER_PORT_8_BIT        0
-    #define USER_PORT_9_BIT        0
-    #define USER_PORT_10_BIT       0
-    #define USER_PORT_11_BIT       0
-    #define USER_PORT_12_BIT       0
-    #define USER_PORT_13_BIT       0
-    #define USER_PORT_14_BIT       0
-    #define USER_PORT_15_BIT       0
-    #define USER_PORT_16_BIT       0
-
-    // Port use definitions
-    //
-    #define USER_SET_PORT_1        GPIOE_PSOR
-    #define USER_CLEAR_PORT_1      GPIOE_PCOR
-    #define USER_PORT_1            GPIOE_PDOR
-    #define USER_TOGGLE_PORT_1     GPIOE_PTOR
-    #define USER_DDR_1             GPIOE_PDDR
-
-    #define USER_SET_PORT_2        GPIOE_PSOR
-    #define USER_CLEAR_PORT_2      GPIOE_PCOR
-    #define USER_PORT_2            GPIOE_PDOR
-    #define USER_TOGGLE_PORT_2     GPIOE_PTOR
-    #define USER_DDR_2             GPIOE_PDDR
-
-    #define USER_SET_PORT_3        GPIOE_PSOR
-    #define USER_CLEAR_PORT_3      GPIOE_PCOR
-    #define USER_PORT_3            GPIOE_PDOR
-    #define USER_TOGGLE_PORT_3     GPIOE_PTOR
-    #define USER_DDR_3             GPIOE_PDDR
-
-    #define USER_SET_PORT_4        GPIOE_PSOR
-    #define USER_CLEAR_PORT_4      GPIOE_PCOR
-    #define USER_PORT_4            GPIOE_PDOR
-    #define USER_TOGGLE_PORT_4     GPIOE_PTOR
-    #define USER_DDR_4             GPIOE_PDDR
-
-    #define USER_SET_PORT_5        GPIOA_PSOR
-    #define USER_TOGGLE_PORT_5     GPIOA_PTOR
-    #define USER_CLEAR_PORT_5      GPIOA_PCOR
-    #define USER_PORT_5            GPIOA_PDOR
-    #define USER_DDR_5             GPIOA_PDDR
-
-    #define USER_SET_PORT_6        GPIOA_PSOR
-    #define USER_TOGGLE_PORT_6     GPIOA_PTOR
-    #define USER_CLEAR_PORT_6      GPIOA_PCOR
-    #define USER_PORT_6            GPIOA_PDOR
-    #define USER_DDR_6             GPIOA_PDDR
-
-    #define USER_SET_PORT_7        GPIOC_PSOR
-    #define USER_TOGGLE_PORT_7     GPIOC_PTOR
-    #define USER_CLEAR_PORT_7      GPIOC_PCOR
-    #define USER_PORT_7            GPIOC_PDOR
-    #define USER_DDR_7             GPIOC_PDDR
-#else
-    #define USER_PORT_1_BIT        PORTD_BIT8                             // use free PA pins on Eval board
-    #define USER_PORT_2_BIT        PORTD_BIT9
-    #if defined TWR_K53N512 && defined TFT2N0369_GLCD_MODE
-        #define USER_PORT_3_BIT    0
-    #else
-        #define USER_PORT_3_BIT    PORTD_BIT10
-    #endif
-    #if (defined TWR_K60D100M && defined SPI_FILE_SYSTEM) || (defined TWR_K53N512 && defined TFT2N0369_GLCD_MODE) // avoid reconfiguring SPI Flash lines and TFT signals
-        #define USER_PORT_4_BIT    0
-        #define USER_PORT_5_BIT    0
-        #define USER_PORT_6_BIT    0
-        #define USER_PORT_7_BIT    0
-    #else
-        #define USER_PORT_4_BIT    PORTD_BIT11
-        #define USER_PORT_5_BIT    PORTD_BIT12
-        #define USER_PORT_6_BIT    PORTD_BIT13
-        #define USER_PORT_7_BIT    PORTD_BIT14
-    #endif
-    #if defined TWR_K64F120M
-        #define USER_PORT_8_BIT    0                                     // avoid PHY interrupt line
-    #else
-        #define USER_PORT_8_BIT    PORTD_BIT15
-    #endif
-    #if defined FRDM_KL46Z
-        #define USER_PORT_9_BIT    0
-    #else
-        #define USER_PORT_9_BIT    PORTC_BIT12
-    #endif
-    #if defined TWR_K40X256 || defined TWR_K40D100M
-        #define USER_PORT_10_BIT   0
-    #else
-        #define USER_PORT_10_BIT   PORTC_BIT13
-    #endif
-    #define USER_PORT_11_BIT       PORTC_BIT14
-    #if defined TWR_K53N512                                              // PTC15 is used to control the reset to the backplane of the tower system - we leave it as high impedant input to that it doesn't assert it
-        #define USER_PORT_12_BIT   0
-    #else
-        #define USER_PORT_12_BIT   PORTC_BIT15
-    #endif
-    #define USER_PORT_13_BIT       PORTD_BIT3                            // {13}
-    #define USER_PORT_14_BIT       PORTD_BIT4                            // {13}
-    #define USER_PORT_15_BIT       PORTC_BIT18
-    #define USER_PORT_16_BIT       PORTC_BIT19
-
-    #if defined TWR_K60F120M                                             // keep I2C lines free for accelerometer use
-        #define _CONFIG_OUTPUT_PORT_1()
-        #define _CONFIG_OUTPUT_PORT_2()
-    #else
-        #define _CONFIG_OUTPUT_PORT_1()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT8,  (PORT_SRE_SLOW))
-        #define _CONFIG_OUTPUT_PORT_2()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT9,  (PORT_SRE_SLOW))
-    #endif
-    #if defined TWR_K53N512 && defined TFT2N0369_GLCD_MODE
-        #define _CONFIG_OUTPUT_PORT_3()
-    #else
-        #define _CONFIG_OUTPUT_PORT_3()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT10, (PORT_SRE_SLOW))
-    #endif
-    #if (defined TWR_K60D100M && defined SPI_FILE_SYSTEM) || (defined TWR_K53N512 && defined TFT2N0369_GLCD_MODE) // avoid reconfiguring SPI Flash lines and TFT signals
-        #define _CONFIG_OUTPUT_PORT_4()
-        #define _CONFIG_OUTPUT_PORT_5()
-        #define _CONFIG_OUTPUT_PORT_6()
-        #define _CONFIG_OUTPUT_PORT_7()
-    #else
-        #define _CONFIG_OUTPUT_PORT_4()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT11, (PORT_SRE_SLOW))
-        #define _CONFIG_OUTPUT_PORT_5()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT12, (PORT_SRE_SLOW))
-        #define _CONFIG_OUTPUT_PORT_6()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT13, (PORT_SRE_SLOW))
-        #define _CONFIG_OUTPUT_PORT_7()    _CONFIG_PORT_OUTPUT(D, PORTD_BIT14, (PORT_SRE_SLOW))
-    #endif
-    #if defined TWR_K64F120M
-        #define _CONFIG_OUTPUT_PORT_8()                                  // avoid PHY interrupt line
-    #else
-        #define _CONFIG_OUTPUT_PORT_8() _CONFIG_PORT_OUTPUT(D, PORTD_BIT15, (PORT_SRE_SLOW))
-    #endif
-    #if defined FRDM_KL46Z
-        #define _CONFIG_OUTPUT_PORT_9()
-    #else
-        #define _CONFIG_OUTPUT_PORT_9()    _CONFIG_PORT_OUTPUT(C, PORTC_BIT12, (PORT_SRE_SLOW))
-    #endif
-    #if defined TWR_K40X256 || defined TWR_K40D100M
-        #define _CONFIG_OUTPUT_PORT_10()
-    #else
-        #define _CONFIG_OUTPUT_PORT_10()   _CONFIG_PORT_OUTPUT(C, PORTC_BIT13, (PORT_SRE_SLOW))
-    #endif
-    #define _CONFIG_OUTPUT_PORT_11()   _CONFIG_PORT_OUTPUT(C, PORTC_BIT14, (PORT_SRE_SLOW))
-    #if defined TWR_K53N512                                              // PTC15 is used to control the reset to the backplane of the tower system - we leave it as high impedant input to that it doesn't assert it
-        #define _CONFIG_OUTPUT_PORT_12()
-    #else
-        #define _CONFIG_OUTPUT_PORT_12()   _CONFIG_PORT_OUTPUT(C, PORTC_BIT15, (PORT_SRE_SLOW))
-    #endif
-    #if defined FRDM_K20D50M || defined TWR_K20D50M || defined FRDM_KL25Z || defined FRDM_KL26Z || defined CAPUCCINO_KL27 || defined FRDM_KL27Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KL43Z || defined rcARM_KL26 || defined FreeLON // {21}
-        #define _CONFIG_OUTPUT_PORT_13()
-        #define _CONFIG_OUTPUT_PORT_14()
-    #else
-        #define _CONFIG_OUTPUT_PORT_13()   _CONFIG_PORT_OUTPUT(D, PORTD_BIT3,  (PORT_SRE_SLOW)) // {13}
-        #define _CONFIG_OUTPUT_PORT_14()   _CONFIG_PORT_OUTPUT(D, PORTD_BIT4,  (PORT_SRE_SLOW)) // {13}
-    #endif
-    #define _CONFIG_OUTPUT_PORT_15()   _CONFIG_PORT_OUTPUT(C, PORTC_BIT18, (PORT_SRE_SLOW))
-    #define _CONFIG_OUTPUT_PORT_16()   _CONFIG_PORT_OUTPUT(C, PORTC_BIT19, (PORT_SRE_SLOW))
-
-    // Port use definitions
-    //
-    #define USER_SET_PORT_1        GPIOD_PSOR
-    #define USER_CLEAR_PORT_1      GPIOD_PCOR
-    #define USER_PORT_1            GPIOD_PDOR
-    #define USER_TOGGLE_PORT_1     GPIOD_PTOR
-    #define USER_DDR_1             GPIOD_PDDR
-
-    #define USER_SET_PORT_2        GPIOD_PSOR
-    #define USER_CLEAR_PORT_2      GPIOD_PCOR
-    #define USER_PORT_2            GPIOD_PDOR
-    #define USER_TOGGLE_PORT_2     GPIOD_PTOR
-    #define USER_DDR_2             GPIOD_PDDR
-
-    #define USER_SET_PORT_3        GPIOD_PSOR
-    #define USER_CLEAR_PORT_3      GPIOD_PCOR
-    #define USER_PORT_3            GPIOD_PDOR
-    #define USER_TOGGLE_PORT_3     GPIOD_PTOR
-    #define USER_DDR_3             GPIOD_PDDR
-
-    #define USER_SET_PORT_4    GPIOD_PSOR
-    #define USER_TOGGLE_PORT_4 GPIOD_PTOR
-    #define USER_CLEAR_PORT_4  GPIOD_PCOR
-    #define USER_PORT_4        GPIOD_PDOR
-    #define USER_DDR_4         GPIOD_PDDR
-
-    #define USER_SET_PORT_5    GPIOD_PSOR
-    #define USER_TOGGLE_PORT_5 GPIOD_PTOR
-    #define USER_CLEAR_PORT_5  GPIOD_PCOR
-    #define USER_PORT_5        GPIOD_PDOR
-    #define USER_DDR_5         GPIOD_PDDR
-
-    #define USER_SET_PORT_6    GPIOD_PSOR
-    #define USER_TOGGLE_PORT_6 GPIOD_PTOR
-    #define USER_CLEAR_PORT_6  GPIOD_PCOR
-    #define USER_PORT_6        GPIOD_PDOR
-    #define USER_DDR_6         GPIOD_PDDR
-
-    #define USER_SET_PORT_7    GPIOD_PSOR
-    #define USER_TOGGLE_PORT_7 GPIOD_PTOR
-    #define USER_CLEAR_PORT_7  GPIOD_PCOR
-    #define USER_PORT_7        GPIOD_PDOR
-    #define USER_DDR_7         GPIOD_PDDR
-#endif
-
-#define USER_SET_PORT_8        GPIOD_PSOR
-#define USER_TOGGLE_PORT_8     GPIOD_PTOR
-#define USER_CLEAR_PORT_8      GPIOD_PCOR
-#define USER_PORT_8            GPIOD_PDOR
+#define USER_SET_PORT_8        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_8     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_8      GPIO1_DR
+#define USER_PORT_8            GPIO1_DR_TOGGLE
 #define USER_DDR_8             GPIOD_PDDR
 
-#define USER_SET_PORT_9        GPIOC_PSOR
-#define USER_TOGGLE_PORT_9     GPIOC_PTOR
-#define USER_CLEAR_PORT_9      GPIOC_PCOR
-#define USER_PORT_9            GPIOC_PDOR
-#define USER_DDR_9             GPIOC_PDDR
+#define USER_SET_PORT_9        GPIO1_DR_SET
+#define USER_TOGGLE_PORT_9     GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_9      GPIO1_DR
+#define USER_PORT_9            GPIO1_DR_TOGGLE
+#define USER_DDR_9             GPIOD_PDDR
 
-#define USER_SET_PORT_10       GPIOC_PSOR
-#define USER_TOGGLE_PORT_10    GPIOC_PTOR
-#define USER_CLEAR_PORT_10     GPIOC_PCOR
-#define USER_PORT_10           GPIOC_PDOR
-#define USER_DDR_10            GPIOC_PDDR
+#define USER_SET_PORT_10       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_10    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_10     GPIO1_DR
+#define USER_PORT_10           GPIO1_DR_TOGGLE
+#define USER_DDR_10            GPIOD_PDDR
 
-#define USER_SET_PORT_11       GPIOC_PSOR
-#define USER_TOGGLE_PORT_11    GPIOC_PTOR
-#define USER_CLEAR_PORT_11     GPIOC_PCOR
-#define USER_PORT_11           GPIOC_PDOR
-#define USER_DDR_11            GPIOC_PDDR
+#define USER_SET_PORT_11       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_11    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_11     GPIO1_DR
+#define USER_PORT_11           GPIO1_DR_TOGGLE
+#define USER_DDR_11            GPIOD_PDDR
 
-#define USER_SET_PORT_12       GPIOC_PSOR
-#define USER_TOGGLE_PORT_12    GPIOC_PTOR
-#define USER_CLEAR_PORT_12     GPIOC_PCOR
-#define USER_PORT_12           GPIOC_PDOR
-#define USER_DDR_12            GPIOC_PDDR
+#define USER_SET_PORT_12       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_12    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_12     GPIO1_DR
+#define USER_PORT_12           GPIO1_DR_TOGGLE
+#define USER_DDR_12            GPIOD_PDDR
 
-#define USER_SET_PORT_13       GPIOD_PSOR                                // {13}
-#define USER_TOGGLE_PORT_13    GPIOD_PTOR
-#define USER_CLEAR_PORT_13     GPIOD_PCOR
-#define USER_PORT_13           GPIOD_PDOR
+#define USER_SET_PORT_13       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_13    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_13     GPIO1_DR
+#define USER_PORT_13           GPIO1_DR_TOGGLE
 #define USER_DDR_13            GPIOD_PDDR
 
-#define USER_SET_PORT_14       GPIOD_PSOR                                // {13}
-#define USER_TOGGLE_PORT_14    GPIOD_PTOR
-#define USER_CLEAR_PORT_14     GPIOD_PCOR
-#define USER_PORT_14           GPIOD_PDOR
+#define USER_SET_PORT_14       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_14    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_14     GPIO1_DR
+#define USER_PORT_14           GPIO1_DR_TOGGLE
 #define USER_DDR_14            GPIOD_PDDR
 
-#define USER_SET_PORT_15       GPIOC_PSOR
-#define USER_TOGGLE_PORT_15    GPIOC_PTOR
-#define USER_CLEAR_PORT_15     GPIOC_PCOR
-#define USER_PORT_15           GPIOC_PDOR
-#define USER_DDR_15            GPIOC_PDDR
+#define USER_SET_PORT_15       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_15    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_15     GPIO1_DR
+#define USER_PORT_15           GPIO1_DR_TOGGLE
+#define USER_DDR_15            GPIOD_PDDR
 
-#define USER_SET_PORT_16       GPIOC_PSOR
-#define USER_TOGGLE_PORT_16    GPIOC_PTOR
-#define USER_CLEAR_PORT_16     GPIOC_PCOR
-#define USER_PORT_16           GPIOC_PDOR
-#define USER_DDR_16            GPIOC_PDDR
+#define USER_SET_PORT_16       GPIO1_DR_SET
+#define USER_TOGGLE_PORT_16    GPIO1_DR_CLEAR
+#define USER_CLEAR_PORT_16     GPIO1_DR
+#define USER_PORT_16           GPIO1_DR_TOGGLE
+#define USER_DDR_16            GPIOD_PDDR
 
 #define USB_DOWNLOAD_FILE      "z"                                       // software upload via USB-CDC is saved to this internal file location
 

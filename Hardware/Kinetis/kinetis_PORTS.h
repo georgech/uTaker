@@ -222,7 +222,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
     _SIM_PORT_CHANGE;
 }
     #else
-    #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORT_A_E_ID || defined irq_PORTA_ID) // if port A is available abd support has not been removed
+    #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORT_A_E_ID || defined irq_PORTA_ID) // if port A is available and support has not been removed
         #if defined PORT_INTERRUPT_USER_DISPATCHER
 static void (*gpio_handlers_A)(int) = 0;                                 // a single handler for port A
         #else

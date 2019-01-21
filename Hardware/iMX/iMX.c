@@ -1525,7 +1525,7 @@ extern void fnRetriggerWatchdog(void)
 /* =================================================================== */
 /*                          Ethernet Controller                        */
 /* =================================================================== */
-    #include "iMX_ENET.h"                                                // include Ethernet controller hardware driver code
+    #include "../Kinetis/kinetis_ENET.h"                                 // include Ethernet controller hardware driver code
 #endif
 
 

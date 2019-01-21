@@ -351,7 +351,7 @@ const PARS cParameters = {
     #endif
     80,                                                                  // flow control at 80% high water
     20,                                                                  // flow control at 20% low water
-    #if defined _KINETIS || defined AVR32_AT32UC3C_EK || defined AVR32_UC3_C2_XPLAINED // {80}
+    #if defined _KINETIS || defined AVR32_AT32UC3C_EK || defined AVR32_UC3_C2_XPLAINED || defined _iMX // {80}
     (MAPPED_DEMO_LED_1 | MAPPED_DEMO_LED_2),                             // user port DDR value
     (MAPPED_DEMO_LED_1 | MAPPED_DEMO_LED_2),                             // user port value of outputs
     #else

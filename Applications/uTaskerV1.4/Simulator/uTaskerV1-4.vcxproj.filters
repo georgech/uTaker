@@ -1501,9 +1501,6 @@
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_DAC.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\iMX\iMX_ENET.h">
-      <Filter>Hardware\iMX</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_errata.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>

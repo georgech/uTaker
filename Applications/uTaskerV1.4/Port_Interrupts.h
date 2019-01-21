@@ -21,6 +21,7 @@
     11.01.2015 Add wake-up test support                                   {6}
     11.12.2015 Add DMA port mirroring reference                           {7}
     19.10.2017 Add DMA_SPI_BURST reference (DMA port trigger of SPI Tx/Rx sequence controlled by DMA) {8}
+    20.01.2019 Add iMX
     Note that the external interrupt tests are not suitable for LPC210x as in this file
 
     The file is otherwise not specifically linked in to the project since it
@@ -34,7 +35,7 @@
     #define _PORT_INTS_CONFIG
 
     #if !defined K70F150M_12M && !defined TWR_K53N512 && !defined TWR_K40X256 && !defined TWR_K40D100M && !defined KWIKSTIK
-      //#define IRQ_TEST                                                 // test IRQ port interrupts
+        #define IRQ_TEST                                                 // test IRQ port interrupts
           //#define DMA_PORT_MIRRORING                                   // demonstrate using DMA to control one or more output ports to follow an input port
       //#define DMA_SPI_BURST                                            // {8} demonstrate input port triggering of an SPI burst using DMA
         #if defined SUPPORT_LOW_POWER && defined IRQ_TEST
@@ -201,10 +202,14 @@ static void spi_half_buffer(void)
 static void fnInitIRQ(void)
 {
     INTERRUPT_SETUP interrupt_setup;                                     // interrupt configuration parameters
-    #if defined _KINETIS                                                 // {5}
+    #if defined _KINETIS || defined _iMX                                 // {5}
     interrupt_setup.int_type       = PORT_INTERRUPT;                     // identifier to configure port interrupt
     interrupt_setup.int_handler    = test_irq_4;                         // handling function
-        #if defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_KL43Z48M
+        #if defined MIMXRT1020
+    interrupt_setup.int_priority   = PRIORITY_PORT_1_0;                  // interrupt priority level
+    interrupt_setup.int_port       = PORT1;                              // the port that the interrupt input is on
+    interrupt_setup.int_port_bits  = PORT1_BIT0;                         // the IRQ input connected - PORT1_BIT0 has a unique handler
+        #elif defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_KL43Z48M
     interrupt_setup.int_priority   = PRIORITY_PORT_C_INT;                // interrupt priority level
     interrupt_setup.int_port       = PORTC;                              // the port that the interrupt input is on
             #if defined FRDM_KL43Z || defined TWR_KL43Z48M
@@ -452,7 +457,12 @@ static void fnInitIRQ(void)
         #endif
         #if (PORTS_AVAILABLE > 4) && (!defined KINETIS_KL || defined TEENSY_LC) && !defined TWR_K22F120M && !defined TWR_K20D50M && !defined TWR_K20D72M && !defined TWR_K53N512 && !defined TWR_K40D100M && !defined TWR_K21D50M && !defined TWR_K21F120M  && !defined FRDM_KE15Z
     interrupt_setup.int_handler    = test_irq_5;                         // handling function
-            #if defined TWR_K24F120M
+            #if defined MIMXRT1020
+    interrupt_setup.int_port = PORT3;                                    // the port that the interrupt input is on
+    interrupt_setup.int_port_bits  = PORT3_BIT0;                         // the input to generate an interrupt
+    interrupt_setup.int_priority   = PRIORITY_PORT_3_LOW;                // interrupt priority level
+    interrupt_setup.int_port_sense = (IRQ_RISING_EDGE | PULLDOWN_ON);    // interrupt is to be rising edge sensitive
+            #elif defined TWR_K24F120M
     interrupt_setup.int_port       = PORTA;                              // the port that the interrupt input is on
     interrupt_setup.int_port_bits  = PORTA_BIT13;                        // LLWU_P4
             #elif defined TWR_K64F120M || defined FRDM_K64F

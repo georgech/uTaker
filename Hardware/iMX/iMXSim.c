@@ -264,7 +264,7 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
 #endif
 };
 
-static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig);
+static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit);
 
 static int iFlagRefresh = 0;
 
@@ -3012,16 +3012,40 @@ static void fnHandleTimerInput(int iPort, unsigned long ulNewState, unsigned lon
 }
 #endif
 
+
+static int fnIsGPIO_clocked(int iPortRef)
+{
+    switch (iPortRef) {
+    case PORT1:
+        if ((CCM_CCGR1 & CCM_CCGR1_GPIO1_CLOCKS_MASK) == CCM_CCGR1_GPIO1_CLOCKS_OFF){
+            return 0;
+        }
+        break;
+    case PORT2:
+        if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCKS_MASK) == CCM_CCGR0_GPIO2_CLOCKS_OFF) {
+            return 0;
+        }
+        break;
+    case PORT3:
+        if ((CCM_CCGR2 & CCM_CCGR2_GPIO3_CLOCKS_MASK) == CCM_CCGR2_GPIO3_CLOCKS_OFF) {
+            return 0;
+        }
+        break;
+    case PORT5:
+        break;
+    default:
+        _EXCEPTION("Bad port reference!");
+        break;
+    }
+    return 1;                                                            // GPIO is clocked
+}
+
+
 // Simulate setting, clearing or toggling of an input pin
 //
 extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit, int iChange)
 {
-#if defined KINETIS_KL
-    static unsigned long ulTSI[61] = {0};
-#endif
     unsigned long ulBit = (0x80000000 >> ucPortBit);
-    unsigned long *ptrPCR = (unsigned long *)PORT0_BLOCK;
-    ptrPCR += (ucPort * sizeof(KINETIS_PORT)/sizeof(unsigned long));
     iFlagRefresh = PORT_CHANGE;
 #if defined SUPPORT_ADC
     if (fnHandleADCchange(iChange, ucPort, ucPortBit) == 0) {            // handle possible ADC function on pin
@@ -3032,52 +3056,27 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORT1:
         if ((~GPIO1_GDIR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_1;
-            if (IS_POWERED_UP(5, PORTA) == 0) {                          // ignore if port is not clocked
+            if (fnIsGPIO_clocked(PORT1) == 0) {                          // ignore if port is not clocked
                 return;
             }
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_1 ^= ulBit;                                    // set new pin state
-#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-#endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO1_PSR &= ~ulBit;
                 GPIO1_PSR |= (ulPort_in_1 & ulBit);                     // set new input register state
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_1 |= ulBit;
-#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-#endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO1_PSR |= ulBit;                                      // set new input register state
             }
             else {
                 ulPort_in_1 &= ~ulBit;
-#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-#endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO1_PSR &= ~ulBit;                                     // set new input register state
             }
             if (ulPort_in_1 != ulOriginal_port_state) {                  // if a change took place
-#if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
-                fnWakeupInterrupt(_PORTA, ulPort_in_A, ulBit, ucPortBit);// handle wakeup events on the pin
-#endif
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-                fnPortInterrupt(_PORTA, ulPort_in_A, ulBit, 0);          // handle interrupts on the pin
-#else
-                fnPortInterrupt(_PORT1, ulPort_in_1, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+                fnPortInterrupt(_PORT1, ulPort_in_1, ulBit);             // handle interrupts and DMA on the pin
         #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
                 fnHandleTimerInput(_PORTA, ulPort_in_A, ulBit, ptrPCR);  // {50}
         #endif
-#endif
             }
         }
         break;
@@ -3085,52 +3084,27 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORT2:
         if ((~GPIO2_GDIR & ulBit) != 0) {                                // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_2;
-            if (IS_POWERED_UP(5, PORTB) == 0) {                          // ignore if port is not clocked
+            if (fnIsGPIO_clocked(PORT2) == 0) {                          // ignore if port is not clocked
                 return;
             }
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_2 ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO2_PSR &= ~ulBit;
                 GPIO2_PSR |= (ulPort_in_2 & ulBit);                      // set new input register state
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_2 |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO2_PSR |= ulBit;                                      // set new input register state
             }
             else {
                 ulPort_in_2 &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO2_PSR &= ~ulBit;                                     // set new input register state
             }
             if (ulPort_in_2 != ulOriginal_port_state) {                  // if a change took place
-    #if defined SUPPORT_LLWU && defined LLWU_AVAILABLE
-                fnWakeupInterrupt(_PORTB, ulPort_in_B, ulBit, ucPortBit);// handle wakeup events on the pin
-    #endif
-    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-                fnPortInterrupt(_PORTB, ulPort_in_B, ulBit, 0);          // handle interrupts on the pin
-    #else
-                fnPortInterrupt(_PORT2, ulPort_in_2, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+                fnPortInterrupt(_PORT2, ulPort_in_2, ulBit);             // handle interrupts and DMA on the pin
         #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
                 fnHandleTimerInput(_PORTB, ulPort_in_B, ulBit, ptrPCR);  // {50}
         #endif
-    #endif
             }
         }
         break;
@@ -3139,52 +3113,27 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORT3:
         if (~GPIO3_GDIR & ulBit) {                                       // if configured as input
             unsigned long ulOriginal_port_state = ulPort_in_3;
-            if (IS_POWERED_UP(5, PORTC) == 0) {                          // ignore if port is not clocked
+            if (fnIsGPIO_clocked(PORT3) == 0) {                          // ignore if port is not clocked
                 return;
             }
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_3 ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        //ignore register state if not connected
-              //    return;
-              //}
                 GPIO3_PSR &= ~ulBit;
                 GPIO3_PSR |= (ulPort_in_3 & ulBit);                      // set new input register state
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_3 |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO3_PSR |= ulBit;                                      // set new input register state
             }
             else {
                 ulPort_in_3 &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO3_PSR &= ~ulBit;                                     // set new input register state
             }
             if (ulPort_in_3 != ulOriginal_port_state) {                  // if a change took place
-    #if defined LLWU_AVAILABLE && defined SUPPORT_LLWU
-                fnWakeupInterrupt(_PORTC, ulPort_in_C, ulBit, ucPortBit);// handle wakeup events on the pin
-    #endif
-    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-                fnPortInterrupt(_PORTC, ulPort_in_C, ulBit, 0);          // handle interrupts on the pin
-    #else
-                fnPortInterrupt(_PORT3, ulPort_in_3, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+                fnPortInterrupt(_PORT3, ulPort_in_3, ulBit);             // handle interrupts and DMA on the pin
         #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
                 fnHandleTimerInput(_PORTC, ulPort_in_C, ulBit, ptrPCR);  // {50}
         #endif
-    #endif
             }
         }
         break;
@@ -3195,40 +3144,19 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             unsigned long ulOriginal_port_state = ulPort_in_5;
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_5 ^= ulBit;                                    // set new pin state
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO5_PSR &= ~ulBit;
                 GPIO5_PSR |= (ulPort_in_5 & ulBit);                      // set new input register state
             }
             else if (iChange == SET_INPUT) {
                 ulPort_in_5 |= ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO5_PSR |= ulBit;                                      // set new input register state
             }
             else {
                 ulPort_in_5 &= ~ulBit;
-    #if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-    #endif
-              //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // ignore register state if not connected
-              //    return;
-              //}
                 GPIO5_PSR &= ~ulBit;                                     // set new input register state
             }
             if (ulPort_in_5 != ulOriginal_port_state) {                  // if a change took place
-    #if defined LLWU_AVAILABLE && defined SUPPORT_LLWU
-                fnWakeupInterrupt(_PORTE, ulPort_in_E, ulBit, ucPortBit);// handle wakeup events on the pin
-    #endif
-                fnPortInterrupt(_PORT5, ulPort_in_5, ulBit, ptrPCR);     // handle interrupts and DMA on the pin
+                fnPortInterrupt(_PORT5, ulPort_in_5, ulBit);             // handle interrupts and DMA on the pin
     #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
                 fnHandleTimerInput(_PORTE, ulPort_in_E, ulBit, ptrPCR);  // {50}
     #endif
@@ -3537,8 +3465,9 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIO1_DR_TOGGLE;                                   // toggle bits from toggle register
         GPIO1_DR = ulNewState;
         GPIO1_PSR = ((ulPort_in_1 & ~GPIO1_GDIR) | (GPIO1_DR & GPIO1_GDIR)); // input state
+        GPIO1_PSR &= ~(ulPeripherals[PORT1]);                            // bits read 0 when the pin is not connected to GPIO
     }
-    GPIO2_DR_SET = GPIO2_DR_CLEAR = GPIO2_DR_TOGGLE = 0;                 // registers always read 0
+    GPIO1_DR_SET = GPIO1_DR_CLEAR = GPIO1_DR_TOGGLE = 0;                 // registers always read 0
 #if PORTS_AVAILABLE > 1
     if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCKS_MASK) != CCM_CCGR0_GPIO2_CLOCKS_OFF) { // if this port is clocked
         ulNewState = (GPIO2_DR | GPIO2_DR_SET);                          // set bits from set register
@@ -3546,6 +3475,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIO2_DR_TOGGLE;                                   // toggle bits from toggle register
         GPIO2_DR = ulNewState;
         GPIO2_PSR = ((ulPort_in_2 & ~GPIO2_GDIR) | (GPIO2_DR & GPIO2_GDIR)); // input state
+        GPIO2_PSR &= ~(ulPeripherals[PORT2]);                            // bits read 0 when the pin is not connected to GPIO
     }
     GPIO2_DR_SET = GPIO2_DR_CLEAR = GPIO2_DR_TOGGLE = 0;                 // registers always read 0
 #endif
@@ -3556,6 +3486,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIO3_DR_TOGGLE;                                   // toggle bits from toggle register
         GPIO3_DR = ulNewState;
         GPIO3_PSR = ((ulPort_in_3 & ~GPIO3_GDIR) | (GPIO3_DR & GPIO3_GDIR)); // input state
+        GPIO3_PSR &= ~(ulPeripherals[PORT3]);                            // bits read 0 when the pin is not connected to GPIO
     }
     GPIO3_DR_SET = GPIO3_DR_CLEAR = GPIO3_DR_TOGGLE = 0;                 // registers always read 0
 #endif
@@ -3566,6 +3497,7 @@ extern void fnSimPorts(void)
         ulNewState ^= GPIO5_DR_TOGGLE;                                   // toggle bits from toggle register
         GPIO5_DR = ulNewState;
         GPIO5_PSR = ((ulPort_in_5 & ~GPIO5_GDIR) | (GPIO5_DR & GPIO5_GDIR)); // input state
+        GPIO5_PSR &= ~(ulPeripherals[PORT5]);                            // bits read 0 when the pin is not connected to GPIO
     }
     GPIO5_DR_SET = GPIO5_DR_CLEAR = GPIO5_DR_TOGGLE = 0;                 // registers always read 0
 #endif
@@ -4128,230 +4060,160 @@ static void fnHandleDMA_triggers(int iTriggerSource, int iDMAmux)
 }
 #endif
 
+static iMX_GPIO *fnGetGPIO(int iPort)
+{
+    switch (iPort) {
+    case PORT1:
+        return (iMX_GPIO *)GPIO1_BLOCK;
+    case PORT2:
+        return (iMX_GPIO *)GPIO2_BLOCK;
+    case PORT3:
+        return (iMX_GPIO *)GPIO3_BLOCK;
+    case PORT5:
+        return (iMX_GPIO *)GPIO5_BLOCK;
+    default:
+        _EXCEPTION("Bad port reference!");
+        return 0;
+    }
+}
 
 // Handle port interrupts on input changes
 //
-static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit, unsigned long *ptrPortConfig)
+static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit)
 {
-#if 0
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    if ((SIM_SCGC_IRQ & SIM_SCGC) != 0) {                                // if the IRQ module is enabled
-        fnHandleIRQ(iPort, ulNewState, ulChangedBit, ptrPortConfig);
-    }
-    #if KBIS_AVAILABLE > 0
-    if ((SIM_SCGC_KBI0 & SIM_SCGC) != 0) {                               // if the KBI0 module is enabled
-        fnHandleKBI(0, iPort, ulNewState, ulChangedBit, ptrPortConfig);
-    }
-    #endif
-    #if KBIS_AVAILABLE > 1
-    if ((SIM_SCGC_KBI1 & SIM_SCGC) != 0) {                               // if the KBI1 module is enabled
-        fnHandleKBI(1, iPort, ulNewState, ulChangedBit, ptrPortConfig);
-    }
-    #endif
-#else
-    int iPortInterruptSource;
-    if ((*ptrPortConfig & PORT_IRQC_INT_MASK) == 0) {                    // no interrupt/DMA function programmed
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    iMX_GPIO *ptrGPIO = fnGetGPIO(iPort);
+    unsigned long ulReg;
+    if ((ptrGPIO->GPIO_IMR & ulChangedBit) == 0) {                       // if no interrupt on this pin
         return;
     }
-    switch (*ptrPortConfig & PORT_IRQC_INT_MASK)  {                      // interrupt/DMA property of the pin
-    case PORT_IRQC_BOTH:
-    case PORT_IRQC_DMA_BOTH:
-        break;
-    case PORT_IRQC_LOW_LEVEL:
-    case PORT_IRQC_FALLING:
-    case PORT_IRQC_DMA_FALLING:
-        if ((ulNewState & ulChangedBit) != 0) {
-            return;                                                      // not correct level
-        }
-        break;
-    case PORT_IRQC_HIGH_LEVEL:
-    case PORT_IRQC_RISING:
-    case PORT_IRQC_DMA_RISING:
-        if ((ulNewState & ulChangedBit) == 0) {
-            return;                                                      // not correct level
-        }
-        break;
-    }
-    #if !defined DEVICE_WITHOUT_DMA
-    if ((*ptrPortConfig & PORT_IRQC_LOW_LEVEL) == 0) {                   // DMA trigger and not interrupt
-        #if defined DMAMUX1_CHCFG_SOURCE_PORTF
-        if (iPort == _PORTF) {
-            fnHandleDMA_triggers(DMAMUX1_CHCFG_SOURCE_PORTF, 1);         // port F is on second DMAMUX
+    if ((ptrGPIO->GPIO_EDGE_SEL & ulChangedBit) == 0) {                 // interrupt not generated on rising and falling edges
+        if ((ulChangedBit & 0xffff0000) != 0) {
+            unsigned long _ulBit = ulChangedBit;
+            ulReg = ptrGPIO->GPIO_ICR2;
+            while ((_ulBit & 0x00010000) == 0) {
+                ulReg >>= 2;
+                _ulBit >>= 1;
+            }
         }
         else {
-        #endif
-            fnHandleDMA_triggers((DMAMUX0_CHCFG_SOURCE_PORTA + iPort), 0);
-        #if defined DMAMUX1_CHCFG_SOURCE_PORTF
+            unsigned long _ulBit = ulChangedBit;
+            ulReg = ptrGPIO->GPIO_ICR1;
+            while ((_ulBit & 0x00000001) == 0) {
+                ulReg >>= 2;
+                _ulBit >>= 1;
+            }
         }
-        #endif
-        return;
+        switch (ulReg & PORT_ICR1_0_INT_MASK) {
+        case PORT_ICR1_0_LOW_LEVEL:
+        case PORT_ICR1_0_FALLING:
+            if ((ulNewState & ulChangedBit) != 0) {
+                return;                                                  // not correct level
+            }
+            break;
+        case PORT_ICR1_0_RISING:
+        case PORT_ICR1_0_HIGH_LEVEL:
+            if ((ulNewState & ulChangedBit) == 0) {
+                return;                                                  // not correct level
+            }
+            break;
+        }
     }
-    #endif
-    *ptrPortConfig |= PORT_ISF;
-    #if defined irq_PORTA_ID
-    iPortInterruptSource = (irq_PORTA_ID + iPort);
-    #endif
+    ptrGPIO->GPIO_ISR |= ulChangedBit;                                   // GPIO interrupt triggered
     switch (iPort) {
-    case _PORTA:
-        PORTA_ISFR |= ulChangedBit;
-    #if defined irq_PORT_A_E_ID
-        iPortInterruptSource = irq_PORT_A_E_ID;
-    #endif
-        break;
-    #if PORTS_AVAILABLE > 1
-    case _PORTB:
-        PORTB_ISFR |= ulChangedBit;
-        #if defined irq_PORT_B_C_D_ID                                    // shared port B/C/D
-        iPortInterruptSource = irq_PORT_B_C_D_ID;
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E
-        iPortInterruptSource = irq_PORTBCD_E_ID;
-        #endif
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 2
-    case _PORTC:
-        PORTC_ISFR |= ulChangedBit;
-        #if defined irq_PORTC_D_ID                                       // shared port C/D interrupt vector
-        iPortInterruptSource = irq_PORTC_D_ID;
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E
-        iPortInterruptSource = irq_PORTBCD_E_ID;
-        #endif
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 3
-    case _PORTD:
-        PORTD_ISFR |= ulChangedBit;
-        #if defined irq_PORTC_D_ID                                       // shared port C/D interrupt vector
-        iPortInterruptSource = irq_PORTC_D_ID;
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E
-        iPortInterruptSource = irq_PORTBCD_E_ID;
-        #endif
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 4
-    case _PORTE:
-        PORTE_ISFR |= ulChangedBit;
-        #if defined irq_PORTBCD_E_ID                                     // shared port B/C/D/E
-        iPortInterruptSource = irq_PORTBCD_E_ID;
-        #elif defined irq_PORT_A_E_ID
-        iPortInterruptSource = irq_PORT_A_E_ID;
-        #endif
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 5
-    case _PORTF:
-        PORTF_ISFR |= ulChangedBit;
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 6
-    case _PORTG:
-        PORTG_ISFR |= ulChangedBit;
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 7
-    case _PORTH:
-        PORTH_ISFR |= ulChangedBit;
-        break;
-    #endif
-    #if PORTS_AVAILABLE > 8
-    case _PORTI:
-        PORTI_ISFR |= ulChangedBit;
-        break;
-    #endif
-    }
-    #if defined irq_PT_ID
-    iPortInterruptSource = irq_PT_ID;
-    #endif
-    if (fnGenInt(iPortInterruptSource) != 0) {                           // if port interrupt is not disabled
-        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-        switch (iPort) {
-        case _PORTA:
-    #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-    #elif defined irq_PORT_A_E_ID
-            ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
-    #else
-            ptrVect->processor_interrupts.irq_PORTA();                   // call port interrupt handler
-    #endif
+    case PORT1:
+        switch (ulChangedBit) {
+        case PORT1_BIT0:
+            if (fnGenInt(irq_GPIO1_Hi_0_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_0();         // call port interrupt handler
+            }
             break;
-        case _PORTB:
-    #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-    #elif defined irq_PORT_B_C_D_ID                                      // shared port B/C/D interrupt vector
-            ptrVect->processor_interrupts.irq_PORTB_C_D();               // call port interrupt handler
-    #elif defined irq_PORTBCD_E_ID                                       // shared port B/C/D/E interrupt vector
-            ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
-    #elif defined irq_PORTB_ID
-            ptrVect->processor_interrupts.irq_PORTB();                   // call port interrupt handler
-    #endif
+        case PORT1_BIT1:
+            if (fnGenInt(irq_GPIO1_Hi_1_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_1();         // call port interrupt handler
+            }
             break;
-    #if PORTS_AVAILABLE > 2
-        case _PORTC:
-        #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-        #elif defined irq_PORTC_ID
-            ptrVect->processor_interrupts.irq_PORTC();                   // call port interrupt handler
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
-            ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
-        #elif defined irq_PORTC_D_ID                                     // shared port C/D interrupt vector
-            ptrVect->processor_interrupts.irq_PORTC_D();                 // call port interrupt handler
-        #endif
+        case PORT1_BIT2:
+            if (fnGenInt(irq_GPIO1_Hi_2_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_2();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 3
-        case _PORTD:
-        #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-        #elif defined irq_PORTC_ID
-            ptrVect->processor_interrupts.irq_PORTD();                   // call port interrupt handler
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
-            ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
-        #elif defined irq_PORTC_D_ID                                     // shared port C/D interrupt vector
-            ptrVect->processor_interrupts.irq_PORTC_D();                 // call port interrupt handler
-        #endif
+        case PORT1_BIT3:
+            if (fnGenInt(irq_GPIO1_Hi_3_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_3();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 4
-        case _PORTE:
-        #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-        #elif defined irq_PORTE_ID
-            ptrVect->processor_interrupts.irq_PORTE();                   // call port interrupt handler
-        #elif defined irq_PORT_A_E_ID                                    // shared port A and E interrupt vector
-            ptrVect->processor_interrupts.irq_PORTA_E();                 // call port interrupt handler
-        #elif defined irq_PORTBCD_E_ID                                   // shared port B/C/D/E interrupt vector
-            ptrVect->processor_interrupts.irq_PORTBCD_E();               // call port interrupt handler
-        #endif
+        case PORT1_BIT4:
+            if (fnGenInt(irq_GPIO1_Hi_4_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_4();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 5
-        case _PORTF:
-        #if defined irq_PT_ID
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
-        #elif defined irq_PORTF_ID
-            ptrVect->processor_interrupts.irq_PORTF();                   // call port interrupt handler
-        #endif
+        case PORT1_BIT5:
+            if (fnGenInt(irq_GPIO1_Hi_5_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_5();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 6
-        case _PORTG:
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        case PORT1_BIT6:
+            if (fnGenInt(irq_GPIO1_Hi_6_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_6();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 7
-        case _PORTH:
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        case PORT1_BIT7:
+            if (fnGenInt(irq_GPIO1_Hi_7_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO1_Hi_7();         // call port interrupt handler
+            }
             break;
-    #endif
-    #if PORTS_AVAILABLE > 8
-        case _PORTI:
-            ptrVect->processor_interrupts.irq_PT();                      // call port interrupt handler
+        default:
+            if (ulChangedBit >= 0x00010000) {
+                if (fnGenInt(irq_GPIO1_16_31_ID) != 0) {                // if port interrupt is not disabled
+                    ptrVect->processor_interrupts.irq_GPIO1_16_31();    // call port interrupt handler
+                }
+            }
+            else {
+                if (fnGenInt(irq_GPIO1_0_15_ID) != 0) {                 // if port interrupt is not disabled
+                    ptrVect->processor_interrupts.irq_GPIO1_0_15();     // call port interrupt handler
+                }
+            }
             break;
-    #endif
         }
-    } 
-#endif
-#endif
+        break;
+    case PORT2:
+        if (ulChangedBit >= 0x00010000) {
+            if (fnGenInt(irq_GPIO2_16_31_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO2_16_31();         // call port interrupt handler
+            }
+        }
+        else {
+            if (fnGenInt(irq_GPIO2_0_15_ID) != 0) {                      // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO2_0_15();          // call port interrupt handler
+            }
+        }
+        break;
+    case PORT3:
+        if (ulChangedBit >= 0x00010000) {
+            if (fnGenInt(irq_GPIO3_16_31_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO3_16_31();         // call port interrupt handler
+            }
+        }
+        else {
+            if (fnGenInt(irq_GPIO3_0_15_ID) != 0) {                      // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO3_0_15();          // call port interrupt handler
+            }
+        }
+        break;
+    case PORT5:
+        if (ulChangedBit >= 0x00010000) {
+            if (fnGenInt(irq_GPIO5_16_31_ID) != 0) {                     // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO5_16_31();         // call port interrupt handler
+            }
+        }
+        else {
+            if (fnGenInt(irq_GPIO5_0_15_ID) != 0) {                      // if port interrupt is not disabled
+                ptrVect->processor_interrupts.irq_GPIO5_0_15();          // call port interrupt handler
+            }
+        }
+        break;
+    }
 }
 
 #if defined I2C_INTERFACE

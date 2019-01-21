@@ -374,23 +374,6 @@ typedef struct st_iMX_IOMUXC_SW
     unsigned long IOMUXC_XBAR1_IN19_SELECT_INPUT;
 } iMX_IOMUXC_SW;
 
-
-typedef struct st_iMX_GPIO
-{
-    unsigned long GPIO_DR;
-    unsigned long GPIO_GDIR;
-    unsigned long GPIO_PSR;
-    unsigned long GPIO_ICR1;
-    unsigned long GPIO_ICR2;
-    unsigned long GPIO_IMR;
-    unsigned long GPIO_ISR;
-    unsigned long GPIO_EDGE_SEL;
-    unsigned long ulRes[19];
-    unsigned long GPIO_DR_SET;
-    unsigned long GPIO_DR_CLEAR;
-    unsigned long GPIO_DR_TOGGLE;
-} iMX_GPIO;
-
 typedef struct st_iMX_CCM
 {
     unsigned long CCM_CCR;

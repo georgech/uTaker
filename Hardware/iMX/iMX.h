@@ -2033,6 +2033,21 @@ typedef struct stVECTOR_TABLE
 #endif
 
 
+typedef struct st_iMX_GPIO
+{
+    volatile unsigned long GPIO_DR;
+    volatile unsigned long GPIO_GDIR;
+    volatile unsigned long GPIO_PSR;
+    volatile unsigned long GPIO_ICR1;
+    volatile unsigned long GPIO_ICR2;
+    volatile unsigned long GPIO_IMR;
+    volatile unsigned long GPIO_ISR;
+    volatile unsigned long GPIO_EDGE_SEL;
+    volatile unsigned long ulRes[25];
+    volatile unsigned long GPIO_DR_SET;
+    volatile unsigned long GPIO_DR_CLEAR;
+    volatile unsigned long GPIO_DR_TOGGLE;
+} iMX_GPIO;
 
 #if defined _WINDOWS
     #include "sim_iMX.h"
@@ -2046,10 +2061,10 @@ typedef struct stVECTOR_TABLE
     #define IOMUXC_BLOCK                       ((unsigned char *)(&iMX.IOMUXC)) // IOMUX controller
     #define IOMUXC_SW_BLOCK                    ((unsigned char *)(&iMX.IOMUXC_SW)) // IOMUXC SW control
 
-    #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[0])) // GPIO
-    #define GPIO2_BLOCK                        ((unsigned char *)(&iMX.GPIO[1])) // GPIO
-    #define GPIO3_BLOCK                        ((unsigned char *)(&iMX.GPIO[2])) // GPIO
-    #define GPIO5_BLOCK                        ((unsigned char *)(&iMX.GPIO[4])) // GPIO
+    #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT1])) // GPIO
+    #define GPIO2_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT2])) // GPIO
+    #define GPIO3_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT3])) // GPIO
+    #define GPIO5_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT4])) // GPIO
 
     #define CCM_BLOCK                          ((unsigned char *)(&iMX.CCM)) // clock control module
 
@@ -2411,7 +2426,7 @@ typedef struct stVECTOR_TABLE
     #define GPIO2_BLOCK                        0x401bc000                // GPIO 2
     #define GPIO3_BLOCK                        0x401c0000                // GPIO 3
 
-    #define GPIO5_BLOCK                        0x40oc8000                // GPIO 5
+    #define GPIO5_BLOCK                        0x400c8000                // GPIO 5
 
     #define CCM_BLOCK                          0x400fc000                // clock control module
 
@@ -2840,7 +2855,7 @@ typedef struct stVECTOR_TABLE
         #define SLCD_BASE_ADD                  0x40053000                // SLCD Controller
     #endif
     #if defined ETHERNET_AVAILABLE
-        #define EMAC_BASE_ADD                  0x400c0000                // Ethernet Controller
+        #define EMAC_BASE_ADD                  0x402d8000                // Ethernet Controller
     #endif
     #if (DAC_CONTROLLERS > 0)
         #if defined KINETIS_KL28
@@ -17259,11 +17274,11 @@ extern void fnSimPers(void);
 
 // Write to a port with a mask eg. eg. _WRITE_PORT_MASK(1, 0x1234,  0x0000ffff)
 //
-#define _WRITE_PORT_MASK(ref, value, mask) GPIO##ref##_PD = ((GPIO##ref##_PD & ~(mask)) | (value)); _SIM_PORT_CHANGE
+#define _WRITE_PORT_MASK(ref, value, mask) GPIO##ref##_DR = ((GPIO##ref##_DR & ~(mask)) | (value)); _SIM_PORT_CHANGE
 
 // Write full port width eg. _WRITE_PORT_MASK(1, 0x12345678)
 //
-#define _WRITE_PORT(ref, value)            GPIO##ref##_PDO = (value); _SIM_PORT_CHANGE
+#define _WRITE_PORT(ref, value)            GPIO##ref##_DR = (value); _SIM_PORT_CHANGE
 
 // Toggle a port with a mask eg. _TOGGLE_PORT(1, PORT1_BIT3)
 //
@@ -17700,7 +17715,7 @@ typedef struct stINTERRUPT_SETUP
 
     unsigned long    int_port_bits;                                      // the input bits to be configured to generate this interrupt
     unsigned short   int_port_sense;                                     // PULLUP_ON, PULLDOWN_ON, PULLUP_DOWN_OFF, IRQ_RISING_EDGE etc.
-    unsigned char    int_port;                                           // the port (PORTA..PORTI)
+    unsigned char    int_port;                                           // the port (PORT1..PORT5)
 } INTERRUPT_SETUP;
 
 #if defined SUPPORT_LPTMR
@@ -17831,16 +17846,6 @@ typedef struct stTIMER_INTERRUPT_SETUP
     unsigned char    capture_channel;                                    // {97}
 } TIMER_INTERRUPT_SETUP;
 
-
-#define PORTA                0
-#define PORTB                1
-#define PORTC                2
-#define PORTD                3
-#define PORTE                4
-#define PORTF                5                                           // {18}
-#define PORTG                6
-#define PORTH                7
-#define PORTI                8
 
 #define PORT_MODULE          0xff                                        // used for module referencing rather than ports
 
@@ -19305,10 +19310,278 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO1_GDIR                      *(volatile unsigned long *)(GPIO1_BLOCK + 0x0004) // GPIO1 direction register
 #define GPIO1_PSR                       *(volatile unsigned long *)(GPIO1_BLOCK + 0x0008) // GPIO1 pad status register
 #define GPIO1_ICR1                      *(volatile unsigned long *)(GPIO1_BLOCK + 0x000c) // GPIO1 interrupt configuration 1 register
+    #define PORT_ICR1_0_LOW_LEVEL       0x00000000                       // IRQ 0 low level sensitive
+    #define PORT_ICR1_0_RISING          0x00000002                       // IRQ 0 rising edge sensitive
+    #define PORT_ICR1_0_FALLING         0x00000003                       // IRQ 0 falling edge sensitive
+    #define PORT_ICR1_0_HIGH_LEVEL      0x00000001                       // IRQ 0 high level sensitive
+    #define PORT_ICR1_0_INT_MASK        0x00000003
+    #define PORT_ICR1_1_LOW_LEVEL       0x00000000                       // IRQ 1 low level sensitive
+    #define PORT_ICR1_1_RISING          0x00000008                       // IRQ 1 rising edge sensitive
+    #define PORT_ICR1_1_FALLING         0x0000000c                       // IRQ 1 falling edge sensitive
+    #define PORT_ICR1_1_HIGH_LEVEL      0x00000004                       // IRQ 1 high level sensitive
+    #define PORT_ICR1_1_INT_MASK        0x0000000c
+    #define PORT_ICR1_2_LOW_LEVEL       0x00000000                       // IRQ 2 low level sensitive
+    #define PORT_ICR1_2_RISING          0x00000020                       // IRQ 2 rising edge sensitive
+    #define PORT_ICR1_2_FALLING         0x00000030                       // IRQ 2 falling edge sensitive
+    #define PORT_ICR1_2_HIGH_LEVEL      0x00000010                       // IRQ 2 high level sensitive
+    #define PORT_ICR1_2_INT_MASK        0x00000030
+    #define PORT_ICR1_3_LOW_LEVEL       0x00000000                       // IRQ 3 low level sensitive
+    #define PORT_ICR1_3_RISING          0x00000080                       // IRQ 3 rising edge sensitive
+    #define PORT_ICR1_3_FALLING         0x000000c0                       // IRQ 3 falling edge sensitive
+    #define PORT_ICR1_3_HIGH_LEVEL      0x00000040                       // IRQ 3 high level sensitive
+    #define PORT_ICR1_3_INT_MASK        0x0000000c
+    #define PORT_ICR1_4_LOW_LEVEL       0x00000000                       // IRQ 4 low level sensitive
+    #define PORT_ICR1_4_RISING          0x00000200                       // IRQ 4 rising edge sensitive
+    #define PORT_ICR1_4_FALLING         0x00000300                       // IRQ 4 falling edge sensitive
+    #define PORT_ICR1_4_HIGH_LEVEL      0x00000100                       // IRQ 4 high level sensitive
+    #define PORT_ICR1_4_INT_MASK        0x00000300
+    #define PORT_ICR1_5_LOW_LEVEL       0x00000000                       // IRQ 5 low level sensitive
+    #define PORT_ICR1_5_RISING          0x00000800                       // IRQ 5 rising edge sensitive
+    #define PORT_ICR1_5_FALLING         0x00000c00                       // IRQ 5 falling edge sensitive
+    #define PORT_ICR1_5_HIGH_LEVEL      0x00000400                       // IRQ 5 high level sensitive
+    #define PORT_ICR1_5_INT_MASK        0x00000c00
+    #define PORT_ICR1_6_LOW_LEVEL       0x00000000                       // IRQ 6 low level sensitive
+    #define PORT_ICR1_6_RISING          0x00002000                       // IRQ 6 rising edge sensitive
+    #define PORT_ICR1_6_FALLING         0x00003000                       // IRQ 6 falling edge sensitive
+    #define PORT_ICR1_6_HIGH_LEVEL      0x00001000                       // IRQ 6 high level sensitive
+    #define PORT_ICR1_6_INT_MASK        0x00003000
+    #define PORT_ICR1_7_LOW_LEVEL       0x00000000                       // IRQ 7 low level sensitive
+    #define PORT_ICR1_7_RISING          0x00008000                       // IRQ 7 rising edge sensitive
+    #define PORT_ICR1_7_FALLING         0x0000c000                       // IRQ 7 falling edge sensitive
+    #define PORT_ICR1_7_HIGH_LEVEL      0x00004000                       // IRQ 7 high level sensitive
+    #define PORT_ICR1_7_INT_MASK        0x0000c000
+    #define PORT_ICR1_8_LOW_LEVEL       0x00000000                       // IRQ 8 low level sensitive
+    #define PORT_ICR1_8_RISING          0x00020000                       // IRQ 8 rising edge sensitive
+    #define PORT_ICR1_8_FALLING         0x00030000                       // IRQ 8 falling edge sensitive
+    #define PORT_ICR1_8_HIGH_LEVEL      0x00010000                       // IRQ 8 high level sensitive
+    #define PORT_ICR1_8_INT_MASK        0x00030000
+    #define PORT_ICR1_9_LOW_LEVEL       0x00000000                       // IRQ 9 low level sensitive
+    #define PORT_ICR1_9_RISING          0x00080000                       // IRQ 9 rising edge sensitive
+    #define PORT_ICR1_9_FALLING         0x000c0000                       // IRQ 9 falling edge sensitive
+    #define PORT_ICR1_9_HIGH_LEVEL      0x00040000                       // IRQ 9 high level sensitive
+    #define PORT_ICR1_9_INT_MASK        0x000c0000
+    #define PORT_ICR1_10_LOW_LEVEL      0x00000000                       // IRQ 10 low level sensitive
+    #define PORT_ICR1_10_RISING         0x00200000                       // IRQ 10 rising edge sensitive
+    #define PORT_ICR1_10_FALLING        0x00300000                       // IRQ 10 falling edge sensitive
+    #define PORT_ICR1_10_HIGH_LEVEL     0x00100000                       // IRQ 10 high level sensitive
+    #define PORT_ICR1_10_INT_MASK       0x00300000
+    #define PORT_ICR1_11_LOW_LEVEL      0x00000000                       // IRQ 11 low level sensitive
+    #define PORT_ICR1_11_RISING         0x00800000                       // IRQ 11 rising edge sensitive
+    #define PORT_ICR1_11_FALLING        0x00c00000                       // IRQ 11 falling edge sensitive
+    #define PORT_ICR1_11_HIGH_LEVEL     0x00400000                       // IRQ 11 high level sensitive
+    #define PORT_ICR1_11_INT_MASK       0x000c0000
+    #define PORT_ICR1_12_LOW_LEVEL      0x00000000                       // IRQ 12 low level sensitive
+    #define PORT_ICR1_12_RISING         0x02000000                       // IRQ 12 rising edge sensitive
+    #define PORT_ICR1_12_FALLING        0x03000000                       // IRQ 12 falling edge sensitive
+    #define PORT_ICR1_12_HIGH_LEVEL     0x01000000                       // IRQ 12 high level sensitive
+    #define PORT_ICR1_12_INT_MASK       0x03000000
+    #define PORT_ICR1_13_LOW_LEVEL      0x00000000                       // IRQ 13 low level sensitive
+    #define PORT_ICR1_13_RISING         0x08000000                       // IRQ 13 rising edge sensitive
+    #define PORT_ICR1_13_FALLING        0x0c000000                       // IRQ 13 falling edge sensitive
+    #define PORT_ICR1_13_HIGH_LEVEL     0x04000000                       // IRQ 13 high level sensitive
+    #define PORT_ICR1_13_INT_MASK       0x0c000000
+    #define PORT_ICR1_14_LOW_LEVEL      0x00000000                       // IRQ 14 low level sensitive
+    #define PORT_ICR1_14_RISING         0x20000000                       // IRQ 14 rising edge sensitive
+    #define PORT_ICR1_14_FALLING        0x30000000                       // IRQ 14 falling edge sensitive
+    #define PORT_ICR1_14_HIGH_LEVEL     0x10000000                       // IRQ 14 high level sensitive
+    #define PORT_ICR1_14_INT_MASK       0x30000000
+    #define PORT_ICR1_15_LOW_LEVEL      0x00000000                       // IRQ 15 low level sensitive
+    #define PORT_ICR1_15_RISING         0x80000000                       // IRQ 15 rising edge sensitive
+    #define PORT_ICR1_15_FALLING        0xc0000000                       // IRQ 15 falling edge sensitive
+    #define PORT_ICR1_15_HIGH_LEVEL     0x40000000                       // IRQ 15 high level sensitive
+    #define PORT_ICR1_15_INT_MASK       0xc0000000
 #define GPIO1_ICR2                      *(volatile unsigned long *)(GPIO1_BLOCK + 0x0010) // GPIO1 interrupt configuration 2 register
+    #define PORT_ICR2_16_LOW_LEVEL      0x00000000                       // IRQ 16 low level sensitive
+    #define PORT_ICR2_16_RISING         0x00000002                       // IRQ 16 rising edge sensitive
+    #define PORT_ICR2_16_FALLING        0x00000003                       // IRQ 16 falling edge sensitive
+    #define PORT_ICR2_16_HIGH_LEVEL     0x00000001                       // IRQ 16 high level sensitive
+    #define PORT_ICR2_16_INT_MASK       0x00000003
+    #define PORT_ICR2_17_LOW_LEVEL      0x00000000                       // IRQ 17 low level sensitive
+    #define PORT_ICR2_17_RISING         0x00000008                       // IRQ 17 rising edge sensitive
+    #define PORT_ICR2_17_FALLING        0x0000000c                       // IRQ 17 falling edge sensitive
+    #define PORT_ICR2_17_HIGH_LEVEL     0x00000004                       // IRQ 17 high level sensitive
+    #define PORT_ICR2_17_INT_MASK       0x0000000c
+    #define PORT_ICR2_18_LOW_LEVEL      0x00000000                       // IRQ 18 low level sensitive
+    #define PORT_ICR2_18_RISING         0x00000020                       // IRQ 18 rising edge sensitive
+    #define PORT_ICR2_18_FALLING        0x00000030                       // IRQ 18 falling edge sensitive
+    #define PORT_ICR2_18_HIGH_LEVEL     0x00000010                       // IRQ 18 high level sensitive
+    #define PORT_ICR2_18_INT_MASK       0x00000030
+    #define PORT_ICR2_19_LOW_LEVEL      0x00000000                       // IRQ 19 low level sensitive
+    #define PORT_ICR2_19_RISING         0x00000080                       // IRQ 19 rising edge sensitive
+    #define PORT_ICR2_19_FALLING        0x000000c0                       // IRQ 19 falling edge sensitive
+    #define PORT_ICR2_19_HIGH_LEVEL     0x00000040                       // IRQ 19 high level sensitive
+    #define PORT_ICR2_19_INT_MASK       0x0000000c
+    #define PORT_ICR2_20_LOW_LEVEL      0x00000000                       // IRQ 20 low level sensitive
+    #define PORT_ICR2_20_RISING         0x00000200                       // IRQ 20 rising edge sensitive
+    #define PORT_ICR2_20_FALLING        0x00000300                       // IRQ 20 falling edge sensitive
+    #define PORT_ICR2_20_HIGH_LEVEL     0x00000100                       // IRQ 20 high level sensitive
+    #define PORT_ICR2_20_INT_MASK       0x00000300
+    #define PORT_ICR2_21_LOW_LEVEL      0x00000000                       // IRQ 21 low level sensitive
+    #define PORT_ICR2_21_RISING         0x00000800                       // IRQ 21 rising edge sensitive
+    #define PORT_ICR2_21_FALLING        0x00000c00                       // IRQ 21 falling edge sensitive
+    #define PORT_ICR2_21_HIGH_LEVEL     0x00000400                       // IRQ 21 high level sensitive
+    #define PORT_ICR2_21_INT_MASK       0x00000c00
+    #define PORT_ICR2_22_LOW_LEVEL      0x00000000                       // IRQ 22 low level sensitive
+    #define PORT_ICR2_22_RISING         0x00002000                       // IRQ 22 rising edge sensitive
+    #define PORT_ICR2_22_FALLING        0x00003000                       // IRQ 22 falling edge sensitive
+    #define PORT_ICR2_22_HIGH_LEVEL     0x00001000                       // IRQ 22 high level sensitive
+    #define PORT_ICR2_22_INT_MASK       0x00003000
+    #define PORT_ICR2_23_LOW_LEVEL      0x00000000                       // IRQ 23 low level sensitive
+    #define PORT_ICR2_23_RISING         0x00008000                       // IRQ 23 rising edge sensitive
+    #define PORT_ICR2_23_FALLING        0x0000c000                       // IRQ 23 falling edge sensitive
+    #define PORT_ICR2_23_HIGH_LEVEL     0x00004000                       // IRQ 23 high level sensitive
+    #define PORT_ICR2_23_INT_MASK       0x0000c000
+    #define PORT_ICR2_24_LOW_LEVEL      0x00000000                       // IRQ 24 low level sensitive
+    #define PORT_ICR2_24_RISING         0x00020000                       // IRQ 24 rising edge sensitive
+    #define PORT_ICR2_24_FALLING        0x00030000                       // IRQ 24 falling edge sensitive
+    #define PORT_ICR2_24_HIGH_LEVEL     0x00010000                       // IRQ 24 high level sensitive
+    #define PORT_ICR2_24_INT_MASK       0x00030000
+    #define PORT_ICR2_25_LOW_LEVEL      0x00000000                       // IRQ 25 low level sensitive
+    #define PORT_ICR2_25_RISING         0x00080000                       // IRQ 25 rising edge sensitive
+    #define PORT_ICR2_25_FALLING        0x000c0000                       // IRQ 25 falling edge sensitive
+    #define PORT_ICR2_25_HIGH_LEVEL     0x00040000                       // IRQ 25 high level sensitive
+    #define PORT_ICR2_25_INT_MASK       0x000c0000
+    #define PORT_ICR2_26_LOW_LEVEL      0x00000000                       // IRQ 26 low level sensitive
+    #define PORT_ICR2_26_RISING         0x00200000                       // IRQ 26 rising edge sensitive
+    #define PORT_ICR2_26_FALLING        0x00300000                       // IRQ 26 falling edge sensitive
+    #define PORT_ICR2_26_HIGH_LEVEL     0x00100000                       // IRQ 26 high level sensitive
+    #define PORT_ICR2_26_INT_MASK       0x00300000
+    #define PORT_ICR2_27_LOW_LEVEL      0x00000000                       // IRQ 27 low level sensitive
+    #define PORT_ICR2_27_RISING         0x00800000                       // IRQ 27 rising edge sensitive
+    #define PORT_ICR2_27_FALLING        0x00c00000                       // IRQ 27 falling edge sensitive
+    #define PORT_ICR2_27_HIGH_LEVEL     0x00400000                       // IRQ 27 high level sensitive
+    #define PORT_ICR2_27_INT_MASK       0x000c0000
+    #define PORT_ICR2_28_LOW_LEVEL      0x00000000                       // IRQ 28 low level sensitive
+    #define PORT_ICR2_28_RISING         0x02000000                       // IRQ 28 rising edge sensitive
+    #define PORT_ICR2_28_FALLING        0x03000000                       // IRQ 28 falling edge sensitive
+    #define PORT_ICR2_28_HIGH_LEVEL     0x01000000                       // IRQ 28 high level sensitive
+    #define PORT_ICR2_28_INT_MASK       0x03000000
+    #define PORT_ICR2_29_LOW_LEVEL      0x00000000                       // IRQ 29 low level sensitive
+    #define PORT_ICR2_29_RISING         0x08000000                       // IRQ 29 rising edge sensitive
+    #define PORT_ICR2_29_FALLING        0x0c000000                       // IRQ 29 falling edge sensitive
+    #define PORT_ICR2_29_HIGH_LEVEL     0x04000000                       // IRQ 29 high level sensitive
+    #define PORT_ICR2_29_INT_MASK       0x0c000000
+    #define PORT_ICR2_30_LOW_LEVEL      0x00000000                       // IRQ 30 low level sensitive
+    #define PORT_ICR2_30_RISING         0x20000000                       // IRQ 30 rising edge sensitive
+    #define PORT_ICR2_30_FALLING        0x30000000                       // IRQ 30 falling edge sensitive
+    #define PORT_ICR2_30_HIGH_LEVEL     0x10000000                       // IRQ 30 high level sensitive
+    #define PORT_ICR2_30_INT_MASK       0x30000000
+    #define PORT_ICR2_31_LOW_LEVEL      0x00000000                       // IRQ 31 low level sensitive
+    #define PORT_ICR2_31_RISING         0x80000000                       // IRQ 31 rising edge sensitive
+    #define PORT_ICR2_31_FALLING        0xc0000000                       // IRQ 31 falling edge sensitive
+    #define PORT_ICR2_31_HIGH_LEVEL     0x40000000                       // IRQ 31 high level sensitive
+    #define PORT_ICR2_31_INT_MASK       0xc0000000
 #define GPIO1_IMR                       *(volatile unsigned long *)(GPIO1_BLOCK + 0x0014) // GPIO1 interrupt mask register
+    #define GPIO_IMR_IMR_0              0x00000001                       // IRQ0 enabled
+    #define GPIO_IMR_IMR_1              0x00000002                       // IRQ1 enabled
+    #define GPIO_IMR_IMR_2              0x00000004                       // IRQ2 enabled
+    #define GPIO_IMR_IMR_3              0x00000008                       // IRQ3 enabled
+    #define GPIO_IMR_IMR_4              0x00000010                       // IRQ4 enabled
+    #define GPIO_IMR_IMR_5              0x00000020                       // IRQ5 enabled
+    #define GPIO_IMR_IMR_6              0x00000040                       // IRQ6 enabled
+    #define GPIO_IMR_IMR_7              0x00000080                       // IRQ7 enabled
+    #define GPIO_IMR_IMR_8              0x00000100                       // IRQ8 enabled
+    #define GPIO_IMR_IMR_9              0x00000200                       // IRQ9 enabled
+    #define GPIO_IMR_IMR_10             0x00000400                       // IRQ10 enabled
+    #define GPIO_IMR_IMR_11             0x00000800                       // IRQ11 enabled
+    #define GPIO_IMR_IMR_12             0x00001000                       // IRQ12 enabled
+    #define GPIO_IMR_IMR_13             0x00002000                       // IRQ13 enabled
+    #define GPIO_IMR_IMR_14             0x00004000                       // IRQ14 enabled
+    #define GPIO_IMR_IMR_15             0x00008000                       // IRQ15 enabled
+    #define GPIO_IMR_IMR_16             0x00010000                       // IRQ16 enabled
+    #define GPIO_IMR_IMR_17             0x00020000                       // IRQ17 enabled
+    #define GPIO_IMR_IMR_18             0x00040000                       // IRQ18 enabled
+    #define GPIO_IMR_IMR_19             0x00080000                       // IRQ19 enabled
+    #define GPIO_IMR_IMR_20             0x00100000                       // IRQ20 enabled
+    #define GPIO_IMR_IMR_21             0x00200000                       // IRQ21 enabled
+    #define GPIO_IMR_IMR_22             0x00400000                       // IRQ22 enabled
+    #define GPIO_IMR_IMR_23             0x00800000                       // IRQ23 enabled
+    #define GPIO_IMR_IMR_24             0x01000000                       // IRQ24 enabled
+    #define GPIO_IMR_IMR_25             0x02000000                       // IRQ25 enabled
+    #define GPIO_IMR_IMR_26             0x04000000                       // IRQ26 enabled
+    #define GPIO_IMR_IMR_27             0x08000000                       // IRQ27 enabled
+    #define GPIO_IMR_IMR_28             0x10000000                       // IRQ28 enabled
+    #define GPIO_IMR_IMR_29             0x20000000                       // IRQ29 enabled
+    #define GPIO_IMR_IMR_30             0x40000000                       // IRQ30 enabled
+    #define GPIO_IMR_IMR_31             0x80000000                       // IRQ31 enabled
 #define GPIO1_ISR                       *(volatile unsigned long *)(GPIO1_BLOCK + 0x0018) // GPIO1 interrupt status register
-#define GPIO1_EDGE_SEL                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x001c) // GPIO1 edge select register
+    #define GPIO_ISR_ISR_0              0x00000001                       // IRQ0 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_1              0x00000002                       // IRQ1 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_2              0x00000004                       // IRQ2 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_3              0x00000008                       // IRQ3 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_4              0x00000010                       // IRQ4 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_5              0x00000020                       // IRQ5 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_6              0x00000040                       // IRQ6 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_7              0x00000080                       // IRQ7 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_8              0x00000100                       // IRQ8 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_9              0x00000200                       // IRQ9 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_10             0x00000400                       // IRQ10 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_11             0x00000800                       // IRQ11 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_12             0x00001000                       // IRQ12 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_13             0x00002000                       // IRQ13 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_14             0x00004000                       // IRQ14 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_15             0x00008000                       // IRQ15 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_16             0x00010000                       // IRQ16 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_17             0x00020000                       // IRQ17 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_18             0x00040000                       // IRQ18 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_19             0x00080000                       // IRQ19 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_20             0x00100000                       // IRQ20 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_21             0x00200000                       // IRQ21 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_22             0x00400000                       // IRQ22 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_23             0x00800000                       // IRQ23 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_24             0x01000000                       // IRQ24 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_25             0x02000000                       // IRQ25 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_26             0x04000000                       // IRQ26 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_27             0x08000000                       // IRQ27 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_28             0x10000000                       // IRQ28 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_29             0x20000000                       // IRQ29 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_30             0x40000000                       // IRQ30 pending (write '1' to clear)
+    #define GPIO_ISR_ISR_31             0x80000000                       // IRQ31 pending (write '1' to clear)
+#define GPIO1_EDGE_SEL                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x001c) // GPIO1 edge select register (overrides GPIO1_ICR1 and GPIO1_ICR2 when enabled)
+    #define GPIO_EDGE_SEL_0             0x00000001                       // IRQ0 on falling and rising edge
+    #define GPIO_EDGE_SEL_1             0x00000002                       // IRQ1 on falling and rising edge
+    #define GPIO_EDGE_SEL_2             0x00000004                       // IRQ2 on falling and rising edge
+    #define GPIO_EDGE_SEL_3             0x00000008                       // IRQ3 on falling and rising edge
+    #define GPIO_EDGE_SEL_4             0x00000010                       // IRQ4 on falling and rising edge
+    #define GPIO_EDGE_SEL_5             0x00000020                       // IRQ5 on falling and rising edge
+    #define GPIO_EDGE_SEL_6             0x00000040                       // IRQ6 on falling and rising edge
+    #define GPIO_EDGE_SEL_7             0x00000080                       // IRQ7 on falling and rising edge
+    #define GPIO_EDGE_SEL_8             0x00000100                       // IRQ8 on falling and rising edge
+    #define GPIO_EDGE_SEL_9             0x00000200                       // IRQ9 on falling and rising edge
+    #define GPIO_EDGE_SEL_10            0x00000400                       // IRQ10 on falling and rising edge
+    #define GPIO_EDGE_SEL_11            0x00000800                       // IRQ11 on falling and rising edge
+    #define GPIO_EDGE_SEL_12            0x00001000                       // IRQ12 on falling and rising edge
+    #define GPIO_EDGE_SEL_13            0x00002000                       // IRQ13 on falling and rising edge
+    #define GPIO_EDGE_SEL_14            0x00004000                       // IRQ14 on falling and rising edge
+    #define GPIO_EDGE_SEL_15            0x00008000                       // IRQ15 on falling and rising edge
+    #define GPIO_EDGE_SEL_16            0x00010000                       // IRQ16 on falling and rising edge
+    #define GPIO_EDGE_SEL_17            0x00020000                       // IRQ17 on falling and rising edge
+    #define GPIO_EDGE_SEL_18            0x00040000                       // IRQ18 on falling and rising edge
+    #define GPIO_EDGE_SEL_19            0x00080000                       // IRQ19 on falling and rising edge
+    #define GPIO_EDGE_SEL_20            0x00100000                       // IRQ20 on falling and rising edge
+    #define GPIO_EDGE_SEL_21            0x00200000                       // IRQ21 on falling and rising edge
+    #define GPIO_EDGE_SEL_22            0x00400000                       // IRQ22 on falling and rising edge
+    #define GPIO_EDGE_SEL_23            0x00800000                       // IRQ23 on falling and rising edge
+    #define GPIO_EDGE_SEL_24            0x01000000                       // IRQ24 on falling and rising edge
+    #define GPIO_EDGE_SEL_25            0x02000000                       // IRQ25 on falling and rising edge
+    #define GPIO_EDGE_SEL_26            0x04000000                       // IRQ26 on falling and rising edge
+    #define GPIO_EDGE_SEL_27            0x08000000                       // IRQ27 on falling and rising edge
+    #define GPIO_EDGE_SEL_28            0x10000000                       // IRQ28 on falling and rising edge
+    #define GPIO_EDGE_SEL_29            0x20000000                       // IRQ29 on falling and rising edge
+    #define GPIO_EDGE_SEL_30            0x40000000                       // IRQ30 on falling and rising edge
+    #define GPIO_EDGE_SEL_31            0x80000000                       // IRQ31 on falling and rising edge
+
+    // Used for configuring interrupt sensitivity and pin characteristics
+    //
+    #define PORT_ICR_LOW_LEVEL        (PORT_ICR1_0_LOW_LEVEL)
+    #define PORT_ICR_HIGH_LEVEL       (PORT_ICR1_0_HIGH_LEVEL)
+    #define PORT_ICR_RISING           (PORT_ICR1_0_RISING)
+    #define PORT_ICR_FALLING          (PORT_ICR1_0_FALLING)
+    #define PORT_ICR_PULL_UP_ENABLE   (0x04)
+    #define PORT_ICR_PULL_DOWN_ENABLE (0x08)
+    #define PORT_ICR_BOTH             (0x10)
+    #define PORT_ICR_DISABLE          (0x20)
+
 
 #define GPIO1_DR_SET                    *(volatile unsigned long *)(GPIO1_BLOCK + 0x0084) // GPIO1 data register set - write-only (reads alwayss 0)
 #define GPIO1_DR_CLEAR                  *(volatile unsigned long *)(GPIO1_BLOCK + 0x0088) // GPIO1 data register clear - write-only (reads alwayss 0)
@@ -19355,7 +19628,6 @@ typedef struct stPDB_SETUP                                               // {37}
 #define GPIO5_DR_SET                    *(volatile unsigned long *)(GPIO5_BLOCK + 0x0084) // GPIO5 data register set - write-only (reads alwayss 0)
 #define GPIO5_DR_CLEAR                  *(volatile unsigned long *)(GPIO5_BLOCK + 0x0088) // GPIO5 data register clear - write-only (reads alwayss 0)
 #define GPIO5_DR_TOGGLE                 *(volatile unsigned long *)(GPIO5_BLOCK + 0x008c) // GPIO5 data register toggle - write-only (reads alwayss 0)
-
 
 
 // Clock Control Module (CCM)
