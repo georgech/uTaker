@@ -601,7 +601,7 @@
     #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 
-    #define FORCE_BOOT()               (_READ_PORT_MASK(B, (PORTB_BIT12))) // pull pin 20 to ground at reset to force boot loader mode
+    #define FORCE_BOOT()               (_READ_PORT_MASK(B, (PORTB_BIT12)) == 0) // pull pin 20 to ground at reset to force boot loader mode
     #define RETAIN_LOADER_MODE()       0                                 // force retaining boot loader mode after update
 
                                         // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 

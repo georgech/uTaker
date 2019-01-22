@@ -5557,7 +5557,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define USB_EP0R                     *(volatile unsigned long *)(USB_DEV_FS_BLOCK + 0x00) // USB endpoint 0 register
         #define USB_EPR_CTR_CTR_RX       0x8000                          // correct transfer for reception (write '0' to clear)
         #define USB_EPR_CTR_DTOG_RX      0x4000                          // data toggle, for reception transfers (write '1' to toggle)
-        #define USB_EPR_CTR_STAT_RX_MSK  0x3000                          // status bits, for reception transfers (write '1' to toggle)
+        #define USB_EPR_CTR_STAT_RX_MASK 0x3000                          // status bits, for reception transfers (write '1' to toggle)
         #define USB_EPR_CTR_STAT_RX_DISABLED 0x0000                      // reception status - disabled
         #define USB_EPR_CTR_STAT_RX_STALL    0x1000                      // reception status - stalled
         #define USB_EPR_CTR_STAT_RX_NAK      0x2000                      // reception status - nacked
@@ -7425,8 +7425,13 @@ typedef struct stVECTOR_TABLE
     #define OUTPUT_OPEN_DRAIN           0x4
     #define ALTERNATIVE_FUNCTION        0x8
     #define FLOATING_INPUT              0x4
-    #define INPUT_PULL_UP               0x8
-    #define INPUT_PULL_DOWN             0x8
+    #if defined _STM32F103X
+        #define INPUT_PULL_UP           0xffff0008
+        #define INPUT_PULL_DOWN         0x00000008
+    #else
+        #define INPUT_PULL_UP           0x8
+        #define INPUT_PULL_DOWN         0x8
+    #endif
 #endif
 
 // Configure pins as input, including enabling power and digital use. eg. _CONFIG_PORT_INPUT(A, PORTA_BIT4, FLOATING_INPUT);
@@ -7469,6 +7474,43 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
      ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16))));             _SIM_PORT_CHANGE // {17}
+#elif defined _STM32F103X
+    #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  __POWER_UP_GPIO(ref); GPIO##ref##_ODR |= ((characteristics >> 16) & pins); GPIO##ref##_ODR &= ~((~characteristics >> 16) & pins); \
+         GPIO##ref##_CRL = ((GPIO##ref##_CRL & \
+         ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3)    | \
+         (((0x0002 & pins) << 3)  | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))   | \
+         (((0x0004 & pins) << 6)  | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))   | \
+         (((0x0008 & pins) << 9)  | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12))  | \
+         (((0x0010 & pins) << 12) | ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15))  | \
+         (((0x0020 & pins) << 15) | ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18))  | \
+         (((0x0040 & pins) << 18) | ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21))  | \
+         (((0x0080 & pins) << 21) | ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24))))| \
+          (((0x0001 & pins)       | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3))  & (characteristics & 0x0f)) | \
+         ((((0x0002 & pins) << 3) | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))  & ((characteristics & 0x0f) << 4)) | \
+         ((((0x0004 & pins) << 6) | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))  & ((characteristics & 0x0f) << 8)) | \
+         ((((0x0008 & pins) << 9) | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12)) & ((characteristics & 0x0f) << 12)) | \
+         ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((characteristics & 0x0f) << 16)) | \
+         ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((characteristics & 0x0f) << 20)) | \
+         ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((characteristics & 0x0f) << 24)) | \
+         ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((characteristics & 0x0f) << 28))); \
+         GPIO##ref##_CRH = ((GPIO##ref##_CRH & \
+         ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
+         (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
+         (((0x0400 & pins) >> 2)  | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))   | \
+         (((0x0800 & pins) << 1)  | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))   | \
+         (((0x1000 & pins) << 4)  | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))   | \
+         (((0x2000 & pins) << 7)  | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10))  | \
+         (((0x4000 & pins) << 10) | ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13))  | \
+         (((0x8000 & pins) << 13) | ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
+         ((((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5))  & (characteristics & 0x0f)) | \
+         ((((0x0200 & pins) >> 5) | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))  & ((characteristics & 0x0f) << 4)) | \
+         ((((0x0400 & pins) >> 2) | ((0x0400 & pins) >> 1)  | ((0x0400 & pins))       | ((0x0400 & pins) << 1))  & ((characteristics & 0x0f) << 8)) | \
+         ((((0x0800 & pins) << 1) | ((0x0800 & pins) << 2)  | ((0x0800 & pins) << 3)  | ((0x0800 & pins) << 4))  & ((characteristics & 0x0f) << 12)) | \
+         ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((characteristics & 0x0f) << 16)) | \
+         ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((characteristics & 0x0f) << 20)) | \
+         ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((characteristics & 0x0f) << 24)) | \
+         ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics & 0x0f) << 28))); _SIM_PORT_CHANGE
+
 #else
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  __POWER_UP_GPIO(ref); GPIO##ref##_ODR |= (characteristics >> 16); \
          GPIO##ref##_CRL = ((GPIO##ref##_CRL & \

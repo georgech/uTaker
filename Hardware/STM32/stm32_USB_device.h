@@ -143,7 +143,7 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
     volatile unsigned long *ptr_ulEndpointCtrl;
     USB_BD_TABLE *ptrBD = (USB_BD_TABLE *)USB_CAN_SRAM_ADDR;             // start of dedicated SRAM area
     if (ENDPOINT_DISABLE == ucEndpointType) {                            // all endpoints are automatically deactivated when there is a USB reset
-        usNextBuffer = (((NUMBER_OF_USB_ENDPOINTS * sizeof(USB_BD_TABLE) / sizeof(unsigned long))) + (ENDPOINT_0_SIZE / 2));
+        usNextBuffer = (((NUMBER_OF_USB_ENDPOINTS * sizeof(USB_BD_TABLE) / sizeof(unsigned short))) + ENDPOINT_0_SIZE);
         return;
     }
     ptr_ulEndpointCtrl = USB_EP0R_ADD;
@@ -168,25 +168,25 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
     if (usMaxEndpointLength > usEndpointLength) {                        // if no larger specified take the specified value
         usEndpointLength = usMaxEndpointLength;
     }
+    ptrBD += ucEndpointRef;
     ptrBD->usUSB_COUNT_TX_0 = 0;
-
     if ((ucEndpointType & IN_ENDPOINT) != 0) {                           // IN type endpoint
-        ulEndpoint_config |= USB_EPR_CTR_STAT_TX_VALID;
+        ulEndpoint_config |= USB_EPR_CTR_STAT_TX_NAK;                    // transmitter active but returns NAKs initially
         ptrBD->usUSB_ADDR_TX = usNextBuffer;                             // buffer location for transmission
     }
     else {                                                               // OUT type endpoint
-        ulEndpoint_config |= USB_EPR_CTR_STAT_RX_VALID;
+        ulEndpoint_config |= USB_EPR_CTR_STAT_RX_VALID;                  // receiver can accept data
         ptrBD->usUSB_COUNT_RX_0 = fnSetRxLength(usEndpointLength);
         ptrBD->usUSB_ADDR_RX = usNextBuffer;                             // buffer location for reception
     }
-    usNextBuffer += (usEndpointLength / 2);
+    usNextBuffer += (usEndpointLength);
     ulEndpoint_config |= ucEndpointRef;
     #if defined _WINDOWS
     *ptr_ulEndpointCtrl |= ulEndpoint_config;                            // set endpoint configuration
     #else
     *ptr_ulEndpointCtrl = ulEndpoint_config;                             // set endpoint configuration
     #endif
-    _SIM_USB(USB_SIM_ENUMERATED, 0, 0);                                    // inform the simulator that USB enumeration has completed
+    _SIM_USB(USB_SIM_ENUMERATED, 0, 0);                                  // inform the simulator that USB enumeration has completed
 }
 
 
@@ -338,9 +338,9 @@ extern void fnSendUSB_data(unsigned char *pData, unsigned short Len, int iEndpoi
     USB_BD_TABLE *ptrBD = (USB_BD_TABLE *)USB_CAN_SRAM_ADDR;             // the start of the buffer descriptor table (we dont use an offset)
     unsigned long *ptrEndpointControl = (unsigned long *)USB_EP0R_ADD;
     volatile unsigned long *ptrOutputBuffer = (USB_CAN_SRAM_ADDR + USB_BTABLE);
-    ptrOutputBuffer += (ptrBD->usUSB_ADDR_RX/2);
     ptrBD += iEndpoint;
     ptrEndpointControl += iEndpoint;
+    ptrOutputBuffer += (ptrBD->usUSB_ADDR_TX/2);
     ptrBD->usUSB_COUNT_TX_0 = Len;
     while (Len != 0) {
         ulNextEntry = *pData++;
@@ -356,7 +356,7 @@ extern void fnSendUSB_data(unsigned char *pData, unsigned short Len, int iEndpoi
     #if defined _WINDOWS
     *ptrEndpointControl = ((*ptrEndpointControl & ~(USB_EPR_CTR_CTR_TX | USB_EPR_CTR_STAT_TX_VALID)) | (USB_EPR_CTR_STAT_TX_VALID));
     #else
-    *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MSK | USB_EPR_CTR_CTR_TX | USB_EPR_CTR_DTOG_TX)) ^ (USB_EPR_CTR_STAT_TX_VALID))/* | USB_EPR_CTR_DTOG_TX*/); // start transmission
+    *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_CTR_TX | USB_EPR_CTR_DTOG_TX)) ^ (USB_EPR_CTR_STAT_TX_VALID))/* | USB_EPR_CTR_DTOG_TX*/); // start transmission
     #endif
     _SIM_USB(USB_SIM_TX, iEndpoint, ptrUSB_HW);
 }
@@ -374,13 +374,18 @@ extern void fnSendZeroData(USB_HW *ptrUSB_HW, int iEndpoint)
 extern void fnUnhaltEndpoint(unsigned char ucEndpoint)
 {
     volatile unsigned long *ptrEndpointControl = USB_EP0R_ADD;
-    ptrEndpointControl += ucEndpoint;
+    ptrEndpointControl += (ucEndpoint & ~IN_ENDPOINT);
+    if ((ucEndpoint & IN_ENDPOINT) != 0) {
 #if defined _WINDOWS
-    *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_TX_MASK);
-    *ptrEndpointControl |= (USB_EPR_CTR_STAT_TX_NAK);                    // unstall endpoint
+        *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_TX_MASK);
+        *ptrEndpointControl |= (USB_EPR_CTR_STAT_TX_NAK);                    // unstall IN endpoint
 #else
-    *ptrEndpointControl = ((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MSK | USB_EPR_CTR_DTOG_TX)) | USB_EPR_CTR_STAT_TX_VALID); // stall control endpoint
+        *ptrEndpointControl = ((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_DTOG_TX)) ^ USB_EPR_CTR_STAT_TX_VALID); // stall control endpoint (move from disabled to NAK)
 #endif
+    }
+    else {
+        _EXCEPTION("To do!!");
+    }
 }
 
 #if 0
@@ -484,11 +489,13 @@ static int fnProcessInput(int iEndpoint_ref, unsigned char ucFrameType)
     USB_BD_TABLE *ptUSB_BD = (USB_BD_TABLE *)USB_CAN_SRAM_ADDR;
     volatile unsigned long *ptrInputBuffer = (USB_CAN_SRAM_ADDR);        // the start of the buffer descriptor table (we dont use an offset)
     volatile unsigned long *ptrEndpointControl;
+    unsigned short usEndpointLength;
     unsigned char ucInputBuffer[1024];                                   // temporary buffer for extracting the USB reception data to
-    usb_hardware.usLength = (ptUSB_BD->usUSB_COUNT_RX_0 & USB_COUNT_COUNT_MASK);
+    ptUSB_BD += iEndpoint_ref;
+    usEndpointLength = ptUSB_BD->usUSB_COUNT_RX_0;
+    usb_hardware.usLength = (usEndpointLength & USB_COUNT_COUNT_MASK);
     ptrInputBuffer += (ptUSB_BD->usUSB_ADDR_RX/2);
     fnPullUSB_data(ucInputBuffer, (unsigned long *)ptrInputBuffer, usb_hardware.usLength);
-    ptUSB_BD += iEndpoint_ref;
     uDisable_Interrupt();                                                // ensure interrupts remain blocked when putting messages to queue
     switch (iReturn = fnUSB_handle_frame(ucFrameType, ucInputBuffer, iEndpoint_ref, &usb_hardware)) { // generic handler routine
     case TERMINATE_ZERO_DATA:                                            // send zero data packet to complete status stage of control transfer
@@ -507,12 +514,25 @@ static int fnProcessInput(int iEndpoint_ref, unsigned char ucFrameType)
         *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_TX_MASK);
         *ptrEndpointControl |= (USB_EPR_CTR_STAT_TX_STALL);              // stall control endpoint
 #else
-        *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MSK | USB_EPR_CTR_DTOG_TX)) ^ USB_EPR_CTR_STAT_TX_STALL) | USB_EPR_CTR_STAT_TX_NAK); // stall control endpoint
+        *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_DTOG_TX)) ^ USB_EPR_CTR_STAT_TX_STALL) | USB_EPR_CTR_STAT_TX_NAK); // stall control endpoint
 #endif
         fnSetUSBEndpointState(iEndpoint_ref, USB_ENDPOINT_STALLED);
         _SIM_USB(USB_SIM_STALL, iEndpoint_ref, &usb_hardware);
         break;
     default:
+#if 0
+        if (USB_OUT_FRAME == ucFrameType) {
+            ptrEndpointControl = USB_EP0R_ADD;
+            ptrEndpointControl += iEndpoint_ref;
+#if defined _WINDOWS
+            *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_RX_MASK);
+            *ptrEndpointControl |= (USB_EPR_CTR_STAT_RX_VALID);
+#else
+            *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_TX_MASK | USB_EPR_CTR_DTOG_TX)) ^ USB_EPR_CTR_STAT_RX_VALID) | USB_EPR_CTR_DTOG_RX); // set receiver back to valid state
+#endif
+          //ptUSB_BD->usUSB_COUNT_RX_0 = (usEndpointLength & (USB_COUNT_RX_BL_SIZE | USB_COUNT_RX_NUM_BLOCK_MASK));
+        }
+#endif
         break;
     }
     uEnable_Interrupt();
@@ -525,23 +545,28 @@ static int fnProcessInput(int iEndpoint_ref, unsigned char ucFrameType)
 static __interrupt void USB_Device_HP_Interrupt(void)
 {
     register unsigned long ulInterrupts = USB_ISTR;
-    unsigned char ucFrameType;
     int iEndpoint_ref = (ulInterrupts & USB_ISTR_EP_ID_MASK);            // the end point interrupting
     volatile unsigned long *ptrEndpointControl = USB_EP0R_ADD;
     ptrEndpointControl += iEndpoint_ref;
     if ((ulInterrupts & USB_ISTR_DIR) != 0) {                            // OUT
         if ((*ptrEndpointControl & USB_EPR_CTR_SETUP) != 0) {            // SETUP
-            ucFrameType = USB_SETUP_FRAME;
+            if (fnProcessInput(iEndpoint_ref, USB_SETUP_FRAME) != MAINTAIN_OWNERSHIP) {
+#if defined _WINDOWS
+                *ptrEndpointControl ^= (USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_CTR_RX); // toggle receive data
+#else
+                *ptrEndpointControl = ((*ptrEndpointControl &  ~(USB_EPR_CTR_CTR_RX | USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_DTOG_TX | USB_EPR_CTR_STAT_TX_MASK)) | USB_EPR_CTR_DTOG_RX); // toggle receive data
+#endif
+            }
         }
         else {                                                           // DATA
-            ucFrameType = USB_OUT_FRAME;
-        }
-        if (fnProcessInput(iEndpoint_ref, ucFrameType) != MAINTAIN_OWNERSHIP) {
-    #if defined _WINDOWS
-            *ptrEndpointControl ^= (USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_CTR_RX); // toggle receive data
-    #else
-            *ptrEndpointControl = ((*ptrEndpointControl &  ~(USB_EPR_CTR_CTR_RX | USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MSK | USB_EPR_CTR_DTOG_TX | USB_EPR_CTR_STAT_TX_MASK)) | USB_EPR_CTR_DTOG_RX); // toggle receive data
-    #endif
+            if (fnProcessInput(iEndpoint_ref, USB_OUT_FRAME) != MAINTAIN_OWNERSHIP) {
+#if defined _WINDOWS
+                    *ptrEndpointControl &= ~(USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_CTR_RX);
+                    *ptrEndpointControl |= (USB_EPR_CTR_STAT_RX_VALID);
+#else
+                    *ptrEndpointControl = (((*ptrEndpointControl & ~(USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_TX_MASK | USB_EPR_CTR_DTOG_TX | USB_EPR_CTR_CTR_RX)) ^ USB_EPR_CTR_STAT_RX_VALID)/* | USB_EPR_CTR_DTOG_RX*/); // set receiver back to valid state
+#endif
+            }
         }
     }
     else {                                                               // transmission acknowledged
@@ -552,7 +577,7 @@ static __interrupt void USB_Device_HP_Interrupt(void)
     #if defined _WINDOWS
         *ptrEndpointControl ^= (/*USB_EPR_CTR_DTOG_TX | */USB_EPR_CTR_CTR_TX); // toggle transmit data
     #else
-        *ptrEndpointControl = ((*ptrEndpointControl &  ~(USB_EPR_CTR_CTR_TX | USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MSK | USB_EPR_CTR_DTOG_TX | USB_EPR_CTR_STAT_TX_MASK))/* | USB_EPR_CTR_DTOG_TX*/); // toggle transmit data
+        *ptrEndpointControl = ((*ptrEndpointControl &  ~(USB_EPR_CTR_CTR_TX | USB_EPR_CTR_DTOG_RX | USB_EPR_CTR_STAT_RX_MASK | USB_EPR_CTR_DTOG_TX | USB_EPR_CTR_STAT_TX_MASK))/* | USB_EPR_CTR_DTOG_TX*/); // toggle transmit data
     #endif
     }
 }
@@ -930,7 +955,7 @@ static void fnUSB_reset(int iError)
     fnUSB_handle_frame(USB_RESET_DETECTED, 0, 0, &usb_hardware);         // generic handler routine
     usb_hardware.ucUSBAddress = 0;                                       // reset the address to revert back to the default state
     USB_BTABLE = 0;                                                      // no offset used in USB SRAM area
-    ptrBD->usUSB_ADDR_TX = ptrBD->usUSB_ADDR_RX = (NUMBER_OF_USB_ENDPOINTS * sizeof(USB_BD_TABLE)/sizeof(unsigned long)); // buffer location of endpoint 0 data
+    ptrBD->usUSB_ADDR_TX = ptrBD->usUSB_ADDR_RX = (NUMBER_OF_USB_ENDPOINTS * sizeof(USB_BD_TABLE)/sizeof(unsigned short)); // buffer location of endpoint 0 data
     ptrBD->usUSB_COUNT_TX_0 = 0;
     ptrBD->usUSB_COUNT_RX_0 = fnSetRxLength(ENDPOINT_0_SIZE);
     USB_DADDR = (USB_DADDR_EF | 0);                                      // reset device address and enable function

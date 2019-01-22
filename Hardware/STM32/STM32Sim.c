@@ -732,8 +732,7 @@ extern unsigned long fnSimInts(char *argv[])
         }
     }
 #endif
-#if defined USB_INTERFACE
-    /*
+#if defined USB_INTERFACE && defined USB_DEVICE_AVAILABLE
     if (iInts & USB_INT) {
         int iEndpoint = 0;
         iInts &= ~USB_INT;
@@ -744,7 +743,7 @@ extern unsigned long fnSimInts(char *argv[])
             }
             iEndpoint++;
         }
-    }*/
+    }
 #endif
     return ulNewActions;
 }
@@ -2318,8 +2317,12 @@ extern void fnSimUSB(int iType, int iEndpoint, USB_HW *ptrUSB_HW)
         }
         break;
     case USB_SIM_TX:                                                     // a frame transmission has just been started
-//      iInts |= USB_INT;                                                // flag that the interrupt should be handled
-//      ulEndpointInt |= (1 << iEndpoint);                               // flag endpoint
+#if defined USB_DEVICE_AVAILABLE
+        if (iEndpoint != 0) {
+            iInts |= USB_INT;                                            // flag that the interrupt should be handled
+            ulEndpointInt |= (1 << iEndpoint);                           // flag endpoint
+        }
+#endif
         break;
     case USB_SIM_ENUMERATED:                                             // flag that we have completed emumeration
         fnChangeUSBState(1);
@@ -2387,6 +2390,19 @@ static void fnUSB_device_transfer_interrupt(int iEndpoint)
         }
     }
 }
+
+static unsigned short fnExtractEndpointLength(unsigned short usUSB_COUNT_RX)
+{
+    unsigned short usMaxRx = ((usUSB_COUNT_RX & USB_COUNT_RX_NUM_BLOCK_MASK) >> USB_COUNT_SHIFT);
+    if ((usUSB_COUNT_RX & USB_COUNT_RX_BL_SIZE) != 0) {
+        usMaxRx *= 32;
+        usMaxRx += 32;
+    }
+    else {
+        usMaxRx *= 2;
+    }
+    return (usMaxRx);
+}
 #endif
 
 // Inject USB transactions for test purposes
@@ -2437,16 +2453,9 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
         case OUT_PID:
         case SETUP_PID:
             {
-                unsigned short usMaxRx = ((ptrBD->usUSB_COUNT_RX_0 & USB_COUNT_RX_NUM_BLOCK_MASK) >> USB_COUNT_SHIFT);
+                unsigned short usMaxRx = fnExtractEndpointLength(ptrBD->usUSB_COUNT_RX_0);
                 volatile unsigned long *ptrInputBuffer = (USB_CAN_SRAM_ADDR + USB_BTABLE);
                 ptrInputBuffer += (ptrBD->usUSB_ADDR_RX/2);
-                if ((ptrBD->usUSB_COUNT_RX_0 & USB_COUNT_RX_BL_SIZE) != 0) {
-                    usMaxRx *= 32;
-                    usMaxRx += 32;
-                }
-                else {
-                    usMaxRx *= 2;
-                }
                 if (usLenEvent > usMaxRx) {
                     usLenEvent = usMaxRx;
                 }
@@ -2454,7 +2463,7 @@ extern int fnSimulateUSB(int iDevice, int iEndPoint, unsigned char ucPID, unsign
                 ptrBD->usUSB_COUNT_RX_0 &= ~(USB_COUNT_COUNT_MASK);
                 ptrBD->usUSB_COUNT_RX_0 |= (usLenEvent & USB_COUNT_COUNT_MASK);
                 ucTxBuffer[iEndPoint] = 0;
-                if ((*ptrEndpointControl & USB_EPR_CTR_STAT_RX_MSK) == USB_EPR_CTR_STAT_RX_VALID) {
+                if ((*ptrEndpointControl & USB_EPR_CTR_STAT_RX_MASK) == USB_EPR_CTR_STAT_RX_VALID) {
                     if (ucPID == SETUP_PID) {
                         *ptrEndpointControl |= (USB_EPR_CTR_CTR_RX | USB_EPR_CTR_SETUP | USB_EPR_CTR_DTOG_TX);
                     }
@@ -2644,6 +2653,11 @@ extern unsigned short fnGetEndpointInfo(int iEndpoint)
 {
     unsigned short usLength = 0;
     #if defined USB_DEVICE_AVAILABLE
+    volatile unsigned long *ptrEndpointControl = USB_EP0R_ADD;
+    USB_BD_TABLE *ptrBD = (USB_BD_TABLE *)(USB_CAN_SRAM_ADDR + USB_BTABLE); // the start of the buffer descripter table
+    ptrEndpointControl += iEndpoint;
+    ptrBD += iEndpoint;
+    usLength = fnExtractEndpointLength(ptrBD->usUSB_COUNT_RX_0);
     #elif defined USB_OTG_AVAILABLE
     switch (iEndpoint) {
     case 0:

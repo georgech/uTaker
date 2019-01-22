@@ -12,10 +12,10 @@
 # Compiler flags (thumb mode - little endian)
 # (set to Cortex-M4, Cortex-M7 [with or without hard FPU] or Cortex-M0+ accordingly)
 #C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
-#C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 
@@ -53,6 +53,15 @@ DEPENDS = ../config.h ../app_hw_STM32.h ../types.h ../TaskConfig.h ../../../uTas
        ../../../stack/tcpip.h \
 	   make_uTaskerV1.4_GNU_STM32
 
+DEPENDS_CMSIS = ../config.h \
+       ../../../Hardware/CMSIS_DSP/arm_math.h \
+       ../../../Hardware/CMSIS_DSP/arm_common_tables.h \
+       ../../../Hardware/CMSIS_DSP/arm_const_structs.h \
+       ../../../Hardware/CMSIS_DSP/core_cm4.h \
+       ../../../Hardware/CMSIS_DSP/cmsis_compiler.h \
+       ../../../Hardware/CMSIS_DSP/cmsis_gcc.h \
+       make_uTaskerV1.4_GNU_STM32
+
 INC     = -I../
 OPTS    = -D _GNU -D _STM32 -g -c -Os
 CC      = arm-none-eabi-gcc
@@ -80,7 +89,7 @@ SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
 				../../../Hardware/STM32/spi_flash_STM32_sst25.h
 
 
-all: uTaskerV1.4.elf
+all: uTaskerV1.4.elf uTaskerV1.4_BM.elf
 
 # Application files
 #
@@ -318,14 +327,14 @@ Build/arm_cfft_radix4_q15.o : ../../../Hardware/CMSIS_DSP/arm_cfft_radix4_q15.c 
 # Create output file and show its size
 #
 uTaskerV1.4.elf: $(OBJS) $(OBJS2) uTaskerSTM32.ld uTaskerSTM32_F4.ld uTaskerSTM32_F7.ld uTaskerSTM32_F429ZI.ld uTaskerSTM32_F429ZI_BM.ld STM32F103_64_20.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TuTaskerSTM32_F4.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TSTM32F103_64_20.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=srec uTaskerV1.4.elf uTaskerV1.4.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=ihex uTaskerV1.4.elf uTaskerV1.4.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerV1.4.elf uTaskerV1.4.bin
 	$(CC_SIZE) uTaskerV1.4.elf
 
-uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) uTaskerSTM32_BM.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TuTaskerSTM32_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2) uTaskerSTM32_BM.ld STM32F103_64_20_BM.ld
+	$(CC_LNK) $(C_FLAGS) -Os -g -TSTM32F103_64_20_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin
