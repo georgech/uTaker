@@ -11,7 +11,7 @@
     File:      M5223X.c [FREESCALE Coldfire]
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     01.02.2007 Improved Ethernet Duplex and auto-negotiation set up      {1}
     15.03.2007 Add VLAN rx frame length option                           {2}
@@ -213,6 +213,7 @@
     16.10.2017 Allow DMA timer to be used without user callback          {190}
     06.06.2018 Change uMemset() to match memset() parameters             {191}
     12.09.2018 Set next USB reception buffer to usb_hardware.ptrRxDatBuffer {192}
+    22.01.2019 Adapt TICK timer calculation to respect micro-second resolution cpnfiguration {193}
 
 */ 
 
@@ -1496,11 +1497,11 @@ extern void uDisable_Interrupt(void)
 extern void uEnable_Interrupt(void)                                      // interrupts are ALWAYS off when entering
 {
 #if defined _WINDOWS
-    if (!iInterruptLevel) {
+    if (0 == iInterruptLevel) {
        _EXCEPTION("Check symmetry of disabling and enabling interrupts!");
     }                                                                    // a routine is enabling interrupt although they are presently off. This may not be a serious error but it is unexpected so best check why...
 #endif
-    if (!(--iInterruptLevel)) {                                          // only when no more interrupt nesting,
+    if (0 == (--iInterruptLevel)) {                                      // only when no more interrupt nesting,
         asm_int_on();
     }
 }
@@ -1531,7 +1532,7 @@ static __interrupt__ void undef_int(void)
 
 // Routine to initialise the Real Time Tick interrupt
 //
-#define REQUIRED_MS ((1000/TICK_RESOLUTION))                             // the TICK frequency we require in kHz
+#define REQUIRED_MS ((1000000/TICK_RESOLUTION))                          // {193} the TICK frequency we require in kHz
 #if TICK_RESOLUTION > 4
     #if TICK_RESOLUTION > 64
         #define TICK_DIVIDE (((BUS_CLOCK/2/32768) + REQUIRED_MS/2)/REQUIRED_MS) // the divide ratio required (32k prescaler assumed)
@@ -2742,7 +2743,7 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
     TDAR = 0;                                                            // enable TX BD operation
 
     #if defined _WINDOWS
-    fnSimulateEthTx(DataLen);
+    fnSimulateEthTx(DataLen, (ptr_put - DataLen));
         #if defined PSEUDO_LOOPBACK                                      // {79} if we detect an IP frame being sent to our own address we loop it back to the input
     if (((*(ptr_put - DataLen + 12)) == 0x08) && (!(uMemcmp(&network[DEFAULT_NETWORK].ucOurIP[0], (ptr_put - DataLen + 26), IPV4_LENGTH)))) {
         fnSimulateEthernetIn((ptr_put - DataLen), DataLen, 1);
@@ -8897,11 +8898,11 @@ extern int fnGetLocalFileTime(unsigned short *ptr_usCreationTime, unsigned short
 //
 extern void fnDoLowPower(void)
 {
-    // switch to low power mode
-#if defined _WINDOWS
-    uEnable_Interrupt();
-#else
+    // Switch to low power mode
+    //
+#if !defined _WINDOWS
     // WAIT or DOZE mode - commanded by STOP instruction (STOP #<data> - writes data to SR and enters stop mode with enabled interrupts)
+    //
     iInterruptLevel = 0;                                                 // mark that no nested interrupts after wake up
     #if defined _GNU
     asm ("stop #0x2000");
@@ -8909,10 +8910,13 @@ extern void fnDoLowPower(void)
     __stop(0x2000);                                                      // IAR intrinsic
     #else
     asm { stop #0x2000 }
-    #endif  
+    #endif
 #endif
-
     // Wait here until the processor is woken by an interrupt
+    //
+#if defined _WINDOWS
+    uEnable_Interrupt();
+#endif
 }
 
 // Set a new low power mode (dummy)

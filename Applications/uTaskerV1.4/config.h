@@ -25,11 +25,14 @@
 
 #if !defined __CONFIG__
     #define __CONFIG__
-
+#if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
+#if defined _CODE_WARRIOR_CF
+    #pragma const_strings on                                             // ensure strings are of const type when compiling with CodeWarrior
+#endif
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
-#define HELLO_WORLD                                                      // gives the classic first step project with just a message on a UART start and echos back input afterwards [enter key shows memory use] (also blinks LED and is identical with or without BLINKY enabled)
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+//#define HELLO_WORLD                                                    // gives the classic first step project with just a message on a UART start and echos back input afterwards [enter key shows memory use] (also blinks LED and is identical with or without BLINKY enabled)
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 //#define EXTERNAL_TEST
@@ -65,6 +68,7 @@
     #define MEM_FACTOR 1.0                                               // Windows tends to use more memory so expand heap slightly in case of deviations
 #else
     #define MEM_FACTOR 1.0
+#endif
 #endif
 
 // Major hardware dependent settings for this project (choice of board - select only one at a time)
@@ -195,9 +199,10 @@
     //#define M52223EVB                                                  // EVB Board for M52223
     //#define M52221DEMO                                                 // DEMO Board for M52221
     //#define M52259EVB                                                  // EVB Board for M52259 (Kirin3)
-      #define M52259DEMO                                                 // DEMO Board for M52259 (Kirin3)
+    //#define M52259DEMO                                                 // DEMO Board for M52259 (Kirin3)
     //#define M52259_TOWER                                               // TWR-M52259 (Kirin3)
-    //#define M52235EVB                                                  // EVB Board for M52235
+    //#define UC_SYMPHONY                                                // MCF52234 based developent board
+      #define M52235EVB                                                  // EVB Board for M52235
     //#define M52233DEMO                                                 // DEMO Board for M52233
 #elif defined _LM3SXXXX                                                  // Luminary Micro Stellaris family
     //#define _LM3S10X                                                   // small package part - 28 SOIC
@@ -231,13 +236,13 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
-    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
+      #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
     //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
-      #define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
+    //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
@@ -1079,6 +1084,11 @@
     #define DEVICE_WITHOUT_USB                                           // M520X has Ethernet but no USB
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)  // we have the LAN buffers in internal SRAM
     #undef UNUSED_STACK_PATTERN                                          // since heap and stack are in different memories don't use stack monitoring
+#elif defined UC_SYMPHONY
+    #define TARGET_HW       "uc:symphony"
+    #define DEVICE_WITHOUT_USB                                           // M52223x has Ethernet but no USB
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((21 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+    #define ETHERNET_AVAILABLE
 #elif defined M52235EVB
     #define TARGET_HW       "M52235EVB"
     #define DEVICE_WITHOUT_USB                                           // M52223x has Ethernet but no USB
@@ -1275,7 +1285,7 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
 #endif
 
-
+#if !defined _ASSEMBLER_CONFIG                                           // remove all following when used for assembler configuration
 // Specify the uParameterSystem and a uFileSystem for use by FTP, HTML and such functions
 //
 #if defined FRDM_KE04Z || defined FRDM_KL03Z || defined TWR_KV10Z32 || defined TEENSY_LC || defined TRK_KEA8 // due to the restricted flash size in this device the flash is used only for program code
@@ -1545,7 +1555,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -2721,4 +2731,5 @@
 
 #define PLAIN_TEXTCONTENT(x) (x == MIME_TXT)                             // list of content types considered as plain text
 
+#endif
 #endif

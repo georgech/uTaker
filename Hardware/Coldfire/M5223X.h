@@ -11,7 +11,7 @@
     File:      M5223X.h (supports also M5213, M5221X, M5222X, M5225X)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     15.05.2007 Add LOW_RES_MS, MED_RES_MS, HIGH_RES_MS hardware resolution control
     09.06.2007 Add Random Number Generator Accelerator support
@@ -197,165 +197,164 @@ typedef struct stCOLDFIRE_CAN_BUF
 #endif
 
 #if defined _M52210 || defined _M52212 || defined _M52213
-    #define NUMBER_SERIAL   (2)                                          // the number of physical queue needed for serial interface(s)
+    #define UARTS_AVAILABLE (2)                                          // the number of UARTs available in the device
 #else
-    #define NUMBER_SERIAL   (3)                                          // the number of physical queue needed for serial interface(s)
+    #define UARTS_AVAILABLE (3)                                          // the number of UARTs available in the device
 #endif
-#define UARTS_AVAILABLE     NUMBER_SERIAL
 #define LPI2C_AVAILABLE     0
 #define I2C_AVAILABLE       2
 
 
 
 #if defined _WINDOWS
-    #define SCM_ADD             ((unsigned char *)(&ucM5223X.SimSCM))      // System Control Module
-    #if defined _M5225X || defined _M520X || defined _M523X                // {54}
-        #define FLEXBUS_ADD     ((unsigned char *)(&ucM5223X.SimFlexBus))  // {32} FlexBus Module
+    #define SCM_ADD             ((unsigned char *)(&ucM5223X.SimSCM))    // System Control Module
+    #if defined _M5225X || defined _M520X || defined _M523X              // {54}
+        #define FLEXBUS_ADD     ((unsigned char *)(&ucM5223X.SimFlexBus))// {32} FlexBus Module
 	#endif
-    #define DMA_ADD             ((unsigned char *)(&ucM5223X.SimDMAS))     // DMA Module (4 channels)
-    #define UART_ADD            ((unsigned char *)(&ucM5223X.SimUARTS))    // UART Modules (3 channels)
-    #define I2C_ADD             ((unsigned char *)(&ucM5223X.SimI2C))      // I2C module
-    #define QSPI_ADD            ((unsigned char *)(&ucM5223X.SimQSPI))     // QSPI module
-    #if defined _M5221X || defined _M5225X || defined _M521XX              // M5221X, M521XX and M5225X have 2 I2C bus modules {24}
-        #define I2C_ADD_1       ((unsigned char *)(&ucM5223X.SimI2C_1))    // I2C module - 1
+    #define DMA_ADD             ((unsigned char *)(&ucM5223X.SimDMAS))   // DMA Module (4 channels)
+    #define UART_ADD            ((unsigned char *)(&ucM5223X.SimUARTS))  // UART Modules (3 channels)
+    #define I2C_ADD             ((unsigned char *)(&ucM5223X.SimI2C))    // I2C module
+    #define QSPI_ADD            ((unsigned char *)(&ucM5223X.SimQSPI))   // QSPI module
+    #if defined _M5221X || defined _M5225X || defined _M521XX            // M5221X, M521XX and M5225X have 2 I2C bus modules {24}
+        #define I2C_ADD_1       ((unsigned char *)(&ucM5223X.SimI2C_1))  // I2C module - 1
     #endif
-    #define RTC_ADD             ((unsigned char *)(&ucM5223X.SimRTC))      // RTC module
-    #define DMA_TIMER_0_ADD     ((unsigned char *)(&ucM5223X.DMATimer0))   // DMA timer 0
-    #define DMA_TIMER_1_ADD     ((unsigned char *)(&ucM5223X.DMATimer1))   // DMA timer 1
-    #define DMA_TIMER_2_ADD     ((unsigned char *)(&ucM5223X.DMATimer2))   // DMA timer 2
-    #define DMA_TIMER_3_ADD     ((unsigned char *)(&ucM5223X.DMATimer3))   // DMA timer 3
-    #define INT_CTRL_0_ADD      ((unsigned char *)(&ucM5223X.SimINT_CTRL0))// Interrupt Controller
-    #define INT_CTRL_1_ADD      ((unsigned char *)(&ucM5223X.SimINT_CTRL1))// Interrupt Controller
-    #define EMAC_BASE_ADD       ((unsigned char *)(&ucM5223X.SimEMAC))     // Fast Ethernet Controller
+    #define RTC_ADD             ((unsigned char *)(&ucM5223X.SimRTC))    // RTC module
+    #define DMA_TIMER_0_ADD     ((unsigned char *)(&ucM5223X.DMATimer0)) // DMA timer 0
+    #define DMA_TIMER_1_ADD     ((unsigned char *)(&ucM5223X.DMATimer1)) // DMA timer 1
+    #define DMA_TIMER_2_ADD     ((unsigned char *)(&ucM5223X.DMATimer2)) // DMA timer 2
+    #define DMA_TIMER_3_ADD     ((unsigned char *)(&ucM5223X.DMATimer3)) // DMA timer 3
+    #define INT_CTRL_0_ADD      ((unsigned char *)(&ucM5223X.SimINT_CTRL0)) // Interrupt Controller
+    #define INT_CTRL_1_ADD      ((unsigned char *)(&ucM5223X.SimINT_CTRL1)) // Interrupt Controller
+    #define EMAC_BASE_ADD       ((unsigned char *)(&ucM5223X.SimEMAC))   // Fast Ethernet Controller
     #define EMAC_FIFO_ADD       ((unsigned char *)(&ucM5223X.SimEMACFifo)) // Fast Ethernet Controller - FIFO
-    #define PORT_MODULE_ADD     ((unsigned char *)(&ucM5223X.SimPORT))     // Port Module
-    #define RESET_CTRL_ADD      ((unsigned char *)(&ucM5223X.SimRESET))    // Reset controller Module
-    #define CLOCK_MODULE_ADD    ((unsigned char *)(&ucM5223X.SimCMR))      // Clock Module
-    #define EPORT_MODULE_0_ADD  ((unsigned char *)(&ucM5223X.SimEPORT))    // Edge Port Module 0
+    #define PORT_MODULE_ADD     ((unsigned char *)(&ucM5223X.SimPORT))   // Port Module
+    #define RESET_CTRL_ADD      ((unsigned char *)(&ucM5223X.SimRESET))  // Reset controller Module
+    #define CLOCK_MODULE_ADD    ((unsigned char *)(&ucM5223X.SimCMR))    // Clock Module
+    #define EPORT_MODULE_0_ADD  ((unsigned char *)(&ucM5223X.SimEPORT))  // Edge Port Module 0
     #if defined BACKUP_WATCHDOG_TIMER_AVAILABLE
         #define BWTR_MODULE_ADD     ((unsigned char *)(&ucM5223X.SimBWTR)) // Backup Watchdog Timer Module
     #else
         #define EPORT_MODULE_1_ADD  ((unsigned char *)(&ucM5223X.SimEPORT1))// Edge Port Module 1
     #endif
-    #define PIT_0_ADD           ((unsigned char *)(&ucM5223X.SimPIT0))     // Periodic Interrupt Timer 0
-    #define PIT_1_ADD           ((unsigned char *)(&ucM5223X.SimPIT1))     // Periodic Interrupt Timer 1
-    #define PIT_2_ADD           ((unsigned char *)(&ucM5223X.SimPIT2))     // Periodic Interrupt Timer 2
-    #define PIT_3_ADD           ((unsigned char *)(&ucM5223X.SimPIT3))     // Periodic Interrupt Timer 3
-    #define ADC_ADD             ((unsigned char *)(&ucM5223X.SimADC))      // ADC
-    #define GPT_ADD             ((unsigned char *)(&ucM5223X.SimGTP))      // General Purpose Timer Module 0
-    #if defined _M52XX_SDRAM                                               // {53}
-        #define GPT1_ADD        ((unsigned char *)(&ucM5223X.SimGTP1))     // General Purpose Timer Module 1
+    #define PIT_0_ADD           ((unsigned char *)(&ucM5223X.SimPIT0))   // Periodic Interrupt Timer 0
+    #define PIT_1_ADD           ((unsigned char *)(&ucM5223X.SimPIT1))   // Periodic Interrupt Timer 1
+    #define PIT_2_ADD           ((unsigned char *)(&ucM5223X.SimPIT2))   // Periodic Interrupt Timer 2
+    #define PIT_3_ADD           ((unsigned char *)(&ucM5223X.SimPIT3))   // Periodic Interrupt Timer 3
+    #define ADC_ADD             ((unsigned char *)(&ucM5223X.SimADC))    // ADC
+    #define GPT_ADD             ((unsigned char *)(&ucM5223X.SimGTP))    // General Purpose Timer Module 0
+    #if defined _M52XX_SDRAM                                             // {53}
+        #define GPT1_ADD        ((unsigned char *)(&ucM5223X.SimGTP1))   // General Purpose Timer Module 1
     #else
-        #define PWM_ADD         ((unsigned char *)(&ucM5223X.SimPWM))      // Pulse Width Modulation (PWM) Module {37}
+        #define PWM_ADD         ((unsigned char *)(&ucM5223X.SimPWM))    // Pulse Width Modulation (PWM) Module {37}
     #endif
     #if defined _M5222X || defined _M5221X || defined _M5225X
-        #define USB_BASE_ADD    ((unsigned char *)(&ucM5223X.SimUSB))      // USB-OTG module
+        #define USB_BASE_ADD    ((unsigned char *)(&ucM5223X.SimUSB))    // USB-OTG module
     #endif
     #if !defined _M5222X && !defined _M5221X && !defined _M521XX
-        #define CAN_BASE_ADD    ((unsigned char *)(&ucM5223X.SimCAN))      // FLEXCAN module
+        #define CAN_BASE_ADD    ((unsigned char *)(&ucM5223X.SimCAN))    // FLEXCAN module
     #endif
-    #define CFM_BASE_ADD        ((unsigned char *)(&ucM5223X.SimCFM))      // FLASH configuration module
-    #define EPHY_BASE_ADD       ((unsigned char *)(&ucM5223X.SimEPHY))     // Ethernet Physical Transceiver
+    #define CFM_BASE_ADD        ((unsigned char *)(&ucM5223X.SimCFM))    // FLASH configuration module
+    #define EPHY_BASE_ADD       ((unsigned char *)(&ucM5223X.SimEPHY))   // Ethernet Physical Transceiver
     #if defined RND_HW_SUPPORT
-        #define RNG_BASE_ADD    ((unsigned char *)(&ucM5223X.SimRNG))      // Random Number Generator Accelerator
+        #define RNG_BASE_ADD    ((unsigned char *)(&ucM5223X.SimRNG))    // Random Number Generator Accelerator
     #endif
-    #define CFC_BASE_ADD        ((unsigned char *)(&ucM5223X.SimCFC))      // FLASH configuration field
+    #define CFC_BASE_ADD        ((unsigned char *)(&ucM5223X.SimCFC))    // FLASH configuration field
     #if defined _M520X || defined _M523X
-        #define SDRAM_MODULE_ADD ((unsigned char *)(&ucM5223X.SimSDRAMC))  // SDRAM controller
+        #define SDRAM_MODULE_ADD ((unsigned char *)(&ucM5223X.SimSDRAMC))// SDRAM controller
     #endif
-    #if defined _M520X                                                     // {54}
-        #define SCM2_ADD        ((unsigned char *)(&ucM5223X.SimSCM2))     // System Control Module 2
+    #if defined _M520X                                                   // {54}
+        #define SCM2_ADD        ((unsigned char *)(&ucM5223X.SimSCM2))   // System Control Module 2
     #endif
-#elif defined _M520X                                                       // {54}
-    #define SCM_ADD             (0xfc000000)                               // System Control Module
-    #define CROSSBAR_ADD        (0xfc004000)                               // Cross-bar switch
-    #define FLEXBUS_ADD         (0xfc008000)                               // FlexBus Module
-    #define EMAC_BASE_ADD       (0xfc030000)                               // Fast Ethernet Controller
-    #define SCM2_ADD            (0xfc040000)                               // System Control Module 2
-    #define DMA_ADD             (0xfc044000)                               // eDMA Module (16 channels)
-    #define INT_CTRL_0_ADD      (0xfc048000)                               // Interrupt Controller 0
-    #define INT_CTRL_IACK_ADD   (0xfc054000)                               // Interrupt Controller IACK
-    #define I2C_ADD             (0xfc058000)                               // I2C module
-    #define QSPI_ADD            (0xfc05c000)                               // QSPI module
-    #define UART_ADD            (0xfc060000)                               // UART Module (3 channels)
-    #define DMA_TIMER_0_ADD     (0xfc070000)                               // DMA timer 0
-    #define DMA_TIMER_1_ADD     (0xfc074000)                               // DMA timer 1
-    #define DMA_TIMER_2_ADD     (0xfc078000)                               // DMA timer 2
-    #define DMA_TIMER_3_ADD     (0xfc07c000)                               // DMA timer 3
-    #define PIT_0_ADD           (0xfc080000)                               // Periodic Interrupt Timer 0
-    #define PIT_1_ADD           (0xfc084000)                               // Periodic Interrupt Timer 1
-    #define EPORT_MODULE_0_ADD  (0xfc088000)                               // Edge Port Module 0
-    #define BWTR_MODULE_ADD     (0xfc08c000)                               // Backup Watchdog Timer Module
-    #define CLOCK_MODULE_ADD    (0xfc090000)                               // Clock Module - PLL
-    #define RESET_CTRL_ADD      (0xfc0a0000)                               // CCM, Reset, Power management
-    #define PORT_MODULE_ADD     (0xfc0a4000)                               // Port Module
-    #define SDRAM_MODULE_ADD    (0xfc0a8000)                               // SDRAM controller
+#elif defined _M520X                                                     // {54}
+    #define SCM_ADD             (0xfc000000)                             // System Control Module
+    #define CROSSBAR_ADD        (0xfc004000)                             // Cross-bar switch
+    #define FLEXBUS_ADD         (0xfc008000)                             // FlexBus Module
+    #define EMAC_BASE_ADD       (0xfc030000)                             // Fast Ethernet Controller
+    #define SCM2_ADD            (0xfc040000)                             // System Control Module 2
+    #define DMA_ADD             (0xfc044000)                             // eDMA Module (16 channels)
+    #define INT_CTRL_0_ADD      (0xfc048000)                             // Interrupt Controller 0
+    #define INT_CTRL_IACK_ADD   (0xfc054000)                             // Interrupt Controller IACK
+    #define I2C_ADD             (0xfc058000)                             // I2C module
+    #define QSPI_ADD            (0xfc05c000)                             // QSPI module
+    #define UART_ADD            (0xfc060000)                             // UART Module (3 channels)
+    #define DMA_TIMER_0_ADD     (0xfc070000)                             // DMA timer 0
+    #define DMA_TIMER_1_ADD     (0xfc074000)                             // DMA timer 1
+    #define DMA_TIMER_2_ADD     (0xfc078000)                             // DMA timer 2
+    #define DMA_TIMER_3_ADD     (0xfc07c000)                             // DMA timer 3
+    #define PIT_0_ADD           (0xfc080000)                             // Periodic Interrupt Timer 0
+    #define PIT_1_ADD           (0xfc084000)                             // Periodic Interrupt Timer 1
+    #define EPORT_MODULE_0_ADD  (0xfc088000)                             // Edge Port Module 0
+    #define BWTR_MODULE_ADD     (0xfc08c000)                             // Backup Watchdog Timer Module
+    #define CLOCK_MODULE_ADD    (0xfc090000)                             // Clock Module - PLL
+    #define RESET_CTRL_ADD      (0xfc0a0000)                             // CCM, Reset, Power management
+    #define PORT_MODULE_ADD     (0xfc0a4000)                             // Port Module
+    #define SDRAM_MODULE_ADD    (0xfc0a8000)                             // SDRAM controller
 #else
-    #define SCM_ADD             (IPSBAR + 0x0)                             // System Control Module
+    #define SCM_ADD             (IPSBAR + 0x0)                           // System Control Module
     #if defined _M523X
-        #define SDRAM_MODULE_ADD (IPSBAR + 0x040)                          // SDRAM controller
+        #define SDRAM_MODULE_ADD (IPSBAR + 0x040)                        // SDRAM controller
     #endif
     #if defined _M5225X || defined _M523X
-        #define FLEXBUS_ADD     (IPSBAR + 0x080)                           // {32} FlexBus Module
+        #define FLEXBUS_ADD     (IPSBAR + 0x080)                         // {32} FlexBus Module
     #endif
-    #define DMA_ADD             (IPSBAR + 0x100)                           // DMA Module (4 channels)
-    #define UART_ADD            (IPSBAR + 0x200)                           // UART Module (3 channels)
-    #define I2C_ADD             (IPSBAR + 0x300)                           // I2C module
-    #define QSPI_ADD            (IPSBAR + 0x340)                           // QSPI module
-    #if defined _M5221X || defined _M5225X || defined _M521XX              // M5221X, M521XX and M5225X have 2 I2C bus modules {24}
-        #define I2C_ADD_1       (IPSBAR + 0x380)                           // I2C module - 1
+    #define DMA_ADD             (IPSBAR + 0x100)                         // DMA Module (4 channels)
+    #define UART_ADD            (IPSBAR + 0x200)                         // UART Module (3 channels)
+    #define I2C_ADD             (IPSBAR + 0x300)                         // I2C module
+    #define QSPI_ADD            (IPSBAR + 0x340)                         // QSPI module
+    #if defined _M5221X || defined _M5225X || defined _M521XX            // M5221X, M521XX and M5225X have 2 I2C bus modules {24}
+        #define I2C_ADD_1       (IPSBAR + 0x380)                         // I2C module - 1
     #endif
     #ifndef _M5225X
-        #define RTC_ADD         (IPSBAR + 0x3c0)                           // RTC module
+        #define RTC_ADD         (IPSBAR + 0x3c0)                         // RTC module
     #endif
-    #define DMA_TIMER_0_ADD     (IPSBAR + 0x400)                           // DMA timer 0
-    #define DMA_TIMER_1_ADD     (IPSBAR + 0x440)                           // DMA timer 1
-    #define DMA_TIMER_2_ADD     (IPSBAR + 0x480)                           // DMA timer 2
-    #define DMA_TIMER_3_ADD     (IPSBAR + 0x4c0)                           // DMA timer 3
-    #define INT_CTRL_0_ADD      (IPSBAR + 0xc00)                           // Interrupt Controller 0
-    #define INT_CTRL_1_ADD      (IPSBAR + 0xd00)                           // Interrupt Controller 1
-    #define EMAC_BASE_ADD       (IPSBAR + 0x1000)                          // Fast Ethernet Controller
-    #define EMAC_FIFO_ADD       (IPSBAR + 0x1400)                          // Fast Ethernet Controller - FIFO
-    #define PORT_MODULE_ADD     (IPSBAR + 0x100000)                        // Port Module
-    #define RESET_CTRL_ADD      (IPSBAR + 0x110000)                        // Reset controller Module
-    #define CLOCK_MODULE_ADD    (IPSBAR + 0x120000)                        // Clock Module
-    #define EPORT_MODULE_0_ADD  (IPSBAR + 0x130000)                        // Edge Port Module 0
+    #define DMA_TIMER_0_ADD     (IPSBAR + 0x400)                         // DMA timer 0
+    #define DMA_TIMER_1_ADD     (IPSBAR + 0x440)                         // DMA timer 1
+    #define DMA_TIMER_2_ADD     (IPSBAR + 0x480)                         // DMA timer 2
+    #define DMA_TIMER_3_ADD     (IPSBAR + 0x4c0)                         // DMA timer 3
+    #define INT_CTRL_0_ADD      (IPSBAR + 0xc00)                         // Interrupt Controller 0
+    #define INT_CTRL_1_ADD      (IPSBAR + 0xd00)                         // Interrupt Controller 1
+    #define EMAC_BASE_ADD       (IPSBAR + 0x1000)                        // Fast Ethernet Controller
+    #define EMAC_FIFO_ADD       (IPSBAR + 0x1400)                        // Fast Ethernet Controller - FIFO
+    #define PORT_MODULE_ADD     (IPSBAR + 0x100000)                      // Port Module
+    #define RESET_CTRL_ADD      (IPSBAR + 0x110000)                      // Reset controller Module
+    #define CLOCK_MODULE_ADD    (IPSBAR + 0x120000)                      // Clock Module
+    #define EPORT_MODULE_0_ADD  (IPSBAR + 0x130000)                      // Edge Port Module 0
     #if defined BACKUP_WATCHDOG_TIMER_AVAILABLE
-        #define BWTR_MODULE_ADD (IPSBAR + 0x140000)                        // Backup Watchdog Timer Module
+        #define BWTR_MODULE_ADD (IPSBAR + 0x140000)                      // Backup Watchdog Timer Module
     #else
-        #define EPORT_MODULE_1_ADD  (IPSBAR + 0x140000)                    // Edge Port Module 1
+        #define EPORT_MODULE_1_ADD  (IPSBAR + 0x140000)                  // Edge Port Module 1
     #endif
-    #define PIT_0_ADD           (IPSBAR + 0x150000)                        // Periodic Interrupt Timer 0
-    #define PIT_1_ADD           (IPSBAR + 0x160000)                        // Periodic Interrupt Timer 1
-    #if defined _M5225X                                                    // {58}
-        #define CAN_BASE_ADD    (IPSBAR + 0x170000)                        // CAN configuration module
+    #define PIT_0_ADD           (IPSBAR + 0x150000)                      // Periodic Interrupt Timer 0
+    #define PIT_1_ADD           (IPSBAR + 0x160000)                      // Periodic Interrupt Timer 1
+    #if defined _M5225X                                                  // {58}
+        #define CAN_BASE_ADD    (IPSBAR + 0x170000)                      // CAN configuration module
     #else
-        #define PIT_2_ADD       (IPSBAR + 0x170000)                        // Periodic Interrupt Timer 2
+        #define PIT_2_ADD       (IPSBAR + 0x170000)                      // Periodic Interrupt Timer 2
     #endif
     #if defined _M5225X
-        #define RTC_ADD         (IPSBAR + 0x180000)                        // RTC module
+        #define RTC_ADD         (IPSBAR + 0x180000)                      // RTC module
     #else
-        #define PIT_3_ADD       (IPSBAR + 0x180000)                        // Periodic Interrupt Timer 3
+        #define PIT_3_ADD       (IPSBAR + 0x180000)                      // Periodic Interrupt Timer 3
     #endif
-    #define ADC_ADD             (IPSBAR + 0x190000)                        // ADC
-    #define GPT_ADD             (IPSBAR + 0x1a0000)                        // General Purpose Timer Module 0
-    #if defined _M52XX_SDRAM                                               // {53}
-        #define GPT1_ADD        (IPSBAR + 0x1b0000)                        // General Purpose Timer Module 1
+    #define ADC_ADD             (IPSBAR + 0x190000)                      // ADC
+    #define GPT_ADD             (IPSBAR + 0x1a0000)                      // General Purpose Timer Module 0
+    #if defined _M52XX_SDRAM                                             // {53}
+        #define GPT1_ADD        (IPSBAR + 0x1b0000)                      // General Purpose Timer Module 1
     #else
-        #define PWM_ADD         (IPSBAR + 0x1b0000)                        // Pulse Width Modulation (PWM) Module {37}
+        #define PWM_ADD         (IPSBAR + 0x1b0000)                      // Pulse Width Modulation (PWM) Module {37}
     #endif
     #if defined _M5222X || defined _M5221X || defined _M5225X
-        #define USB_BASE_ADD    (IPSBAR + 0x1c0000)                        // USB-OTG module
+        #define USB_BASE_ADD    (IPSBAR + 0x1c0000)                      // USB-OTG module
     #endif
     #if !defined _M5222X && !defined _M5221X && !defined _M521XX && !defined _M5225X // {58}
-        #define CAN_BASE_ADD    (IPSBAR + 0x1c0000)                        // CAN configuration module
+        #define CAN_BASE_ADD    (IPSBAR + 0x1c0000)                      // CAN configuration module
     #endif
-    #define CFM_BASE_ADD        (IPSBAR + 0x1d0000)                        // FLASH configuration module
-    #define EPHY_BASE_ADD       (IPSBAR + 0x1e0000)                        // Ethernet Physical Transceiver
+    #define CFM_BASE_ADD        (IPSBAR + 0x1d0000)                      // FLASH configuration module
+    #define EPHY_BASE_ADD       (IPSBAR + 0x1e0000)                      // Ethernet Physical Transceiver
     #if defined RND_HW_SUPPORT
-        #define RNG_BASE_ADD    (IPSBAR + 0x1f0000)                        // Random Number Generator Accelerator
+        #define RNG_BASE_ADD    (IPSBAR + 0x1f0000)                      // Random Number Generator Accelerator
     #endif
-    #define CFC_BASE_ADD        (FLASH_START_ADDRESS + 0x400)              // FLASH configuration field
+    #define CFC_BASE_ADD        (FLASH_START_ADDRESS + 0x400)            // FLASH configuration field
 #endif
 
 

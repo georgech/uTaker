@@ -11,7 +11,7 @@
     File:      usb_device_loader.c - USB-based firmware loading
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     17.05.2011 Official USB VID/PID for Freescale MSD                    {1}
     31.05.2011 Add optional password protection on SW uploads            {2}

@@ -11,7 +11,7 @@
     File:      app_hw_m5223x.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     26.02.2007 Added SMTP LOGIN defines                                  {1}
     26.02.2007 Add TFTP message contents                                 {2}
@@ -107,7 +107,9 @@
 
 #if defined (M52233DEMO)
     #define CHIP_80_PIN                                                  // the 80 pin device has various non-connected ports
-    #define _M52233    
+    #define _M52233
+#elif defined UC_SYMPHONY
+    #define _M52234
 #elif defined (M52235EVB)                                                // larger device has no restrictions
     #define _M52235
 #elif defined M52223EVB
@@ -673,6 +675,7 @@
     #define SERIAL_PORT_0     4                                          // if we open UART channel 0 we simulate using comx on the PC
     #define SERIAL_PORT_1     6                                          // if we open UART channel 1 we simulate using comx on the PC
     #define SERIAL_PORT_2     8                                          // if we open UART channel 2 we simulate using comx on the PC
+    #define NUMBER_SERIAL   (UARTS_AVAILABLE)                            // the number of physical queues needed for serial interface(s)
     #if defined M52210DEMO || defined M52211EVB
         #define DEMO_UART     1                                          // use UART 1 (the UART connector on the board)
         #define PPP_UART      0                                          // use UART 0 for PPP
@@ -1150,8 +1153,14 @@
     #define CONFIGURE_MOUSE_INPUTS() (PNQPAR &= ~((ALT_2_FUNCTION_Q << BIT_5_Q_SHIFT) | (ALT_2_FUNCTION_Q << BIT_1_Q_SHIFT))); _CONFIG_PORT_INPUT(NQ, (SWITCH_SW1 | SWITCH_SW2))
     #define MOUSE_UP()               0                                   // not used
     #define MOUSE_DOWN()             0                                   // not used
-    #define MOUSE_LEFT()             (!_READ_PORT_MASK(NQ, SWITCH_SW2))  // press this button to move mouse left
-    #define MOUSE_RIGHT()            (!_READ_PORT_MASK(NQ, SWITCH_SW1))  // press this button to move mouse right
+    #define MOUSE_LEFT()             (_READ_PORT_MASK(NQ, SWITCH_SW2) == 0) // press this button to move mouse left
+    #define MOUSE_RIGHT()            (_READ_PORT_MASK(NQ, SWITCH_SW1) == 0) // press this button to move mouse right
+#elif defined UC_SYMPHONY
+    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(GP, PORT_GP_BIT3) // DDRGP |= PORT_GP_BIT3 
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(GP, PORT_GP_BIT3)    // PORTGP ^= PORT_GP_BIT3
+    #define CONFIGURE_WATCHDOG         ACTIVE_WATCHDOG_2_SEC             // watchdog enabled with 2 second period (set WATCHDOG_DISABLED to disable)
+    #define INIT_WATCHDOG_DISABLE()    (PNQPAR &= ~(ALT_2_FUNCTION_Q << BIT_4_Q_SHIFT)) // ensure IRQ4 is an input
+    #define WATCHDOG_DISABLE()         ((PORTIN_SETNQ & PORT_NQ_BIT4) == 0) // pull this input down to disable watchdog (enable debugging)
 #else
     #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(TC, PORT_TC_BIT0) // {53} DDRTC |= PORT_TC_BIT0 
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(TC, PORT_TC_BIT0)    // {53} PORTTC ^= PORT_TC_BIT0
@@ -1681,6 +1690,10 @@ typedef unsigned char LCD_CONTROL_PORT_SIZE;
     #define SENDERS_EMAIL_ADDRESS      "M52235EVB@uTasker.com"           // fictional Email address of the board being used
     #define EMAIL_SUBJECT              "M52235EVB Test"                  // Email subject
     #define EMAIL_CONTENT              "Hello!!\r\nThis is an email message from the M52235EVB.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your M52235EVB!!";
+#elif defined UC_SYMPHONY
+    #define SENDERS_EMAIL_ADDRESS      "ucSymphony@uTasker.com"          // fictional Email address of the board being used
+    #define EMAIL_SUBJECT              "ucSymphony Test"                 // Email subject
+    #define EMAIL_CONTENT              "Hello!!\r\nThis is an email message from the ucSymphony.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your ucSymphony!!";
 #elif defined M52259DEMO                                                 // {45}
     #define SENDERS_EMAIL_ADDRESS      "M52259DEMO@uTasker.com"          // fictional Email address of the board being used
     #define EMAIL_SUBJECT              "M52259DEMO Test"                 // Email subject
