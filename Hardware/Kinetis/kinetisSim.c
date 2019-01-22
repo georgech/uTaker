@@ -5431,7 +5431,7 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
     #endif
                         ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3 (and possibly shared channel)
                         break;
-    #if DMA_CHANNEL_COUNT > 4
+    #if (DMA_CHANNEL_COUNT > 4) && defined irq_DMA4_ID
                     case 4:
         #if defined eDMA_SHARES_INTERRUPTS
                     case (4 + (DMA_CHANNEL_COUNT / 2)):
@@ -5457,7 +5457,7 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
                         ptrVect->processor_interrupts.irq_DMA7();        // call the interrupt handler for DMA channel 7 (and possibly shared channel)
                         break;
     #endif
-    #if DMA_CHANNEL_COUNT > 8
+    #if (DMA_CHANNEL_COUNT > 8) && defined irq_DMA8_ID
                     case 8:
         #if defined eDMA_SHARES_INTERRUPTS
                     case (8 + (DMA_CHANNEL_COUNT / 2)):

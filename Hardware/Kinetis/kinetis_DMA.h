@@ -29,6 +29,7 @@
     25.03.2018 Correct _DMA_Interrupt_3()                                {9}
     04.01.2019 Monitor DMA channel errors when performing blocking software based transfers and return an error code {10}
     09.01.2019 Shared with iMX project
+    22.01.2019 Control the DMA interrupt multiplexer for KE14/KE15 parts {11}
 
 */
 
@@ -620,9 +621,26 @@ extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaT
             ptrDMA_TCD->DMA_TCD_CSR = (DMA_TCD_CSR_INTMAJOR);            // interrupt when the transmit/receive buffer is full
         }
         #if defined eDMA_SHARES_INTERRUPTS                               // interrupts are shared between channel 0 and _DMA_CHANNEL_COUNT, 1 and _DMA_CHANNEL_COUNT + 1, etc.
+            #if defined KINETIS_KE14 || defined KINETIS_KE15             // {11}
+        if (ucDMA_channel >= (_DMA_CHANNEL_COUNT/2)) {
+            SIM_MISCTRL |= (SIM_MISCTRL_DMA_INT_SEL_4 << (ucDMA_channel - (_DMA_CHANNEL_COUNT / 2))); // select DMA channel 4,5,6 or 7 to be active
+        }
+        else {
+            SIM_MISCTRL &= ~(SIM_MISCTRL_DMA_INT_SEL_4 << ucDMA_channel);// select DMA channel 0,1,2 or 3 to be active
+        }
+            #endif
         fnEnterInterrupt((irq_DMA0_ID + (ucDMA_channel%_DMA_CHANNEL_COUNT)), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel%_DMA_CHANNEL_COUNT]); // enter DMA interrupt handler on full/half buffer completion
         #else
+            #if defined USE_DMA_INT_MUX && defined INTMUX0_AVAILABLE
+        if (ucDMA_channel >= (_DMA_CHANNEL_COUNT/2)) {                   // if the interrupt soutce needs to be extended via INTMUX
+            fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_DMA), (INTMUX0_PERIPHERAL_DMA0_4 + (ucDMA_channel/2)), (void(*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on full/half buffer completion - via INTMUX
+        }
+        else {
+            fnEnterInterrupt((irq_DMA0_ID + ucDMA_channel), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on full/half buffer completion
+        }
+            #else
         fnEnterInterrupt((irq_DMA0_ID + ucDMA_channel), int_priority, (void(*)(void))_DMA_Interrupt[ucDMA_channel]); // enter DMA interrupt handler on full/half buffer completion
+            #endif
         #endif
     }
     else {
