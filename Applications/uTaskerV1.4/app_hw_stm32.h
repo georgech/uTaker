@@ -11,7 +11,7 @@
     File:      app_hw_stm32.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     Application specific hardware configuration
 
@@ -803,7 +803,7 @@
     #endif
     #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
-    #elif !defined STM3240G_EVAL
+    #elif !defined STM3240G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)
     #endif
   //#define USART3_FULL_REMAP                                            // use USART3 on second set of remapped pins (note that this is channel 2)

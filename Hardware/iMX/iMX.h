@@ -10377,16 +10377,6 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PORT_ODE                     0
 #else
     #define PORTA_PCR0                   *(volatile unsigned long *)(PORT0_BLOCK + 0x00)  // Pin Control Register 0
-      #define PORT_NO_PULL               0x00000000                                       // no pull-up/down enabled
-      #define PORT_PE                    0x00000002                                       // enable pull if digital input (sense defined by following)
-      #define PORT_PS_DOWN_ENABLE        (0x00000000 | PORT_PE)                           // pull-down active (note that it is combined with the PORT_PE so that it is enabled)
-      #define PORT_PS_UP_ENABLE          (0x00000001 | PORT_PE)                           // pull-up active (note that it is combined with the PORT_PE so that it is enabled)
-      #define PORT_SRE_FAST              0x00000000                                       // fast slew-rate if digital output
-      #define PORT_SRE_SLOW              0x00000004                                       // slow slew-rate if digital output
-      #define PORT_PFE                   0x00000010                                       // passive filter enabled if digital input (disable for signals > 2MHz)
-      #define PORT_ODE                   0x00000020                                       // open-drain enabled if digital output
-      #define PORT_DSE_LOW               0x00000000                                       // digital strength low if digital output
-      #define PORT_DSE_HIGH              0x00000040                                       // digital strength high if digital output
       #define PORT_MUX_ANALOG            0x00000000                                       // pin disabled (analog)
       #define PORT_MUX_ALT0              0x00000000                                       // alternative 0
       #define PORT_MUX_GPIO              0x00000100                                       // GPIO (alternative 1)
@@ -17253,6 +17243,42 @@ typedef struct stDAC_REGS                                                // {23}
 #define PORT5_BIT30                      0x40000000
 #define PORT5_BIT31                      0x80000000
 
+// Compatibility with Kinetis
+//
+#define PORT_NO_PULL               (0)                                              // no pull-up/down enabled
+#define PORT_PS_DOWN_ENABLE        (IOMUXC_SW_PAD_CTL_PAD_PUS_100k_DOWN | IOMUXC_SW_PAD_CTL_PAD_PUE | IOMUXC_SW_PAD_CTL_PAD_PKE) // pull-down active (note that it is combined with the PORT_PE so that it is enabled)
+#define PORT_PS_UP_ENABLE          (IOMUXC_SW_PAD_CTL_PAD_PUS_22k_UP | IOMUXC_SW_PAD_CTL_PAD_PUE | IOMUXC_SW_PAD_CTL_PAD_PKE) // pull-up active (note that it is combined with the PORT_PE so that it is enabled)
+#define PORT_SRE_FAST              (IOMUXC_SW_PAD_CTL_PAD_SRE)                      // fast slew-rate if digital output
+#define PORT_SRE_SLOW              (0)                                              // slow slew-rate if digital output
+#define PORT_PFE                   (0)                                              // not supported (only for interface compatibility)
+#define PORT_ODE                   (IOMUXC_SW_PAD_CTL_PAD_ODE)                      // open-drain enabled if digital output
+#define PORT_DSE_LOW               (IOMUXC_SW_PAD_CTL_PAD_DSE_1)                    // digital strength low if digital output
+#define PORT_DSE_HIGH              (IOMUXC_SW_PAD_CTL_PAD_DSE_7)                    // digital strength high if digital output
+
+// Exteded port characteristics
+//
+#define PORT_NO_HYSTERISIS         0x00000000                                       // no hysterisis enabled
+#define PORT_WITH_HYSTERISIS       (IOMUXC_SW_PAD_CTL_PAD_HYS)                      // hysterisis enabled
+#define PORT_DSE_OFF               (IOMUXC_SW_PAD_CTL_PAD_DSE_DISABLED)
+#define PORT_DSE_1                 (IOMUXC_SW_PAD_CTL_PAD_DSE_1)
+#define PORT_DSE_2                 (IOMUXC_SW_PAD_CTL_PAD_DSE_2)
+#define PORT_DSE_3                 (IOMUXC_SW_PAD_CTL_PAD_DSE_3)
+#define PORT_DSE_MID               (PORT_DSE_3)
+#define PORT_DSE_4                 (IOMUXC_SW_PAD_CTL_PAD_DSE_4)
+#define PORT_DSE_5                 (IOMUXC_SW_PAD_CTL_PAD_DSE_5)
+#define PORT_DSE_6                 (IOMUXC_SW_PAD_CTL_PAD_DSE_6)
+#define PORT_DSE_7                 (IOMUXC_SW_PAD_CTL_PAD_DSE_7)
+#define PORT_SPEED_LOW             (IOMUXC_SW_PAD_CTL_PAD_SPEED_LOW)
+#define PORT_SPEED_MID             (IOMUXC_SW_PAD_CTL_PAD_SPEED_MEDIUM)
+#define PORT_SPEED_MAX             (IOMUXC_SW_PAD_CTL_PAD_SPEED_MAX)
+#define PORT_PS_UP_ENABLE_LOW      (IOMUXC_SW_PAD_CTL_PAD_PUS_22k_UP | IOMUXC_SW_PAD_CTL_PAD_PUE)
+#define PORT_PS_UP_ENABLE_HIGH     (IOMUXC_SW_PAD_CTL_PAD_PUS_100k_UP | IOMUXC_SW_PAD_CTL_PAD_PUE)
+#define PORT_PS_UP_ENABLE_MEDIUM   (IOMUXC_SW_PAD_CTL_PAD_PUS_47k_UP | IOMUXC_SW_PAD_CTL_PAD_PUE)
+#define PORT_KEEPER                (IOMUXC_SW_PAD_CTL_PAD_PKE)
+
+
+
+
 
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics);
 extern void fnSimPers(void);
@@ -17262,15 +17288,15 @@ extern void fnSimPers(void);
 
 // Configure pins as output, including enabling clock to specified port eg. _CONFIG_PORT_OUTPUT(1, PORT1_BIT16, (PORT_SRE_FAST | PORT_DSE_LOW));
 //
-#define _CONFIG_PORT_OUTPUT(ref, pins, chars) fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
+#define _CONFIG_PORT_OUTPUT(ref, pins, chars) fnConnectGPIO(PORT##ref, pins, (chars)); GPIO##ref##_GDIR |= (pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE; _SIM_PER_CHANGE
 
 // Configure pins as Input, including enabling clock to specified port eg. _CONFIG_PORT_INPUT(1, PORT1_BIT4, PORT_PS_UP_ENABLE);
 //
-#define _CONFIG_PORT_INPUT(ref, pins, chars)  fnConnectGPIO(PORT##ref, pins, (PORT_MUX_GPIO | chars)); GPIO##ref##_GDIR &= ~(pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
+#define _CONFIG_PORT_INPUT(ref, pins, chars)  fnConnectGPIO(PORT##ref, pins, (chars)); GPIO##ref##_GDIR &= ~(pins); _SIM_PORT_CHANGE; _SIM_PER_CHANGE
 
 // Configure a peripheral function eg. _CONFIG_PERIPHERAL(B, 2, (PB_2_FTM0_CH0 | PORT_SRE_FAST | PORT_DSE_HIGH));
 //
-#define _CONFIG_PERIPHERAL(port, function, chars) IOMUXC_SW_MUX_CTL_PAD_##port = ##port##_##function; _SIM_PER_CHANGE
+#define _CONFIG_PERIPHERAL(port, function, chars) IOMUXC_SW_MUX_CTL_PAD_##port = ##port##_##function; IOMUXC_SW_PAD_CTL_PAD_##port = (chars); _SIM_PER_CHANGE
 
 // Write to a port with a mask eg. eg. _WRITE_PORT_MASK(1, 0x1234,  0x0000ffff)
 //
@@ -18232,10 +18258,6 @@ typedef struct stPDB_SETUP                                               // {37}
 #define PDB_FREQUENCY(prescaler, mul, hz) ((BUS_CLOCK/((prescaler) * (mul))/(hz)) - 1) // period match value
 
 
-
-
-
-
     #define IOMUXC_SW_PAD_CTL_PAD_HYS             0x00010000             // hysterisis enable field
     #define IOMUXC_SW_PAD_CTL_PAD_PUS_MASK        0x0000c000             // pull-up/down configuration field
     #define IOMUXC_SW_PAD_CTL_PAD_PUS_100k_DOWN   0x00000000             // pull-up/down configuration field - 100k pull-down
@@ -18245,7 +18267,10 @@ typedef struct stPDB_SETUP                                               // {37}
     #define IOMUXC_SW_PAD_CTL_PAD_PUE             0x00002000             // pull/keep select field
     #define IOMUXC_SW_PAD_CTL_PAD_PKE             0x00001000             // pull/keep enable field
     #define IOMUXC_SW_PAD_CTL_PAD_ODE             0x00000800             // open drain enable field
-    #define IOMUXC_SW_PAD_CTL_PAD_SPEED           0x000000c0             // speed field read-only
+    #define IOMUXC_SW_PAD_CTL_PAD_SPEED_MASK      0x000000c0             // speed field
+    #define IOMUXC_SW_PAD_CTL_PAD_SPEED_LOW       0x00000000             // speed field (50MHz)
+    #define IOMUXC_SW_PAD_CTL_PAD_SPEED_MEDIUM    0x00000040             // speed field (100MHz)
+    #define IOMUXC_SW_PAD_CTL_PAD_SPEED_MAX       0x000000c0             // speed field (200MHz)
     #define IOMUXC_SW_PAD_CTL_PAD_DSE_MASK        0x00000038             // drive strength field
     #define IOMUXC_SW_PAD_CTL_PAD_DSE_DISABLED    0x00000000             // drive strength field - output driver disabled
     #define IOMUXC_SW_PAD_CTL_PAD_DSE_1           0x00000008             // drive strength field - R0 = 260 Ohm at 3V3, 150 Ohm at 1V8, 240 Ohm for DDR
@@ -18257,7 +18282,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define IOMUXC_SW_PAD_CTL_PAD_DSE_7           0x00000030             // drive strength field - R0/7
     #define IOMUXC_SW_PAD_CTL_PAD_SRE             0x00000001             // slew rate field
 
-    #define IOMUXC_SW_MUX_CTL_PAD_SION            0x00000010             // software input on field
+    #define IOMUXC_SW_MUX_CTL_PAD_SION            0x00000010             // software input on field (force input path to pad)
     #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK   0x00000007             // MUX mode select field
     #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0   0x00000000             // MUX mode select field - ALT0
     #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1   0x00000001             // MUX mode select field - ALT1
@@ -18286,17 +18311,21 @@ typedef struct stPDB_SETUP                                               // {37}
 //
 #define IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD     (unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0000)
 #define IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP         *(unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0000) // SW_MUX_CTL_PAD_WAKEUP SW MUX control register
+    #define IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_SION (IOMUXC_SW_MUX_CTL_PAD_SION)
     #define PAD_WAKEUP_GPIO5_IO00                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define PAD_WAKEUP_NMI_GLUE_NMI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
 #define IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_ON_REQ    *(unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0004) // SW_MUX_CTL_PAD_PMIC_ON_REQ SW MUX control register
+    #define IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_ON_REQ_SION (IOMUXC_SW_MUX_CTL_PAD_SION)
     #define PAD_PMIC_ON_REQ_SNVS_LP_PMIC_ON_REQ   (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define PAD_PMIC_ON_REQ_GPIO5_IO01            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
 #define IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_STBY_REQ  *(unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0008) // SW_MUX_CTL_PAD_PMIC_STBY_REQ SW MUX control register
+    #define IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_STBY_REQ_SION (IOMUXC_SW_MUX_CTL_PAD_SION)
     #define PAD_PMIC_STBY_REQ_CCM_PMIC_VSTBY_REQ  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define PAD_PMIC_STBY_REQ_GPIO5_IO02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_TEST_MODE      *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x000c) // SW_PAD_CTL_PAD_TEST_MODE SW PAD control register
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_POR_B          *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0010) // SW_PAD_CTL_PAD_POR_B SW PAD control register
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_ONOFF          *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0014) // SW_PAD_CTL_PAD_ONOFF SW PAD control register
+#define IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP_ADD     (unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0018)
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP         *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0018) // SW_PAD_CTL_PAD_WAKEUP SW PAD control register
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_PMIC_ON_REQ    *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x001c) // SW_PAD_CTL_PAD_PMIC_ON_REQ SW PAD control register
 #define IOMUXC_SNVS_SW_PAD_CTL_PAD_PMIC_STBY_REQ  *(volatile unsigned long *)(IOMUXC_SNVS_BLOCK + 0x0020) // SW_PAD_CTL_PAD_PMIC_STBY_REQ SW PAD control register
@@ -18322,19 +18351,156 @@ typedef struct stPDB_SETUP                                               // {37}
     #define IOMUXC_GPR_GPR1_SAI1_MCLK2_SEL         0x00000038            // SAI1 MCLK2 source select
     #define IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL         0x00000007            // SAI1 MCLK1 source select
 #define IOMUXC_GPR_GPR2                 *(unsigned long *)(IOMUXC_BLOCK + 0x0008) // GPR2 general purpose register
-#define IOMUXC_GPR_GPR3                 *(unsigned long *)(IOMUXC_BLOCK + 0x000c) // GPR3 general purpose register
-#define IOMUXC_GPR_GPR4                 *(unsigned long *)(IOMUXC_BLOCK + 0x0010) // GPR4 general purpose register
+    #define IOMUXC_GPR_GPR2_QTIMER2_TMR_CNTS_FREEZE  0x20000000          // QTIMER2 timer counter freeze
+    #define IOMUXC_GPR_GPR2_QTIMER1_TMR_CNTS_FREEZE  0x10000000          // QTIMER1 timer counter freeze
+    #define IOMUXC_GPR_GPR2_MQS_OVERSAMPLE_32      0x0000000             // PWM x32 oversampling rate compared with mclk
+    #define IOMUXC_GPR_GPR2_MQS_OVERSAMPLE_64      0x0400000             // PWM x64 oversampling rate compared with mclk
+    #define IOMUXC_GPR_GPR2_MQS_EN                 0x02000000            // enable MQS
+    #define IOMUXC_GPR_GPR2_MQS_SW_RST             0x01000000            // MQS software reset
+    #define IOMUXC_GPR_GPR2_MQS_CLK_DIV            0x00ff0000            // divider ratio control for mclk from hmclk. mclk frequency = 1/(n+1) * hmclk frequency
+    #define IOMUXC_GPR_GPR2_L2_MEM_DEEPSLEEP       0x00004000            // force memory into deep sleep mode
+    #define IOMUXC_GPR_GPR2_RAM_AUTO_CLK_GATING_EN   0x00002000          // enable automatically gate off RAM clock
+    #define IOMUXC_GPR_GPR2_L2_MEM_EN_POWERSAVING    0x00001000          // memory power saving features enabled [SHUTDOWN/DEEPSLEEP/LIGHTSLEEP]
+#define IOMUXC_GPR_GPR3                 *(volatile unsigned long *)(IOMUXC_BLOCK + 0x000c) // GPR3 general purpose register
+    #define IOMUXC_GPR_GPR3_OCRAM_STATUS           0x000f0000            // OCRAM pipeline settings status (read-only)
+    #define IOMUXC_GPR_GPR3_DCP_KEY_SEL_LO         0x00000000            // select [127:0] from snvs/ocotp key as dcp key
+    #define IOMUXC_GPR_GPR3_DCP_KEY_SEL_HI         0x00000010            // select [255:128] from snvs/ocotp key as dcp key
+    #define IOMUXC_GPR_GPR3_OCRAM_CTL_WAPL         0x00000008            // write address pipeline is enabled
+    #define IOMUXC_GPR_GPR3_OCRAM_CTL_WDPL         0x00000004            // write data pipeline is enabled
+    #define IOMUXC_GPR_GPR3_OCRAM_CTL_RAPL         0x00000002            // read address pipeline is enabled
+    #define IOMUXC_GPR_GPR3_OCRAM_CTL_RDPL         0x00000001            // read data pipeline is enabled
+#define IOMUXC_GPR_GPR4                 *(volatile unsigned long *)(IOMUXC_BLOCK + 0x0010) // GPR4 general purpose register
+    #define IOMUXC_GPR_GPR4_FLEXIO1_STOP_ACK       0x10000000            // FLEXIO1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_FLEXSPI_STOP_ACK       0x08000000            // FLEXSPI stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_PIT_STOP_ACK           0x04000000            // PIT stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_SEMC_STOP_ACK          0x02000000            // SEMC stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_SAI3_STOP_ACK          0x00800000            // SAI3 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_SAI2_STOP_ACK          0x00400000            // SAI2 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_SAI1_STOP_ACK          0x00200000            // SAI1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_ENET_STOP_ACK          0x00100000            // ENET stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_TRNG_STOP_ACK          0x00080000            // TRNG stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_CAN2_STOP_ACK          0x00040000            // CAN2 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_CAN1_STOP_ACK          0x00020000            // CAN1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR4_EDMA_STOP_ACK          0x00010000            // EDMA stop acknowledge is asserted [eDMA is in STOP mode] (read-only)
+    #define IOMUXC_GPR_GPR4_FLEXIO1_STOP_REQ       0x00001000            // FLEXIO1 stop request on
+    #define IOMUXC_GPR_GPR4_FLEXSPI_STOP_REQ       0x00000800            // FLEXSPI stop request on
+    #define IOMUXC_GPR_GPR4_PIT_STOP_REQ           0x00000400            // PIT stop request on 
+    #define IOMUXC_GPR_GPR4_SEMC_STOP_REQ          0x00000200            // SEMC stop request on 
+    #define IOMUXC_GPR_GPR4_SAI3_STOP_REQ          0x00000080            // SAI3 stop request on 
+    #define IOMUXC_GPR_GPR4_SAI2_STOP_REQ          0x00000040            // SAI2 stop request on 
+    #define IOMUXC_GPR_GPR4_SAI1_STOP_REQ          0x00000020            // SAI1 stop request on 
+    #define IOMUXC_GPR_GPR4_ENET_STOP_REQ          0x00000010            // ENET stop request on 
+    #define IOMUXC_GPR_GPR4_TRNG_STOP_REQ          0x00000008            // TRNG stop request on 
+    #define IOMUXC_GPR_GPR4_CAN2_STOP_REQ          0x00000004            // CAN2 stop request on 
+    #define IOMUXC_GPR_GPR4_CAN1_STOP_REQ          0x00000002            // CAN1 stop request on 
+    #define IOMUXC_GPR_GPR4_EDMA_STOP_REQ          0x00000001            // EDMA stop request on
 #define IOMUXC_GPR_GPR5                 *(unsigned long *)(IOMUXC_BLOCK + 0x0014) // GPR5 general purpose register
+    #define IOMUXC_GPR_GPR5_VREF_1M_CLK_GPT2       0x20000000            // GPT2 ipg_clk_highfreq driven by anatop 1 MHz clock (rather than by IPG_PERCLK)
+    #define IOMUXC_GPR_GPR5_VREF_1M_CLK_GPT1       0x10000000            // GPT1 ipg_clk_highfreq driven by anatop 1 MHz clock (rather than by IPG_PERCLK)
+    #define IOMUXC_GPR_GPR5_ENET_EVENT3IN_SEL_ENET 0x0o000000            // ENET input timer event3 source input from ENET_1588_EVENT3_IN
+    #define IOMUXC_GPR_GPR5_ENET_EVENT3IN_SEL_GPT2 0x02000000            // ENET input timer event3 source input from GPT2.GPT_COMPARE1
+    #define IOMUXC_GPR_GPR5_GPT2_CAPIN1_SEL_GPT2   0x00000000            // GPT2 input capture channel 1 source from GPT2_CAPTURE1
+    #define IOMUXC_GPR_GPR5_GPT2_CAPIN1_SEL_ENET   0x00800000            // GPT2 input capture channel 1 source from ENET_1588_EVENT3_OUT (channel 3 of IEEE 1588 timer)
+    #define IOMUXC_GPR_GPR5_WDOG2_MASK             0x00000080            // WDOG2 timeout is masked
+    #define IOMUXC_GPR_GPR5_WDOG1_MASK             0x00000040            // WDOG1 timeout is masked
 #define IOMUXC_GPR_GPR6                 *(unsigned long *)(IOMUXC_BLOCK + 0x0018) // GPR6 general purpose register
-#define IOMUXC_GPR_GPR7                 *(unsigned long *)(IOMUXC_BLOCK + 0x001c) // GPR7 general purpose register
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_19 0x80000000            // IOMUXC XBAR_INOUT19 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_18 0x40000000            // IOMUXC XBAR_INOUT18 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_17 0x20000000            // IOMUXC XBAR_INOUT17 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_16 0x10000000            // IOMUXC XBAR_INOUT16 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_15 0x08000000            // IOMUXC XBAR_INOUT15 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_14 0x04000000            // IOMUXC XBAR_INOUT14 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_13 0x02000000            // IOMUXC XBAR_INOUT13 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_12 0x01000000            // IOMUXC XBAR_INOUT12 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_11 0x00800000            // IOMUXC XBAR_INOUT11 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_10 0x00400000            // IOMUXC XBAR_INOUT10 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_9  0x00200000            // IOMUXC XBAR_INOUT9 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_8  0x00100000            // IOMUXC XBAR_INOUT8 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_7  0x00080000            // IOMUXC XBAR_INOUT7 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_6  0x00040000            // IOMUXC XBAR_INOUT6 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_5  0x00020000            // IOMUXC XBAR_INOUT5 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_IOMUXC_XBAR_DIR_SEL_4  0x00010000            // IOMUXC XBAR_INOUT4 select as output (rather than as input)
+    #define IOMUXC_GPR_GPR6_QTIMER2_TRM3_INPUT_SEL 0x00000080            // QTIMER2 TMR3 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER2_TRM2_INPUT_SEL 0x00000040            // QTIMER2 TMR2 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER2_TRM1_INPUT_SEL 0x00000020            // QTIMER2 TMR1 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER2_TRM0_INPUT_SEL 0x00000010            // QTIMER2 TMR0 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER1_TRM3_INPUT_SEL 0x00000008            // QTIMER1 TMR3 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER1_TRM2_INPUT_SEL 0x00000004            // QTIMER1 TMR2 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER1_TRM1_INPUT_SEL 0x00000002            // QTIMER1 TMR1 input from XBAR (rather than from IOMUX)
+    #define IOMUXC_GPR_GPR6_QTIMER1_TRM0_INPUT_SEL 0x00000001            // QTIMER1 TMR0 input from XBAR (rather than from IOMUX)
+#define IOMUXC_GPR_GPR7                 *(volatile unsigned long *)(IOMUXC_BLOCK + 0x001c) // GPR7 general purpose register
+    #define IOMUXC_GPR_GPR7_LPUART8_STOP_ACK       0x80000000            // LPUART8 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART7_STOP_ACK       0x40000000            // LPUART7 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART6_STOP_ACK       0x20000000            // LPUART6 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART5_STOP_ACK       0x10000000            // LPUART5 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART4_STOP_ACK       0x08000000            // LPUART4 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART3_STOP_ACK       0x04000000            // LPUART3 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART2_STOP_ACK       0x02000000            // LPUART2 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART1_STOP_ACK       0x01000000            // LPUART1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPSPI4_STOP_ACK        0x00800000            // LPSPI4 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPSPI3_STOP_ACK        0x00400000            // LPSPI3 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPSPI2_STOP_ACK        0x00200000            // LPSPI2 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPSPI1_STOP_ACK        0x00100000            // LPSPI1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPI2C4_STOP_ACK        0x00080000            // LPI2C4 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPI2C3_STOP_ACK        0x00040000            // LPI2C3 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPI2C2_STOP_ACK        0x00020000            // LPI2C2 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPI2C1_STOP_ACK        0x00010000            // LPI2C1 stop acknowledge is asserted (read-only)
+    #define IOMUXC_GPR_GPR7_LPUART8_STOP_REQ       0x00008000            // LPUART8 stop request on
+    #define IOMUXC_GPR_GPR7_LPUART7_STOP_REQ       0x00004000            // LPUART7 stop request on
+    #define IOMUXC_GPR_GPR7_LPUART6_STOP_REQ       0x00002000            // LPUART6 stop request on
+    #define IOMUXC_GPR_GPR7_LPUART5_STOP_REQ       0x00001000            // LPUART5 stop request on
+    #define IOMUXC_GPR_GPR7_LPUART4_STOP_REQ       0x00000800            // LPUART4 stop request on
+    #define IOMUXC_GPR_GPR7_LPUART3_STOP_REQ       0x00000400            // LPUART3 stop request on 
+    #define IOMUXC_GPR_GPR7_LPUART2_STOP_REQ       0x00000200            // LPUART2 stop request on 
+    #define IOMUXC_GPR_GPR7_LPUART1_STOP_REQ       0x00000100            // LPUART1 stop request on
+    #define IOMUXC_GPR_GPR7_LPSPI4_STOP_REQ        0x00000080            // LPSPI4 stop request on 
+    #define IOMUXC_GPR_GPR7_LPSPI3_STOP_REQ        0x00000040            // LPSPI3 stop request on 
+    #define IOMUXC_GPR_GPR7_LPSPI2_STOP_REQ        0x00000020            // LPSPI2 stop request on 
+    #define IOMUXC_GPR_GPR7_LPSPI1_STOP_REQ        0x00000010            // LPSPI1 stop request on 
+    #define IOMUXC_GPR_GPR7_LPI2C4_STOP_REQ        0x00000008            // LPI2C4 stop request on 
+    #define IOMUXC_GPR_GPR7_LPI2C3_STOP_REQ        0x00000004            // LPI2C3 stop request on 
+    #define IOMUXC_GPR_GPR7_LPI2C2_STOP_REQ        0x00000002            // LPI2C2 stop request on 
+    #define IOMUXC_GPR_GPR7_LPI2C1_STOP_REQ        0x00000001            // LPI2C1 stop request on
 #define IOMUXC_GPR_GPR8                 *(unsigned long *)(IOMUXC_BLOCK + 0x0020) // GPR8 general purpose register
-#define IOMUXC_GPR_GPR9                 *(unsigned long *)(IOMUXC_BLOCK + 0x0024) // GPR9 general purpose register
+    #define IOMUXC_GPR_GPR8_LPUART8_IPG_DOZE       0x80000000            // LPUART8 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART8_IPG_STOP_MODE  0x40000000            // LPUART8 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART7_IPG_DOZE       0x20000000            // LPUART7 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART7_IPG_STOP_MODE  0x10000000            // LPUART7 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART6_IPG_DOZE       0x08000000            // LPUART6 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART6_IPG_STOP_MODE  0x04000000            // LPUART6 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART5_IPG_DOZE       0x02000000            // LPUART5 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART5_IPG_STOP_MODE  0x01000000            // LPUART5 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART4_IPG_DOZE       0x00800000            // LPUART4 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART4_IPG_STOP_MODE  0x00400000            // LPUART4 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART3_IPG_DOZE       0x00200000            // LPUART3 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART3_IPG_STOP_MODE  0x00100000            // LPUART3 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART2_IPG_DOZE       0x00080000            // LPUART2 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART2_IPG_STOP_MODE  0x00040000            // LPUART2 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPUART1_IPG_DOZE       0x00020000            // LPUART1 in doze mode
+    #define IOMUXC_GPR_GPR8_LPUART1_IPG_STOP_MODE  0x00010000            // LPUART1 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPSPI4_IPG_DOZE        0x00008000            // LPSPI4 in doze mode
+    #define IOMUXC_GPR_GPR8_LPSPI4_IPG_STOP_MODE   0x00004000            // LPSPI4 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPSPI3_IPG_DOZE        0x00002000            // LPSPI3 in doze mode
+    #define IOMUXC_GPR_GPR8_LPSPI3_IPG_STOP_MODE   0x00001000            // LPSPI3 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPSPI2_IPG_DOZE        0x00000800            // LPSPI2 in doze mode
+    #define IOMUXC_GPR_GPR8_LPSPI2_IPG_STOP_MODE   0x00000400            // LPSPI2 not functional in stop mode 
+    #define IOMUXC_GPR_GPR8_LPSPI1_IPG_DOZE        0x00000200            // LPSPI1 in doze mode 
+    #define IOMUXC_GPR_GPR8_LPSPI1_IPG_STOP_MODE   0x00000100            // LPSPI1 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPI2C4_IPG_DOZE        0x00000080            // LPI2C4 in doze mode
+    #define IOMUXC_GPR_GPR8_LPI2C4_IPG_STOP_MODE   0x00000040            // LPI2C4 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPI2C3_IPG_DOZE        0x00000020            // LPI2C3 in doze mode
+    #define IOMUXC_GPR_GPR8_LPI2C3_IPG_STOP_MODE   0x00000010            // LPI2C3 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPI2C2_IPG_DOZE        0x00000008            // LPI2C2 in doze mode
+    #define IOMUXC_GPR_GPR8_LPI2C2_IPG_STOP_MODE   0x00000004            // LPI2C2 not functional in stop mode
+    #define IOMUXC_GPR_GPR8_LPI2C1_IPG_DOZE        0x00000002            // LPI2C1 in doze mode
+    #define IOMUXC_GPR_GPR8_LPI2C1_IPG_STOP_MODE   0x00000001            // LPI2C1 not functional in stop mode
+#define IOMUXC_GPR_GPR9                 *(unsigned long *)(IOMUXC_BLOCK + 0x0024) // GPR9 general purpose register (reserved)
 #define IOMUXC_GPR_GPR10                *(unsigned long *)(IOMUXC_BLOCK + 0x0028) // GPR10 general purpose register
 #define IOMUXC_GPR_GPR11                *(unsigned long *)(IOMUXC_BLOCK + 0x002c) // GPR11 general purpose register
 #define IOMUXC_GPR_GPR12                *(unsigned long *)(IOMUXC_BLOCK + 0x0030) // GPR12 general purpose register
 #define IOMUXC_GPR_GPR13                *(unsigned long *)(IOMUXC_BLOCK + 0x0034) // GPR13 general purpose register
 #define IOMUXC_GPR_GPR14                *(unsigned long *)(IOMUXC_BLOCK + 0x0038) // GPR14 general purpose register
-#define IOMUXC_GPR_GPR15                *(unsigned long *)(IOMUXC_BLOCK + 0x003c) // GPR15 general purpose register
+#define IOMUXC_GPR_GPR15                *(unsigned long *)(IOMUXC_BLOCK + 0x003c) // GPR15 general purpose register (reserved)
 #define IOMUXC_GPR_GPR16                *(unsigned long *)(IOMUXC_BLOCK + 0x0040) // GPR16 general purpose register
 #define IOMUXC_GPR_GPR17                *(unsigned long *)(IOMUXC_BLOCK + 0x0044) // GPR17 general purpose register
 #define IOMUXC_GPR_GPR18                *(unsigned long *)(IOMUXC_BLOCK + 0x0048) // GPR18 general purpose register
@@ -18946,6 +19112,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_15_ENET_1588_EVENT0_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_AD_B1_15_FLEXIO1_FLEXIO00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_15_GPIO1_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x013c)
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x013c) // SW_MUX_CTL_PAD_GPIO_SD_B0_00 SW MUX control register [GPIO3-13]
     #define GPIO_SD_B0_00_USDHC1_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_SD_B0_00_QTIMER1_TIMER0           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
@@ -19094,6 +19261,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_SD_B1_11_SAI3_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_SD_B1_11_LPSPI2_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_SD_B1_11_GPIO3_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0188)
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0188) // SW_PAD_CTL_PAD_GPIO_EMC_00 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_01          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x018c) // SW_PAD_CTL_PAD_GPIO_EMC_01 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_02          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0190) // SW_PAD_CTL_PAD_GPIO_EMC_02 SW PAD control register
@@ -19126,6 +19294,7 @@ typedef struct stPDB_SETUP                                               // {37}
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_29          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01fc) // SW_PAD_CTL_PAD_GPIO_EMC_29 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_30          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0200) // SW_PAD_CTL_PAD_GPIO_EMC_30 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_31          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0204) // SW_PAD_CTL_PAD_GPIO_EMC_31 SW PAD control register
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0208)
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0208) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_33          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x020c) // SW_PAD_CTL_PAD_GPIO_EMC_33 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_34          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0210) // SW_PAD_CTL_PAD_GPIO_EMC_34 SW PAD control register
@@ -19136,6 +19305,7 @@ typedef struct stPDB_SETUP                                               // {37}
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_39          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0224) // SW_PAD_CTL_PAD_GPIO_EMC_39 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_40          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0228) // SW_PAD_CTL_PAD_GPIO_EMC_40 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_41          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x022c) // SW_PAD_CTL_PAD_GPIO_EMC_41 SW PAD control register
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x0230)
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0230) // SW_PAD_CTL_PAD_GPIO_AD_B0_00 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0234) // SW_PAD_CTL_PAD_GPIO_AD_B0_01 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0238) // SW_PAD_CTL_PAD_GPIO_AD_B0_02 SW PAD control register
@@ -19168,6 +19338,7 @@ typedef struct stPDB_SETUP                                               // {37}
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a4) // SW_PAD_CTL_PAD_GPIO_AD_B1_13 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a8) // SW_PAD_CTL_PAD_GPIO_AD_B1_14 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ac) // SW_PAD_CTL_PAD_GPIO_AD_B1_15 SW PAD control register
+#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0)
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0) // SW_PAD_CTL_PAD_GPIO_SD_B0_00 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b4) // SW_PAD_CTL_PAD_GPIO_SD_B0_01 SW PAD control register
 #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b8) // SW_PAD_CTL_PAD_GPIO_SD_B0_02 SW PAD control register

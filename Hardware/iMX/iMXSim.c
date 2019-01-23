@@ -394,10 +394,39 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_39 = cPinDefaults[_PORT3][7];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_40 = cPinDefaults[_PORT3][8];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41 = cPinDefaults[_PORT3][9];
+    #if defined IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_42
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_42 = cPinDefaults[_PORT3][10];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_43 = cPinDefaults[_PORT3][11];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_44 = cPinDefaults[_PORT3][12];
+    #endif
+
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00 = cPinDefaults[_PORT3][13];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01 = cPinDefaults[_PORT3][14];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02 = cPinDefaults[_PORT3][15];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03 = cPinDefaults[_PORT3][16];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04 = cPinDefaults[_PORT3][17];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05 = cPinDefaults[_PORT3][18];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_06 = cPinDefaults[_PORT3][19];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00 = cPinDefaults[_PORT3][20];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01 = cPinDefaults[_PORT3][21];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02 = cPinDefaults[_PORT3][22];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_03 = cPinDefaults[_PORT3][23];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_04 = cPinDefaults[_PORT3][24];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_05 = cPinDefaults[_PORT3][25];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_06 = cPinDefaults[_PORT3][26];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_07 = cPinDefaults[_PORT3][27];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_08 = cPinDefaults[_PORT3][28];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09 = cPinDefaults[_PORT3][29];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10 = cPinDefaults[_PORT3][30];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11 = cPinDefaults[_PORT3][31];
 
     IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP = cPinDefaults[_PORT5][0];
     IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_ON_REQ = cPinDefaults[_PORT5][1];
     IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_STBY_REQ = cPinDefaults[_PORT5][2];
+
+    IOMUXC_GPR_GPR3 = (0x0000ffe0 | IOMUXC_GPR_GPR3_DCP_KEY_SEL_HI);
+    IOMUXC_GPR_GPR10 = 0x00000007;
+    IOMUXC_GPR_GPR15 = 0xffffffff;
 
 
     // Clock configuration module (CCM)
@@ -679,58 +708,6 @@ static void fnSetDevice(unsigned long *port_inits)
     #elif !defined KINETIS_KL
     SIM_SOPT2 = SIM_SOPT2_TRACECLKSEL;
     #endif
-#endif
-#if defined KINETIS_KL
-    #if defined KINETIS_KL02 || defined KINETIS_KL03 || defined KINETIS_KL05
-    PORTA_PCR0 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT3);              // default SWD_CLK
-    PORTA_PCR1 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT3);    // default reset input
-    PORTA_PCR2 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT3);              // default SWD_DIO
-    PORTA_PCR3 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT0);              // default EXTAL0
-    PORTA_PCR4 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT0);              // default XTAL0
-        #if defined KINETIS_KL03
-    PORTB_PCR5 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT3);    // default NMI input
-        #endif
-    #else
-    PORTA_PCR0 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT7);              // port configuration defaults (JTAG/SWD)
-    PORTA_PCR20 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);   // default reset input
-    PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    #endif
-#elif defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    GPIOA_PIDR = 0xffffffff;                                             // port input disable registers
-    #if PORTS_AVAILABLE > 1
-    GPIOB_PIDR = 0xffffffff;
-    #endif
-    #if (defined KINETIS_KE04 && (SIZE_OF_FLASH > (8 * 1024))) || defined KINETIS_KE06 || defined KINETIS_KEA64 || defined KINETIS_KEA128
-    PORT_IOFLT0 = 0x00c00000;
-    PORT_PUE0   = 0x00100000;
-    #else
-    PORT_IOFLT = 0x00c00000;
-        #if (defined KINETIS_KE04 && (SIZE_OF_FLASH <= (8 * 1024)))
-    PORT_PUEL  = 0x00000001;
-        #else
-    PORT_PUEL  = 0x00100000;
-        #endif
-    #endif
-#elif defined KINETIS_KV10
-    PORTA_PCR0 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT7);              // port configuration defaults (JTAG/SWD)
-    PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR20 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-#elif defined KINETIS_KE15 || defined KINETIS_KE18
-    PORTD_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // NMI
-    PORTA_PCR5 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // reset
-    PORTC_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // SWD_CLK
-    PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);    // SWD_DIO
-#else
-    PORTA_PCR0 = (PORT_PE | PORT_DSE_HIGH | PORT_MUX_ALT7);              // port configuration defaults (JTAG/SWD)
-    PORTA_PCR1 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR2 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR3 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    PORTA_PCR4 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    if ((ulDisabled[0] & 0x20) == 0) {
-        PORTA_PCR5 = (PORT_PS_UP_ENABLE | PORT_DSE_HIGH | PORT_MUX_ALT7);
-    }
 #endif
 #if defined USB_INTERFACE
     PER_ID = 0x04;                                                       // USB-OTG
@@ -1526,13 +1503,13 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     portNr--;
     switch (portNr) {
     case _PORT1:
-        return (ulPeripherals[0]);
+        return (ulPeripherals[PORT1]);
     case _PORT2:
-        return (ulPeripherals[1]);
+        return (ulPeripherals[PORT2]);
     case _PORT3:
-        return (ulPeripherals[2]);
+        return (ulPeripherals[PORT3]);
     case _PORT5:
-        return (ulPeripherals[4]);
+        return (ulPeripherals[PORT5]);
     default:
         return 0;
     }
@@ -3538,8 +3515,15 @@ extern void fnSimPers(void)
                 break;
             case _PORT3:
                 {
-                    unsigned long *ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
-                    ptrGPIO_EMC += iPin;
+                    unsigned long *ptrGPIO_EMC;
+                    if (iPin >= 13) {
+                        ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD;
+                        ptrGPIO_EMC += (iPin - 13);
+                    }
+                    else {
+                        ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
+                        ptrGPIO_EMC += iPin;
+                    }
                     ucPortFunctions[iPort][iPin] = (unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK);
                     if ((unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK) != IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO) {
                         ulPeripherals[iPort] |= ulBit;

@@ -3356,6 +3356,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_SPI1                 INPUT_TO_INTMUX0_CHANNEL_2   // the SPI1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
+        #if defined KINETIS_KL82
+            #define INTMUX_DMA              INPUT_TO_INTMUX0_CHANNEL_3   // the DMA extended interrupts are connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
+        #endif
     #endif
 #else
     // Define interrupt priorities in the system (kinetis supports 0..15 - 0 is highest priority and 15 is lowest priority)

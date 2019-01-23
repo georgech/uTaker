@@ -11,7 +11,7 @@
     File:      low_power.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     25.11.2007 Add optional low power monitoring                         {1}
     15.07.2014 Add optional preparation for low power mode and recovery after leaving low power mode {2}
@@ -28,6 +28,8 @@
 extern void fnLowPower(TTASKTABLE *ptrTaskTable)                         // low power task called on every scheduling pass
 {
     if (uNoSchedule(OWN_TASK) == 0) {                                    // is the scheduler idle?
+        // Interrupts are disabled at this point
+        //
     #if defined PREPARE_SLEEP_STATE
         PREPARE_SLEEP_STATE();                                           // {2} optional preparation for the sleep mode to reduce peripheral consumption or enable only certain wakeup sources
     #endif
@@ -41,6 +43,10 @@ extern void fnLowPower(TTASKTABLE *ptrTaskTable)                         // low 
     #if defined RECOVER_SLEEP_STATE
         RECOVER_SLEEP_STATE();                                           // {2} optional changes on sleep mode exit to allow full power operation again
     #endif
+    }
+    else {
+        // When there is a task that needs to be scheduled the interrupts will now be enabled
+        //
     }
 }
 #endif

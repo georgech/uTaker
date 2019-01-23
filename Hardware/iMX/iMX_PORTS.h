@@ -23,9 +23,10 @@
 //
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics)
 {
-    register unsigned long ulMask;
     unsigned long ulBit = 0x00000001;
     unsigned long *ptrGPIO;
+    unsigned long *ptrChars;
+    int iPort3 = 0;
 
     switch (iPortRef) {
     case PORT1:
@@ -33,21 +34,26 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         CCM_CCGR1 &= ~(CCM_CCGR1_GPIO1_CLOCKS_MASK);
         CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCKS_STOP);
         //CCM_CCGR1  |= (CCM_CCGR1_GPIO1_CLOCKS_RUN);
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD;
         break;
     case PORT2:
         ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
         CCM_CCGR0 &= ~(CCM_CCGR0_GPIO2_CLOCKS_MASK);
         CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCKS_STOP);
       //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCKS_RUN);
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;
         break;
     case PORT3:
-        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
         CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCKS_MASK);
         CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCKS_STOP);
         //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCKS_RUN);
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD;
+        iPort3 = 1;
         break;
     case PORT5:
         ptrGPIO = IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD;
+        ptrChars = IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP_ADD;
         break;
     default:
         _EXCEPTION("The port that is being accessed is not available on this processor!!");
@@ -161,24 +167,21 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
     IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_STBY_REQ = PAD_PMIC_STBY_REQ_GPIO5_IO02
     */
 
-
-
-    if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) != 0) {    // don't allow the multiplexer setting to be changed so that peripheral function setting is not modified
-        ulCharacteristics &= (PORT_IRQC_INT_MASK | PORT_LOCK | PORT_PS_UP_ENABLE); // allow only these field to be set
-        ulMask = (PORT_IRQC_INT_MASK | PORT_PS_UP_ENABLE);               // allow only these fields to be reset
-    }
-    else {
-        ulMask = (PORT_IRQC_INT_MASK | PORT_MUX_MASK | PORT_DSE_HIGH | PORT_ODE | PORT_PFE | PORT_SRE_SLOW | PORT_PS_UP_ENABLE); // {7} allow all fields to be modified (set or reset)
-    }
-
     while (ulPortBits != 0) {                                            // for each specified pin
         if ((ulPortBits & ulBit) != 0) {                                 // if this port bit is to be set as GPIO
-            *ptrGPIO = PAD_MUX_MODE_GPIO;                                // set the GPIO mode for this pin
-          //*ptrGPIO = PAD_MUX_MODE_GPIO;                                // set the GPIO characteristics for each port pin
+            if ((PORT_PSEUDO_FLAG_SET_ONLY_PULLS & ulCharacteristics) == 0) { // don't allow the multiplexer setting to be changed so that peripheral function setting is not modified
+                *ptrGPIO = PAD_MUX_MODE_GPIO;                            // set the GPIO mode for this pin
+            }
+            *ptrChars = ulCharacteristics;                               // set the GPIO characteristics for each port pin
             ulPortBits &= ~(ulBit);                                      // pin has been set
         }
         ptrGPIO++;
         ulBit <<= 1;
+        if ((iPort3 != 0) && (ulBit == PORT3_BIT13)) {                   // exception for port 3, which moves from EMC pads to SD pads
+            iPort3 = 0;
+            ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD;
+            ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD;
+        }
     }
     _SIM_PER_CHANGE;
 }
