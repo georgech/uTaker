@@ -435,13 +435,13 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
 
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
-        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7                  GPIO1
         {  "JTAG_TMS",     "-",     "-",         "-",          "-",           "GPIO1_IO00","-",        "GPT1_COMPARE1"     }, // pad GPIO_AD_B0_00 [GPIO1-0]
         {  "JTAG_TCK",     "-",     "-",         "-",          "-",           "GPIO1_IO01","-",        "GPT1_CAPTURE2"     }, // pad GPIO_AD_B0_01 [GPIO1-1]
         {  "JTAG_MOD",     "-",     "-",         "-",          "-",           "GPIO1_IO02","-",        "GPT1_CAPTURE1"     }, // pad GPIO_AD_B0_02 [GPIO1-2]
         {  "JTAG_TDI",     "USDHC2_CD_B","WDOG1_B","SAI1_MCLK","USDHC1_WP",   "GPIO1_IO03","USB_OTG1_OC","CCM_PMIC_RDY"    }, // pad GPIO_AD_B0_03 [GPIO1-3]
         {  "JTAG_TDO",     "FLEXCAN1_TX","USDHC1_WP","QTIMER2_TIMER0","ENET_MDIO","GPIO1_IO04","USB_OTG1_PWR","EWM_OUT_B"  }, // pad GPIO_AD_B0_04 [GPIO1-4]
-        {  "JTAG_TRSTB",   "FLEXCAN1_RX","USDHC1_CD_B","QTIMER2_TIMER1","ENET_MDC","GPIO1_IO05","USB_OTG1_ID","NMI_GLUE_NMI"}, // pad GPIO_AD_B0_05 [GPIO1-5]
+        {  "JTAG_TRSTB",   "FLEXCAN1_RX","USDHC1_CD_B","QTIMER2_TIMER1","ENET_MDC","GPIO1_IO05","USB_OTG1_ID","NMI_GLUE_NMI"},// pad GPIO_AD_B0_05 [GPIO1-5]
         {  "PIT_TRIGGER00","MQS_RIGHT","LPUART1_TX","QTIMER2_TIMER2","FLEXPWM2_PWMA03","GPIO1_IO06","REF_32K_OUT","-"      }, // pad GPIO_AD_B0_06 [GPIO1-6]
         {  "PIT_TRIGGER01","MQS_LEFT","LPUART1_RX","QTIMER2_TIMER3","FLEXPWM2_PWMB03","GPIO1_IO07","REF_24M_OUT","-"       }, // pad GPIO_AD_B0_07 [GPIO1-7]
         {  "ENET_TX_CLK",  "LPI2C3_SCL","LPUART1_CTS_B","KPP_COL00","ENET_REF_CLK1","GPIO1_IO08","ARM_CM7_TXEV","-"        }, // pad GPIO_AD_B0_08 [GPIO1-8]
@@ -467,10 +467,10 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "USB_OTG1_OC",  "ACMP1_OUT","LPSPI3_SCK","USDHC2_CD_B","FLEXIO1_FLEXIO03","GPIO1_IO28","FLEXPWM1_PWMA03","-"    }, // pad GPIO_AD_B1_12 [GPIO1-28]
         {  "LPI2C1_HREQ",  "ACMP2_OUT","LPSPI3_PCS0","USDHC2_WP","FLEXIO1_FLEXIO02","GPIO1_IO29","FLEXPWM1_PWMB03","-"     }, // pad GPIO_AD_B1_13 [GPIO1-29]
         {  "LPI2C1_SCL",   "ACMP3_OUT","LPSPI3_SDO","ENET_1588_EVENT0_OUT","FLEXIO1_FLEXIO01","GPIO1_IO30","-","-"         }, // pad GPIO_AD_B1_14 [GPIO1-30]
-        {  "LPI2C1_SDA",   "ACMP4_OUT","LPSPI3_SDI","ENET_1588_EVENT0_IN","FLEXIO1_FLEXIO00","GPIO1_IO31","-","-"         }, // pad GPIO_AD_B1_14 [GPIO1-30]
+        {  "LPI2C1_SDA",   "ACMP4_OUT","LPSPI3_SDI","ENET_1588_EVENT0_IN","FLEXIO1_FLEXIO00","GPIO1_IO31","-","-"          }, // pad GPIO_AD_B1_14 [GPIO1-31]
     },
     {
-        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7                         GPIO2
         {  "SEMC_DATA00",  "QTIMER2_TIMER0","LPUART4_CTS_B","SPDIF_SR_CLK","LPSPI2_SCK","GPIO2_IO00","FLEXCAN1_TX","PIT_TRIGGER02"}, // pad GPIO_EMC_00 [GPIO2-0]
         {  "SEMC_DATA01",  "QTIMER2_TIMER1","LPUART4_RTS_B","SPDIF_OUT","LPSPI2_PCS0","GPIO2_IO01","FLEXCAN1_RX","PIT_TRIGGER03"}, // pad GPIO_EMC_01 [GPIO2-1]
         {  "SEMC_DATA02",  "QTIMER2_TIMER2","LPUART4_TX","SPDIF_LOCK","LPSPI2_SDO","GPIO2_IO02","LPI2C1_SCL","-"           }, // pad GPIO_EMC_02 [GPIO2-2]
@@ -505,7 +505,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "SEMC_DM01",    "FLEXPWM2_PWMB02","LPUART4_RTS_B","SAI3_RX_DATA","WDOG2_B","GPIO2_IO31","GPT2_CLK","FLEXPWM1_PWMX03"}  // pad GPIO_EMC_31 [GPIO2-31]
     },
     {
-        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7                  GPIO3
         {  "SEMC_DATA12",  "QTIMER1_TIMER0","LPUART4_TX","SAI3_TX_DATA","LPSPI4_SCK","GPIO3_IO00","-", "REF_24M_OUT"       }, // pad GPIO_EMC_32 [GPIO3-0]
         {  "SEMC_DATA09",  "QTIMER1_TIMER1","LPUART4_RX","SAI3_TX_BCLK","LPSPI4_PCS0","GPIO3_IO01","-","-"                 }, // pad GPIO_EMC_33 [GPIO3-1]
         {  "SEMC_DATA10",  "QTIMER1_TIMER2","LPUART7_TX","SAI3_TX_SYNC","LPSPI4_SDO","GPIO3_IO02","ENET_CRS","-"           }, // pad GPIO_EMC_34 [GPIO3-2]
@@ -540,8 +540,8 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "USDHC2_DATA7", "FLEXSPI_A_SS0_B","ENET_TDATA01","SAI3_RX_DATA","LPSPI2_PCS3","GPIO3_IO31","-","-" }, // pad GPIO_SD_B1_11 [GPIO3-31]
     },
     {
-        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
-        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }, // GPIO4
+        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7                  GPIO4
+        {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }, 
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
@@ -575,7 +575,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
     },
     {
-        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
+        // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7                  GPIO5
         {  "-",            "-",     "-",         "-",          "-",           "GPIO5_IO00","-",        "NMI_GLUE_NMI"      }, // pad WAKEUP [GPIO5]
         {  "SNVS_LP_PMIC_ON_REQ","-","-",        "-",          "-",           "GPIO5_IO01","-",        "-"                 }, // pad PMIC_ON_REQ
         {  "CCM_PMIC_VSTBY_REQ","-","-",         "-",          "-",           "GPIO5_IO02","-",        "-"                 }, // pad PMIC_STBY_REQ
