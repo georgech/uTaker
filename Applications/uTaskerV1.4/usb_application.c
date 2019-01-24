@@ -11,7 +11,7 @@
     File:      usb_application.c - example of USB communication device, MSD and HID mouse
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     19.09.2008 File content made conditional on HOST support             {1}
     19.09.2008 Allow use without USE_MAINTENANCE                         {2}
@@ -364,7 +364,6 @@ static unsigned char  ucCollectingMode = 0xff;
 #if defined USB_STRING_OPTION && defined USB_RUN_TIME_DEFINABLE_STRINGS
     static USB_STRING_DESCRIPTOR *SerialNumberDescriptor;                // string built up to contain a variable serial number
 #endif
-
 #if defined USB_HOST_SUPPORT
     #if defined USB_MSD_HOST
     static unsigned char ucDeviceLUN = 0;
@@ -416,6 +415,9 @@ static void fnConfigureUSB(void);                                        // rout
         #if defined USB_TO_ETHERNET || defined USB_TO_TCP_IP
             static QUEUE_TRANSFER fnSendRNDIS_Data(QUEUE_HANDLE rndis_handle, unsigned char *ptrData, REMOTE_NDIS_ETHERNET_PACKET_MESSAGE *ptrRNDIS_message, unsigned short usEthernetLength);
         #endif
+    #endif
+    #if defined USB_DEVICE_SUPPORT && !defined USB_CDC_INTERFACE_PASSTHROUGH && !defined USB_CDC_ECHO
+        static void fnHandleUSB_command_input(unsigned char ucInputMessage[LARGE_MESSAGE], QUEUE_TRANSFER Length);
     #endif
 #endif
 #if defined USB_HOST_SUPPORT
@@ -833,6 +835,8 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
                     fnDriver(USBPortID_comms[FIRST_CDC_INTERFACE], (RX_ON), 0); // {43} enable IN polling on first interface
                 }
     #endif
+#elif defined USE_USB_CDC && !defined USB_CDC_INTERFACE_PASSTHROUGH && !defined USB_CDC_ECHO && !defined SERIAL_INTERFACE
+                fnHandleUSB_command_input((unsigned char *)"\r", 1);     // when there is no serial interface we try to connect the new USB interface to the debug handle so that debug messages are immediately seen
 #endif
 #if defined USE_USB_HID_MOUSE
                 iUSB_mouse_state = 1;                                    // mark that the mouse function is active
@@ -1378,17 +1382,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         if (USB_DEVICE_MODE_OF_OPERATION == iUSB_mode) {                 // handle command line input only when in device mode
         #endif
         #if !defined USB_CDC_INTERFACE_PASSTHROUGH && !defined USB_CDC_ECHO
-            if (usUSB_state == ES_NO_CONNECTION) {
-                if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
-                    if (fnInitiateLogin(ES_USB_LOGIN) == TELNET_ON_LINE) {
-                        static const CHAR ucCOMMAND_MODE_BLOCKED[] = "Command line blocked\r\n";
-                        fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, (sizeof(ucCOMMAND_MODE_BLOCKED) - 1));
-                    }
-                }
-            }
-            else {
-                fnCommandInput(ucInputMessage, Length, SOURCE_USB);
-            }
+            fnHandleUSB_command_input(ucInputMessage, Length);
         #endif
         #if defined USB_HOST_SUPPORT
         }
@@ -1827,6 +1821,23 @@ extern void fnSetUSB_debug(void)
     #endif
 }
 
+    #if defined USB_DEVICE_SUPPORT && !defined USB_CDC_INTERFACE_PASSTHROUGH && !defined USB_CDC_ECHO
+static void fnHandleUSB_command_input(unsigned char ucInputMessage[LARGE_MESSAGE], QUEUE_TRANSFER Length)
+{
+    if (usUSB_state == ES_NO_CONNECTION) {
+        if (fnCommandInput(ucInputMessage, Length, SOURCE_USB) != 0) {
+            if (fnInitiateLogin(ES_USB_LOGIN) == TELNET_ON_LINE) {
+                static const CHAR ucCOMMAND_MODE_BLOCKED[] = "Command line blocked\r\n";
+                fnWrite(USBPortID_comms[FIRST_CDC_INTERFACE], (unsigned char *)ucCOMMAND_MODE_BLOCKED, (sizeof(ucCOMMAND_MODE_BLOCKED) - 1));
+            }
+        }
+    }
+    else {
+        fnCommandInput(ucInputMessage, Length, SOURCE_USB);
+    }
+}
+    #endif
+
 #if defined RUN_IN_FREE_RTOS && defined FREE_RTOS_USB
 QUEUE_HANDLE fnGetUSB_Handle(void)
 {
@@ -1839,7 +1850,6 @@ QUEUE_HANDLE fnGetUSB_Handle(void)
     #endif
 }
 #endif
-
 
     #if defined USE_USB_CDC && defined SERIAL_INTERFACE && defined USB_SERIAL_CONNECTIONS && (USB_CDC_VCOM_COUNT > 1)
 static QUEUE_HANDLE fnOpenUART(TTYTABLE *PtrInterfaceParameters, unsigned char ucDriverMode)

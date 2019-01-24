@@ -172,6 +172,7 @@
 //#define RAM_TEST                                                       // {61} perform a RAM test on startup - if error found, stop
 //#define TEST_MSG_MODE                                                  // test UART in message mode
 //#define TEST_MSG_CNT_MODE                                              // test UART in message counter mode
+//#define DELAY_MASS_STORAGE_START                                       // optionally delay the mass storage task (SD card) starting
 #if defined SUPPORT_DISTRIBUTED_NODES
   //#define TEST_DISTRIBUTED_TX                                          // test some uNetwork messages
 #endif
@@ -813,7 +814,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         uTaskerStateChange(TASK_USB, UTASKER_ACTIVATE);                  // start USB task
 #endif
 #if (defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT) && !defined MB785_GLCD_MODE
+    #if defined DELAY_MASS_STORAGE_START
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(2 *SEC), E_TIMER_MASS_STORAGE_START_DELAY);
+    #else
         uTaskerStateChange(TASK_MASS_STORAGE, UTASKER_ACTIVATE);         // {52} start mass storage task
+    #endif
 #endif
 #if defined IRQ_TEST || defined WAKEUP_TEST
         fnInitIRQ();                                                     // initialise pin interrupts or wakeup source(s)
@@ -877,6 +882,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined TEST_SENSIRION || defined TEST_DS1621                    // {56}
             case E_NEXT_SENSOR_REQUEST:
                 fnNextSensorRequest();
+                break;
+    #endif
+    #if defined DELAY_MASS_STORAGE_START
+            case E_TIMER_MASS_STORAGE_START_DELAY:
+                uTaskerStateChange(TASK_MASS_STORAGE, UTASKER_ACTIVATE);         // {52} start mass storage task
                 break;
     #endif
     #if defined nRF24L01_INTERFACE

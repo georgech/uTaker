@@ -4188,7 +4188,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
                 SPI0_MCR = (SPI_MCR_HALT | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)); \
                 SPI0_MCR = (0 | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5));
 
-		#define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS4_0)              // force DI and CS lines high ready for the initialisation sequence
+        #define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS4_0); while ((SPI0_SR & (SPI_SR_RFDF)) != 0) {(void)SPI0_POPR; SPI0_SR = (SPI_SR_RFDF);} // force DI and CS lines high ready for the initialisation sequence (and drain SPI Rx FIFO)
 		#define SET_SD_CS_LOW()      _CLEARBITS(D, SPI_CS4_0)            // assert the CS line of the SD card to be read
 		#define SET_SD_CS_HIGH()     _SETBITS(D, SPI_CS4_0)              // negate the CS line of the SD card to be read
 
@@ -4197,7 +4197,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 		// Set maximum speed
 		//
-		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
+		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_8 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
 		#if defined _WINDOWS
 			#define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
 			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }

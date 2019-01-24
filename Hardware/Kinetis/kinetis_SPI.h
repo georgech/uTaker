@@ -11,7 +11,7 @@
     File:      kinetis_SPI.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
@@ -184,14 +184,14 @@ static __interrupt void int_spi_2_slave(void)
 /*                           SPI driver code                           */
 /* =================================================================== */
 
-static void fnAssertChpSelect(QUEUE_HANDLE channel, unsigned char ucChipSelect)
+static void fnAssertChipSelect(QUEUE_HANDLE channel, unsigned char ucChipSelect)
 {
     int i;
     int iAssert = 0;
     for (i = 0; i < SPI_CHIP_SELECTS; i++) {
         if (ulTxChipSelectLine[channel][i] != 0) {
             if (ulTxChipSelectLine[channel][i] != ucChipSelect) {        // negate all other chip select lines
-                _SETBITS(B, (1 << (ulTxChipSelectLine[channel][i] - 1))); // negate the CS line [note that the port reference is not solved yet]
+                _SETBITS(B, (1 << (ulTxChipSelectLine[channel][i] - 1)));// negate the CS line [note that the port reference is not solved yet]
             }
             else {
                 iAssert = i;
@@ -216,7 +216,7 @@ extern void fnClearSPITxInt(QUEUE_HANDLE channel)
     #else
     _KINETIS_SPI *ptrSPI = (_KINETIS_SPI *)SPI_Base_Address[channel];
     ptrSPI->SPI_C1 &= ~(SPI_C1_SPIE | SPI_C1_SPTIE);                     // disable interrupts
-    fnAssertChpSelect(channel, 0);                                       // deassert all chip select lines
+    fnAssertChipSelect(channel, 0);                                      // deassert all chip select lines
     #endif
 }
 
@@ -251,7 +251,7 @@ extern int fnTxSPIByte(QUEUE_HANDLE channel, unsigned short usTxByte, unsigned c
     #else
     _KINETIS_SPI *ptrSPI = (_KINETIS_SPI *)SPI_Base_Address[channel];
     if ((ucChipSelect & FIRST_SPI_MESSAGE_WORD) != 0) {
-        fnAssertChpSelect(channel, (ucChipSelect & SPI_CHIP_SELECT_MASK));
+        fnAssertChipSelect(channel, (ucChipSelect & SPI_CHIP_SELECT_MASK));
     }
     ptrSPI->SPI_D = (unsigned char)(usTxByte);
     if ((ucChipSelect & LAST_SPI_MESSAGE_WORD) != 0) {

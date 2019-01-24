@@ -1153,7 +1153,7 @@
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(C, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(G, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1220,7 +1220,7 @@
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(A, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(A, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1266,7 +1266,7 @@
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(E, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(E, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1324,7 +1324,7 @@
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(D, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(D, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1396,7 +1396,7 @@
     #define CONFIG_TEST_OUTPUT()
     #define TOGGLE_TEST_OUTPUT()
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(D, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1450,7 +1450,7 @@
     #define CONFIG_TEST_OUTPUT()
     #define TOGGLE_TEST_OUTPUT()      _TOGGLE_PORT(B, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(B, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1513,7 +1513,7 @@
     #define CONFIG_TEST_OUTPUT()
     #define TOGGLE_TEST_OUTPUT()      _TOGGLE_PORT(F, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(F, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1591,7 +1591,7 @@
 
     #define CONFIG_TEST_OUTPUT()
     #define TOGGLE_TEST_OUTPUT()
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
@@ -1599,7 +1599,7 @@
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 
     #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (USER_KEY_BUTTON), (INPUT_PULL_UP)) // PA0 configured as input with pull-up
-    #define WATCHDOG_DISABLE()         (0 == (_READ_PORT_MASK(A, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
+    #define WATCHDOG_DISABLE()         (1) // (0 == (_READ_PORT_MASK(A, (USER_KEY_BUTTON)))) // disable watchdog by holding the user button down at reset
 
     #define CONFIGURE_MOUSE_INPUTS()
     #define MOUSE_LEFT_CLICK()         0
@@ -1649,7 +1649,7 @@
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(I, LED2)
 
-    #if defined USE_MAINTENANCE
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(I, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))

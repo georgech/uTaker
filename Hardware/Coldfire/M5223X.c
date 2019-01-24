@@ -2276,8 +2276,12 @@ extern int fnConfigEthernet(ETHTABLE *pars)                              // {151
         EPHYCTL0 &= ~ANDIS;                                              // enable autonegotiate
     }
 
-    if ((pars->usMode & LAN_LEDS) != 0) {                                // enable hardware LED support                                                    
+    if ((pars->usMode & LAN_LEDS) != 0) {                                // enable hardware LED support
+    #if defined PHY_LED_MASK
+        PLDPAR = ((PLDPAR & ~(PHY_LED_MASK)) | (ENABLE_PHY_LEDS & PHY_LED_MASK));
+    #else
         PLDPAR = ENABLE_PHY_LEDS;
+    #endif
     }
 
     EPHYCTL0 |= (EPHYEN | EPHYIEN);                                      // enable the PHY

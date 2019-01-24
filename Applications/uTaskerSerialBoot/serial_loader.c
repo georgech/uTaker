@@ -11,7 +11,7 @@
     File:      serial_loader.c
     Project:   uTasker serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     07.01.2010 Provisional optional GCC workaround                       {1}
     25.03.2010 Use fnEraseFlashSector() rather than uFileErase()         {2}
@@ -70,6 +70,11 @@
 /* =================================================================== */
 
 #define OWN_TASK                    TASK_APPLICATION
+
+#if defined START_APPLICATION_VIA_RESET
+    #undef  RESET_PERIPHERALS
+    #define RESET_PERIPHERALS()    fnResetBoard()
+#endif
 
 #define STATE_INIT                  0x0000                               // task states
 #define STATE_ACTIVE                0x0001
@@ -2450,7 +2455,7 @@ extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, uns
 
 
 extern void fnJumpToValidApplication(int iResetPeripherals)              // {25}
-{              
+{
     if ((*(unsigned long *)fnGetFlashAdd((unsigned char *)_UTASKER_APP_START_) != 0xffffffff) && (*(unsigned long *)(fnGetFlashAdd((unsigned char *)_UTASKER_APP_START_) + 4) != 0xffffffff)) {
     #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER           // {9}
         if (*(unsigned long *)fnGetFlashAdd((unsigned char *)UTASKER_APP_START) == 0xffffffff) {

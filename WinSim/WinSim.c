@@ -669,7 +669,7 @@ _abort_multi:
             unsigned char ucSetLineCodingSetup[]             = {0x21, 0x20, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00};
             unsigned char ucSetLineCoding[]                  = {0x00, 0xe1, 0x00, 0x00, 0x00, 0x00, 0x08}; // 57600 / 8 bits
             unsigned char ucGetLineCoding[]                  = {0xa1, 0x21, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00}; // request line coding
-            unsigned char ucSetControlLineState[]            = {0x21, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // set control line stte
+            unsigned char ucSetControlLineState[]            = {0x21, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // set control line state
     #endif
             fnSimulateUSB(0, 0, 0, 0, USB_RESET_CMD);                    // USB reset condition
             fnSimulateUSB(0, 0, SETUP_PID, ucGetDescriptorDevice, sizeof(ucGetDescriptorDevice)); // inject SETUP packet

@@ -2351,6 +2351,7 @@
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
         #define SET_SPI_SD_INTERFACE_FAST_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_SUPER_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
     #else                                                                // note that PORTB_BIT7 is held high due to this requirement in a special application
+        #define START_APPLICATION_VIA_RESET
         #define SPI_CS4_0             PORTD_BIT4
         #define INITIALISE_SPI_SD_INTERFACE() POWER_UP(6, SIM_SCGC6_SPI0); \
                 _CONFIG_PERIPHERAL(C, 5, PC_5_SPI0_SCK | PORT_SRE_FAST | PORT_DSE_HIGH); \
@@ -2363,7 +2364,7 @@
                 SPI0_MCR = (SPI_MCR_HALT | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5)); \
                 SPI0_MCR = (0 | (SPI_MCR_DIS_TXF | SPI_MCR_DIS_RXF | SPI_MCR_MSTR | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF | SPI_MCR_PCSIS_CS0 | SPI_MCR_PCSIS_CS1 | SPI_MCR_PCSIS_CS2 | SPI_MCR_PCSIS_CS3 | SPI_MCR_PCSIS_CS4 | SPI_MCR_PCSIS_CS5));
 
-		#define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS4_0)              // force DI and CS lines high ready for the initialisation sequence
+        #define SET_SD_DI_CS_HIGH()  _SETBITS(D, SPI_CS4_0); while ((SPI0_SR & (SPI_SR_RFDF)) != 0) {(void)SPI0_POPR; SPI0_SR = (SPI_SR_RFDF);} // force DI and CS lines high ready for the initialisation sequence (and drain SPI Rx FIFO)
 		#define SET_SD_CS_LOW()      _CLEARBITS(D, SPI_CS4_0)            // assert the CS line of the SD card to be read
 		#define SET_SD_CS_HIGH()     _SETBITS(D, SPI_CS4_0)              // negate the CS line of the SD card to be read
 
@@ -2372,7 +2373,7 @@
 
 		// Set maximum speed
 		//
-		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_2 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
+		#define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI0_MCR |= SPI_MCR_HALT; SPI0_CTAR0 = (SPI_CTAR_FMSZ_8 | SPI_CTAR_CPOL | SPI_CTAR_CPHA | SPI_CTAR_BR_8 | SPI_CTAR_DBR); SPI0_MCR &= ~SPI_MCR_HALT;
 		#if defined _WINDOWS
 			#define WRITE_SPI_CMD(byte)    SPI0_SR &= ~(SPI_SR_RFDF); SPI0_PUSHR = (byte | SPI_PUSHR_PCS_NONE | SPI_PUSHR_CTAS_CTAR0); SPI0_POPR = _fnSimSD_write((unsigned char)byte)
 			#define WAIT_TRANSMISSON_END() while ((SPI0_SR & (SPI_SR_RFDF)) == 0) { SPI0_SR |= (SPI_SR_RFDF); }
@@ -3923,15 +3924,15 @@
 #if defined KINETIS_KL                                                   // {5} KL doesn't have SIM_SCG1 and SIM_SCG3 registers
     #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
         #if defined KINETIS_KL82
-            #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+            #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                        POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
                                        IRQ0_31_CER  = 0xffffffff
         #elif defined FRDM_KL28Z
-            #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+            #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
             PCC_LPUART0 = 0; \
             IRQ0_31_CER = 0xffffffff
         #else
-            #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+            #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                        POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
                                        SIM_SOPT1_CLR(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE); \
                                        IRQ0_31_CER  = 0xffffffff; \
@@ -3942,7 +3943,7 @@
                                        IRQ64_95_CPR = 0xffffffff
         #endif
     #elif defined KINETIS_KL03                                           // don't disable USB regulator
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(5, (SIM_SCGC5_LPUART0)); \
                                    IRQ0_31_CER  = 0xffffffff; \
                                    IRQ32_63_CER = 0xffffffff; \
@@ -3951,7 +3952,7 @@
                                    IRQ32_63_CPR = 0xffffffff; \
                                    IRQ64_95_CPR = 0xffffffff 
     #else                                                                // don't disable USB regulator
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3)); \
                                    IRQ0_31_CER  = 0xffffffff; \
                                    IRQ32_63_CER = 0xffffffff; \
@@ -3961,16 +3962,16 @@
                                    IRQ64_95_CPR = 0xffffffff
     #endif
 #elif defined FRDM_KE15Z
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    PCC_LPUART1 = 0; \
                                    IRQ0_31_CER  = 0xffffffff
 #elif defined KINETIS_KE
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2)); \
                                    IRQ0_31_CER  = 0xffffffff
 #elif defined KINETIS_K22_SF7
     #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
                                    POWER_DOWN_ATOMIC(6, LPUART0); \
                                    SIM_SOPT1_CLR(SIM_SOPT1_USBREGEN, SIM_SOPT1CFG_URWE); \
@@ -3981,7 +3982,7 @@
                                    IRQ32_63_CPR = 0xffffffff; \
                                    IRQ64_95_CPR = 0xffffffff
     #else                                                                // don't disable USB regulator
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3)); \
                                    POWER_DOWN_ATOMIC(6, LPUART0); \
                                    IRQ0_31_CER  = 0xffffffff; \
@@ -3993,7 +3994,7 @@
     #endif
 #else
     #if defined USB_INTERFACE                                            // disable USB regulator, USB controller module, UARTs and SD card controller, disable peripheral interrupts and clear possible pending
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3 | SIM_SCGC4_USBOTG)); \
                                    POWER_DOWN(1, (SIM_SCGC1_UART4 | SIM_SCGC1_UART5)); \
                                    POWER_DOWN_ATOMIC(2, ENET); \
@@ -4006,7 +4007,7 @@
                                    IRQ32_63_CPR = 0xffffffff; \
                                    IRQ64_95_CPR = 0xffffffff
     #else                                                                // don't disable USB regulator
-        #define RESET_PERIPHERALS()SYSTICK_CSR = 0; \
+        #define RESET_PERIPHERALS() SYSTICK_CSR = 0; \
                                    POWER_DOWN(4, (SIM_SCGC4_UART0 | SIM_SCGC4_UART1 | SIM_SCGC4_UART2 | SIM_SCGC4_UART3)); \
                                    POWER_DOWN(1, (SIM_SCGC1_UART4 | SIM_SCGC1_UART5)); \
                                    POWER_DOWN(2, SIM_SCGC2_ENET); \

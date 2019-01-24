@@ -11,7 +11,7 @@
     File:      application.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.02.2006 Add SMTP parameter settings                               {1}
     03.06.2007 Add FTP user definable FTP timeout and ACTIVE_FTP_LOGIN   {2}
@@ -542,12 +542,13 @@ extern int iAccelOutput;
 
 #define E_NEXT_SENSOR_REQUEST      122
 
+#define E_TIMER_MASS_STORAGE_START_DELAY 123
+
 #define E_SERVE_PAGE               130                                   // global application events
 #define E_TIMER_SW_DELAYED_RESET   131
 #define E_TEST_MODBUS_DELAY        133
 #define E_nRF24L01_PERIOD          134
 #define E_nRF24L01_EVENT           135
-
 #define E_USB_TX_CONTINUE          136
 
 

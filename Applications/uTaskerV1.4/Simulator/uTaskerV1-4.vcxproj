@@ -3235,6 +3235,9 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M520X.h" />
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M521X_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5222X_M5221X_port.h" />
     <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
@@ -3247,6 +3250,10 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5225X_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M523X_port.h" />
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M52XX_SDRAM.h" />
     <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>

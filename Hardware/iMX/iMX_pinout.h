@@ -202,7 +202,7 @@ static const unsigned char cPinDefaults[PORTS_AVAILABLE][PORT_WIDTH] = {
 
 static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
     {
-        //  100LQFP    144 LQFPP                                         GPIO_AD_B0/1 [GPIO1]
+        // 100LQFP     144LQFPP                                          GPIO_AD_B0/1 [GPIO1]
         {  "78",       "111",    },                                      // GPIO_AD_B0_00 [GPIO1.IO[0]] jtag_mux.TMS
         {  "77",       "110",    },                                      // GPIO_AD_B0_01 [GPIO1.IO[1]] jtag_mux.TCK
         {  "76",       "109",    },                                      // GPIO_AD_B0_02 [GPIO1.IO[2]] jtag_mux.MOD
@@ -237,7 +237,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "52",       "74",     },                                      // GPIO_AD_B1_15 [GPIO1.IO[31]]
     },
     {
-        //  100LQFP    144 LQFP LCSP                                     GPIO_EMC [GPIO2]
+        // 100LQFP     144LQFP                                           GPIO_EMC [GPIO2]
         {  "-",        "18",     },                                      // GPIO_EMC_00 [GPIO2.IO[0]]
         {  "-",        "17",     },                                      // GPIO_EMC_01 [GPIO2.IO[1]]
         {  "-",        "16",     },                                      // GPIO_EMC_02 [GPIO2.IO[2]]
@@ -272,7 +272,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "-",        "125",    },                                      // GPIO_EMC_31 [GPIO2.IO[31]]
     },
     {
-        //  100LQFP    144 LQFPLCSP                                      GPIO_EMC/GPIO_SD_B [GPIO3]
+        // 100LQFP     144LQFP                                           GPIO_EMC/GPIO_SD_B [GPIO3]
         {  "85",       "124",    },                                      // GPIO_EMC_32 [GPIO3.IO[0]]
         {  "84",       "123",    },                                      // GPIO_EMC_33 [GPIO3.IO[1]]
         {  "83",       "122",    },                                      // GPIO_EMC_34 [GPIO3.IO[2]]
@@ -307,7 +307,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "8",        "19",     },                                      // GPIO_SD_B1_11 [GPIO3.IO[31]]
     },
     {
-        //  100LQFP   144LQFP
+        // 100LQFP    144LQFP
         {  "-",        "-",      },                                      // 
         {  "-",        "-",      },                                      // 
         {  "-",        "-",      },                                      // 
@@ -342,7 +342,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "-",        "-",      },                                      // 
     },
     {
-        //  100LQFP   144LQFP                                            [GPIO5]
+        // 100LQFP    144LQFP                                            [GPIO5]
         {  "-",        "52",     },                                      // WAKEUP [GPIO5.IO[00]]
         {  "-",        "53",     },                                      // PMIC_ON_REQ [GPIO5.IO[01]]
         {  "-",        "54",     },                                      // PMIC_STBY_REQ [GPIO5.IO[02]]
@@ -377,7 +377,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][2] = {
         {  "-",        "-",      },                                      // 
     },
     { 
-        //  100LQFP    144LQFP                                           dedicated ADC pins
+        // 100LQFP     144LQFP                                           dedicated ADC pins
         {  "-",        "-",      },                                      // ADC0_DP0
         {  "-",        "-",      },                                      // ADC0_DM0
         {  "-",        "-",      },                                      // ADC0_DP3

@@ -26,6 +26,11 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
+#if defined _STM32F103X
+    #define _DISABLE_INTERRUPTS()   uEnable_Interrupt()
+    #define _ENABLE_INTERRUPTS()    uDisable_Interrupt()
+#endif
+
 /* =================================================================== */
 /*                       local structure definitions                   */
 /* =================================================================== */
@@ -618,8 +623,10 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
                 #if defined _WINDOWS
                 FLASH_SR = 0;
                 #endif
+                _DISABLE_INTERRUPTS();
                 *(volatile unsigned short *)fnGetFlashAdd((unsigned char *)ucDestination) = usValue; // write the value to the flash location
                 while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                // wait until write operation completes
+                _ENABLE_INTERRUPTS();
                 if (FLASH_SR & (FLASH_SR_WRPRTERR | FLASH_SR_PGERR)) {   // check for errors
                     iError = 1;                                          // write error
                     break;
@@ -907,6 +914,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         FLASH_SR = 0;                                                    // reset self-clearing status bits
             #endif
         FLASH_AR = (CAST_POINTER_ARITHMETIC)ptrSector;                   // set pointer to first location in the page to be erased
+        _DISABLE_INTERRUPTS();
         FLASH_CR = (FLASH_CR_PER | FLASH_CR_STRT);                       // {15} start page erase operation
       //FLASH_CR |= FLASH_CR_STRT;                                       // start page erase operation
         #endif
@@ -925,6 +933,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         }
         #endif
         while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                        // wait until delete operation completes
+        _ENABLE_INTERRUPTS();
         #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
         if (iProtectedSector != 0) {
             fnProtectFlash(ptrSector, PROTECT_SECTOR);                   // set protection again

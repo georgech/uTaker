@@ -1663,6 +1663,27 @@
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_PORTS.h">
       <Filter>Hardware\iMX</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M52XX_SDRAM.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M520X.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M521X_port.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M523X_port.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5222X_M5221X_port.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5223X_port.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\Coldfire\M5225X_port.h">
+      <Filter>WinSim\SIMcoldfire</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

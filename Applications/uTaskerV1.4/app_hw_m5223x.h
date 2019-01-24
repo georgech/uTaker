@@ -1156,11 +1156,12 @@
     #define MOUSE_LEFT()             (_READ_PORT_MASK(NQ, SWITCH_SW2) == 0) // press this button to move mouse left
     #define MOUSE_RIGHT()            (_READ_PORT_MASK(NQ, SWITCH_SW1) == 0) // press this button to move mouse right
 #elif defined UC_SYMPHONY
-    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(GP, PORT_GP_BIT3) // DDRGP |= PORT_GP_BIT3 
-    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(GP, PORT_GP_BIT3)    // PORTGP ^= PORT_GP_BIT3
+    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(LD, PORT_LD_BIT2) // DDRLD |= PORT_LD_BIT2
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(LD, PORT_LD_BIT2)    // PORTLD ^= PORT_LD_BIT2
     #define CONFIGURE_WATCHDOG         ACTIVE_WATCHDOG_2_SEC             // watchdog enabled with 2 second period (set WATCHDOG_DISABLED to disable)
     #define INIT_WATCHDOG_DISABLE()    (PNQPAR &= ~(ALT_2_FUNCTION_Q << BIT_4_Q_SHIFT)) // ensure IRQ4 is an input
     #define WATCHDOG_DISABLE()         ((PORTIN_SETNQ & PORT_NQ_BIT4) == 0) // pull this input down to disable watchdog (enable debugging)
+    #define PHY_LED_MASK               (ACT_LED_ENABLED | LINK_LED_ENABLED /*| SPEED_LED_ENABLED*/ | DUPLEX_LED_ENABLED | COLLISION_LED_ENABLED | RX_LED_ENABLED | TX_LED_ENABLED) // speed LED controlled by the application (blink LED)
 #else
     #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(TC, PORT_TC_BIT0) // {53} DDRTC |= PORT_TC_BIT0 
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(TC, PORT_TC_BIT0)    // {53} PORTTC ^= PORT_TC_BIT0
