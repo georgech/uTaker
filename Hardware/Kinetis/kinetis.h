@@ -9280,7 +9280,7 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC2_ACFE       0x00000020                                  // compare function enable
       #define ADC_SC2_ADTRG_SW   0x00000000                                  // conversion trigger select - software
       #define ADC_SC2_ADTRG_HW   0x00000040                                  // conversion trigger select - hardware
-      #define ADC_SC2_ADACT      0x00000080                                  // ADC converion in progress (read-only)
+      #define ADC_SC2_ADACT      0x00000080                                  // ADC conversion in progress (read-only)
     #define ADC0_SC3            *(volatile unsigned long *)(ADC0_BLOCK + 0x08) // ADC0 Status and Control Register 3
       #define ADC_CFG1_ADICLK_BUS  0x00000000                                // input clock select - bus clock
       #define ADC_CFG1_ADICLK_BUS2 0x00000001                                // input clock select - bus clock divided by 2
@@ -9474,7 +9474,7 @@ typedef struct stFLEX_TIMER_MODULE
       #define ADC_SC2_ACFE       0x00000020                                  // compare function enable
       #define ADC_SC2_ADTRG_SW   0x00000000                                  // conversion trigger select - software
       #define ADC_SC2_ADTRG_HW   0x00000040                                  // conversion trigger select - hardware
-      #define ADC_SC2_ADACT      0x00000080                                  // ADC converion in progress (read-only)
+      #define ADC_SC2_ADACT      0x00000080                                  // ADC conversion in progress (read-only)
     #if defined KINETIS_KE14 || defined KINETIS_KE15
         #define ADC0_SC3        *(volatile unsigned long *)(ADC0_BLOCK + 0x094) // ADC0 Status and Control Register 3
     #else

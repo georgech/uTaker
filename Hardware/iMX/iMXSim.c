@@ -932,76 +932,29 @@ static void fnSetDevice(unsigned long *port_inits)
     INTMUX0_CH2_CSR = 0x200;
     INTMUX0_CH3_CSR = 0x300;
 #endif
-#if defined KINETIS_KE15 || defined KINETIS_KE18
-    ADC0_SC1A = ADC_SC1A_ADCH_OFF;                                       // ADC0
-    ADC0_SC1B = ADC_SC1A_ADCH_OFF;
-    ADC0_CFG2 = 0x0000000c;
-    ADC0_BASE_OFS = 0x00000040;
-    ADC0_XOFS = 0x00000030;
-    ADC0_YOFS = 0x00000037;
-    ADC0_G = 0x000002f0;
-    ADC0_UG = 0x00000004;
-    ADC0_CLPX_OFS = 0x00000440;
-    ADC0_CLP9_OFS = 0x00000240;
-#elif defined KINETIS_KE
-    ADC0_SC1 = ADC_SC1A_ADCH_OFF;
-    ADC0_SC2 = ADC_SC2_FEMPTY;
-#else
-    ADC0_SC1A   = ADC_SC1A_ADCH_OFF;                                     // ADC0
-    ADC0_SC1B   = ADC_SC1A_ADCH_OFF;
-    ADC0_OFS    = 0x00000004;
-    ADC0_PG     = 0x00008200;
-    ADC0_MG     = 0x00008200;
-    ADC0_CLPD   = 0x0000000a;
-    ADC0_CLPS   = 0x00000020;
-    ADC0_CLP4   = 0x00000200;
-    ADC0_CLP3   = 0x00000100;
-    ADC0_CLP2   = 0x00000080;
-    ADC0_CLP1   = 0x00000040;
-    ADC0_CLP0   = 0x00000020;
-    ADC0_CLMD   = 0x0000000a;
-    ADC0_CLMS   = 0x00000020;
-    ADC0_CLM4   = 0x00000200;
-    ADC0_CLM3   = 0x00000100;
-    ADC0_CLM2   = 0x00000080;
-    ADC0_CLM1   = 0x00000040;
-    ADC0_CLM0   = 0x00000020;
+#if ADC_CONTROLLERS > 0                                                  // ADC1
+    ADC1_HC0 = ADC_HC_ADCH_OFF;
+    ADC1_HC1 = ADC_HC_ADCH_OFF;
+    ADC1_HC2 = ADC_HC_ADCH_OFF;
+    ADC1_HC3 = ADC_HC_ADCH_OFF;
+    ADC1_HC4 = ADC_HC_ADCH_OFF;
+    ADC1_HC5 = ADC_HC_ADCH_OFF;
+    ADC1_HC6 = ADC_HC_ADCH_OFF;
+    ADC1_HC7 = ADC_HC_ADCH_OFF;
+    ADC1_CFG = ADC_CFG_ADSTS_6;
 #endif
-#if ADC_CONTROLLERS > 1
-    #if defined KINETIS_KE15 || defined KINETIS_KE18
-    ADC1_SC1A = ADC_SC1A_ADCH_OFF;                                     // ADC1
-    ADC1_SC1B = ADC_SC1A_ADCH_OFF;
-    ADC1_CFG2 = 0x0000000c;
-    ADC1_BASE_OFS = 0x00000040;
-    ADC1_XOFS = 0x00000030;
-    ADC1_YOFS = 0x00000037;
-    ADC1_G = 0x000002f0;
-    ADC1_UG = 0x00000004;
-    ADC1_CLPX_OFS = 0x00000440;
-    ADC1_CLP9_OFS = 0x00000240;
-    #else
-    ADC1_SC1A   = ADC_SC1A_ADCH_OFF;
-    ADC1_SC1B   = ADC_SC1A_ADCH_OFF;
-    ADC1_OFS    = 0x00000004;
-    ADC1_PG     = 0x00008200;
-    ADC1_MG     = 0x00008200;
-    ADC1_CLPD   = 0x0000000a;
-    ADC1_CLPS   = 0x00000020;
-    ADC1_CLP4   = 0x00000200;
-    ADC1_CLP3   = 0x00000100;
-    ADC1_CLP2   = 0x00000080;
-    ADC1_CLP1   = 0x00000040;
-    ADC1_CLP0   = 0x00000020;
-    ADC1_CLMD   = 0x0000000a;
-    ADC1_CLMS   = 0x00000020;
-    ADC1_CLM4   = 0x00000200;
-    ADC1_CLM3   = 0x00000100;
-    ADC1_CLM2   = 0x00000080;
-    ADC1_CLM1   = 0x00000040;
-    ADC1_CLM0   = 0x00000020;
-    #endif
+#if ADC_CONTROLLERS > 1                                                  // ADC2
+    ADC2_HC0 = ADC_HC_ADCH_OFF;
+    ADC2_HC1 = ADC_HC_ADCH_OFF;
+    ADC2_HC2 = ADC_HC_ADCH_OFF;
+    ADC2_HC3 = ADC_HC_ADCH_OFF;
+    ADC2_HC4 = ADC_HC_ADCH_OFF;
+    ADC2_HC5 = ADC_HC_ADCH_OFF;
+    ADC2_HC6 = ADC_HC_ADCH_OFF;
+    ADC2_HC7 = ADC_HC_ADCH_OFF;
+    ADC2_CFG = ADC_CFG_ADSTS_6;
 #endif
-#if DAC_CONTROLLERS > 1
+#if DAC_CONTROLLERS > 0
     DAC0_SR     = DAC_SR_DACBFRPTF;                                      // DAC
     DAC0_C2     = 0x0f;
     #if DAC_CONTROLLERS > 1

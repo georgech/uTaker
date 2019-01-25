@@ -4148,6 +4148,7 @@ typedef struct st_iMX_PERIPH
 
     iMX_GPIO              GPIO[5];                                       // GPIO (warning - these are not physically contiguous in the memory map)
     iMX_CCM               CCM;                                           // clock control module
+    iMX_ADC               ADC[ADC_CONTROLLERS];                          // ADC
 } iMX_PERIPH;
 
 

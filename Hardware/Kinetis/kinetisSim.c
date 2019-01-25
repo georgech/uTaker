@@ -969,7 +969,7 @@ static void fnSetDevice(unsigned long *port_inits)
     ADC1_CLM0   = 0x00000020;
     #endif
 #endif
-#if DAC_CONTROLLERS > 1
+#if DAC_CONTROLLERS > 0
     DAC0_SR     = DAC_SR_DACBFRPTF;                                      // DAC
     DAC0_C2     = 0x0f;
     #if DAC_CONTROLLERS > 1
