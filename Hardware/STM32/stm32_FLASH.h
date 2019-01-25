@@ -29,6 +29,9 @@
 #if defined _STM32F103X
     #define _DISABLE_INTERRUPTS()   uEnable_Interrupt()
     #define _ENABLE_INTERRUPTS()    uDisable_Interrupt()
+#else
+    #define _DISABLE_INTERRUPTS()
+    #define _ENABLE_INTERRUPTS()
 #endif
 
 /* =================================================================== */
