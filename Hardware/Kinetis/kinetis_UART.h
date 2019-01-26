@@ -62,10 +62,6 @@
     #endif
 #endif
 
-#if !defined UART_PULL_UPS                                               // if the user wishes pull-up/downs on the UART Rx pins this can be set to PORT_PS_UP_ENABLE or PORT_PS_DOWN_ENABLE in app_hw_kinetis.h
-    #define UART_PULL_UPS    (PORT_NO_PULL)                              // if not overridden by the user there are no pull-up/downs on the UART Rx pins
-#endif
-
 #if defined _WINDOWS
     static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short usDivider, unsigned char ucFraction, unsigned long ulBusClock, unsigned long ulSpecialClock);
 #endif
@@ -2756,7 +2752,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
             #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
-            #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K66 || defined KINETIS_K65
+            #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
             POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
             #else
             POWER_UP_ATOMIC(6, LPUART0);                                 // power up LPUART 0

@@ -11,7 +11,7 @@
     File:      simkinetis.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     04.03.2012 Add NAND Flash controller                                 {1}
     17.03.2012 Add ADC                                                   {2}
@@ -2145,7 +2145,7 @@ typedef struct stKINETIS_SIM
             unsigned long SIM_SOPT6;
         #endif
     unsigned long SIM_SOPT7;
-    #if defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
+    #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
         unsigned long SIM_SOPT8;
         unsigned long ulRes2[1];
     #else

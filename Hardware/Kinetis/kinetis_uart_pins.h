@@ -19,6 +19,10 @@
 
 */
 
+#if !defined UART_PULL_UPS                                               // if the user wishes pull-up/downs on the UART Rx pins this can be set to PORT_PS_UP_ENABLE or PORT_PS_DOWN_ENABLE in app_hw_kinetis.h
+    #define UART_PULL_UPS    (PORT_NO_PULL)                              // if not overridden by the user there are no pull-up/downs on the UART Rx pins
+#endif
+
 
 static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 {
@@ -42,7 +46,7 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             #else
             _CONFIG_PERIPHERAL(B, 1, (PB_1_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PB1 (alt. function 2)
             #endif
-        #elif defined KINETIS_K66 || defined KINETIS_K65
+        #elif defined KINETIS_K65 || defined KINETIS_K66
             #if defined LPUART0_ON_D
             _CONFIG_PERIPHERAL(D, 9, (PD_9_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PD9 (alt. function 5)
             #elif defined LPUART0_ON_A
@@ -99,7 +103,7 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             #else
             _CONFIG_PERIPHERAL(B, 2, (PB_2_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PB2 (alt. function 2)
             #endif
-        #elif defined KINETIS_K66 || defined KINETIS_K65
+        #elif defined KINETIS_K65 || defined KINETIS_K66
             #if defined LPUART0_ON_D
             _CONFIG_PERIPHERAL(D, 8, (PD_8_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PD8 (alt. function 5)
             #elif defined LPUART0_ON_A

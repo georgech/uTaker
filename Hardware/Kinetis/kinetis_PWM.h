@@ -606,7 +606,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                     _CONFIG_PERIPHERAL(A, 12,  (PA_12_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.12 (alt. function 2)
         #elif defined KINETIS_KL02 || defined KINETIS_KL04 || defined KINETIS_KL05
                     _CONFIG_PERIPHERAL(A, 1,  (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
-        #elif defined KINETIS_K66
+        #elif defined KINETIS_K65 || defined KINETIS_K66
                     _CONFIG_PERIPHERAL(C, 12, (PC_12_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PC.12 (alt. function 4)
         #elif defined KINETIS_KL26
                     _CONFIG_PERIPHERAL(B, 16, (PB_16_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PA.18 (alt. function 4)

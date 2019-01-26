@@ -291,7 +291,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #endif
 #endif
 
-#if defined KINETIS_K66 && defined PERIPHERAL_CLOCK_DIVIDE               // TPM and LPUART clock divide
+#if (defined KINETIS_K65 || defined KINETIS_K66) && defined PERIPHERAL_CLOCK_DIVIDE // TPM and LPUART clock divide
     #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
         #if (PERIPHERAL_CLOCK_DIVIDE == 0)                               // divide by 0.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((0 << 1) | 0x1)
@@ -1840,7 +1840,7 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        16
 #endif
 
-#if defined KINETIS_K70 || ((defined KINETIS_K60 && defined KINETIS_K_FPU) && !defined KINETIS_K64 && !defined KINETIS_K66) || (defined KINETIS_K20 && (KINETIS_MAX_SPEED > 100000000))
+#if defined KINETIS_K70 || ((defined KINETIS_K60 && defined KINETIS_K_FPU) && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && (KINETIS_MAX_SPEED > 100000000))
     #define DMAMUX1_AVAILABLE
 #endif
 
@@ -4555,7 +4555,7 @@ typedef struct stVECTOR_TABLE
     #if LPUARTS_AVAILABLE > 0
         #if defined KINETIS_KE14 || defined KINETIS_KE15
             #define LPUART0_BLOCK              0x4006a000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K66 || defined KINETIS_K65
+        #elif defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K65 || defined KINETIS_K66
             #define LPUART0_BLOCK              0x400c4000                // LPUART0
         #elif defined KINETIS_KL
             #define LPUART0_BLOCK              0x40054000                // LPUART0
@@ -6793,7 +6793,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #define DMAMUX0_CHCFG_SOURCE_PORTC           16                  // 0x10 PTC - only channel 2
         #define DMAMUX0_CHCFG_SOURCE_PORTD           16                  // 0x10 PTD - only channel 3
     #else
-        #if defined KINETIS_K66
+        #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
         #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18
@@ -7030,7 +7030,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_PORTC         51                  // 0x33 port C
           #define DMAMUX0_CHCFG_SOURCE_PORTD         52                  // 0x34 port D
           #define DMAMUX0_CHCFG_SOURCE_PORTE         53                  // 0x35 port E
-        #if defined KINETIS_K64 || defined KINETIS_K66
+        #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   54                  // 0x36 IEEE 1588 timer 0
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   55                  // 0x37 IEEE 1588 timer 1 (or)
           #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                  // 0x37 TPM1 overflow
@@ -11370,7 +11370,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #if defined KINETIS_HAS_IRC48M                                   // {58}
             #define SIM_SOPT2_PLLFLLSEL_FLL    0x00000000                // select peripheral clocking option source - MCGFLLCLK
             #define SIM_SOPT2_PLLFLLSEL_PLL    0x00010000                // select peripheral clocking option source - MCGPLLCLK
-            #if defined KINETIS_K66
+            #if defined KINETIS_K65 || defined KINETIS_K66
                 #define SIM_SOPT2_PLLFLLSEL_USB1_PFD_CLK 0x00020000      // select peripheral clocking option source - USB1 PDF
             #endif
             #define SIM_SOPT2_PLLFLLSEL_IRC48M 0x00030000                // select peripheral clocking option source - IRC48 MHz clock
@@ -11526,7 +11526,7 @@ typedef struct stKINETIS_LPTMR_CTL
       #define SIM_SOPT7_ADC0PRETRGSEL_A      0x00000000                  // ADC pretrigger select - pretrigger A
       #define SIM_SOPT7_ADC0PRETRGSEL_B      0x00000010                  // ADC pretrigger select - pretrigger B
       #define SIM_SOPT7_ADC0ALTTRGEN         0x00000080                  // ADC alternate trigger enable
-    #if defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
+    #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K22_SF7
         #define SIM_SOPT8                    *(unsigned long*)(SIM_BLOCK + 0x101c) // System Options Register 8
     #endif
     #if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_K65 || defined KINETIS_K66
@@ -11562,7 +11562,7 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SCGC1_SIM_SCGC1_UART5 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1028), 11)
         #define SIM_SCGC2                    *(volatile unsigned long *)(SIM_BLOCK + 0x102c) // System Clock Gating Control Register 2
           #define SIM_SCGC2_ENET             0x00000001
-          #if defined KINETIS_K66 || defined KINETIS_K65
+          #if defined KINETIS_K65 || defined KINETIS_K66
             #define SIM_SCGC2_LPUART0        0x00000010
             #define SIM_SCGC2_TPM1           0x00000200
             #define SIM_SCGC2_TPM2           0x00000400
@@ -11590,7 +11590,7 @@ typedef struct stKINETIS_LPTMR_CTL
           // Bit-banding references
           //
           #define SIM_SCGC2_SIM_SCGC2_ENET   BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 0)
-          #if defined KINETIS_K66 || defined KINETIS_K65
+          #if defined KINETIS_K65 || defined KINETIS_K66
               #define SIM_SCGC2_SIM_SCGC2_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 4)
               #define SIM_SCGC2_SIM_SCGC2_TPM1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 9)
               #define SIM_SCGC2_SIM_SCGC2_TPM2    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 10)
@@ -13032,7 +13032,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PA_3_LPUART0_TX          PORT_MUX_ALT4
         #define PB_4_LPUART0_RX          PORT_MUX_ALT3
         #define PB_3_LPUART0_TX          PORT_MUX_ALT3
-    #elif defined KINETIS_K66
+    #elif defined KINETIS_K65 || defined KINETIS_K66
         #define PD_8_LPUART0_RX          PORT_MUX_ALT5
         #define PD_9_LPUART0_TX          PORT_MUX_ALT5
         #define PA_1_LPUART0_RX          PORT_MUX_ALT5
@@ -13773,7 +13773,7 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PA_19_TPM_CLKIN1             PORT_MUX_ALT4
     #define PE_17_TPM_CLKIN1             PORT_MUX_ALT4
     #define PE_30_TPM_CLKIN1             PORT_MUX_ALT4
-#elif defined KINETIS_K66 || defined KINETIS_K80
+#elif defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
     #define PB_0_TPM1_CH0                PORT_MUX_ALT6
     #define PA_12_TPM1_CH0               PORT_MUX_ALT7
     #define PA_8_TPM1_CH0                PORT_MUX_ALT6
@@ -13791,7 +13791,7 @@ typedef struct stKINETIS_LPTMR_CTL
 
 #define PB_16_FTM_CLKIN0                 PORT_MUX_ALT4
 #define PB_17_FTM_CLKIN0                 PORT_MUX_ALT4
-#if defined KINETIS_K66 || defined KINETIS_K80
+#if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
     #define PC_12_FTM_CLKIN0             PORT_MUX_ALT4
     #define PA_18_TPM_CLKIN0             PORT_MUX_ALT7
     #define PB_16_TPM_CLKIN0             PORT_MUX_ALT7
@@ -16174,7 +16174,7 @@ typedef struct stKINETIS_CAN_CONTROL
         volatile unsigned long LPUART_CTRL;
         volatile unsigned long LPUART_DATA;
         unsigned long LPUART_MATCH;
-    #if defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KE14 || defined KINETIS_KE15
+    #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_KL28 || defined KINETIS_KE14 || defined KINETIS_KE15
         unsigned long LPUART_MODIR;
     #endif
     #if defined KINETIS_KL28 || defined KINETIS_KE14 || defined KINETIS_KE15
