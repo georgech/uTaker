@@ -75,10 +75,10 @@
 
 //#define DEBUG_CODE                                                     // acivate some debug ouput to monitor operation
 //#define RESET_ON_SUSPEND                                               // reset when the USB cable is pulled
-#if defined _DEV2
-    #define RESET_ON_STOP                                                // reset when the drive is stopped
+#if defined _DEV2 || defined ARDUINO_BLUE_PILL
+    #define RESET_ON_STOP                                                // reset when the drive is stopped (ejected by host)
 #endif
-//#define RESET_ON_EJECT                                                 // reset when the drive is ejected
+#define RESET_ON_EJECT                                                   // reset when the drive is unplugged
 
 #if !defined DISK_COUNT
     #define DISK_COUNT 1                                                 // {26}
@@ -177,7 +177,7 @@
             #define USB_MSD_IN_ENDPOINT_NUMBER  2
         #endif
     #endif
-#elif defined _LM3SXXXX
+#elif defined _LM3SXXXX || defined _STM32
     #define USB_VENDOR_ID                  0x1cbe                        // Luminary Micro, Inc. vendor ID
     #define USB_PRODUCT_ID                 0x1234                        // non-official test MSD PID
     #define USB_MSD_OUT_ENDPOINT_NUMBER         1
@@ -237,6 +237,8 @@
         #define DISK_NAME_INC              10
     #elif defined tinyK22
         #define DISK_NAME                  "TINYK22"
+    #elif defined ARDUINO_BLUE_PILL
+        #define DISK_NAME                  "BLUE_PILL"
     #else
         #define DISK_NAME                  "UPLOAD_DISK"
     #endif

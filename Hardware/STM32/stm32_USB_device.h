@@ -19,6 +19,7 @@
 #if defined _USB_DEVICE_DRIVER_CODE && defined USB_DEVICE_AVAILABLE
 
 static USB_HW usb_hardware = {{{0}}};
+static unsigned long USB_errors = 0;
 
 #define ENDPOINT_RX_FIFO_SIZE      64                                    // (number of words) the RxFIFO and 4 TxFIFOs are divided into equal areas of 256 bytes each (total 1.25k available)
 #define ENDPOINT_0_TX_FIFO_SIZE    64                                    // (number of words) the RxFIFO and 4 TxFIFOs are divided into equal areas of 256 bytes each (total 1.25k available)
@@ -36,36 +37,6 @@ static USB_HW usb_hardware = {{{0}}};
 #endif
 
 
-
-/***** Debugging ****************************/
-#define MAX_USB_EVENTS 2048
-unsigned long ulUSBEvents[MAX_USB_EVENTS] = {0};
-int iUSB_event_Number = 0;
-int iLogOn = 0;
-
-extern void fnAddUSB_event(unsigned long ulCause, unsigned long Value)
-{
-#if defined USB_DEVICE_AVAILABLE
-#elif defined USB_OTG_AVAILABLE
-    /*
-    if ((ulCause >= 0x100031) && (ulCause <= 0x100035)) {                                           // trigger from this cause
-        iLogOn = 1;
-    }*/
-    if (iLogOn == 0) {
-        return;
-    }
-    if (iUSB_event_Number >= (MAX_USB_EVENTS - 2)) {
-        return;
-       // iUSB_event_Number = 0;
-    }
-    ulUSBEvents[iUSB_event_Number++] = ulCause;
-    ulUSBEvents[iUSB_event_Number++] = Value;
-    ulUSBEvents[iUSB_event_Number++] = (OTG_FS_DSTS >> 8);               // SOF
-#endif
-}
-
-/*********************************************/
-
 // This routine is called with interrupts blocked for deferred read of a reception buffer
 //
 extern int fnConsumeUSB_out(unsigned char ucEndpointRef)
@@ -80,7 +51,7 @@ extern unsigned long fnUSB_error_counters(int iValue)                    // {24}
 {
     // No error counters supported 
     //
-    return 0;
+    return USB_errors;
 }
 
 // Copy a buffer to the TxFIFO
@@ -191,59 +162,10 @@ extern void fnActivateHWEndpoint(unsigned char ucEndpointType, unsigned char ucE
 
 
 #if 0
-/**
-* @brief  Activate and configure an endpoint
-* @param  USBx : Selected device
-* @param  ep: pointer to endpoint structure
-* @retval HAL status
-*/
 HAL_StatusTypeDef USB_ActivateEndpoint(USB_TypeDef *USBx, USB_EPTypeDef *ep)
 {
-    /* initialize Endpoint */
-    switch (ep->type)
-    {
-    case EP_TYPE_CTRL:
-        PCD_SET_EPTYPE(USBx, ep->num, USB_EP_CONTROL);
-        break;
-    case EP_TYPE_BULK:
-        PCD_SET_EPTYPE(USBx, ep->num, USB_EP_BULK);
-        break;
-    case EP_TYPE_INTR:
-        PCD_SET_EPTYPE(USBx, ep->num, USB_EP_INTERRUPT);
-        break;
-    case EP_TYPE_ISOC:
-        PCD_SET_EPTYPE(USBx, ep->num, USB_EP_ISOCHRONOUS);
-        break;
-    default:
-        break;
-    }
 
-    PCD_SET_EP_ADDRESS(USBx, ep->num, ep->num);
-
-    if (ep->doublebuffer == 0)
-    {
-        if (ep->is_in)
-        {
-            /*Set the endpoint Transmit buffer address */
-            PCD_SET_EP_TX_ADDRESS(USBx, ep->num, ep->pmaadress);
-            PCD_CLEAR_TX_DTOG(USBx, ep->num);
-            /* Configure NAK status for the Endpoint*/
-            PCD_SET_EP_TX_STATUS(USBx, ep->num, USB_EP_TX_NAK);
-        }
-        else
-        {
-            /*Set the endpoint Receive buffer address */
-            PCD_SET_EP_RX_ADDRESS(USBx, ep->num, ep->pmaadress);
-            /*Set the endpoint Receive buffer counter*/
-            PCD_SET_EP_RX_CNT(USBx, ep->num, ep->maxpacket);
-            PCD_CLEAR_RX_DTOG(USBx, ep->num);
-            /* Configure VALID status for the Endpoint*/
-            PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_VALID);
-        }
-    }
-    /*Double Buffer*/
-    else
-    {
+    { // double buffered reference
         /*Set the endpoint as double buffered*/
         PCD_SET_EP_DBUF(USBx, ep->num);
         /*Set buffer address for double buffered mode*/
@@ -272,35 +194,13 @@ HAL_StatusTypeDef USB_ActivateEndpoint(USB_TypeDef *USBx, USB_EPTypeDef *ep)
             PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_DIS);
         }
     }
-
-    return HAL_OK;
 }
 
-/**
-* @brief  De-activate and de-initialize an endpoint
-* @param  USBx : Selected device
-* @param  ep: pointer to endpoint structure
-* @retval HAL status
-*/
 HAL_StatusTypeDef USB_DeactivateEndpoint(USB_TypeDef *USBx, USB_EPTypeDef *ep)
 {
-    if (ep->doublebuffer == 0)
-    {
-        if (ep->is_in)
-        {
-            PCD_CLEAR_TX_DTOG(USBx, ep->num);
-            /* Configure DISABLE status for the Endpoint*/
-            PCD_SET_EP_TX_STATUS(USBx, ep->num, USB_EP_TX_DIS);
-        }
-        else
-        {
-            PCD_CLEAR_RX_DTOG(USBx, ep->num);
-            /* Configure DISABLE status for the Endpoint*/
-            PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_DIS);
-        }
-    }
+
     /*Double Buffer*/
-    else
+
     {
         if (ep->is_in == 0)
         {
@@ -325,8 +225,6 @@ HAL_StatusTypeDef USB_DeactivateEndpoint(USB_TypeDef *USBx, USB_EPTypeDef *ep)
             PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_DIS);
         }
     }
-
-    return HAL_OK;
 }
 #endif
 
@@ -368,7 +266,6 @@ extern void fnSendZeroData(USB_HW *ptrUSB_HW, int iEndpoint)
     fnSendUSB_data(0, 0, iEndpoint, ptrUSB_HW);
 }
 
-
 // When the clear feature is received for a stalled endpoint it is cleared in the hardware by calling this routine
 //
 extern void fnUnhaltEndpoint(unsigned char ucEndpoint)
@@ -388,56 +285,6 @@ extern void fnUnhaltEndpoint(unsigned char ucEndpoint)
     }
 }
 
-#if 0
-/**
-* @brief  USB_EPSetStall : set a stall condition over an EP
-* @param  USBx : Selected device
-* @param  ep: pointer to endpoint structure
-* @retval HAL status
-*/
-HAL_StatusTypeDef USB_EPSetStall(USB_TypeDef *USBx, USB_EPTypeDef *ep)
-{
-    if (ep->num == 0)
-    {
-        /* This macro sets STALL status for RX & TX*/
-        PCD_SET_EP_TXRX_STATUS(USBx, ep->num, USB_EP_RX_STALL, USB_EP_TX_STALL);
-    }
-    else
-    {
-        if (ep->is_in)
-        {
-            PCD_SET_EP_TX_STATUS(USBx, ep->num, USB_EP_TX_STALL);
-        }
-        else
-        {
-            PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_STALL);
-        }
-    }
-    return HAL_OK;
-}
-
-/**
-* @brief  USB_EPClearStall : Clear a stall condition over an EP
-* @param  USBx : Selected device
-* @param  ep: pointer to endpoint structure
-* @retval HAL status
-*/
-HAL_StatusTypeDef USB_EPClearStall(USB_TypeDef *USBx, USB_EPTypeDef *ep)
-{
-    if (ep->is_in)
-    {
-        PCD_CLEAR_TX_DTOG(USBx, ep->num);
-        PCD_SET_EP_TX_STATUS(USBx, ep->num, USB_EP_TX_VALID);
-    }
-    else
-    {
-        PCD_CLEAR_RX_DTOG(USBx, ep->num);
-        PCD_SET_EP_RX_STATUS(USBx, ep->num, USB_EP_RX_VALID);
-    }
-    return HAL_OK;
-}
-
-#endif
 
 static void fnPullUSB_data(unsigned char *ptrOutput, unsigned long *ptrInputBuffer, unsigned short usLength)
 {
@@ -480,12 +327,6 @@ extern unsigned char fnGetUSB_data(unsigned char **ptrData, int iInc)
     return ucValue;
 }
 
-volatile int iCnt = 0;
-static void fnLogThis(void)
-{
-    iCnt++;
-}
-
 // This routine handles all SETUP and OUT frames. It can send an empty data frame if required by control endpoints or stall on errors.
 // It usually clears the handled input buffer when complete, unless the buffer is specified to remain owned by the processor.
 //
@@ -500,9 +341,6 @@ static int fnProcessInput(int iEndpoint_ref, unsigned char ucFrameType)
     ptUSB_BD += iEndpoint_ref;
     usEndpointLength = ptUSB_BD->usUSB_COUNT_RX_0;
     usb_hardware.usLength = (usEndpointLength & USB_COUNT_COUNT_MASK);
-    if ((ucFrameType == USB_OUT_FRAME) && (usb_hardware.usLength > 0)) {
-        fnLogThis();
-    }
     ptrInputBuffer += (ptUSB_BD->usUSB_ADDR_RX/2);
     fnPullUSB_data(ucInputBuffer, (unsigned long *)ptrInputBuffer, usb_hardware.usLength);
     uDisable_Interrupt();                                                // ensure interrupts remain blocked when putting messages to queue
@@ -983,6 +821,7 @@ static __interrupt void USB_Device_LP_Interrupt(void)
         else if ((ulInterrupts & USB_ISTR_ERR) != 0) {
             // Error
             //
+            USB_errors++;
         }
         USB_ISTR = 0;                                                    // clear interrupt(s)
     }
@@ -1010,7 +849,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
 
     RCC_APB1RSTR |= RCC_APB1RSTR_USBRST;                                 // reset the module
     RCC_APB1RSTR &= ~(RCC_APB1RSTR_USBRST);
-    USB_CNTR = USB_CNTR_FRES;                                            // leave powered down mode (connecting transceiver) but leave în reset until it is stable
+    USB_CNTR = USB_CNTR_FRES;                                            // leave powered down mode (connecting transceiver) but leave in reset until it is stable
     fnDelayLoop(USB_DEVICE_T_STARTUP);                                   // wait stabilisation delay
     USB_CNTR = 0;                                                        // exit forced reset state
     USB_ISTR = 0;                                                        // clear possible spurious interrupts that are pending

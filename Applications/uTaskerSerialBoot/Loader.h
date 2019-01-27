@@ -11,7 +11,7 @@
     File:      Loader.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     15.09.2009 Add STR91XF setup
     03.01.2010 Add SAM7X setup
@@ -316,8 +316,8 @@
     #define ROOT_FILE_ENTRIES         4                                  // when USB MSD loader this many directory entries are set to the start of FLASH - the application start is shifted by this amount x 32 bytes
     #define ENABLE_READBACK                                              // allow USB to transfer present application to PC
     #if defined ARDUINO_BLUE_PILL
-        #define UTASKER_APP_START     (FLASH_START_ADDRESS + (16 * 1024))// application starts at this address
-        #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (44 * 1024)) // end of application space - after maximum application size
+        #define UTASKER_APP_START     (FLASH_START_ADDRESS + (12 * 1024))// application starts at this address
+        #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (32 * 1024)) // end of application space - after maximum application size
     #else
         #define UTASKER_APP_START     (FLASH_START_ADDRESS + (16 * 1024))// application starts at this address
         #define UTASKER_APP_END       (unsigned char *)(UTASKER_APP_START + (130 * 1024)) // end of application space - after maximum application size
@@ -325,7 +325,7 @@
 
     // Before software can be read from the disk a password file must have been copied
     //
-    #define READ_PASSWORD             "enable file read from the Kinetis device by dragging this file to the disk" // password with maximum length of 512 bytes
+  //#define READ_PASSWORD             "enable file read from the STM32 device by dragging this file to the disk" // password with maximum length of 512 bytes
 
     // SD card loading - file to be loaded, magic number and secret key for authenticating the file's content
     //

@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\ST Micro\STM32\workspace_STM32\uTaskerV1.4.9\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.general.xcl" --backend -f "D:\MJBC\Internal\ST Micro\STM32\workspace_STM32\uTaskerV1.4.9\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.driver.xcl" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.general.xcl" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\ST Micro\STM32\workspace_STM32\uTaskerV1.4.9\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.general.xcl" "--debug_file=%~1" --backend -f "D:\MJBC\Internal\ST Micro\STM32\workspace_STM32\uTaskerV1.4.9\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.driver.xcl" 
+"D:\Programs\IAR Systems\Embedded Workbench 7.5\common\bin\cspybat" -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.general.xcl" "--debug_file=%~1" --backend -f "D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\IAR7_STM32\settings\uTaskerV1.Release_BM_STM32.driver.xcl" 
 
 @echo off 
 :end

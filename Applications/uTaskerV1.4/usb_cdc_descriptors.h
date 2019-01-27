@@ -11,7 +11,7 @@
     File:      usb_cdc_descriptors.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     01.12.2015 Add RNDIS support
     23.12.2015 Add RAW HID and Audio support
@@ -116,7 +116,7 @@
         #else
             #define USB_PRODUCT_ID          0x0044                       // uTasker Freescale development CDC product ID
         #endif
-    #elif defined _LM3SXXXX
+    #elif defined _LM3SXXXX || defined _STM32
         #define USB_VENDOR_ID               0x1cbe                       // {3} Luminary Micro, Inc. vendor ID
         #define USB_PRODUCT_ID              0x0101                       // {6} uTasker Luminary development CDC product ID
     #elif defined _HW_SAM7X || defined _HW_AVR32

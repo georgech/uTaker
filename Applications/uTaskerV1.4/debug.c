@@ -3995,6 +3995,11 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
         // Fall through intentionally
         //
     case DO_RESET:                                                       // hardware - reset
+#if defined ARDUINO_BLUE_PILL                                            // this board has a simple USB connection that needs to be disconnected to the host before restarting
+        _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT11 | PORTA_BIT12), (OUTPUT_SLOW | OUTPUT_PUSH_PULL), 0); // drive USB+ to 0V (will only be driven when the USB is disconnected)
+        USB_CNTR |= (USB_CNTR_FRES | USB_CNTR_PDWN);                     // reset USB and disconnect its tranceiver
+        fnDelayLoop(50000);
+#endif
         fnResetBoard();
         break;
     case DO_LAST_RESET:

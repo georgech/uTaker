@@ -11,7 +11,7 @@
     File:        app_hw_stm32.h
     Project:     uTasker serial loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2014
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
     Application specific hardware configuration
@@ -160,7 +160,7 @@
 
 #include "../../Hardware/STM32/STM32.h"
 
-#define _DELETE_BOOT_MAILBOX()     *(BOOT_MAIL_BOX) = 0
+#define _DELETE_BOOT_MAILBOX()     *(BOOT_MAIL_BOX) = 0; CLEAR_RESET_CAUSES()
 
 // F4 needs 4..24MHz external clock
 // F4 starts with internal 16MHz 1% RC oscillator (F1 and F2 2%)
@@ -596,12 +596,12 @@
 #elif defined ARDUINO_BLUE_PILL                                          // STM32F103
     #define BLINK_LED                  PORTC_BIT13                       // green LED
 
-    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(B, (PORTB_BIT12 | PORTB_BIT13), (INPUT_PULL_UP)) // PB12 and PB13 configured as input with pull-up
-    #define WATCHDOG_DISABLE()         (_READ_PORT_MASK(B, (PORTB_BIT13)) == 0) // disable watchdog by pulling pin 19 to ground at reset
+#define INIT_WATCHDOG_DISABLE()        _CONFIG_PORT_INPUT(B, (PORTB_BIT12), (INPUT_PULL_UP)); _CONFIG_PORT_INPUT(B, (PORTB_BIT2), (FLOATING_INPUT)); _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (PORTA_BIT11 | PORTA_BIT12), (OUTPUT_SLOW | OUTPUT_PUSH_PULL), 0); // PB2 and PB12 configured as input (PTB2 floating due to HW design)
+    #define WATCHDOG_DISABLE()         (_READ_PORT_MASK(B, (PORTB_BIT12)) == 0) // disable watchdog by pulling pin 20 to ground at reset
     #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 
-    #define FORCE_BOOT()               (_READ_PORT_MASK(B, (PORTB_BIT12)) == 0) // pull pin 20 to ground at reset to force boot loader mode
+    #define FORCE_BOOT()               ((_READ_PORT_MASK(B, (PORTB_BIT2)) != 0) || (SOFTWARE_RESET_DETECTED() && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER))) // set BOOT1 to '1' at reset to force boot loader mode
     #define RETAIN_LOADER_MODE()       0                                 // force retaining boot loader mode after update
 
                                         // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 

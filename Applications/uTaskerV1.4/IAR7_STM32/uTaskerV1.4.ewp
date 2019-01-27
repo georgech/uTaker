@@ -1050,7 +1050,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>STM32L486ZG	ST STM32L486ZG</state>
+          <state>STM32F103C8	ST STM32F103C8</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -1089,7 +1089,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>39</state>
+          <state>38</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -1106,21 +1106,21 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>39</state>
+          <state>38</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>STM32L486ZG	ST STM32L486ZG</state>
+          <state>STM32F103C8	ST STM32F103C8</state>
         </option>
         <option>
           <name>FPU2</name>
           <version>0</version>
-          <state>4</state>
+          <state>0</state>
         </option>
         <option>
           <name>NrRegs</name>
           <version>0</version>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>NEON</name>
@@ -1129,7 +1129,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>39</state>
+          <state>38</state>
         </option>
       </data>
     </settings>
@@ -1688,7 +1688,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\uTaskerSTM32_L496ZG.icf</state>
+          <state>$PROJ_DIR$\settings\uTaskerSTM32_64_20.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -2011,7 +2011,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>STM32F407VG	ST STM32F407VG</state>
+          <state>STM32F103C8	ST STM32F103C8</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -2050,7 +2050,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>40</state>
+          <state>38</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -2067,21 +2067,21 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>39</state>
+          <state>38</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>STM32F407VG	ST STM32F407VG</state>
+          <state>STM32F103C8	ST STM32F103C8</state>
         </option>
         <option>
           <name>FPU2</name>
           <version>0</version>
-          <state>4</state>
+          <state>0</state>
         </option>
         <option>
           <name>NrRegs</name>
           <version>0</version>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>NEON</name>
@@ -2090,7 +2090,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>39</state>
+          <state>38</state>
         </option>
       </data>
     </settings>
@@ -2649,7 +2649,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\STM32_F4_Flash_BM.icf</state>
+          <state>$PROJ_DIR$\settings\uTaskerSTM32_64_20_BM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

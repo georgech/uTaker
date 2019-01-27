@@ -2512,9 +2512,8 @@ extern void fnUserHWInit(void)
     }
     // A non-forced boot mode start is guaranteed to have empty application Flash from here
     //
-    #elif !defined _WINDOWS
-    _DELETE_BOOT_MAILBOX();                                              // {13}
     #endif
+    _DELETE_BOOT_MAILBOX();                                              // {13}
 #endif
 #if defined ETH_INTERFACE && defined RESET_PHY                           // {18}
     ASSERT_PHY_RST();                                                    // immediately set PHY to reset state

@@ -1446,6 +1446,20 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 #endif
 
 
+// Macro to clear flags by writing '1' to the bit
+//
+#if defined _WINDOWS                                                     // clear when simulating
+    #define WRITE_ONE_TO_CLEAR(reg, flag)    reg &= ~(flag)
+#else
+    #define WRITE_ONE_TO_CLEAR(reg, flag)    reg = (flag)
+#endif
+#if defined _WINDOWS                                                     // clear when simulating
+    #define OR_ONE_TO_CLEAR(reg, flag)       reg &= ~(flag)
+#else
+    #define OR_ONE_TO_CLEAR(reg, flag)       reg |= (flag)
+#endif
+
+
 // Flexible Static Memory Controller
 //
 #define FSMC_BCR1                        *(volatile unsigned long *)(FSMC_BLOCK + 0x0000) // SRAM/NOR-Flash chip-select control register 1
@@ -3227,27 +3241,27 @@ typedef struct stSTM32_BD
         #define RCC_BDCR_RTCEN               0x00008000
         #define RCC_BDCR_BDRST               0x00010000
     #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x24) // control status register
-        #define RCC_CSR_LSION                0x00000001                  // enable 40kHz RC oscillator
-        #define RCC_CSR_LSIRDY               0x00000002                  // read-only
+        #define RCC_CSR_LSION                0x00000001                  // internal low-speed oscillator enable (enable 40kHz RC oscillator)
+        #define RCC_CSR_LSIRDY               0x00000002                  // internal low-speed oscillator ready (read-only)
         #if defined _STM32F031
             #define RCC_CSR_V18PWRRSTF       0x00800000
         #endif
-        #define RCC_CSR_RMVF                 0x01000000
+        #define RCC_CSR_RMVF                 0x01000000                  // remove reset flag (write '1' to clear all flags)
         #if defined _STM32F031
             #define RCC_CSR_OBLRSTF          0x02000000
         #endif
-        #define RCC_CSR_PINRSTF              0x04000000
-        #define RCC_CSR_PORRSTF              0x08000000
-        #define RCC_CSR_SFTRSTF              0x10000000
-        #define RCC_CSR_IWDGRSTF             0x20000000
-        #define RCC_CSR_WWDGRSTF             0x40000000
-        #define RCC_CSR_LPWRRSTF             0x80000000
+        #define RCC_CSR_PINRSTF              0x04000000                  // pin reset flag (read-only)
+        #define RCC_CSR_PORRSTF              0x08000000                  // power on reset/power down reset flag (read-only)
+        #define RCC_CSR_SFTRSTF              0x10000000                  // software reset flag (read-only)
+        #define RCC_CSR_IWDGRSTF             0x20000000                  // independent watchdog reset flag (read-only)
+        #define RCC_CSR_WWDGRSTF             0x40000000                  // window watchdog reset flag (read-only)
+        #define RCC_CSR_LPWRRSTF             0x80000000                  // low power reset flag (read-only)
         #if defined _STM32F031
             #define RESET_CAUSE_FLAGS        (RCC_CSR_V18PWRRSTF | RCC_CSR_OBLRSTF | RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
         #else
             #define RESET_CAUSE_FLAGS        (RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
         #endif
-    #define RCC_AHB1RSTR                      *(unsigned long *)(RCC_BLOCK + 0x28) // AHB peripheral clock enable register
+    #define RCC_AHB1RSTR                     *(unsigned long *)(RCC_BLOCK + 0x28) // AHB peripheral clock enable register
       #define RCC_AHBRSTR_OTGFSRST           0x00001000
       #define RCC_AHBRSTR_ETHMACRST          0x00004000
       #define RCC_CFGR2                      *(unsigned long *)(RCC_BLOCK + 0x2c) // clock configuration register 2
@@ -3265,6 +3279,8 @@ typedef struct stSTM32_BD
         #define RCC_CR2                      *(unsigned long *)(RCC_BLOCK + 0x34) // clock control register 2
     #endif
 #endif
+#define SOFTWARE_RESET_DETECTED()            ((RCC_CSR & (RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF)) == RCC_CSR_SFTRSTF)
+#define CLEAR_RESET_CAUSES()                  WRITE_ONE_TO_CLEAR(RCC_CSR, RCC_CSR_RMVF)
 
 // Macro to reset peripheral module
 //
@@ -5448,7 +5464,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOA_ODR                   *(volatile unsigned long *)(GPIO_PORTA_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOA_BSRR                  *(volatile unsigned long *)(GPIO_PORTA_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOA_BRR                   *(volatile unsigned long *)(GPIO_PORTA_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOA_LCKR                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOA_LCKR                  *(unsigned long *)(GPIO_PORTA_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOB_CRL                   *(volatile unsigned long *)(GPIO_PORTB_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOB_CRH                   *(volatile unsigned long *)(GPIO_PORTB_BLOCK + 0x04)  // Port Control Register High
@@ -5456,7 +5472,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOB_ODR                   *(volatile unsigned long *)(GPIO_PORTB_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOB_BSRR                  *(volatile unsigned long *)(GPIO_PORTB_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOB_BRR                   *(volatile unsigned long *)(GPIO_PORTB_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOB_LCKR                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOB_LCKR                  *(unsigned long *)(GPIO_PORTB_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOC_CRL                   *(volatile unsigned long *)(GPIO_PORTC_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOC_CRH                   *(volatile unsigned long *)(GPIO_PORTC_BLOCK + 0x04)  // Port Control Register High
@@ -5464,7 +5480,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOC_ODR                   *(volatile unsigned long *)(GPIO_PORTC_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOC_BSRR                  *(volatile unsigned long *)(GPIO_PORTC_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOC_BRR                   *(volatile unsigned long *)(GPIO_PORTC_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOC_LCKR                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOC_LCKR                  *(unsigned long *)(GPIO_PORTC_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOD_CRL                   *(volatile unsigned long *)(GPIO_PORTD_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOD_CRH                   *(volatile unsigned long *)(GPIO_PORTD_BLOCK + 0x04)  // Port Control Register High
@@ -5472,7 +5488,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOD_ODR                   *(volatile unsigned long *)(GPIO_PORTD_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOD_BSRR                  *(volatile unsigned long *)(GPIO_PORTD_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOD_BRR                   *(volatile unsigned long *)(GPIO_PORTD_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOD_LCKR                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOD_LCKR                  *(unsigned long *)(GPIO_PORTD_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOE_CRL                   *(volatile unsigned long *)(GPIO_PORTE_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOE_CRH                   *(volatile unsigned long *)(GPIO_PORTE_BLOCK + 0x04)  // Port Control Register High
@@ -5480,7 +5496,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOE_ODR                   *(volatile unsigned long *)(GPIO_PORTE_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOE_BSRR                  *(volatile unsigned long *)(GPIO_PORTE_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOE_BRR                   *(volatile unsigned long *)(GPIO_PORTE_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOE_LCKR                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOE_LCKR                  *(unsigned long *)(GPIO_PORTE_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOF_CRL                   *(volatile unsigned long *)(GPIO_PORTF_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOF_CRH                   *(volatile unsigned long *)(GPIO_PORTF_BLOCK + 0x04)  // Port Control Register High
@@ -5488,7 +5504,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOF_ODR                   *(volatile unsigned long *)(GPIO_PORTF_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOF_BSRR                  *(volatile unsigned long *)(GPIO_PORTF_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOF_BRR                   *(volatile unsigned long *)(GPIO_PORTF_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOF_LCKR                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOF_LCKR                  *(unsigned long *)(GPIO_PORTF_BLOCK + 0x18)           // Port Configuration Lock Register
 
     #define GPIOG_CRL                   *(volatile unsigned long *)(GPIO_PORTG_BLOCK + 0x00)  // Port Control Register Low
     #define GPIOG_CRH                   *(volatile unsigned long *)(GPIO_PORTG_BLOCK + 0x04)  // Port Control Register High
@@ -5496,7 +5512,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
     #define GPIOG_ODR                   *(volatile unsigned long *)(GPIO_PORTG_BLOCK + 0x0c)  // Port Output Data Register
     #define GPIOG_BSRR                  *(volatile unsigned long *)(GPIO_PORTG_BLOCK + 0x10)  // Port Bit Set/Reset Register (write-only)
     #define GPIOG_BRR                   *(volatile unsigned long *)(GPIO_PORTG_BLOCK + 0x14)  // Port Bit Reset Register (write-only)
-    #define GPIOG_LCKR                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x10)           // Port Configuration Lock Register
+    #define GPIOG_LCKR                  *(unsigned long *)(GPIO_PORTG_BLOCK + 0x18)           // Port Configuration Lock Register
 
     // Alternate-function I/O 
     //
@@ -7305,6 +7321,7 @@ typedef struct stVECTOR_TABLE
     #define __GPIO_IS_POWERED(ref)  (RCC_APB2ENR & (RCC_APB2ENR << ref))
     #define __GPIO_IS_IN_RESET(ref) (RCC_APB2RSTR & (RCC_APB2ENR_IOPAEN << ref))
 #endif
+
 
 // Port macros
 //

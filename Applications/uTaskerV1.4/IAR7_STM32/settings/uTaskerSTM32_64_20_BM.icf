@@ -2,9 +2,9 @@
 /*-Editor annotation file-*/
 /* IcfEditorFile="$TOOLKIT_DIR$\config\ide\IcfEditor\a_v1_0.xml" */
 /*-Specials-*/
-define symbol __ICFEDIT_intvec_start__ = 0x08004080;
+define symbol __ICFEDIT_intvec_start__ = 0x08003080;
 /*-Memory Regions-*/
-define symbol __ICFEDIT_region_ROM_start__ = 0x08004080;
+define symbol __ICFEDIT_region_ROM_start__ = 0x08003080;
 define symbol __ICFEDIT_region_ROM_end__   = 0x0800FFFF;
 define symbol __ICFEDIT_region_RAM_start__ = 0x20000200;
 define symbol __ICFEDIT_region_RAM_end__   = 0x2004FFFF;
