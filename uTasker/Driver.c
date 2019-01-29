@@ -11,7 +11,7 @@
     File:      Driver.c (containing queue driver and some library replacement routines)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     24.03.2007 Cast to quieten GNU compiler                              {1}
     25.08.2007 uStrlen() const type to match prototype                   {2}
@@ -654,7 +654,9 @@ extern QUEUE_TRANSFER fnWriteInternal(unsigned char *output_buffer, QUEUE_TRANSF
             return (ptQUEQue->buf_length - ptQUEQue->chars);             // remaining space in queue (before adding new message)
         }
         DataSent = fnFillBuf(ptQUEQue, output_buffer, nr_of_bytes);      // protected copy performed here
+    #if !defined APPLICATION_WITHOUT_OS
         uTaskerStateChange(cWakeTask, UTASKER_ACTIVATE);                 // wake the task written to
+    #endif
     }
     else {
     #if defined SUPPORT_DISTRIBUTED_NODES

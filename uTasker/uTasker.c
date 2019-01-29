@@ -35,7 +35,6 @@
 
 */
 
-
 /* =================================================================== */
 /*                           include files                             */
 /* =================================================================== */
@@ -46,7 +45,7 @@
 /*                          local definitions                          */
 /* =================================================================== */
 
-#ifndef OS_MALLOC                                                        // {17}
+#if !defined OS_MALLOC                                                   // {17}
     #define OS_MALLOC(x) uMalloc((MAX_MALLOC)(x))
 #endif
 
@@ -68,6 +67,7 @@
 
 volatile UTASK_TICK uTaskerSystemTick = 0;                               // system tick counter
 
+#if !defined APPLICATION_WITHOUT_OS
 #if defined MULTISTART
     MULTISTART_TABLE *ptMultiStartTable = 0;
     JUMP_TABLE *JumpTable = 0;
@@ -89,9 +89,6 @@ volatile UTASK_TICK uTaskerSystemTick = 0;                               // syst
 static TTIMETABLE *tTimerList = 0;                                       // pointer to timer list
 static TTASKTABLE *tTaskTable = 0;                                       // pointer to process table
 
-#if defined (RANDOM_NUMBER_GENERATOR) && !defined (RND_HW_SUPPORT)
-    static unsigned short usRandomNumber = 0;
-#endif
 
 #if defined MONITOR_PERFORMANCE                                          // {15}
     static unsigned long ulTotalIdle = 0;
@@ -253,24 +250,6 @@ retry:
 #endif
     return (nr_of_tasks);
 }
-
-#if defined RANDOM_NUMBER_GENERATOR
-
-#define PRNG_POLY  0xb400                                                // taps: 16 14 13 11; characteristic polynomial: x^16 + x^14 + x^13 + x^11 + 1
-
-extern unsigned short fnRandom(void)                                     // {9}
-{
-    #if defined RND_HW_SUPPORT
-    return fnGetRndHW();                                                 // get a random value from the hardware
-    #else
-    register unsigned short usShifter = usRandomNumber;                  // for speed, copy to register
-
-    usShifter = (unsigned short)((usShifter >> 1) ^ (-(signed short)(usShifter & 1) & PRNG_POLY));
-    usRandomNumber = usShifter;                                          // {13} save the new value
-    return (usShifter);
-    #endif
-}
-#endif
 
 #if defined MONITOR_PERFORMANCE                                          // {15}
 // Each time a task starts and stops its duration is recorded in its task struct - an idle duration is recorded when no tasks are operating
@@ -646,4 +625,23 @@ extern void fnRtmkSystemTick(void)
         ptTimerList++;                                                   // move to the next task in the task table
     }
 }
+#endif
 
+#if defined RANDOM_NUMBER_GENERATOR
+
+#define PRNG_POLY  0xb400                                                // taps: 16 14 13 11; characteristic polynomial: x^16 + x^14 + x^13 + x^11 + 1
+
+extern unsigned short fnRandom(void)                                     // {9}
+{
+    #if defined RND_HW_SUPPORT
+    return fnGetRndHW();                                                 // get a random value from the hardware
+    #else
+    static unsigned short usRandomNumber = 0;
+    register unsigned short usShifter = usRandomNumber;                  // for speed, copy to register
+
+    usShifter = (unsigned short)((usShifter >> 1) ^ (-(signed short)(usShifter & 1) & PRNG_POLY));
+    usRandomNumber = usShifter;                                          // {13} save the new value
+    return (usShifter);
+    #endif
+}
+#endif

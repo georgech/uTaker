@@ -11,7 +11,7 @@
     File:      WinSim.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.04.2007 Added function fnGetEEPROMSize()                          {1}
     11.08.2007 Added SPI Data FLASH to support the AT45DBXXX             {2}
@@ -285,6 +285,7 @@ extern int main(int argc, char *argv[])
         fnSetProjectDetails(++argv);
 	    fnInitHW();                                                      // initialise hardware  
         fnSimPorts();                                                    // ensure simulator is aware of any hardware port initialisations
+#if !defined APPLICATION_WITHOUT_OS
 #if defined RUN_IN_FREE_RTOS
         {
             DWORD ThreadIDRead;                                          // start the FreeRTOS main loop in a thread since it never returns
@@ -324,6 +325,7 @@ _abort_multi:
 	    uTaskerStart((UTASKTABLEINIT *)ctTaskTable, ctNodes, PHYSICAL_QUEUES); // start the operating system
     #endif
         iRun = 5;
+#endif
 #endif
         iInitialised = 1;
         break;
@@ -808,7 +810,7 @@ _abort_multi:
     if (iRun != 0) {
         do {
             if (iWinPcapSending == 0) {
-    #if !defined RUN_IN_FREE_RTOS
+    #if !defined RUN_IN_FREE_RTOS && !defined APPLICATION_WITHOUT_OS
         #if defined MULTISTART
                 ptrNewstart =
         #endif

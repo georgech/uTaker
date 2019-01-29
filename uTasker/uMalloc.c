@@ -11,7 +11,7 @@
     File:      uMalloc.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     12.10.2007 uMallocAlign() quantity extended to 64k                   {1}
     05.05.2009 Add conditional compile on UNUSED_STACK_PATTERN           {2}
@@ -70,13 +70,14 @@ extern void fnInitialiseHeap(const HEAP_NEEDS *ctOurHeap, void *HeapStart)
 
     present_HeapSize = 0;                                                // initially no heap has been allocated
     pucTopOfHeap = pucBottomOfHeap = (unsigned char *)HeapStart;         // mark bottom of heap
-
+#if !defined APPLICATION_WITHOUT_OS
     while (ctOurHeap->ConfigNr != OurConfigNr) {
         if (ctOurHeap->ConfigNr == 0) {
             return;                                                      // end of list - node not found
         }
         ctOurHeap++;
     }
+#endif
     pucTopOfHeap += ctOurHeap->need_this_amount;                         // we need the following amount of memory for heap use
 
 #if defined UNUSED_HEAP_PATTERN

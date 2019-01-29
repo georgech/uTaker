@@ -419,8 +419,7 @@ static void disable_watchdog(void)
 /* =================================================================== */
 /*                                main()                               */
 /* =================================================================== */
-
-#if !defined RUN_IN_FREE_RTOS && !defined _WINDOWS
+#if !defined RUN_IN_FREE_RTOS && !defined APPLICATION_WITHOUT_OS && !defined _WINDOWS
     static void fn_uTasker_main(void);
 #elif defined RUN_IN_FREE_RTOS && !defined _WINDOWS
     extern void fnFreeRTOS_main(void);
@@ -438,25 +437,28 @@ extern int main(void)
         ptrTopOfUsedMemory = __sfe(".data");
     }
 #endif
-    fnInitHW();                                                          // perform hardware initialisation (note that we do not have heap yet)
 #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
     ptrSeed = RANDOM_SEED_LOCATION;                                      // {23}
 #endif
+    fnInitHW();                                                          // perform hardware initialisation (note that we do not have heap yet)
+#if !defined APPLICATION_WITHOUT_OS
     fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
-#if defined RUN_IN_FREE_RTOS
+    #if defined RUN_IN_FREE_RTOS
     fnFreeRTOS_main();                                                   // never return in normal situations
     FOREVER_LOOP() {
         // This only happens when there was a failure to initialise and start FreeRTOS (usually not enough heap)
         //
         _EXCEPTION("FreeRTOS failed to initialise");
     }
-#else
+    #else
     fn_uTasker_main();                                                   // never return
+    #endif
 #endif
     return 0;                                                            // we never return....
 }
 #endif                                                                   // end if not _WINDOWS
 
+#if !defined APPLICATION_WITHOUT_OS
 #if defined RUN_IN_FREE_RTOS
     extern void fn_uTasker_main(void *pars)
 #else
@@ -497,6 +499,7 @@ extern int main(void)
     }
 #endif
 }
+#endif
 
 #if defined _COMPILE_KEIL
 // Keil demands the use of a __main() call to correctly initialise variables - it then calls main()
@@ -1348,27 +1351,29 @@ extern int fnIsPending(int iInterruptID)                                 // {126
 /*                                 TICK                                */
 /* =================================================================== */
 
+#if !defined APPLICATION_WITHOUT_TICK
 // Tick interrupt
 //
 static __interrupt void _RealTimeInterrupt(void)
 {
-#if defined TICK_USES_LPTMR                                              // {94} tick interrupt from low power timer
+    #if defined TICK_USES_LPTMR                                          // {94} tick interrupt from low power timer
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt
-#elif defined TICK_USES_RTC                                              // {100} tick interrupt from RTC
+    #elif defined TICK_USES_RTC                                          // {100} tick interrupt from RTC
     RTC_SC |= RTC_SC_RTIF;                                               // clear pending interrupt
-#else                                                                    // tick interrupt from systick
+    #else                                                                // tick interrupt from systick
     INT_CONT_STATE_REG = PENDSTCLR;                                      // reset interrupt
     #if defined _WINDOWS
     INT_CONT_STATE_REG &= ~(PENDSTSET | PENDSTCLR);
     #endif
-#endif
-#if defined RUN_IN_FREE_RTOS && !defined _WINDOWS
+    #endif
+    #if defined RUN_IN_FREE_RTOS && !defined _WINDOWS
     xPortSysTickHandler();
-#endif
+    #endif
     uDisable_Interrupt();                                                // ensure tick handler cannot be interrupted
         fnRtmkSystemTick();                                              // operating system tick
     uEnable_Interrupt();
 }
+#endif
 
 #if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {136} enable low voltage detection interrupt warning
 // Interrupt to warn that the voltage is close to the reset threshold
@@ -1385,6 +1390,7 @@ static __interrupt void _low_voltage_irq(void)
 }
 #endif
 
+#if !defined APPLICATION_WITHOUT_TICK
 // Routine to initialise the tick interrupt (uses Cortex M7/M4/M0+ SysTick timer, RTC or low power timer)
 //
 extern void fnStartTick(void)
@@ -1521,6 +1527,7 @@ extern void fnStartTick(void)
     #endif
 #endif
 }
+#endif
 
 /* =================================================================== */
 /*                             Watchdog                                */
@@ -2657,28 +2664,45 @@ extern void start_application(unsigned long app_link_location)
 #if !defined FREERTOS_NOT_COMPILED /*defined RUN_IN_FREE_RTOS || defined _WINDOWS*/ // to satisfy FreeRTOS callbacks - even when FreeRTOS not linked
 extern void *pvPortMalloc(int iSize)
 {
+    #if defined _WINDOWS
+    static unsigned long ulFreeRTOS_stack = 0;
+    ulFreeRTOS_stack += iSize;
+    #endif
+    #if defined FREERTOS_SAFE_CALLOC && defined SUPPORT_UCALLOC
+    return (uCalloc((size_t)iSize, 1));                                  // use uTasker safe calloc() as basis for heap
+    #elif defined FREERTOS_SECONDARY_HEAP && defined SECONDARY_UMALLOC   // use secondard heap in fast memory or DDRAM
     return uMalloc((MAX_MALLOC)iSize);                                   // use uMalloc() which assumes that memory is never freed
+    #else
+    return uMalloc((MAX_MALLOC)iSize);                                   // use uMalloc() which assumes that memory is never freed
+    #endif
 }
+
 extern void vPortFree(void *free)
 {
     _EXCEPTION("Unexpected free call!!");
 }
+
 extern void vApplicationStackOverflowHook(void)
 {
 }
+
 extern void vApplicationTickHook(void)                                   // FreeRTOS tick interrupt
 {
 }
+
 extern void vMainConfigureTimerForRunTimeStats(void)
 {
 }
+
 extern unsigned long ulMainGetRunTimeCounterValue(void)
 {
     return uTaskerSystemTick;
 }
+
 extern void vApplicationIdleHook(void)
 {
 }
+
 extern void prvSetupHardware(void)
 {
 }
@@ -2794,7 +2818,11 @@ const _RESET_VECTOR __vector_table
     0,
     irq_pend_sv,
     #endif
+    #if defined APPLICATION_WITHOUT_TICK
+    irq_default,
+    #else
     _RealTimeInterrupt,                                                  // systick
+    #endif
     {                                                                    // processor specific interrupts
     irq_default,                                                         // 0
     irq_default,                                                         // 1
