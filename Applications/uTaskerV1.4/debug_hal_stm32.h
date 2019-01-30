@@ -30,7 +30,7 @@
 //
 extern int fnPortState(CHAR cPortBit)
 {
-    #if defined STM3240G_EVAL
+    #if defined STM3241G_EVAL
     switch (cPortBit) {
     case '1':
         return (_READ_PORT_MASK(G, LED1) != 0);
@@ -213,7 +213,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
     default:
         break;
     }
-#elif defined STM3240G_EVAL
+#elif defined STM3241G_EVAL
     switch (cPortBit) {
     case '1':
         if ((GPIOG_MODER & 0x00003000) == 0x00001000) {                  // PORTG_BIT6 [(1 << (6 * 2)) | (1 << ((6 * 2) + 1))]
@@ -341,7 +341,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
     case 'd':                                                            // default use for 0..4
     case 'i':                                                            // port to be input
         switch (cPortBit) {
-#if defined STM3240G_EVAL
+#if defined STM3241G_EVAL
         case 0:
             _CONFIG_PORT_INPUT(G, (LED1), (INPUT_PULL_UP));              // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
@@ -490,7 +490,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 
     case 'o':                                                            // port to be output
         switch (cPortBit) {
-#if defined STM3240G_EVAL
+#if defined STM3241G_EVAL
         case 0:
             _CONFIG_PORT_OUTPUT(G, (LED1), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
@@ -653,7 +653,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
     #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG
-        #if defined STM3240G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
+        #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
     POWER_UP_USER_PORTS();                                               // ensure that the used ports are powered up before used
         #endif
     if (iSetClr != 0) {
@@ -939,7 +939,7 @@ extern int fnTogglePortOut(CHAR cPortBit)
 //
 extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 {
-    #if defined STM3240G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
+    #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
     unsigned char ucBit = 0x01;
     while (ucBit != 0) {                                                 // for each possible output
         if (DEMO_USER_PORTS & ucBit) {                                   // if the port bit is to be an output

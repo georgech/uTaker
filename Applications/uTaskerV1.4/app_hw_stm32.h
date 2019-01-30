@@ -16,7 +16,7 @@
     Application specific hardware configuration
 
     27.02.2012 Correct STM3210C_EVAL GLCD setup                          {1}
-    15.07.2012 Modify output ports to avoid LCD interface on STM3240G_EVAL {2}
+    15.07.2012 Modify output ports to avoid LCD interface on STM3241G_EVAL {2}
     09.09.2012 Added key and LED configuation for keypad simulator       {3}
     09.09.2012 Add SD card detection input                               {4}
     12.09.2012 Add I2C 3 and I2C multiplexing options                    {5}
@@ -182,7 +182,7 @@
     #define PCLK1_DIVIDE        4
     #define PCLK2_DIVIDE        2
     #define HCLK_DIVIDE         1
-#elif defined STM3240G_EVAL                                              // STM32F407IGH6 (168MHz)
+#elif defined STM3241G_EVAL                                              // STM32F417IGH6 (168MHz)
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source
@@ -471,7 +471,7 @@
     #define SPI_FLASH_SECTOR_LENGTH (64 * 4 * SPI_FLASH_PAGE_LENGTH)     // exception sector 0a is 2k and sector 0b is 62k
 #endif
 
-#if defined STM3240G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI
+#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI
     // SPI FLASH system setup
     //
     //#define SPI_FLASH_MULTIPLE_CHIPS                                   // activate when multiple physical chips are used
@@ -532,7 +532,7 @@
   //#define SDCARD_DETECT_INPUT_POLL                                     // {4} use card detect switch for detection polling (use together with T_CHECK_CARD_REMOVAL)
   //#define SDCARD_DETECT_INPUT_INTERRUPT                                // {4} use card detect switch for detection by interrupt (T_CHECK_CARD_REMOVAL and SDCARD_DETECT_INPUT_POLL should be disabled)
 
-    #if defined STM3240G_EVAL || defined ST_MB997A_DISCOVERY || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
+    #if defined STM3241G_EVAL || defined ST_MB997A_DISCOVERY || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO
         #define SD_CONTROLLER_AVAILABLE                                  // use SDIO rather than SPI (necessary on STM3240G-EVAL board)
 
         #if defined SD_CONTROLLER_AVAILABLE
@@ -763,8 +763,8 @@
         #define LPUART_REMAP_G                                           // STLink VCOM
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
-    #elif defined STM3240G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK 
-        #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3240G can't use USART 4 and SD card at the same time so needs a modification for this
+    #elif defined STM3241G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK 
+        #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3241G can't use USART 4 and SD card at the same time so needs a modification for this
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
     #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD)     // {6}
         #define DEMO_UART    5                                           // use UART channel 5 (USART 6 since ST USARTs count from 1)
@@ -803,7 +803,7 @@
     #endif
     #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
-    #elif !defined STM3240G_EVAL && !defined ARDUINO_BLUE_PILL
+    #elif !defined STM3241G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)
     #endif
   //#define USART3_FULL_REMAP                                            // use USART3 on second set of remapped pins (note that this is channel 2)
@@ -934,10 +934,10 @@
     #define SENDERS_EMAIL_ADDRESS             "STM32F407_EVAL@uTasker.com" // fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "STM32F407 Test"           // email subject
     #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM32F407.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM32F407!!";
-#elif defined STM3240G_EVAL || defined STM32F746G_DISCO
-    #define SENDERS_EMAIL_ADDRESS             "STM3240G_EVAL@uTasker.com"// fictional Email address of the board being used
-    #define EMAIL_SUBJECT                     "STM3240G Test"            // email subject
-    #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM3240G-EVAL.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM3240G!!";
+#elif defined STM3241G_EVAL || defined STM32F746G_DISCO
+    #define SENDERS_EMAIL_ADDRESS             "STM3241G_EVAL@uTasker.com"// fictional Email address of the board being used
+    #define EMAIL_SUBJECT                     "STM3241G Test"            // email subject
+    #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM3241G-EVAL.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM3241G!!";
 #elif defined NUCLEO_F429ZI
     #define SENDERS_EMAIL_ADDRESS             "Nucleo-F429ZI@uTasker.com"// fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "Nucleo-F429ZI"            // email subject
@@ -1124,7 +1124,7 @@
 
                                         // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {118, 408, 127, 424}, _PORTB, LED1}
-#elif defined STM3240G_EVAL
+#elif defined STM3241G_EVAL
     #define JOYSTICK_SEL               0x80                              // I/O expander input
     #define JOYSTICK_DOWN              0x08                              // I/O expander input
     #define JOYSTICK_LEFT              0x20                              // I/O expander input
@@ -1694,9 +1694,9 @@
         #define PHY_IDENTIFIER         (0x20005c00 | (VNDR_MDL << 4) | MDL_REV) // NATIONAL DP83848 identifier
         #define PHY_POLL_LINK                                            // activate polling of the link state since this board has no interrupt line
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
-    #elif defined STM3240G_EVAL
+    #elif defined STM3241G_EVAL
         #define _DP83848
-        #define PHY_ADDRESS_           0x01                              // address of PHY on STM3210C_EVAL board (MII mode)
+        #define PHY_ADDRESS_           0x01                              // address of PHY on STM3241G_EVAL board (MII mode)
         #define VNDR_MDL               0x09                              // vendor model number
         #define MDL_REV                0x00                              // model revision number
         #define PHY_IDENTIFIER         (0x20005c00 | (VNDR_MDL << 4) | MDL_REV) // NATIONAL DP83848 identifier
@@ -1773,7 +1773,7 @@
 
 // GLCD
 //
-#if (defined STM3240G_EVAL || defined STM32F746G_DISCO) && defined SUPPORT_GLCD // {1} FSMC 16 bit data bus used a data lines, configured as inputs, port D0 used as C/D, port G 5,6,7 used as RD and WR
+#if (defined STM3241G_EVAL || defined STM32F746G_DISCO) && defined SUPPORT_GLCD // {1} FSMC 16 bit data bus used a data lines, configured as inputs, port D0 used as C/D, port G 5,6,7 used as RD and WR
     #define GLCD_C_D               PORTD_BIT0
     #define GLCD_WR                PORTG_BIT7
     #define GLCD_RD                PORTG_BIT6
@@ -1902,12 +1902,12 @@
 #define GPIO_DEFAULT_INPUT_E       0xfffe                                // set to 0xfffe to detect SD card on STM3210C_EVAL
 #define GPIO_DEFAULT_INPUT_F       0xffff
 #define GPIO_DEFAULT_INPUT_G       0xffff
-#define GPIO_DEFAULT_INPUT_H       0xdfff                                // set to 0xdfff to detect SD card on STM3240G_EVAL
+#define GPIO_DEFAULT_INPUT_H       0xdfff                                // set to 0xdfff to detect SD card on STM3241G_EVAL
 #define GPIO_DEFAULT_INPUT_I       0xffff
 #define GPIO_DEFAULT_INPUT_J       0xffff
 #define GPIO_DEFAULT_INPUT_K       0xffff
 
-#if defined STM3240G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO // {2}
+#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO // {2}
     // User port mapping
     //
     #define USER_PORT_1_BIT        PORTI_BIT0                            // use free pins on Eval board

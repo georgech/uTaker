@@ -435,6 +435,27 @@ extern void uEnable_Interrupt(void)
     }
 }
 
+// Routine to change interrupt level mask
+//
+#if !defined _COMPILE_KEIL
+    #if defined _GNU
+        #define DONT_INLINE __attribute__((noinline))
+    #else
+        #define DONT_INLINE
+    #endif
+extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel) // {102}
+{
+    #if !defined ARM_MATH_CM0PLUS                                         // mask not supported by Cortex-m0+
+        #if defined _WINDOWS
+    STM32.CORTEX_M3_REGS.ulBASEPRI = ucMaskLevel;                         // value 0 has no effect - non-zero defines the base priority for exception processing (the processor does not process any exception with a priority value greater than or equal to BASEPRI))
+        #else
+    asm("msr basepri, r0");                                               // modify the base priority to block interrupts with a lower priority than this level
+    asm("bx lr");                                                         // return
+        #endif
+    #endif
+}
+#endif
+
 
 // Function used to enter processor interrupts
 //

@@ -223,17 +223,36 @@
     //
     // Nucleo 32 range
     //
-    //#define NUCLEO_F031K6                                              // evaluation board with STM32F031 (cortex-m0)
-    //#define NUCLEO_L011K4                                              // evaluation board with STM32L011 (cortex-m0+)
-    //#define NUCLEO_L031K6                                              // evaluation board with STM32L031 (cortex-m0+)
-    //#define NUCLEO_L432KC                                              // evaluation board with STM32L432 (cortex-m4 with FPU)
+    //#define NUCLEO_L011K4                                              // evaluation board with STM32L011K4T6 (cortex-m0+)
+    //#define NUCLEO_L031K6                                              // evaluation board with STM32L031K6T6 (cortex-m0+)
+    //#define NUCLEO_L042K6                                              // evaluation board with STM32L042K6T6
+    //#define NUCLEO_L432KC                                              // evaluation board with STM32L432C6U (cortex-m4 with FPU)
+    //#define NUCLEO_F031K6                                              // evaluation board with STM32F031K6T6 (cortex-m0)
+
+    // Nucleo 64 range
+    //
+    //#define NUCLEO_L053R8                                              // evaluation board with STM32L053R8T6
+    //#define NUCLEO_L073RZ                                              // evaluation board with STM32L073RZT6
+    //#define NUCLEO_L152RE                                              // evaluation board with STM32L152RET6
+    //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6
+    //#define NUCLEO_F030RB                                              // evaluation board with STM32F030RBT6
+    //#define NUCLEO_F072RB                                              // evaluation board with STM32F072RBT6
+    //#define NUCLEO_F103RB                                              // evaluation board with STM32F103RBT6
+    //#define NUCLEO_F334R8                                              // evaluation board with STM32F334R8T6 (cortex-m4 with FPU)
+    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
+    //#define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6
 
     // Nucleo 144 range
     //
-    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6
     //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6U
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
+    //#define NUCLEO_F207ZG                                              // evaluation board with STM32F207ZGT6U
+    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
+    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U
+    //#define NUCLEO_F496ZG                                              // evaluation board with STM32F496ZGT6U
+    //#define NUCLEO_F746ZG                                              // evaluation board with STM32F746ZGT6U
+    //#define NUCLEO_F767ZI                                              // evaluation board with STM32F767ZIT6U
+    //#define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
       #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
@@ -241,7 +260,7 @@
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    //#define STM3240G_EVAL                                              // evaluation board with STM32F407IGH6
+    //#define STM3241G_EVAL                                              // evaluation board with STM32F417IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
@@ -1237,11 +1256,12 @@
     #define _STM32F4XX
     #define _STM32F407
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
-#elif defined STM3240G_EVAL
+#elif defined STM3241G_EVAL
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define TARGET_HW            "STM3240C-EVAL (STM32F407IGH6)"
     #define _STM32F4XX
-    #define _STM32F407
+    #define _STM32F417
+    #define STM32_FPU                                                    // FPU present
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
 #elif defined STM32F407ZG_SK
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
@@ -1566,7 +1586,7 @@
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -1592,7 +1612,7 @@
                 #define NUMBER_USB_AUDIO  0
             #endif
             #if defined USE_USB_MSD
-              //#define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
+                #define FAT_EMULATION                                    // support FAT emulation (full mass-storage not required by USB-MSD)
                 #if defined FAT_EMULATION
                     #define NUMBER_USB_MSD 1                             // single MSD LUM (eg. set to 2 for SD card and emulated drive)
                     #define EMULATED_FAT_LUNS         1                  // the number of logical units on emulated drive

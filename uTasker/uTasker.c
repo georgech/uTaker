@@ -68,17 +68,18 @@
 volatile UTASK_TICK uTaskerSystemTick = 0;                               // system tick counter
 
 #if !defined APPLICATION_WITHOUT_OS
-#if defined MULTISTART
+    #if defined MULTISTART
     MULTISTART_TABLE *ptMultiStartTable = 0;
     JUMP_TABLE *JumpTable = 0;
-#endif
+    #endif
 
-#if defined MONITOR_PERFORMANCE                                          // {15}
+    #if defined MONITOR_PERFORMANCE                                      // {15}
     unsigned long ulMaximumIdle = 0;
-#endif
+    #endif
 
-#if defined INTERRUPT_WATCHDOG_TASK                                      // {20}
+    #if defined INTERRUPT_WATCHDOG_TASK                                  // {20}
     CHAR cInterruptWatchdog = 0;
+    #endif
 #endif
 
 
@@ -86,9 +87,13 @@ volatile UTASK_TICK uTaskerSystemTick = 0;                               // syst
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-static TTIMETABLE *tTimerList = 0;                                       // pointer to timer list
-static TTASKTABLE *tTaskTable = 0;                                       // pointer to process table
+#if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
+    static unsigned short usRandomNumber = 0;
+#endif
 
+#if !defined APPLICATION_WITHOUT_OS
+    static TTIMETABLE *tTimerList = 0;                                   // pointer to timer list
+    static TTASKTABLE *tTaskTable = 0;                                   // pointer to process table
 
 #if defined MONITOR_PERFORMANCE                                          // {15}
     static unsigned long ulTotalIdle = 0;
@@ -636,7 +641,6 @@ extern unsigned short fnRandom(void)                                     // {9}
     #if defined RND_HW_SUPPORT
     return fnGetRndHW();                                                 // get a random value from the hardware
     #else
-    static unsigned short usRandomNumber = 0;
     register unsigned short usShifter = usRandomNumber;                  // for speed, copy to register
 
     usShifter = (unsigned short)((usShifter >> 1) ^ (-(signed short)(usShifter & 1) & PRNG_POLY));

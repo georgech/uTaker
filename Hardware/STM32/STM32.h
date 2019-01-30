@@ -196,7 +196,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 
 // Ethernet configuration
 //
-#if defined _STM32F407 || defined _STM32F427 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
+#if defined _STM32F407 || defined _STM32F417 || defined _STM32F427 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
     #define ETHERNET_AVAILABLE
 #endif
 

@@ -286,7 +286,7 @@ void vPortSVCHandler( void )
 #if defined _WINDOWS
     
 //    fnSetReg(16, (unsigned long)pxCurrentTCB->pxTopOfStack); // set the process stack pointer
-//    fnPopRegisters();                                                    // pop the task's registers
+//    fnPopRegisters();                                                  // pop the task's registers
     uMask_Interrupt(0);
   //bx r14                                                               // jump to the task's next address to be executed
 #else
