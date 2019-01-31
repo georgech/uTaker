@@ -11,7 +11,7 @@
     File:      kinetis_FLASH.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     07.04.2012 Adapt Flash interface for FPU devices                     {10}
     22.07.2012 Add interface for OTP area                                {20}
@@ -230,7 +230,7 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     case FCMD_PROGRAM_EEPROM:
     case FCMD_ERASE_EEPROM_SECTOR:
     #endif
-    #if defined FLASH_BLOCK_COUNT
+    #if FLASH_BLOCK_COUNT > 1
     case FCMD_ERASE_FLASH_BLOCK:                                         // {203} block erase
     #endif
     case FCMD_ERASE_FLASH_SECTOR:                                        // sector erase
@@ -336,12 +336,12 @@ static int fnFlashNow(unsigned char ucCommand, unsigned long *ptrWord, unsigned 
     #endif
         else {
     #if defined _WINDOWS
-        #if defined FLASH_BLOCK_COUNT                                    // {203}
+        #if FLASH_BLOCK_COUNT > 1                                        // {203}
             if (FCMD_ERASE_FLASH_BLOCK == ucCommand) {
                 unsigned char *ptrFlash = fnGetFlashAdd((unsigned char *)ptrWord);
                 unsigned long ulSize = 0;
                 do {
-                    fnDeleteFlashSector(ptrFlash); // the sector erase must be phrase aligned ([2:0] = 0) or 128 bit aligned ([3:0] = 0) for some devices
+                    fnDeleteFlashSector(ptrFlash);                       // the sector erase must be phrase aligned ([2:0] = 0) or 128 bit aligned ([3:0] = 0) for some devices
                     ulSize += FLASH_GRANULARITY;
                     ptrFlash += FLASH_GRANULARITY;
                 } while (ulSize < FLASH_BLOCK_SIZE);
@@ -1064,7 +1064,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
     Length += (((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1))); // increase length to compensate if the address is not on a sector boundary
     ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
     do {
-        #if defined FLASH_BLOCK_COUNT                                    // {203} check whether a block erase can be performed
+        #if FLASH_BLOCK_COUNT > 1                                        // {203} check whether a block erase can be performed
         if (((CAST_POINTER_ARITHMETIC)ptrSector & (FLASH_BLOCK_SIZE - 1)) == 0) { // if the start address is on a block boundary
             if (Length >= FLASH_BLOCK_SIZE) {                            // and the erase length encloses a block
                 if ((fnFlashNow(FCMD_ERASE_FLASH_BLOCK, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single block

@@ -250,6 +250,7 @@ typedef struct
 #if defined DEVELOPERS_LOADER
     static const CHAR cProcessorName[] = TARGET_HW;                      // processor/board name for reporting/display use
 #endif
+#endif
 
 #if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER || defined SDCARD_SECURE_LOADER
     static const CHAR decrypt_key[] = "aes256 secret key";
@@ -259,7 +260,7 @@ typedef struct
     #endif
 #endif
 
-
+#if defined KEEP_SERIAL_TASK
 /* =================================================================== */
 /*                     global variable definitions                     */
 /* =================================================================== */
@@ -1072,44 +1073,6 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
 #endif
 }
 
-#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER || defined SDCARD_SECURE_LOADER // {34}
-
-typedef struct stALIGNED_KEY
-{
-    unsigned long  ulLength;                                             // long word to ensure following key alignment
-    unsigned char  ucKey[32];                                            // key aligned
-} ALIGNED_KEY;
-
-
-extern void fnPrepareDecrypt(int iEncrypt)
-{
-    ALIGNED_KEY decryptKey = {0, {0}};
-    int iInitKey = (AES_COMMAND_AES_SET_KEY_DECRYPT | AES_COMMAND_AES_RESET_IV); // assume decrypt key initiaisation with IV set to zero
-    #if defined PRIME_AES256_INITIAL_VECTOR
-    unsigned char initVector[32];
-    int iVectorLength = (sizeof(initial_vector) - 1);
-    #endif
-    decryptKey.ulLength = (sizeof(decrypt_key) - 1);
-    uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
-    while (decryptKey.ulLength < 32) {
-        decryptKey.ucKey[decryptKey.ulLength++] = 'X';
-    }
-    #if defined SDCARD_SUPPORT && defined SDCARD_SECURE_LOADER           // the SD card loader also encrypts flash content to see whether it matches the encyrpted card content
-    if (iEncrypt != 0) {                                                 // set encyrpt key iinstead of decrypt key
-        iInitKey = (AES_COMMAND_AES_SET_KEY_ENCRYPT | AES_COMMAND_AES_RESET_IV);
-    }
-    #endif
-    fnAES_Init(iInitKey, decryptKey.ucKey, 256);                         // register the key
-    #if defined PRIME_AES256_INITIAL_VECTOR
-    uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
-    while (iVectorLength < 16) {
-        initVector[iVectorLength++] = 'X';
-    }
-    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the initial vector
-    #endif
-}
-#endif
-
 #if defined BLAZE_K22
 static void fnLoaderForced(int iNoFirmware)
 {
@@ -1407,6 +1370,42 @@ extern void fnDebugHex(unsigned long ulValue, unsigned char uLen)        // disp
 #endif
 #endif
 
+#if defined KBOOT_SECURE_LOADER || defined USB_MSD_DEVICE_SECURE_LOADER || defined SDCARD_SECURE_LOADER // {34}
+typedef struct stALIGNED_KEY
+{
+    unsigned long  ulLength;                                             // long word to ensure following key alignment
+    unsigned char  ucKey[32];                                            // key aligned
+} ALIGNED_KEY;
+
+
+extern void fnPrepareDecrypt(int iEncrypt)
+{
+    ALIGNED_KEY decryptKey = {0, {0}};
+    int iInitKey = (AES_COMMAND_AES_SET_KEY_DECRYPT | AES_COMMAND_AES_RESET_IV); // assume decrypt key initiaisation with IV set to zero
+    #if defined PRIME_AES256_INITIAL_VECTOR
+    unsigned char initVector[32];
+    int iVectorLength = (sizeof(initial_vector) - 1);
+    #endif
+    decryptKey.ulLength = (sizeof(decrypt_key) - 1);
+    uMemcpy(decryptKey.ucKey, decrypt_key, (sizeof(decrypt_key) - 1));
+    while (decryptKey.ulLength < 32) {
+        decryptKey.ucKey[decryptKey.ulLength++] = 'X';
+    }
+    #if defined SDCARD_SUPPORT && defined SDCARD_SECURE_LOADER           // the SD card loader also encrypts flash content to see whether it matches the encyrpted card content
+    if (iEncrypt != 0) {                                                 // set encyrpt key iinstead of decrypt key
+        iInitKey = (AES_COMMAND_AES_SET_KEY_ENCRYPT | AES_COMMAND_AES_RESET_IV);
+    }
+    #endif
+    fnAES_Init(iInitKey, decryptKey.ucKey, 256);                         // register the key
+    #if defined PRIME_AES256_INITIAL_VECTOR
+    uMemcpy(initVector, initial_vector, (sizeof(initial_vector) - 1));
+    while (iVectorLength < 16) {
+        initVector[iVectorLength++] = 'X';
+    }
+    fnAES_Init(AES_COMMAND_AES_PRIME_IV, initVector, 0);                 // prime the initial vector
+    #endif
+}
+#endif
 
 #if (defined SERIAL_INTERFACE && defined KBOOT_LOADER) || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER && !defined USE_USB_MSD) // {20}
 static void fnHandlePropertyGet(unsigned long ulPropertyTag, unsigned long ulMemoryID, KBOOT_PACKET *ptrKBOOT_response)

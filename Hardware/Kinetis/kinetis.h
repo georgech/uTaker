@@ -1112,10 +1112,14 @@ typedef struct stRESET_VECTOR
 
 #if (SIZE_OF_FLASH == (2 * 1024 * 1024))
     #define FLASH_BLOCK_COUNT    4                                       // the flash is divided into 4 blocks
+#elif defined KINETIS_K02
+    #define FLASH_BLOCK_COUNT    1                                       // the flash is made up of a single block
 #else
     #define FLASH_BLOCK_COUNT    2                                       // the flash is divided into 2 blocks
 #endif
-#define FLASH_BLOCK_SIZE     (SIZE_OF_FLASH/FLASH_BLOCK_COUNT)
+#if FLASH_BLOCK_COUNT > 1
+    #define FLASH_BLOCK_SIZE     (SIZE_OF_FLASH/FLASH_BLOCK_COUNT)
+#endif
 
 #if defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define FLASH_CONTROLLER_FTFE                                        // FTFE type rather than standard KE type
@@ -6428,7 +6432,7 @@ typedef struct stKINETIS_INTMUX
         #define FTMRH_FSTAT         *(volatile unsigned char *)(FTFL_BLOCK + 0x6) // Flash Status Register
           #define FTMRH_STAT_MGSTAT  0x03                                // error detected during sequence (mask)
           #define FTMRH_STAT_MBUSY   0x08                                // memory controller is busy executing a command (CCIF == 0)
-          #define FTMRH_STAT_FPVIOL  0x10                                // Flash protection violation flag
+          #define FTMRH_STAT_FPVIOL  0x10                                // flash protection violation flag
           #define FTMRH_STAT_ACCERR  0x20                                // Flash access error flag
           #define FTMRH_STAT_CCIF    0x80                                // command complete interrupt flag
         #define FTMRH_FERSTAT       *(volatile unsigned char *)(FTFL_BLOCK + 0x7) // Flash Error Status Register
@@ -6453,7 +6457,9 @@ typedef struct stKINETIS_INTMUX
       #define FCMD_PROGRAM_PHRASE             0x06                       // program (up to) 8 bytes phrase
       #define FCMD_PROGRAM_ONCE               0x07
       #define FCMD_ERASE_ALL_BLOCKS           0x08
-      #define FCMD_ERASE_FLASH_BLOCK          0x09
+      #if FLASH_BLOCK_COUNT > 1
+          #define FCMD_ERASE_FLASH_BLOCK      0x09
+      #endif
       #define FCMD_ERASE_FLASH_SECTOR         0x0a
       #define FCMD_UNSECURE_FLASH             0x0b
       #define FCMD_VERIFY_BACKDOOR_ACCESS_KEY 0x0c
@@ -6461,8 +6467,8 @@ typedef struct stKINETIS_INTMUX
       #define FCMD_SET_FACTORY_MARGIN_LEVEL   0x0e
       #if defined KINETIS_KE_EEPROM
           #define FCMD_ERASE_VERIFY_EEPROM_SECTION 0x10
-          #define FCMD_PROGRAM_EEPROM              0x11
-          #define FCMD_ERASE_EEPROM_SECTOR         0x12
+          #define FCMD_PROGRAM_EEPROM         0x11
+          #define FCMD_ERASE_EEPROM_SECTOR    0x12
       #endif
 
     #define FTFL_FSTAT          FTMRH_FSTAT                              // for compatibility
@@ -6559,7 +6565,9 @@ typedef struct stKINETIS_INTMUX
       #define FCMD_PROGRAM_LONG_WORD          0x06                       // program a long word
       #define FCMD_PROGRAM                    FCMD_PROGRAM_LONG_WORD
         #endif
+        #if FLASH_BLOCK_COUNT > 1
       #define FCMD_ERASE_FLASH_BLOCK          0x08
+        #endif
       #define FCMD_ERASE_FLASH_SECTOR         0x09
       #define FCMD_PROGRAM_SECTOR             0x0b
       #define FCMD_READ_1S_ALL_BLOCKS         0x40

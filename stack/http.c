@@ -11,7 +11,7 @@
     File:      http.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     16.05.2007 Rename variable from i to iSessionNumber and remove unnecessary zeroing {1}
     16.05.2007 Add iWebHandlerCommand variable for clarity.                            {2}
@@ -1670,7 +1670,7 @@ static unsigned short fnWebParGenerator(unsigned char *ptrBuffer, HTTP *http_ses
                 break;
     #if defined HTTP_DYNAMIC_CONTENT
             case WEB_INSERT_DYNAMIC:                                     // insert dynamic HTML {16}
-                if (fnInsertValue) {
+                if (0 != fnInsertValue) {
                     CHAR cInput[WEB_ESCAPE_LEN - 2];                     // backup of the control tag
                     LENGTH_CHUNK_COUNT ChunkReference;                   // {24}
                     if (http_session->ucDynamicFlags & MAXIMUM_DYNAMIC_INSERTS) { // {60} do not allow a second insertion in the same frame!!
@@ -1805,7 +1805,7 @@ static unsigned short fnWebParGen(unsigned char ptrBuffer[], HTTP *http_session,
     #endif
         if ((usContentShrink == 0) || (usThisLength == 0) || ((usFrameLength + usContentShrink) >= usTx_window)
     #if defined HTTP_DYNAMIC_CONTENT
-            || (http_session->ucDynamicFlags & QUIT_FRAME_DURING_GENERATION) // when a frame buffer cannot accept more dynamic chunks quit immediately
+            || ((http_session->ucDynamicFlags & QUIT_FRAME_DURING_GENERATION) != 0) // when a frame buffer cannot accept more dynamic chunks quit immediately
     #endif
             ) {                                                          // frame buffer completely full (or shrunk content will have no room)
     #if defined HTTP_DYNAMIC_CONTENT
