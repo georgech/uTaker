@@ -1219,13 +1219,13 @@
     #define SERIAL_PORT_4   4                                            // if we open UART channel 4 we simulate using comx on the PC
     #define SERIAL_PORT_5   4                                            // if we open UART channel 5 we simulate using comx on the PC
 
-    #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER)
+    #if defined KWIKSTIK || defined TWR_K60F120M || defined K20FX512_120 || defined TWR_K21F120M || (defined TWR_K64F120M && defined TWR_SER) || ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
         #define LOADER_UART           5                                  // the serial interface used by the serial loader
     #elif defined FRDM_K82F
         #define LOADER_UART           4                                  // use UART 4
     #elif defined TWR_K70F120M || defined TWR_KL46Z48M || defined TWR_K21D50M || defined TWR_KL43Z48M || defined TRK_KEA128 || defined TRK_KEA64 || defined KL25_TEST_BOARD || defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_KEAZN32Q64 || defined FRDM_KEAZ64Q64 || defined FRDM_KEAZ128Q80 || defined TEENSY_3_5 || defined TEENSY_3_6 || defined DWGB_SDCARD
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
-    #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M || defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z || ((defined K02F100M || defined K12D50M) && defined DEV5) || (defined TWR_K60D100M && defined DEV6)
+    #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M || defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
     #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FRDM_KV31F || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
@@ -1695,16 +1695,14 @@
     #else
         #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(E, SWITCH_2) == 0)
     #endif
-    #if !defined DEV6
-        #define SD_CONTROLLER_AVAILABLE                                  // use SDHC controller rather than SPI
-    #endif
-    #if defined TWR_K60N512 || defined TWR_K60D100M                      // TWR_K60F120M/TWR_K70F120M have no write protect input on the SD card socket
+    #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
+    #if (defined TWR_K60N512 || defined TWR_K60D100M) && !defined DEV6   // TWR_K60F120M/TWR_K70F120M have no write protect input on the SD card socket
         #define WRITE_PROTECT_INPUT     PORTE_BIT27
     #endif
     #if defined SD_CONTROLLER_AVAILABLE
         #define SET_SD_CS_HIGH()                                         // dummy for compatibility
         #define SET_SD_CS_LOW()                                          // dummy for compatibility
-        #if defined TWR_K60N512 || defined TWR_K60D100M
+        #if (defined TWR_K60N512 || defined TWR_K60D100M) && !defined DEV6
             #if defined _WINDOWS
                 #define POWER_UP_SD_CARD()    _CONFIG_PORT_INPUT(E, (WRITE_PROTECT_INPUT), (PORT_PS_UP_ENABLE)); SDHC_SYSCTL |= SDHC_SYSCTL_INITA; SDHC_SYSCTL &= ~SDHC_SYSCTL_INITA; // apply power to the SD card if appropriate (we use this to send 80 clocks - self-clearing bit)
             #else

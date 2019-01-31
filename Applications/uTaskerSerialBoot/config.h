@@ -1122,7 +1122,7 @@
         #define SUPPORT_FLUSH
     #endif
     #if defined SDCARD_SUPPORT
-        #define SDCARD_SECURE_LOADER
+      //#define SDCARD_SECURE_LOADER
         #if !defined DWGB_SDCARD && defined USE_USB_MSD
             #define UREVERSEMEMCPY                                       // required when SD card used in SPI mode
             #if !defined SPECIAL_VERSION_SDCARD && !defined DEV5 && !defined DEV6
