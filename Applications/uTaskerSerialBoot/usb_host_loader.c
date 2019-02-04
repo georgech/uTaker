@@ -11,7 +11,7 @@
     File:      usb_host_loader.c - MSD
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     USB-MSD host loader application
     19.11.2015 Limit UFI_READ_FORMAT_CAPACITY transfer length to a single 64 byte frame {1}
@@ -548,7 +548,7 @@ static void fnSetSerialNumberString(CHAR *ptrSerialNumber) {             // {12}
 
 // This routine must always be supplied by the user if usb strings are supported
 //
-extern unsigned char *fnGetUSB_string_entry(unsigned char usStringRef, unsigned short *usLength) // {2}
+extern unsigned char *fnGetUSB_string_entry(unsigned char ucStringRef, unsigned short *usLength) // {2}
 {
     return 0;                                                            // dummy for host
 }

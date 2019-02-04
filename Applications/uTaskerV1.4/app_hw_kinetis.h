@@ -3920,9 +3920,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
     #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
-    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(B, DEMO_LED_2)
-    #define SET_TEST_OUTPUT()       _SETBITS(B, DEMO_LED_2)
-    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(B, DEMO_LED_2)
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(A, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(A, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(A, DEMO_LED_2)
  
     #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
     #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)

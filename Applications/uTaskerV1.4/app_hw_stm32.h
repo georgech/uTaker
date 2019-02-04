@@ -1594,7 +1594,7 @@
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
         #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
-        #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+        #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (OUTPUT_SLOW | OUTPUT_PUSH_PULL), 0)
     #endif
     #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
 

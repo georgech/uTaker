@@ -11,7 +11,7 @@
     File:      WinSim.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.04.2007 Add function fnGetEEPROMSize(void)                        {1}
     11.08.2007 Add fnInitSPI_DataFlash(), fnGetDataFlashStart(), fnGetDataFlashSize() and fnSimAT45DBXXX() {2}

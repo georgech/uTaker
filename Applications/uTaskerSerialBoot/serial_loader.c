@@ -2505,7 +2505,7 @@ extern void fnUserHWInit(void)
         #if defined SPI_SW_UPLOAD
             fnEraseFlashSector((unsigned char *)(SIZE_OF_FLASH + UPLOAD_OFFSET), (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete space in SPI FLASH
         #else
-            fnEraseFlashSector((unsigned char *)UTASKER_APP_START,(MAX_FILE_LENGTH) (UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
+            fnEraseFlashSector((unsigned char *)UTASKER_APP_START, (MAX_FILE_LENGTH)(UTASKER_APP_END - (unsigned char *)UTASKER_APP_START)); // delete application space
         #endif
         }
     }

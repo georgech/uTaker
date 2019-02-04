@@ -11,7 +11,7 @@
     File:      hardware.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     01.03.2007 fnGetFlashAdd() added
     30.03.2007 fnPutFlashAdd() added
@@ -461,8 +461,8 @@ extern void fnClearSLCD(void);                                           // {25}
     #define REMOTE_ETH_INTERRUPT          2
 #endif
 
-    // Boot mailbox values                                               {51}
-    //
+// Boot mailbox values                                                   {51}
+//
 #define RESET_TO_SERIAL_LOADER      0x89a2                               // pattern set to BOOT_MAIL_BOX to request the serial loader to start
 #define RESET_TO_APPLICATION        0x755d                               // pattern set to BOOT_MAIL_BOX to request the serial loader to jump to the application
 #define RTC_VALID_PATTERN           0xca35                               // pattern set the RTC_VALID_LOCATION when the RTC values are valid

@@ -1844,7 +1844,7 @@
 // Ethernet
 //
 #if !defined DEVICE_WITHOUT_ETHERNET && !defined K70F150M_12M && !defined TEENSY_3_5 && !defined TEENSY_3_6 && !defined K66FX1M && !defined HEXIWEAR_K64F && !defined HEXIWEAR_KW40Z && !defined K66FX1M0
-    #define ETH_INTERFACE                                                // enable Ethernet interface driver
+  //#define ETH_INTERFACE                                                // enable Ethernet interface driver
 #elif defined TEENSY_3_1 || defined TEENSY_LC
   //#define ETH_INTERFACE                                                // enable external Ethernet interface driver
     #if defined ETH_INTERFACE
@@ -2688,7 +2688,6 @@
     #define NO_PERIPHERAL_DEMONSTRATIONS
 #endif
 
-#if !defined _FREE_RTOS_APPLICATION && !defined INC_FREERTOS_H
     // Project includes are set here for all files in the correct order
     //
     #include "types.h"                                                   // project specific type settings (include the hardware configuration headers)
@@ -2699,6 +2698,7 @@
     #include "../../uTasker/driver.h"                                    // driver and general formatting routines
     #include "../../Hardware/hardware.h"                                 // general hardware
     #include "../../uTasker/uTasker.h"                                   // operating system defines
+#if !defined _FREE_RTOS_APPLICATION && !defined INC_FREERTOS_H
     #if defined USE_MODBUS
         #include "../../uTasker/MODBUS/modbus.h"
     #endif

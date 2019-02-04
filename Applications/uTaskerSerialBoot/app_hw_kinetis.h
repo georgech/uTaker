@@ -831,6 +831,9 @@
     #define MASK_0N36M                                                   // enable errata workarounds for this mask
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin QFN package
     #if defined DEV5
+        #if defined K12D50M
+            #define KINETIS_FLEX
+        #endif
         #define PIN_COUNT       PIN_COUNT_48_PIN                         // 48 pin LQFP package
     #else
         #define PIN_COUNT       PIN_COUNT_64_PIN                         // 64 pin LQFP package

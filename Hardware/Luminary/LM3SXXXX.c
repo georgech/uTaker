@@ -1166,7 +1166,7 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
         fnSimulateEthernetIn(ptr_put, length, 1);
     }
         #ifdef PSEUDO_LOOPBACK                                           // if we detect an IP frame being sent to our own address we loop it back to the input
-    else if (((*(ptr_put + 12)) == 0x08) && (!(uMemcmp(&network.ucOurIP[0], (ptr_put + 26), IPV4_LENGTH)))) {
+    else if (((*(ptr_put + 12)) == 0x08) && (!(uMemcmp(&network[DEFAULT_NETWORK].ucOurIP[0], (ptr_put + 26), IPV4_LENGTH)))) {
         fnSimulateEthernetIn(ptr_put, length, 1);
     }
         #endif

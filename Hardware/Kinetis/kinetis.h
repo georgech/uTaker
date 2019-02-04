@@ -1112,10 +1112,10 @@ typedef struct stRESET_VECTOR
 
 #if (SIZE_OF_FLASH == (2 * 1024 * 1024))
     #define FLASH_BLOCK_COUNT    4                                       // the flash is divided into 4 blocks
-#elif defined KINETIS_K02
-    #define FLASH_BLOCK_COUNT    1                                       // the flash is made up of a single block
+#elif (defined KINETIS_K12 && !defined KINETIS_FLEX)
+    #define FLASH_BLOCK_COUNT    2                                       // the flash is divided into 2 blocks (note that this is presently set to 1 in order to deactivate block erase use)
 #else
-    #define FLASH_BLOCK_COUNT    2                                       // the flash is divided into 2 blocks
+    #define FLASH_BLOCK_COUNT    1                                       // the flash is made up of a single block
 #endif
 #if FLASH_BLOCK_COUNT > 1
     #define FLASH_BLOCK_SIZE     (SIZE_OF_FLASH/FLASH_BLOCK_COUNT)

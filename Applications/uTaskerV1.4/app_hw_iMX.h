@@ -1797,7 +1797,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
         // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS  \
-        {RGB(255, 0,  0  ), RGB(0,0,0),  1, {342, 88,  0, 7 }, _PORT1, USER_LED}
+        {RGB(0, 255,  0  ), RGB(0,0,0),  1, {257, 186,  264, 195 }, _PORT1, USER_LED}
 #elif defined TWR_K70F120M || defined TWR_K80F150M || defined FRDM_K82F || defined TWR_VF65GS10
     #if defined FRDM_K82F
         #define DEMO_LED_1             (PORTC_BIT9)                      // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
