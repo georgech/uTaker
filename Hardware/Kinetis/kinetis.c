@@ -2587,6 +2587,8 @@ static void _LowLevelInit(void)
 #endif
 #if defined _WINDOWS && !defined INTERRUPT_VECTORS_IN_FLASH              // check that the size of the interrupt vectors has not grown beyond that what is expected (increase its space in the script file if necessary!!)
     if (VECTOR_SIZE > CHECK_VECTOR_SIZE) {
+        unsigned long ulVectorSize = VECTOR_SIZE;
+        unsigned long ulCheck = CHECK_VECTOR_SIZE;
         _EXCEPTION("Check the vector table size setting!!");
     }
     #if defined USE_SECTION_PROGRAMMING                                  // {105}

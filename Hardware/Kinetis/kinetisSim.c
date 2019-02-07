@@ -3439,6 +3439,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         }
         break;
 #endif
+#if TSI_AVAILABLE > 0
 #if defined KINETIS_KL
     case _TOUCH_PORTB:
         if (ulBit == PORTB_BIT16) {                                       // channel 9 on PTB16
@@ -3675,6 +3676,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             ulPort_in_C &= ~ulBit;
         }
         break;
+#endif
 #endif
 #endif
     case _PORT_EXT_0:                                                    // {8} external ports extensions

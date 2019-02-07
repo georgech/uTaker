@@ -691,6 +691,9 @@
     <ClInclude Include="..\..\..\Hardware\STM32\STM32F103X_port.h">
       <Filter>WinSim\SIMstm32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
+      <Filter>WinSim\SIMstm32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

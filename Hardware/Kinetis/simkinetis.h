@@ -3652,7 +3652,7 @@ unsigned long LTC0_OFIFO;
 } KINETIS_LTC;
 #endif
 
-#if defined KINETIS_K80
+#if defined QSPI_AVAILABLE
 typedef struct stKINETIS_QSPI                                            // {29}
 {
     unsigned long QuadSPI_MCR;

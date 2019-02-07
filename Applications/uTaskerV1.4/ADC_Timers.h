@@ -1861,8 +1861,6 @@ static void fnConfigure_Timer(void)
     #if defined PHASE_SHIFTED_COMBINED_OUTPUTS                           // {29}
     // Set up two complimentary output pairs which are phase shifted from each other
     //
-    // Set up two complimentary output pairs which are phase shifted from each other
-    //
     pwm_setup.pwm_frequency = PWM_FREQUENCY(1000, 128);                  // generate 1000Hz on PWM output
     pwm_setup.pwm_value = _PWM_PERCENT(50, pwm_setup.pwm_frequency);     // 50% PWM (high/low)
     pwm_setup.pwm_mode = (PWM_EDGE_ALIGNED | PWM_COMBINED_PHASE_SHIFT);  // phase shifted mode (only possible in edge aligned mode)

@@ -11,7 +11,7 @@
     File:      kinetis_low_power.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     22.07.2014 Add fnGetLowPowerMode() and fnSetLowPowerMode()           {1}
     02.07.2015 Always re-synchronise the RTC counters after waking from a low leakage state {2}
@@ -50,7 +50,7 @@ extern void fnDoLowPower(void)
         #elif LPUARTS_AVAILABLE > 0
             #if defined KINETIS_KL
             if (IS_POWERED_UP(5, LPUART0))                               // if LPUART0 is enabled
-            #elif defined KINETIS_K80
+            #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
             if (IS_POWERED_UP(2, LPUART0))                               // if LPUART0 is enabled
             #else
             if (IS_POWERED_UP(6, LPUART0))                               // if LPUART0 is enabled
@@ -185,7 +185,7 @@ extern void fnDoLowPower(void)
         #elif LPUARTS_AVAILABLE > 0
             #if defined KINETIS_KL
     if (IS_POWERED_UP(5, LPUART0) != 0)                                  // if LPUART0 is enabled
-        #elif defined KINETIS_K80
+        #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
     if (IS_POWERED_UP(2, LPUART0) != 0)                                  // if LPUART0 is enabled
         #else
     if (IS_POWERED_UP(6, LPUART0) != 0)                                  // if LPUART0 is enabled

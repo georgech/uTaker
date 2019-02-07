@@ -984,11 +984,11 @@ extern int fnConfigEthernet(ETHTABLE *pars)
         #endif
         #if defined MDIO_ON_PORTA                                        // {104}
             #if defined ETHERNET_MDIO_WITH_PULLUPS
-    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/5) with pullup enabled
+    _CONFIG_PERIPHERAL(A, 7, (PA_7_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PA.7 (alt. function 5) with pullup enabled
             #else
-    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PB.0 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 7, PA_7_MII0_MDIO);                            // MII0_MDIO on PA.7 (alt. function 5)
             #endif
-    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PB.1 (alt. function 4/5)
+    _CONFIG_PERIPHERAL(A, 8, PA_8_MII0_MDC);                             // MII0_MDC on PA.8 (alt. function 5)
         #else
             #if defined ETHERNET_MDIO_WITH_PULLUPS
     _CONFIG_PERIPHERAL(B, 0, (PB_0_MII0_MDIO | PORT_PS_UP_ENABLE));      // MII0_MDIO on PB.0 (alt. function 4/8) with pullup enabled

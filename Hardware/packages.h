@@ -33,11 +33,13 @@ Copyright (C) M.J.Butcher Consulting 2004..2019
 #define PIN_COUNT_121_PIN       14
 #define PIN_COUNT_143_PIN       15
 #define PIN_COUNT_144_PIN       16
-#define PIN_COUNT_176_PIN       17
-#define PIN_COUNT_196_PIN       18
-#define PIN_COUNT_208_PIN       19
-#define PIN_COUNT_216_PIN       20
-#define PIN_COUNT_256_PIN       21
+#define PIN_COUNT_169_PIN       17
+#define PIN_COUNT_176_PIN       18
+#define PIN_COUNT_196_PIN       19
+#define PIN_COUNT_208_PIN       20
+#define PIN_COUNT_210_PIN       21
+#define PIN_COUNT_216_PIN       22
+#define PIN_COUNT_256_PIN       23
 
 #define PACKAGE_LQFP            1
 #define PACKAGE_MAPBGA          2

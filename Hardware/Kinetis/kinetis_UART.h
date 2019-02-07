@@ -2752,7 +2752,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
             #if defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
-            #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+            #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
             POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
             #else
             POWER_UP_ATOMIC(6, LPUART0);                                 // power up LPUART 0

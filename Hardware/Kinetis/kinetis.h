@@ -1189,6 +1189,10 @@ typedef struct stRESET_VECTOR
     #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/2))           // SRAM is symmetrical around 0x20000000
 #endif
 
+#if defined SIZE_OF_OCRAM
+    #define OCRAM_START_ADDRESS   (0x34000000)                           // RAM tightly coupled to the ARM cortex-m4 core
+#endif
+
 #if KINETIS_MAX_SPEED >= 100000000                                       // devices with less that 100MHz speed don't generally have memory protection unit
     #if !(defined KINETIS_K22 && ((SIZE_OF_FLASH <= (512 * 1024)) && !defined KINETIS_FLEX)) // {86} exception of K22 FN with 512k Flash or less
         #define MPU_AVAILABLE
@@ -1252,7 +1256,9 @@ typedef struct stRESET_VECTOR
 
 // Touch Sensor Interface
 //
-#if defined KINETIS_KL
+#if defined KINETIS_K27 || defined KINETIS_K28
+    #define TSI_AVAILABLE             0
+#elif defined KINETIS_KL
     #if defined KINETIS_KL82
         #define TSI_AVAILABLE         1
         #define TSI_INPUTS_AVAILABLE  16
@@ -1411,7 +1417,9 @@ typedef struct stRESET_VECTOR
     #endif
 #endif
 
-#if defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_KV40
+#if defined KINETIS_K27 || defined KINETIS_K28
+    #define SPI_AVAILABLE           4
+#elif defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_KV40
     #define SPI_AVAILABLE           1
 #elif defined KINETIS_KL82 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KL27 || defined KINETIS_KS
     #define SPI_AVAILABLE           2
@@ -1598,7 +1606,9 @@ typedef struct stRESET_VECTOR
 
 // ADC configuration
 //
-#if defined KINETIS_K61 || defined KINETIS_K70 || (((defined KINETIS_K60 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && !defined KINETIS_K26 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24)) && (KINETIS_MAX_SPEED > 100000000))
+#if defined KINETIS_K27 || defined KINETIS_K28
+    #define ADC_CONTROLLERS         1
+#elif defined KINETIS_K61 || defined KINETIS_K70 || (((defined KINETIS_K60 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66) || (defined KINETIS_K20 && !defined KINETIS_K26 && !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24)) && (KINETIS_MAX_SPEED > 100000000))
     #define ADC_CONTROLLERS         4
 #elif defined KINETIS_KE14 || defined KINETIS_KE15
     #define ADC_CONTROLLERS         2
@@ -2394,7 +2404,7 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_PORTE)(void);                                            // 44
     void  (*irq_SW_IRQ)(void);                                           // 45
 #else
-    void  (*irq_DMA0)(void);                                             // 0
+    void  (*irq_DMA0)(void);                                             // 0 (K27 and K28 share the DMA interupts between DMAn and DMAn+16)
     void  (*irq_DMA1)(void);                                             // 1
     void  (*irq_DMA2)(void);                                             // 2
     void  (*irq_DMA3)(void);                                             // 3
@@ -2433,7 +2443,11 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_LL_wakeup)(void);                                        // 21
     void  (*irq_WDOG0)(void);                                            // 22
     #if defined RNG_AVAILABLE
+        #if defined TRUE_RANDOM_NUMBER_GENERATOR
+        void  (*irq_TRNG0)(void);                                        // 23
+        #else
         void  (*irq_RNG)(void);                                          // 23
+        #endif
     #else
         void  (*irq_res_23)(void);                                       // 23
     #endif
@@ -2586,7 +2600,7 @@ typedef struct stPROCESSOR_IRQ
             void  (*irq_CAN2_RX)(void);                                  // 119
             void  (*irq_CAN2_WAKE_UP)(void);                             // 120
         #endif
-    #elif defined KINETIS_K80
+    #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
         void  (*irq_I2S0_TX)(void);                                      // 28
         void  (*irq_I2S0_RX)(void);                                      // 29
         void  (*irq_LPUART0)(void);                                      // 30
@@ -2596,8 +2610,13 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_LPUART4)(void);                                      // 34
         void  (*irq_res_35)(void);                                       // 35
         void  (*irq_res_36)(void);                                       // 36
-        void  (*irq_EVMSIM0)(void);                                      // 37
-        void  (*irq_EVMSIM1)(void);                                      // 38
+        #if defined KINETIS_K80
+            void  (*irq_EVMSIM0)(void);                                  // 37
+            void  (*irq_EVMSIM1)(void);                                  // 38
+        #else
+            void  (*irq_res_37)(void);                                   // 37
+            void  (*irq_res_38)(void);                                   // 38
+        #endif
         void  (*irq_ADC0)(void);                                         // 39
         void  (*irq_CMP0)(void);                                         // 40
         void  (*irq_CMP1)(void);                                         // 41
@@ -2625,10 +2644,19 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_PORTE)(void);                                        // 63
         void  (*irq_SOFTWARE)(void);                                     // 64
         void  (*irq_SPI2)(void);                                         // 65
-        void  (*irq_res_66)(void);                                       // 66
+        #if SPI_AVAILABLE > 3
+            void  (*irq_SPI3)(void);                                     // 66
+        #else
+            void  (*irq_res_66)(void);                                   // 66
+        #endif
         void  (*irq_res_67)(void);                                       // 67
-        void  (*irq_res_68)(void);                                       // 68
-        void  (*irq_res_69)(void);                                       // 69
+        #if I2S_AVAILABLE > 1
+            void  (*irq_I2S1_TX)(void);                                  // 68
+            void  (*irq_I2S1_RX)(void);                                  // 69
+        #else
+            void  (*irq_res_68)(void);                                   // 68
+            void  (*irq_res_69)(void);                                   // 69
+        #endif
         void  (*irq_FLEXIO)(void);                                       // 70
         void  (*irq_FTM3)(void);                                         // 71
         void  (*irq_res_72)(void);                                       // 72
@@ -2646,13 +2674,25 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_res_84)(void);                                       // 84
         void  (*irq_res_85)(void);                                       // 85
         void  (*irq_res_86)(void);                                       // 86
-        void  (*irq_TSI0)(void);                                         // 87
+        #if TSI_AVAILABLE > 0
+            void  (*irq_res_87)(void);                                   // 87
+        #else
+            void  (*irq_TSI0)(void);                                     // 87
+        #endif
         void  (*irq_TPM1)(void);                                         // 88
         void  (*irq_TPM2)(void);                                         // 89
-        void  (*irq_res_90)(void);                                       // 90
+        #if defined KINETIS_WITH_USBPHY
+            void  (*irq_USBHS_DCD_PHY)(void);                            // 90        
+        #else
+            void  (*irq_res_90)(void);                                   // 90
+        #endif
         void  (*irq_I2C3)(void);                                         // 91
         void  (*irq_res_92)(void);                                       // 92
-        void  (*irq_res_93)(void);                                       // 93
+        #if defined KINETIS_WITH_USBPHY
+            void  (*irq_USB_HS)(void);                                   // 93
+        #else
+            void  (*irq_res_93)(void);                                   // 93
+        #endif
         void  (*irq_res_94)(void);                                       // 94
         void  (*irq_res_95)(void);                                       // 95
         void  (*irq_res_96)(void);                                       // 96
@@ -2661,7 +2701,7 @@ typedef struct stPROCESSOR_IRQ
         void  (*irq_res_99)(void);                                       // 99
         void  (*irq_QSPI)(void);                                         // 100
     #elif defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || (defined KINETIS_K22 && !defined KINETIS_K22_SF7)
             void  (*irq_I2S0_TX)(void);                                  // 28
             void  (*irq_I2S0_RX)(void);                                  // 29
             void  (*irq_res_30)(void);                                   // 30
@@ -2761,7 +2801,7 @@ typedef struct stPROCESSOR_IRQ
             void  (*irq_ADC1)(void);                                     // 73
             #if defined KINETIS_K24 && ((SIZE_OF_FLASH == 256 * 1024))
                 void  (*irq_I2C2)(void);                                 // 74
-            #elif !defined KINETIS_KV30 && !defined KINETIS_K22
+            #elif !defined KINETIS_KV30 && !defined KINETIS_K22_SF7
                 void  (*irq_I2C2)(void);                                 // 74
                 #if NUMBER_OF_CAN_INTERFACES > 0
                     void  (*irq_CAN0_MESSAGE)(void);                     // 75
@@ -2783,7 +2823,7 @@ typedef struct stPROCESSOR_IRQ
                 #else
                     void  (*irq_res_81)(void);                           // 81
                 #endif
-                #if !defined KINETIS_K24
+                #if defined ETHERNET_AVAILABLE
                     void  (*irq_ETH_IEEE1588)(void);                     // 82
                     void  (*irq_ETH_TX)(void);                           // 83
                     void  (*irq_ETH_RX)(void);                           // 84
@@ -3451,7 +3491,7 @@ typedef struct stVECTOR_TABLE
     #define irq_PORTE_ID                  44                             // 44
     #define irq_SW_IRQ_ID                 45                             // 45
 #else
-    #define irq_DMA0_ID                   0                              // 0
+    #define irq_DMA0_ID                   0                              // 0 (K27 and K28 share the DMA interupts between DMAn and DMAn+16)
     #define irq_DMA1_ID                   1                              // 1
     #define irq_DMA2_ID                   2                              // 2
     #define irq_DMA3_ID                   3                              // 3
@@ -3477,7 +3517,11 @@ typedef struct stVECTOR_TABLE
     #define irq_LL_wakeup_ID              21                             // 21
     #define irq_WDOG_ID                   22                             // 22
     #if defined RNG_AVAILABLE
-        #define irq_RNG_ID                23                             // 23
+        #if defined TRUE_RANDOM_NUMBER_GENERATOR
+            #define irq_TRNG0_ID          23                             // 23
+        #else
+            #define irq_RNG_ID            23                             // 23
+        #endif
     #endif
     #define irq_I2C0_ID                   24                             // 24
     #if I2C_AVAILABLE > 1
@@ -3604,7 +3648,7 @@ typedef struct stVECTOR_TABLE
             #define irq_CAN2_RX_ID            119                        // 119
             #define irq_CAN2_WAKE_UP_ID       120                        // 120
         #endif
-    #elif defined KINETIS_K80
+    #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28 
         #define irq_I2S0_TX_ID            28                             // 28
         #define irq_I2S0_RX_ID            29                             // 29
         #define irq_LPUART0_ID            30                             // 30
@@ -3612,9 +3656,10 @@ typedef struct stVECTOR_TABLE
         #define irq_LPUART2_ID            32                             // 32
         #define irq_LPUART3_ID            33                             // 33
         #define irq_LPUART4_ID            34                             // 34
-
-        #define irq_EVMSIM0_ID            37                             // 37
-        #define irq_EVMSIM1_ID            38                             // 38
+        #if defined KINETIS_K80
+            #define irq_EVMSIM0_ID        37                             // 37
+            #define irq_EVMSIM1_ID        38                             // 38
+        #endif
         #define irq_ADC0_ID               39                             // 39
         #define irq_CMP0_ID               40                             // 40
         #define irq_CMP1_ID               41                             // 41
@@ -3642,7 +3687,14 @@ typedef struct stVECTOR_TABLE
         #define irq_PORTE_ID              63                             // 63
         #define irq_SOFTWARE_ID           64                             // 64
         #define irq_SPI2_ID               65                             // 65
+        #if SPI_AVAILABLE > 3
+            #define irq_SPI3_ID           66                             // 66
+        #endif
 
+        #if I2S_AVAILABLE > 1
+            #define irq_I2S1_TX_ID        68                             // 68
+            #define irq_I2S1_RX_ID        69                             // 69
+        #endif
         #define irq_FLEXIO_ID             70                             // 70
         #define irq_FTM3_ID               71                             // 71
 
@@ -3650,15 +3702,22 @@ typedef struct stVECTOR_TABLE
 
         #define irq_SDHC_ID               81                             // 81
 
-        #define irq_TSI0_ID               87                             // 87
+        #if TSI_AVAILABLE > 0
+            #define irq_TSI0_ID           87                             // 87
+        #endif
         #define irq_TPM1_ID               88                             // 88
         #define irq_TPM2_ID               89                             // 89
-
+        #if defined KINETIS_WITH_USBPHY
+            #define irq_USBHS_DCD_PHY_ID  90                             // 90        
+        #endif
         #define irq_I2C3_ID               91                             // 91
 
+        #if defined KINETIS_WITH_USBPHY
+            #define irq_USB_HS_ID         93                             // 93
+        #endif
         #define irq_QSPI_ID               100                            // 100
     #elif defined KINETIS_K02 || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_KV30 || defined KINETIS_KW2X // {46}
-        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined KINETIS_KW2X || defined KINETIS_K12 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || (defined KINETIS_K22 && !defined KINETIS_K22_SF7)
             #define irq_I2S0_TX_ID        28                             // 28
             #define irq_I2S0_RX_ID        29                             // 29
         #else
@@ -3718,19 +3777,25 @@ typedef struct stVECTOR_TABLE
             #define irq_FTM3_ID           71                             // 71
             #define irq_DAC1_ID           72                             // 72
             #define irq_ADC1_ID           73                             // 73
-            #if !defined KINETIS_KV30 && !defined KINETIS_K22
+            #if !defined KINETIS_KV30 && !defined KINETIS_K22_SF7
                 #define irq_I2C2_ID           74                         // 74
-                #define irq_CAN0_MESSAGE_ID   75                         // 75
-                #define irq_CAN0_BUS_OFF_ID   76                         // 76
-                #define irq_CAN0_ERROR_ID     77                         // 77
-                #define irq_CAN0_TX_ID        78                         // 78
-                #define irq_CAN0_RX_ID        79                         // 79
-                #define irq_CAN0_WAKE_UP_ID   80                         // 80
-                #define irq_SDHC_ID           81                         // 81
-                #define irq_ETH_IEEE1588_ID   82                         // 82
-                #define irq_ETH_TX_ID         83                         // 83
-                #define irq_ETH_RX_ID         84                         // 84
-                #define irq_ETH_ERR_MISC_ID   85                         // 85
+                #if NUMBER_OF_CAN_INTERFACES > 0
+                    #define irq_CAN0_MESSAGE_ID   75                     // 75
+                    #define irq_CAN0_BUS_OFF_ID   76                     // 76
+                    #define irq_CAN0_ERROR_ID     77                     // 77
+                    #define irq_CAN0_TX_ID        78                     // 78
+                    #define irq_CAN0_RX_ID        79                     // 79
+                    #define irq_CAN0_WAKE_UP_ID   80                     // 80
+                #endif
+                #if NUMBER_OF_SDHC > 0
+                    #define irq_SDHC_ID       81                         // 81
+                #endif
+                #if defined ETHERNET_AVAILABLE
+                    #define irq_ETH_IEEE1588_ID   82                     // 82
+                    #define irq_ETH_TX_ID         83                     // 83
+                    #define irq_ETH_RX_ID         84                     // 84
+                    #define irq_ETH_ERR_MISC_ID   85                     // 85
+                #endif
                 #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
                     #define irq_LPUART0_ID    86                         // 86
                     #define irq_TSI0_ID       87                         // 87
@@ -3862,7 +3927,10 @@ typedef struct stVECTOR_TABLE
 
 #define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
 
-#if defined KINETIS_KE14 || defined KINETIS_KE15
+#if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28 
+    #define LAST_PROCESSOR_IRQ     irq_QSPI
+    #define CHECK_VECTOR_SIZE                468                         // (16 + 100 + 1) = 117    ) * 4 - adequate for this processor [0x1e8]
+#elif defined KINETIS_KE14 || defined KINETIS_KE15
     #define LAST_PROCESSOR_IRQ     irq_RCM
     #define CHECK_VECTOR_SIZE                192                         // (16 + 31 + 1) = 48) * 4 - adequate for this processor [0xc0]
 #elif defined KINETIS_KE18
@@ -3880,6 +3948,9 @@ typedef struct stVECTOR_TABLE
 #elif defined KINETIS_KV50
     #define LAST_PROCESSOR_IRQ     irq_CAN2_WAKE_UP
     #define CHECK_VECTOR_SIZE                548                         // (16 + 120 + 1) = 137) * 4 - adequate for this processor [0x224]
+#elif defined KINETIS_K22 && !defined KINETIS_K22_SF7
+    #define LAST_PROCESSOR_IRQ     irq_SDHC
+    #define CHECK_VECTOR_SIZE                392                         // (16 + 81 + 1) = 97) * 4 - adequate for this processor [0x188]
 #elif defined KINETIS_KV30 || defined KINETIS_K22
     #define LAST_PROCESSOR_IRQ     irq_ADC1
     #define CHECK_VECTOR_SIZE                360                         // (16 + 73 + 1) = 90) * 4 - adequate for this processor [0x168]
@@ -3928,9 +3999,6 @@ typedef struct stVECTOR_TABLE
 #elif defined KINETIS_K61 || defined KINETIS_K70 || ((defined KINETIS_K60 || defined KINETIS_K20) && KINETIS_MAX_SPEED > 100000000)
     #define LAST_PROCESSOR_IRQ     irq_I2S1_RX
     #define CHECK_VECTOR_SIZE                488                         // (16 + 105 + 1) = 122) * 4 - adequate for this processor [0x1e8]
-#elif defined KINETIS_K80
-    #define LAST_PROCESSOR_IRQ     irq_QSPI
-    #define CHECK_VECTOR_SIZE                468                         // (16 + 100 + 1) = 117    ) * 4 - adequate for this processor [0x1e8]
 #else
     #define LAST_PROCESSOR_IRQ     irq_PORTE
     #define CHECK_VECTOR_SIZE                432                         // (16 + 91 + 1) = 108) * 4 - adequate for this processor  [0x1b0]
@@ -4085,7 +4153,9 @@ typedef struct stVECTOR_TABLE
     #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM
         #define AXBS_BLOCK                     ((unsigned char *)(&kinetis.AXBS)) // {50} Crossbar Switch
     #endif
-    #define TSI_BLOCK                          ((unsigned char *)(&kinetis.TSI)) // Touch Sense Input Module
+    #if TSI_AVAILABLE > 0
+        #define TSI_BLOCK                      ((unsigned char *)(&kinetis.TSI)) // Touch Sense Input Module
+    #endif
     #define SIM_BLOCK                          ((unsigned char *)(&kinetis.SIM)) // System Integration Module
     #if defined KINETIS_KE && !defined KINETIS_KE14 && !defined KINETIS_KE15 && !defined KINETIS_KE18
         #define PORT_BLOCK                     ((unsigned char *)(&kinetis.PORT)) // Port block
@@ -4447,7 +4517,9 @@ typedef struct stVECTOR_TABLE
     #if !defined KINETIS_KE && !defined KINETIS_KL && !defined KINETIS_KM
         #define AXBS_BLOCK                     0x40004000                // {50} crossbar switch
     #endif
-    #define TSI_BLOCK                          0x40045000                // touch sense input module
+    #if TSI_AVAILABLE > 0
+        #define TSI_BLOCK                      0x40045000                // touch sense input module
+    #endif
     #if defined KINETIS_KE
         #define SIM_BLOCK                      0x40048000                // system integration module
     #elif defined KINETIS_KM
@@ -4566,7 +4638,7 @@ typedef struct stVECTOR_TABLE
     #if LPUARTS_AVAILABLE > 0
         #if defined KINETIS_KE14 || defined KINETIS_KE15
             #define LPUART0_BLOCK              0x4006a000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K65 || defined KINETIS_K66
+        #elif defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K80 || defined KINETIS_KL28 || defined KINETIS_K65 || defined KINETIS_K66
             #define LPUART0_BLOCK              0x400c4000                // LPUART0
         #elif defined KINETIS_KL
             #define LPUART0_BLOCK              0x40054000                // LPUART0
@@ -4577,7 +4649,7 @@ typedef struct stVECTOR_TABLE
     #if LPUARTS_AVAILABLE > 1
         #if defined KINETIS_KE14 || defined KINETIS_KE15
             #define LPUART1_BLOCK              0x4006b000                // LPUART0
-        #elif defined KINETIS_K80 || defined KINETIS_KL28
+        #elif defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K80 || defined KINETIS_KL28
             #define LPUART1_BLOCK              0x400c5000                // LPUART1
         #else
             #define LPUART1_BLOCK              0x40055000                // LPUART1
@@ -6811,7 +6883,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
-        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18
+        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_K27 || defined KINETIS_K28
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    2                   // 0x02 LPUART0 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    3                   // 0x03 LPUART0 TX
           #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    4                   // 0x04 LPUART1 RX
@@ -6843,26 +6915,36 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #elif  defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    6                   // 0x06 LPUART2 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    7                   // 0x07 LPUART2 TX
+        #elif defined KINETIS_K27 || defined KINETIS_K28
+          #define DMAMUX0_CHCFG_SOURCE_LPUART2_RX    6                   // 0x06 LPUART2 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART2_TX    7                   // 0x07 LPUART2 TX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART3_RX    8                   // 0x08 LPUART3 RX
+          #define DMAMUX0_CHCFG_SOURCE_LPUART3_TX    9                   // 0x09 LPUART3 TX
         #else
           #define DMAMUX0_CHCFG_SOURCE_UART2_RX      6                   // 0x06 UART2 RX
           #define DMAMUX0_CHCFG_SOURCE_UART2_TX      7                   // 0x07 UART2 TX
           #define DMAMUX0_CHCFG_SOURCE_UART3_RX      8                   // 0x08 UART3 RX
           #define DMAMUX0_CHCFG_SOURCE_UART3_TX      9                   // 0x09 UART3 TX
         #endif
-        #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30
-          #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10                  // 0x0a UART4 RX (or RX/TX) - single MUX channel that can be use for either Rx or Tx
-          #if defined KINETIS_K80
-            #define DMAMUX0_CHCFG_SOURCE_UART4_TX    11                  // 0x0b UART4 TX
+        #if defined KINETIS_K21 || defined KINETIS_K22 || defined KINETIS_K24 || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_KV30 || defined KINETIS_K27 || defined KINETIS_K28
+          #if defined KINETIS_K27 || defined KINETIS_K28
+              #define DMAMUX0_CHCFG_SOURCE_LPUART4_RX    10              // 0x0a LPUART4 RX
+              #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX    11              // 0x0b LPUART4 TX
           #else
-            #define DMAMUX0_CHCFG_SOURCE_UART4_TX    10                  // 0x0a UART4 TX (or RX/TX)
-            #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11                  // 0x0b UART5 RX (TX or RX) - single MUX channel that can be use for either Rx or Tx
-            #define DMAMUX0_CHCFG_SOURCE_UART5_TX    11                  // 0x0b UART5 TX (TX or RX)
+              #define DMAMUX0_CHCFG_SOURCE_UART4_RX      10              // 0x0a UART4 RX (or RX/TX) - single MUX channel that can be use for either Rx or Tx
+              #if defined KINETIS_K80
+                #define DMAMUX0_CHCFG_SOURCE_UART4_TX    11              // 0x0b UART4 TX
+              #else
+                #define DMAMUX0_CHCFG_SOURCE_UART4_TX    10              // 0x0a UART4 TX (or RX/TX)
+                #define DMAMUX0_CHCFG_SOURCE_UART5_RX    11              // 0x0b UART5 RX (TX or RX) - single MUX channel that can be use for either Rx or Tx
+                #define DMAMUX0_CHCFG_SOURCE_UART5_TX    11              // 0x0b UART5 TX (TX or RX)
+              #endif
           #endif
           #define DMAMUX0_CHCFG_SOURCE_I2S0_RX       12                  // 0x0c I2S0 RX
           #define DMAMUX0_CHCFG_SOURCE_I2S0_TX       13                  // 0x0d I2S0 TX
           #define DMAMUX0_CHCFG_SOURCE_SPI0_RX       14                  // 0x0e SPI0 RX
           #define DMAMUX0_CHCFG_SOURCE_SPI0_TX       15                  // 0x0f SPI0 TX
-            #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
+            #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
           #define DMAMUX0_CHCFG_SOURCE_SPI1_RX       16                  / 0x10 SPI1 RX
           #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       17                  / 0x11 SPI2 TX
           #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                  / 0x12 I2C0 (or I2C3)
@@ -6872,7 +6954,6 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       17                  // 0x11 SPI2 TX or RX
           #define DMAMUX0_CHCFG_SOURCE_I2C0          18                  // 0x12 I2C0 - DMAMUX0_CHCFG_xx are only available on DMA MUX 0
           #define DMAMUX0_CHCFG_SOURCE_I2C1          19                  // 0x13 I2C1
-          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  // 0x13 I2C1 (or I2C2)
             #endif
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C0       20                  // 0x14 FTM0 channel 0
           #define DMAMUX0_CHCFG_SOURCE_FTM0_C1       21                  // 0x15 FTM0 channel 1
@@ -7070,7 +7151,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C2_C3    57                  // 0x39 FTM1 OR of channels 2 to 3
           #define DMAMUX0_CHCFG_SOURCE_FTM2_C2_C3    58                  // 0x3a FTM2 OR of channels 2 to 3
           #define DMAMUX0_CHCFG_SOURCE_LPTMR0        59                  // 0x3b LPTMR0
-        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80
+        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80 && !defined KINETIS_K27 && !defined KINETIS_K28
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                  // 0x38 FTM3 channel 6
@@ -7100,7 +7181,10 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
               #define DMAMUX0_CHCFG_SOURCE_LPUART4_TX  DMAMUX0_CHCFG_SOURCE_UART4_RX // shared Rx/Tx channel
           #endif
         #elif LPUARTS_AVAILABLE > 0
-          #if !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE14 && !defined KINETIS_KE15 && !defined KINETIS_KE18
+          #if defined KINETIS_K27 || defined KINETIS_K28
+              #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       (58)            // 0x3a SPI2 RX
+              #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       (59)            // 0x3b SPI2 TX
+          #elif !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE14 && !defined KINETIS_KE15 && !defined KINETIS_KE18
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX  59                  // 0x3b LPUART0 TX
           #endif
@@ -10713,6 +10797,7 @@ typedef struct stKINETIS_LPTMR_CTL
 #define AXBS_MGPCR7                      *(volatile unsigned long *)(AXBS_BLOCK + 0xf00) // Master General Purpose Control Registers 7
 #endif
 
+#if TSI_AVAILABLE > 0
 // Touch Sense Input Module
 //
 #if defined KINETIS_KL
@@ -10977,6 +11062,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #define TSI0_THRESHLD14          *(unsigned long*)(TSI_BLOCK + 0x158) // Channel 14 Threshold Register
         #define TSI0_THRESHLD15          *(unsigned long*)(TSI_BLOCK + 0x15c) // Channel 15 Threshold Register
      #endif
+#endif
 #endif
 
 
@@ -11581,7 +11667,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SCGC2_LPUART0        0x00000010
             #define SIM_SCGC2_TPM1           0x00000200
             #define SIM_SCGC2_TPM2           0x00000400
-          #elif defined KINETIS_K80
+          #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
             #define SIM_SCGC2_LPUART0        0x00000010
             #define SIM_SCGC2_LPUART1        0x00000020
             #define SIM_SCGC2_LPUART2        0x00000040
@@ -11598,6 +11684,8 @@ typedef struct stKINETIS_LPTMR_CTL
             #endif
             #define SIM_SCGC2_EMVSIM0        0x00100000
             #define SIM_SCGC2_EMVSIM1        0x00200000
+          #endif
+          #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
             #define SIM_SCGC2_LPUART4        0x00400000
             #define SIM_SCGC2_QSPI           0x04000000
             #define SIM_SCGC2_FLEXIO         0x80000000
@@ -11609,18 +11697,22 @@ typedef struct stKINETIS_LPTMR_CTL
               #define SIM_SCGC2_SIM_SCGC2_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 4)
               #define SIM_SCGC2_SIM_SCGC2_TPM1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 9)
               #define SIM_SCGC2_SIM_SCGC2_TPM2    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 10)
-          #elif defined KINETIS_K80
+          #elif defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
               #define SIM_SCGC2_SIM_SCGC2_LPUART0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 4)
               #define SIM_SCGC2_SIM_SCGC2_LPUART1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 5)
               #define SIM_SCGC2_SIM_SCGC2_LPUART2 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 6)
               #define SIM_SCGC2_SIM_SCGC2_LPUART3 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 7)
               #define SIM_SCGC2_SIM_SCGC2_TPM1    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 9)
               #define SIM_SCGC2_SIM_SCGC2_TPM2    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 10)
+          #endif
+          #if defined KINETIS_K80
               #if defined LTC_AVAILABLE
                   #define SIM_SCGC2_SIM_SCGC2_LTC BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 17)
               #endif
               #define SIM_SCGC2_SIM_SCGC2_EMVSIM0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 20)
               #define SIM_SCGC2_SIM_SCGC2_EMVSIM1 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 21)
+          #endif
+          #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
               #define SIM_SCGC2_SIM_SCGC2_LPUART4 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 22)
               #define SIM_SCGC2_SIM_SCGC2_QSPI    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 26)
               #define SIM_SCGC2_SIM_SCGC2_FLEXIO0 BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x102c), 31)
@@ -11842,7 +11934,7 @@ typedef struct stKINETIS_LPTMR_CTL
               #define SIM_SCGC6_FLEXCAN0         0x00000010
               #define SIM_SCGC6_TRNG0            0x00000020
           #endif
-          #if !defined KINETIS_KL && !defined KINETIS_K80
+          #if !defined KINETIS_KL && !defined KINETIS_K80 && !defined KINETIS_K27 && !defined KINETIS_K28
               #define SIM_SCGC6_LPUART0          0x00000400
           #endif
           #if defined DSPI_SPI
@@ -13038,6 +13130,10 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PE_10_UART5_CTS                  PORT_MUX_ALT3
 
 #if LPUARTS_AVAILABLE > 0
+    #if defined KINETIS_K27 || defined KINETIS_K28
+        #define PC_24_LPUART0_TX         PORT_MUX_ALT3
+        #define PC_25_LPUART0_RX         PORT_MUX_ALT3
+    #endif
     #if defined KINETIS_KL03
         #define PB_2_LPUART0_RX          PORT_MUX_ALT2
         #define PB_1_LPUART0_TX          PORT_MUX_ALT2

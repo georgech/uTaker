@@ -78,7 +78,7 @@
 #if defined _DEV2 || defined ARDUINO_BLUE_PILL
     #define RESET_ON_STOP                                                // reset when the drive is stopped (ejected by host)
 #endif
-#define RESET_ON_EJECT                                                   // reset when the drive is unplugged
+//#define RESET_ON_EJECT                                                 // reset when the drive is unplugged
 
 #if !defined DISK_COUNT
     #define DISK_COUNT 1                                                 // {26}

@@ -17,8 +17,8 @@ Global
 		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - Kinetis plus GNU build|Win32.Build.0 = uTasker Kinetis plus GNU build|Win32
 		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - Kinetis|Win32.ActiveCfg = Debug|Win32
 		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - Kinetis|Win32.Build.0 = Debug|Win32
-		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32 plus GNU uild|Win32.ActiveCfg = uTasker Serial Loader - STM32 plus GNU uild|Win32
-		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32 plus GNU uild|Win32.Build.0 = uTasker Serial Loader - STM32 plus GNU uild|Win32
+		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32 plus GNU uild|Win32.ActiveCfg = uTasker Serial Loader - STM32 plus GNU build|Win32
+		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32 plus GNU uild|Win32.Build.0 = uTasker Serial Loader - STM32 plus GNU build|Win32
 		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32|Win32.ActiveCfg = uTasker Serial Loader - STM32|Win32
 		{1542481E-DEFD-45D3-9CF4-0565D976C143}.uTasker Serial Loader - STM32|Win32.Build.0 = uTasker Serial Loader - STM32|Win32
 	EndGlobalSection

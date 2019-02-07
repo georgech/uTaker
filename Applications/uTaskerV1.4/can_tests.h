@@ -11,7 +11,7 @@
     File:      can_tests.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     The file is otherwise not specifically linked in to the project since it
     is included by application.c when needed.

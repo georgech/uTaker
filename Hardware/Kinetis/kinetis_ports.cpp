@@ -11,7 +11,7 @@
     File:      kinetis_ports.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     16.04.2012 New method for K20, K61, K70                              {1}
     18.04.2012 Add dedicated ADC display                                 {2}
@@ -46,6 +46,8 @@
     #include "kinetis_port_k10.h"
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #include "kinetis_port_K26_K65_K66.h"
+#elif defined KINETIS_K27 || defined KINETIS_K28
+    #include "kinetis_port_K27_K28.h"
 #elif defined KINETIS_K20 || defined KINETIS_K21 || defined KINETIS_K22
     #include "kinetis_port_k20.h"
 #elif defined KINETIS_K30

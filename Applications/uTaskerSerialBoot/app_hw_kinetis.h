@@ -131,7 +131,7 @@
     #if defined MEMORY_SWAP && defined FRDM_K64F
       //#define SUPPORT_SWAP_BLOCK                                       // support flash swap block
     #endif
-#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z
+#elif defined TWR_K65F180M || defined K26FN2_180 || defined FRDM_K66F || defined K66FX1M0 || defined TEENSY_3_6 || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
   //#define RUN_FROM_HIRC                                                // clock directly from internal 48MHz RC clock
   //#define RUN_FROM_HIRC_PLL                                            // use 48MHz RC clock as input to the PLL
@@ -166,7 +166,7 @@
         #define FLEX_CLOCK_DIVIDE    3                                   // 120/3 to give 40MHz
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #else
-        #if defined FRDM_K66F || defined FRDM_KL82Z
+        #if defined FRDM_K66F || defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
             #define CRYSTAL_FREQUENCY    12000000                        // 12 MHz crystal
             #define CLOCK_DIV            1                               // input must be divided to 8MHz..16MHz range (/1 to /8)
         #else
@@ -177,14 +177,14 @@
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
       //#define USE_HIGH_SPEED_RUN_MODE                                  // note that flash programming is not possible in high speed run mode and so it is not used by the serial loader
         #if defined USE_HIGH_SPEED_RUN_MODE
-            #if defined FRDM_KL82Z
+            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define CLOCK_MUL        16                              // the PLL multiplication factor to achieve operating frequency of 96MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
-            #elif defined FRDM_K66F || defined K66FX1M0
+            #elif defined FRDM_K66F || defined TWR_K65F180M || defined K66FX1M0 || defined FRDM_K28F
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #else
                 #define CLOCK_MUL        45                              // the PLL multiplication factor to achieve operating frequency of 180MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #endif
-            #if defined FRDM_KL82Z
+            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define BUS_CLOCK_DIVIDE     4                           // 96/4 to give 24MHz (max. 24MHz)
                 #define QSPI_CLOCK_DIVIDE    1                           // 96/1 to give 96MHz (max. 96MHz)
                 #define FLASH_CLOCK_DIVIDE   4                           // 96/4 to give 24MHz (max. ?MHz)
@@ -193,24 +193,28 @@
                 #define FLEX_CLOCK_DIVIDE    3                           // 180/3 to give 60MHz (max. 60MHz)
                 #define FLASH_CLOCK_DIVIDE   7                           // 180/7 to give 25.714MHz (max. 28MHz)
             #endif
-        #else
-            #if defined FRDM_KL82Z
+        #else                                                            // run mode has no functional restrictions but can't operate as fast as high speed run mode
+            #if defined FRDM_KL82Z || defined TWR_KL82Z72M || defined FRDM_K28F
                 #define CLOCK_MUL        24                              // the PLL multiplication factor to achieve operating frequency of 144MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #elif defined TEENSY_3_6 || defined TWR_K65F180M || defined K66FX1M0
                 #define CLOCK_MUL        30                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #else
                 #define CLOCK_MUL        20                              // the PLL multiplication factor to achieve operating frequency of 120MHz (x16 to x47 possible) [PLL output range 90..180MHz - VCO is PLL * 2]
             #endif
-            #if defined FRDM_KL82Z
+            #if defined FRDM_KL82Z || defined TWR_KL82Z72M
                 #define SYSTEM_CLOCK_DIVIDE  2                           // 144/2 to give 72MHz
                 #define BUS_CLOCK_DIVIDE     6                           // 144/6 to give 24MHz (max. 24MHz)
                 #define QSPI_CLOCK_DIVIDE    2                           // 144/2 to give 72MHz (max. 72MHz)
                 #define FLASH_CLOCK_DIVIDE   6                           // 144/6 to give 24MHz (max. 24MHz)
+            #elif defined FRDM_K28F
+                #define BUS_CLOCK_DIVIDE     2                           // 150/3 to give 50MHz
+                #define FLEX_CLOCK_DIVIDE    3                           // 150/3 to give 50MHz
+                #define FLASH_CLOCK_DIVIDE   6                           // 150/6 to give 25MHz
             #else
                 #define BUS_CLOCK_DIVIDE     2                           // 120/2 to give 60MHz (max. 60MHz)
                 #define FLEX_CLOCK_DIVIDE    2                           // 120/2 to give 60MHz (max. 60MHz)
-                #define FLASH_CLOCK_DIVIDE   5                           // 120/5 to give 24MHz (max. 28MHz)
-            #endif            
+                #define FLASH_CLOCK_DIVIDE   5                           // 120/7 to give 24MHz (max. 28MHz)
+            #endif
         #endif
     #endif
     #define USB_CRYSTAL_LESS                                             // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
@@ -662,7 +666,17 @@
     #else
         #define SIZE_OF_FLASH   (1024 * 1024)                            // 1M FLASH
     #endif
-    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
+    #define SIZE_OF_RAM         (128 * 1024)                             // 128k 
+#elif defined FRDM_K28F
+    #define MASK_2N96TN
+    #define PIN_COUNT           PIN_COUNT_169_PIN                        // 169 pin package
+    #define PACKAGE_TYPE        PACKAGE_MAPBGA
+  //#define PIN_COUNT           PIN_COUNT_210_PIN                        // 210 pin package
+  //#define PACKAGE_TYPE        PACKAGE_WLCSP
+
+    #define SIZE_OF_FLASH       (2 * 1024 * 1024)                        // 2M FLASH
+    #define SIZE_OF_RAM         (512 * 1024)                             // 512 SRAM
+    #define SIZE_OF_OCRAM       (512 * 1024)                             // 512 SRAM
 #elif defined FRDM_K22F || defined tinyK22
     #define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 LQFP pin package
     #define PACKAGE_TYPE        PACKAGE_LQFP
@@ -730,7 +744,9 @@
     #endif
     #define PACKAGE_TYPE        PACKAGE_MAPBGA
   //#define PACKAGE_TYPE        PACKAGE_WLCSP
-  //#define KINETIS_FLEX                                                 // X part with flex memory rather than N part with program Flash only
+    #if defined K66FX1M0
+        #define KINETIS_FLEX                                             // X part with flex memory rather than N part with program Flash only
+    #endif
     #define SIZE_OF_FLASH       (2 * 1024 * 1024)                        // 2M FLASH
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
 #elif defined TEENSY_3_6
@@ -1230,7 +1246,7 @@
         #define LOADER_UART           2                                  // the serial interface used by the serial loader
     #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M || defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined TWR_K20D72M || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined K24FN1M0_120 || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined BLAZE_K22 || defined tinyK22 || defined FRDM_KE15Z
         #define LOADER_UART           1                                  // the serial interface used by the serial loader
-    #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FRDM_KV31F || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
+    #elif defined K02F100M || defined K12D50M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TEENSY_3_1 || defined FRDM_K64F || defined FRDM_KE04Z || defined TWR_KV10Z32 || defined TWR_KV31F120M || defined FRDM_KV31F || defined TWR_KV58F220M || defined FRDM_KL82Z || defined FRDM_K28F || defined FRDM_K66F || defined HEXIWEAR_K64F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM)
         #define LOADER_UART           0                                  // the serial interface used by the serial loader
     #else
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
@@ -2244,6 +2260,38 @@
     #define SDHC_SYSCTL_SPEED_SLOW  (SDHC_SYSCTL_SDCLKFS_64 | SDHC_SYSCTL_DVS_5) // 375kHz when 120MHz clock
     #define SDHC_SYSCTL_SPEED_FAST  (SDHC_SYSCTL_SDCLKFS_2 | SDHC_SYSCTL_DVS_3) // 20MHz when 120MHz clock
     #define SET_SPI_SD_INTERFACE_FULL_SPEED() fnSetSD_clock(SDHC_SYSCTL_SPEED_FAST); SDHC_PROCTL |= SDHC_PROCTL_DTW_4BIT
+#elif  defined FRDM_K28F
+    #define LED_RED            (PORTE_BIT6)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define LED_GREEN          (PORTE_BIT7)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define LED_BLUE           (PORTE_BIT8)                              // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_2           (PORTA_BIT4)                              // switch 2 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_3           (PORTD_BIT0)                              // switch 3 - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SDCARD_DETECT      (PORTB_BIT5)
+
+    #define BLINK_LED          (LED_GREEN)
+
+
+    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
+
+    #define FORCE_BOOT()       (_READ_PORT_MASK(D, (SWITCH_3)) == 0)     // pull this input down to force boot loader mode (hold SW1 and SW22 at reset) - only valid at power on
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_2), PORT_PS_UP_ENABLE)
+
+    #define WATCHDOG_DISABLE()  (_READ_PORT_MASK(A, SWITCH_2) == 0)      // pull this input down to disable watchdog (hold SW22 at reset)
+
+    #define BUTTON_KEY_DEFINITIONS  {_PORTA, SWITCH_2,   {303,  15, 320,  28 }}, \
+                                    {_PORTD, SWITCH_3,   {303, 191, 320, 204 }},
+
+    #define KEYPAD "KeyPads/FRDM_K28F.bmp"
+
+    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0,0,0),  RGB(0,  255,0  ), 0, {297, 75, 0, 6}, _PORTE, LED_GREEN}, \
+        {RGB(0,0,0),  RGB(255,0,  0  ), 0, {297, 75, 0, 6}, _PORTE, LED_RED}, \
+        {RGB(0,0,0),  RGB(0,  0,  255), 0, {297, 75, 0, 6}, _PORTE, LED_BLUE},
 #elif defined K66FX1M0
     #define LED_ORANGE         (PORTC_BIT5)                              // orange LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_GREEN          (PORTE_BIT0)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -2259,7 +2307,7 @@
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_1 | SWITCH_22), PORT_PS_UP_ENABLE)
 
     #define WATCHDOG_DISABLE()  (1) // (_READ_PORT_MASK(D, SWITCH_22) == 0) // pull this input down to disable watchdog (hold SW22 at reset)
-#elif defined FRDM_K66F
+#elif defined FRDM_K66F || defined K66FX1M0
     #define LED_GREEN          (PORTE_BIT6)                              // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_RED            (PORTC_BIT9)                              // red LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define LED_BLUE           (PORTA_BIT11)                             // blue LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -2316,6 +2364,19 @@
 
     #define DEL_USB_SYMBOL()                                             // control display of USB enumeration - clear
     #define SET_USB_SYMBOL()                                             // control display of USB enumeration - set
+
+    #define BUTTON_KEY_DEFINITIONS  {_PORTD, SWITCH_2,   {286,   6, 299,  14 }}, \
+                                    {_PORTA, SWITCH_3,   {286, 183, 299, 190 }},
+
+    #define KEYPAD "KeyPads/FRDM_K66F.bmp"
+
+    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0,  255,0  ), RGB(0,0,0),  1, {316, 10, 0, 5}, _PORTE, LED_GREEN}, \
+        {RGB(255,0,  0  ), RGB(0,0,0),  1, {316, 10, 0, 5}, _PORTC, LED_RED}, \
+        {RGB(0,  0,  255), RGB(0,0,0),  1, {316, 10, 0, 5}, _PORTA, LED_BLUE},
 #elif defined TEENSY_3_5 || defined TEENSY_3_6
     #define SD_CONTROLLER_AVAILABLE                                      // use SDHC controller rather than SPI
     #if defined SD_CONTROLLER_AVAILABLE
