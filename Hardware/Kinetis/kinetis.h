@@ -348,6 +348,14 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define KINETIS_WITH_RTC_CRYSTAL
 #endif
 
+// EMVSIM configuration
+//
+#if defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KL28
+    #define EMVSIM_AVAILABLE    2
+#else
+    #define EMVSIM_AVAILABLE    0
+#endif
+
 
 // Define the FLL input divider value if an external clock is being used (it must give an input reference frequency between 31.25kHz and 39.062kHz for use as FLL input)
 //
@@ -1357,6 +1365,7 @@ typedef struct stRESET_VECTOR
 //
 #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
     #define LPUARTS_AVAILABLE       5
+    #define NO_UART_FRACTION_CONTROL
     #define LPUART_WITHOUT_MODEM_CONTROL
 #elif defined KINETIS_KL28 || defined KINETIS_KL82 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18
     #define LPUARTS_AVAILABLE       3
@@ -4018,7 +4027,7 @@ typedef struct stVECTOR_TABLE
     #define PDB_AVAILABLE   0
 #endif
 
-#if defined KINETIS_K80
+#if defined KINETIS_K80 || defined KINETIS_K27|| defined KINETIS_K28
     #define RTC_REGISTER_FILE_SIZE       128                             // 128 bytes of data backed up by VBAT
     #define SYSTEM_REGISTER_FILE_SIZE    32                              // 32 bytes of data backed up in all power modes
 #endif
@@ -4139,7 +4148,7 @@ typedef struct stVECTOR_TABLE
     #endif
     #if !defined KINETIS_WITHOUT_RTC
         #define RTC_BLOCK                      ((unsigned char *)(&kinetis.RTC)) // RTC
-        #if defined KINETIS_K80
+        #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
             #define RTC_REGISTER_BLOCK         ((unsigned char *)(&kinetis.RTC_REGISTER_FILE)) // RTC register file
             #define SYSTEM_REGISTER_BLOCK      ((unsigned char *)(&kinetis.SYSTEM_REGISTER_FILE)) // system register file
         #endif
@@ -4395,7 +4404,7 @@ typedef struct stVECTOR_TABLE
     #if defined MPU_AVAILABLE
         #define MPU_BLOCK                      0x4000d000                // Memory Protection Unit
     #endif
-    #if defined KINETIS_K80
+    #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
         #define SDRAMC_BLOCK                   0x4000f000                // SDRAM Controller
     #endif
     #if !defined KINETIS_KL && !defined KINETIS_KE
@@ -4446,7 +4455,7 @@ typedef struct stVECTOR_TABLE
         #define CRC_BLOCK                      0x40032000                // CRC {8}
     #endif
     #if defined HS_USB_AVAILABLE
-        #if defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 // {96}
+        #if defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66 // {96}
             #define USBHS_BASE_ADD             0x400a1000                // USBHS
         #else
             #define USBHS_BASE_ADD             0x40034000                // USBHS {25}
@@ -4481,9 +4490,7 @@ typedef struct stVECTOR_TABLE
     #else
         #define FTM_BLOCK_0                    0x40038000                // FlexTimer 0 (TPM0 in KL/KE)
         #define FTM_BLOCK_1                    0x40039000                // FlexTimer 1 (TPM1 in KL/KE)
-        #if defined KINETIS_KL || defined KINETIS_K22_SF7 || defined KINETIS_KE || defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
-            #define FTM_BLOCK_2                0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
-        #endif
+        #define FTM_BLOCK_2                    0x4003a000                // FlexTimer 2 (TPM2 in KL/KE)
     #endif
     #if defined KINETIS_KL28
         #define ADC0_BLOCK                     0x40066000                // ADC0
@@ -4498,8 +4505,9 @@ typedef struct stVECTOR_TABLE
             #define RTC_BLOCK                  0x40038000                // RTC
         #else
             #define RTC_BLOCK                  0x4003d000                // RTC
-            #if defined KINETIS_K80
+            #if defined KINETIS_K80 || defined KINETIS_K27 || defined INETIS_K28
                 #define RTC_REGISTER_BLOCK     0x4003e000                // RTC register file
+                #define SYSTEM_REGISTER_BLOCK  0x40041000                // system register file
             #endif
         #endif
     #endif
@@ -4782,7 +4790,7 @@ typedef struct stVECTOR_TABLE
         #endif
     #elif !defined KINETIS_KL && !defined KINETIS_KE
         #define SDHC_BLOCK                     0x400b1000                // SDHC
-        #if !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66 && !defined KINETIS_K22_SF7
+        #if !defined KINETIS_K27 && !defined KINETIS_K28 && !defined KINETIS_K64 && !defined KINETIS_K65 && !defined KINETIS_K66 && !defined KINETIS_K22_SF7
             #define FTM_BLOCK_2                0x400b8000                // FlexTimer 2
         #endif
         #if defined KINETIS_K22_SF7
@@ -4818,7 +4826,7 @@ typedef struct stVECTOR_TABLE
     #if (DAC_CONTROLLERS > 0)
         #if defined KINETIS_KL28
             #define DAC0_BASE_ADD              0x4006a000                // DAC0
-        #elif defined KINETIS_KL || defined KINETIS_KE18
+        #elif defined KINETIS_KL || defined KINETIS_KE18 || defined KINETIS_K27 || defined KINETIS_K28
             #define DAC0_BASE_ADD              0x4003f000                // {52} DAC0
         #else
             #define DAC0_BASE_ADD              0x400cc000                // DAC0
@@ -6402,6 +6410,14 @@ typedef struct stKINETIS_INTMUX
         #define CROSSBAR_MASTER_USB_FS          MASTER_M4
         #define CROSSBAR_MASTER_SDHC            MASTER_M5
         #define CROSSBAR_MASTER_USB_HS          MASTER_M6
+    #elif defined KINETIS_K27 || defined KINETIS_K28
+        #define FMC_FPAPR_USB_FS                FMC_PFAPR_M3AP_RD        // USB FS is bus master 3
+        #define FMC_FPAPR_SDHC                  FMC_PFAPR_M4AP_RD        // SDHC is bus master 4
+        #define FMC_FPAPR_USB_HS                FMC_PFAPR_M5AP_RD        // USB HS is bus master 5
+        #define CROSSBAR_MASTER_eDMA            MASTER_M2
+        #define CROSSBAR_MASTER_USB_FS          MASTER_M3
+        #define CROSSBAR_MASTER_SDHC            MASTER_M4
+        #define CROSSBAR_MASTER_USB_HS          MASTER_M5
     #elif defined KINETIS_K_FPU && !(defined KINETIS_K21 || defined KINETIS_K22 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024))) || defined KINETIS_K64)
         #define FMC_FPAPR_SDHC_NFC_USB_FS       FMC_PFAPR_M3AP_RD
         #define FMC_FPAPR_USB_FS                FMC_PFAPR_M3AP_RD        // USB FS is bus master 3
@@ -11480,7 +11496,7 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SOPT2_PLLFLLSEL      0x00010000                  // select PLL source (MCGPLLCLK rather than MCGFLLCLK)
         #endif
             #define SIM_SOPT2_USBSRC         0x00040000                  // usb clock source is MCGPLLCLK/MCGFLLCLK (or IRC48M) clock divided by the USB fractional divider rather than USB_CLKIN
-        #if defined KINETIS_K80
+        #if defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
             #define SIM_SOPT2_FLEXIOSRC      0x00c00000                  // flexIO module clock sorce select
                 #define SIM_SOPT2_FLEXIOSRC_DISABLED 0x00000000          // flexIO clock disabled
                 #define SIM_SOPT2_FLEXIOSRC_ALT      0x00400000          // clock for flexIO selected from SOPT2[PLLFLLSEL]
@@ -11498,9 +11514,11 @@ typedef struct stKINETIS_LPTMR_CTL
             #define SIM_SOPT2_SDHCSRC_SEL    0x10000000                  // SDHC clock source - source selected by PLLFLLSEL
             #define SIM_SOPT2_SDHCSRC_OSC    0x20000000                  // SDHC clock source - OSCERCLK
             #define SIM_SOPT2_SDHCSRC_MCG    0x30000000                  // SDHC clock source - MCGIRCLK
-            #define SIM_SOPT2_EMVSIMSRC_SEL  0x40000000                  // EMVSIM module clock source - source selected by PLLFLLSEL
-            #define SIM_SOPT2_EMVSIMSRC_OSC  0x80000000                  // EMVSIM module clock source - OSCERCLK
-            #define SIM_SOPT2_EMVSIMSRC_MCG  0xc0000000                  // EMVSIM module clock source - MCGIRCLK
+            #if defined EMVSIM_AVAILABLE
+                #define SIM_SOPT2_EMVSIMSRC_SEL  0x40000000              // EMVSIM module clock source - source selected by PLLFLLSEL
+                #define SIM_SOPT2_EMVSIMSRC_OSC  0x80000000              // EMVSIM module clock source - OSCERCLK
+                #define SIM_SOPT2_EMVSIMSRC_MCG  0xc0000000              // EMVSIM module clock source - MCGIRCLK
+            #endif
         #else
             #if defined KINETIS_HAS_IRC48M                               // {58}
                 #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66

@@ -1252,7 +1252,7 @@
         #define LOADER_UART           3                                  // the serial interface used by the serial loader
     #endif
     #define MODBUS_UART_0    (LOADER_UART)                               // modbus uses the serial interface
-    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL27Z || defined FRDM_KL82Z || defined TWR_K80F150M || defined FRDM_K82F
+    #if defined FRDM_KL03Z || defined FRDM_KL43Z || defined TWR_KL43Z48M || defined FRDM_KL27Z || defined FRDM_KL82Z || defined TWR_K80F150M || defined FRDM_K82F || defined FRDM_K28F
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the UART from it
       //#define LPUART_OSCERCLK                                          // clock the UART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the UART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined
@@ -2271,14 +2271,13 @@
 
     #define BLINK_LED          (LED_GREEN)
 
-
-    #define INIT_WATCHDOG_LED()    _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_2), PORT_PS_UP_ENABLE)
+#define INIT_WATCHDOG_LED()     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH)); _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_3), PORT_PS_UP_ENABLE)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(E, BLINK_LED)
 
-    #define FORCE_BOOT()       (_READ_PORT_MASK(D, (SWITCH_3)) == 0)     // pull this input down to force boot loader mode (hold SW1 and SW22 at reset) - only valid at power on
-    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_2), PORT_PS_UP_ENABLE)
+    #define FORCE_BOOT()       ((_READ_PORT_MASK(D, (SWITCH_3)) == 0) || (SOFTWARE_RESET_DETECTED() && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER))) // pull this input down to force boot loader mode (hold SW3 at reset)
 
-    #define WATCHDOG_DISABLE()  (_READ_PORT_MASK(A, SWITCH_2) == 0)      // pull this input down to disable watchdog (hold SW22 at reset)
+    #define WATCHDOG_DISABLE() (_READ_PORT_MASK(A, SWITCH_2) == 0)       // pull this input down to disable watchdog (hold SW2 at reset)
 
     #define BUTTON_KEY_DEFINITIONS  {_PORTA, SWITCH_2,   {303,  15, 320,  28 }}, \
                                     {_PORTD, SWITCH_3,   {303, 191, 320, 204 }},

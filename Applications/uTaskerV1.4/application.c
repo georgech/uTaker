@@ -2937,53 +2937,60 @@ extern void fnStopWatchApplication(void)
 //
 extern void fnUserHWInit(void)
 {
+#if defined APPLICATION_WITHOUT_OS                                       // simple main loop program without OS
+    FOREVER_LOOP() {
+        fnDelayLoop(100000);                                             // 100ms delay
+        fnRetriggerWatchdog();                                           // retrigger the watchdog and toggle the heart-beat LED
+    }
+#else
     CONFIG_TEST_OUTPUT();                                                // allow user configuration of a test output
-#if defined USB_HOST_SUPPORT
+    #if defined USB_HOST_SUPPORT
     USB_HOST_POWER_CONFIG();                                             // configure USB host power supply to default (off) state
-#endif
-#if defined SC16IS7XX_CLOCK_FROM_TIMER
+    #endif
+    #if defined SC16IS7XX_CLOCK_FROM_TIMER
     CONFIG_SC16IS7XX_CLOCK();
-#endif
-#if defined LAN_REPORT_ACTIVITY
+    #endif
+    #if defined LAN_REPORT_ACTIVITY
     CONFIGURE_LAN_LEDS();                                                // configure and drive ports
-#endif
-#if defined SUPPORT_KEY_SCAN
+    #endif
+    #if defined SUPPORT_KEY_SCAN
     INIT_KEY_SCAN();                                                     // general initialisation for key scan
-#endif
-#if (defined SPECIAL_LCD_DEMO || defined SUPPORT_GLCD) && !defined SUPPORT_TFT && !defined TFT_GLCD_MODE // {38} configure GLCD ports and drive RST line if required
+    #endif
+    #if (defined SPECIAL_LCD_DEMO || defined SUPPORT_GLCD) && !defined SUPPORT_TFT && !defined TFT_GLCD_MODE // {38} configure GLCD ports and drive RST line if required
     CONFIGURE_GLCD();
-    #if defined BLAZE_K22_
+        #if defined BLAZE_K22_
     if (IS_POWERED_UP(4, USBOTG) != 0) {                                 // if the USB controller has been left powered up by the Blaze boot loader
         USB_USBTRC0 |= USB_USBTRC0_USBRESET;                             // command a reset of the USB controller
         while ((USB_USBTRC0 & USB_USBTRC0_USBRESET) != 0) {              // wait for the reset to complete
-        #if defined _WINDOWS
+            #if defined _WINDOWS
             USB_USBTRC0 = 0;
-        #endif
+            #endif
         }
         POWER_DOWN_ATOMIC(4, USBOTG);                                    // power down the USB controller
      }
+        #endif
     #endif
-#endif
-#if defined MB785_GLCD_MODE && defined SDCARD_SUPPORT
+    #if defined MB785_GLCD_MODE && defined SDCARD_SUPPORT
     CONFIGURE_SDCARD_DETECT_INPUT();                                     // {69}
-#endif
-#if defined ETH_INTERFACE
-    #if defined M52259EVB                                                // this board has a DP83640 PHY, which requires a 167ms powerup stabilisation delay. The reset is help low for this period. It is released when configuring the Ethernet connection.
+    #endif
+    #if defined ETH_INTERFACE
+        #if defined M52259EVB                                            // this board has a DP83640 PHY, which requires a 167ms powerup stabilisation delay. The reset is help low for this period. It is released when configuring the Ethernet connection.
     RESET_RCR |= FRCRSTOUT;                                              // assert RSTO
-    #elif defined RESET_PHY
+        #elif defined RESET_PHY
     ASSERT_PHY_RST();                                                    // immediately set PHY to reset state
     CONFIG_PHY_STRAPS();                                                 // configure the required strap options - the reset line will be de-asserted during the Ethernet configuration
+        #endif
     #endif
-#endif
-#if defined RAM_TEST                                                     // {61}
+    #if defined RAM_TEST                                                 // {61}
     if (fnRAM_test(0, (SIZE_OF_RAM/RAM_BLOCK_SIZE)) != (unsigned long *)0xffffffff) { // test code of a complete RAM area
         // The return address was the address in RAM that failed
         //
         FOREVER_LOOP() {}                                                // serious error found in RAM - stop here
     }
-#endif
-#if defined nRF24L01_INTERFACE
+    #endif
+    #if defined nRF24L01_INTERFACE
     fnPrepare_nRF24L01_signals();
+    #endif
 #endif
 }
 

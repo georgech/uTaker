@@ -75,7 +75,9 @@
 
 //#define DEBUG_CODE                                                     // acivate some debug ouput to monitor operation
 //#define RESET_ON_SUSPEND                                               // reset when the USB cable is pulled
-#if defined _DEV2 || defined ARDUINO_BLUE_PILL
+#if defined _DEV2
+    #define RESET_ON_STOP                                                // reset when the drive is stopped (ejected by host)
+#else
     #define RESET_ON_STOP                                                // reset when the drive is stopped (ejected by host)
 #endif
 //#define RESET_ON_EJECT                                                 // reset when the drive is unplugged

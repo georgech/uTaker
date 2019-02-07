@@ -31,8 +31,11 @@
 #endif
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED
+//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED [can use low power mode]
 //#define HELLO_WORLD                                                    // gives the classic first step project with just a message on a UART start and echos back input afterwards [enter key shows memory use] (also blinks LED and is identical with or without BLINKY enabled)
+#if defined BLINKY                                                       //
+  //#define APPLICATION_WITHOUT_OS                                       // use together with BLINKY to remove all OS components and have a simple main loop and delays (still uses interrupt-free SYSTICK for timing accuracy but not low power mode)
+#endif                                                                   //
 //                                                                       // 
 ///////////////////////////////////////////////////////////////////////////
 //#define EXTERNAL_TEST
@@ -147,7 +150,7 @@
     //#define tinyK22                                                    // USB memory stick format board with SD card and 120MMHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
     //#define BLAZE_K22                                                  // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
     //#define TWR_K24F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
-    //#define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
+      #define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
 
     //#define KWIKSTIK                                                   // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
     //#define TWR_K40X256                                                // tower board http://www.utasker.com/kinetis/TWR-K40X256.html
@@ -166,7 +169,7 @@
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
     //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
-      #define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
+    //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
@@ -1586,7 +1589,7 @@
         #endif
         #if defined USB_DEVICE_SUPPORT                                   // define one or more device classes (multiple classes creates a composite device)
             #define USE_USB_CDC                                          // USB-CDC (use also for Modbus over USB)
-            #define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
+          //#define USE_USB_MSD                                          // needs SD card to compile (or alternatives FLASH_FAT / SPI_FLASH_FAT / FAT_EMULATION)
           //#define USE_USB_HID_MOUSE                                    // human interface device (mouse)
           //#define USE_USB_HID_KEYBOARD                                 // human interface device (keyboard)
               //#define USB_KEYBOARD_DELAY                               // enable inter-character delay control
@@ -2637,7 +2640,7 @@
 // Low Power
 //
 #if !((defined K70F150M_12M || defined TWR_K70F120M || defined TWR_K60F120M || defined K60F150M_50M) && defined USB_INTERFACE) // don't use low power mode due to errata e7166
-    #if !defined RUN_IN_FREE_RTOS                                        // low power mode is presety not supported together with FreeRTOS
+    #if !defined APPLICATION_WITHOUT_OS
         #define SUPPORT_LOW_POWER                                        // a low power task supervises power reduction when possible
           //#define LOW_POWER_CYCLING_MODE                               // allow low power cycle loop with a "Virtual Wake-up Interrupt Handler" - see video https://youtu.be/v4UnfcDiaE4
     #endif
@@ -2649,9 +2652,13 @@
 
 
 #if defined BLINKY || defined HELLO_WORLD                                // if the BLINKY operation is defined we ensure that the following are disabled to give simplest configuration
-    #if !defined HELLO_WORLD
+    #if defined APPLICATION_WITHOUT_OS
+        #define APPLICATION_WITHOUT_TICK
+        #undef SERIAL_INTERFACE
+    #elif !defined HELLO_WORLD
         #undef SERIAL_INTERFACE
     #endif
+
     #undef USE_MAINTENANCE
     #undef USB_INTERFACE
     #undef USB_HOST_SUPPORT

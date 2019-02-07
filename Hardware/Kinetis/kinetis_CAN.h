@@ -11,7 +11,7 @@
     File:      kinetis_CAN.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     11.01.2013 Set CAN controller clock source before moving to freeze mode {65}
     04.03.2014 Correct CAN time stamp request option                     {70}
