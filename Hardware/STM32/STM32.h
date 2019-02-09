@@ -130,6 +130,23 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 
 #define RTC_VALID_PATTERN       0xca35
 
+#if defined _WINDOWS
+    extern unsigned char uninitialisedRAM[16];
+    #define BOOT_MAIL_BOX           (unsigned short *)&uninitialisedRAM[0]
+    #define RANDOM_SEED_LOCATION    (unsigned short *)&uninitialisedRAM[2]
+    #define RTC_SECONDS_LOCATION    (unsigned long *)&uninitialisedRAM[4]
+    #define RTC_ALARM_LOCATION      (unsigned long *)&uninitialisedRAM[8]
+    #define RTC_VALID_LOCATION      (unsigned short *)&uninitialisedRAM[12]
+    #define RTC_PRESCALER_LOCATION  (unsigned short *)&uninitialisedRAM[14]
+#else
+    #define BOOT_MAIL_BOX           (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 2)) // {13}
+    #define RANDOM_SEED_LOCATION    (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 4)) // location of a short word which is never initialised and so has a random power on value
+    #define RTC_SECONDS_LOCATION    (unsigned long *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 8))
+    #define RTC_ALARM_LOCATION      (unsigned long *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 12))
+    #define RTC_VALID_LOCATION      (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 14))
+    #define RTC_PRESCALER_LOCATION  (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 16))
+#endif
+
 #if !defined PERSISTENT_RAM_SIZE
     #define PERSISTENT_RAM_SIZE          0
 #endif
@@ -215,6 +232,13 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 #if defined _STM32F429 || defined _STM32F427
     #define USARTS_AVAILABLE   4
     #define UARTS_AVAILABLE    4
+    #define LPUARTS_AVAILABLE  0
+#elif defined _STM32F411                                                 // in work
+    #define USARTS_AVAILABLE   6                                         // 3 usable
+    #define USART3_NOT_PRESENT                                           // only USART1, 2 and 6 available/usable
+    #define UART4_NOT_PRESENT
+    #define UART5_NOT_PRESENT
+    #define UARTS_AVAILABLE    0
     #define LPUARTS_AVAILABLE  0
 #elif defined _STM32F401
     #define USARTS_AVAILABLE   6                                         // 3 usable
@@ -339,6 +363,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #endif
 #endif
 #define SYSCLK          PLL_OUTPUT_FREQ
+#define CORE_CLOCK      SYSCLK                                           // for compatibility
 
 #if defined _STM32L432 || defined _STM32L0x1 || defined _STM32L4X5 || defined _STM32L4X6
     #if defined DISABLE_PLL
@@ -401,7 +426,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #if defined USE_HSI_CLOCK
             #define PLL_INPUT_FREQUENCY  (HSI_FREQUENCY/PLL_INPUT_DIV)   // {20}
         #else
-            #define PLL_INPUT_FREQUENCY  (CRYSTAL_FREQ / PLL_INPUT_DIV)
+            #define PLL_INPUT_FREQUENCY  (CRYSTAL_FREQ/PLL_INPUT_DIV)
         #endif
         #if (PLL_INPUT_FREQUENCY > 2000000) || (PLL_INPUT_FREQUENCY < 1000000)
             #error "PLL input must be between 1 and 2 MHz (preference 2MHz)"
@@ -724,11 +749,20 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #endif
     #endif
 #elif defined _STM32F4XX
-    #if PCLK1 > 42000000
-        #error "PCLK1 speed is too high (max. 42MHz)!!"
-    #endif
-    #if PCLK2 > 84000000
-        #error "PCLK2 speed is too high (max. 84MHz)!!"
+    #if defined _STM32F411
+        #if PCLK1 > 50000000
+            #error "PCLK1 speed is too high (max. 50MHz)!!"
+        #endif
+        #if PCLK2 > 100000000
+            #error "PCLK2 speed is too high (max. 100MHz)!!"
+        #endif
+    #else
+        #if PCLK1 > 42000000
+            #error "PCLK1 speed is too high (max. 42MHz)!!"
+        #endif
+        #if PCLK2 > 84000000
+            #error "PCLK2 speed is too high (max. 84MHz)!!"
+        #endif
     #endif
 #elif defined _STM32F2XX
     #if PCLK1 > 30000000
@@ -820,7 +854,18 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     // Determine highest operating frequency and optimal wait states
     //
     #if SUPPLY_VOLTAGE == SUPPLY_2_7__3_6
-        #if defined _STM32F401
+        #if defined _STM32F411
+            #define PLL_MAX_FREQ         100000000                       // highest speed possible
+            #if SYSCLK > 90000000
+                #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_THREE_WAITS
+            #elif SYSCLK > 64000000
+                #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_TWO_WAITS
+            #elif SYSCLK > 30000000
+                #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ONE_WAIT
+            #else
+                #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_ZERO_WAIT
+            #endif
+        #elif defined _STM32F401
             #define PLL_MAX_FREQ         84000000                        // highest speed possible
             #if SYSCLK > 60000000
                 #define FLASH_WAIT_STATES   FLASH_ACR_LATENCY_TWO_WAITS
@@ -989,8 +1034,6 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #error "System frequency too high!!!!"
 #endif
 
-#define RANDOM_SEED_LOCATION (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 4)) // {13} location of a long word which is never initialised and so has a random power on value
-#define BOOT_MAIL_BOX        (unsigned short *)(RAM_START_ADDRESS + (SIZE_OF_RAM - 2)) // {13}
 
 /*****************************************************************************************************/
 
@@ -2438,9 +2481,11 @@ typedef struct stSTM32_BD
       #define RCC_CR_CSSON                   0x00080000                  // clock security system enable
       #define RCC_CR_PLLON                   0x01000000                  // main phase lock loop enable
       #define RCC_CR_PLLRDY                  0x02000000                  // main phase lock loop ready flag (read-only)
-      #if defined _STM32F7XX || defined _STM32F427 || defined _STM32F429
+      #if defined _STM32F7XX || defined _STM32F427 || defined _STM32F429 || defined _STM32F411
         #define RCC_CR_PLLI2SON              0x04000000                  // PLL2 enable
         #define RCC_CR_PLLI2SRDY             0x08000000                  // PLL2 ready flag (read-only)
+      #endif
+      #if defined _STM32F7XX || defined _STM32F427 || defined _STM32F429
         #define RCC_CR_PLLSAION              0x10000000                  // phase lock loop SAI enable
         #define RCC_CR_PLLSAIRDY             0x20000000                  // phase lock loop SAI enable ready flag (read-only)
       #endif

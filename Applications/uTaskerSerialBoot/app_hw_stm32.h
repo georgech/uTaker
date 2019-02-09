@@ -125,6 +125,22 @@
     #define STM32F100RB                                                  // exact processor type
     #define PCLK1_DIVIDE        2
     #define PCLK2_DIVIDE        1
+#elif defined NUCLEO_F411RE
+    #define CRYSTAL_FREQ        8000000                                  // 4..26MHz possible
+  //#define DISABLE_PLL                                                  // run from clock source directly
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source
+    #define PLL_INPUT_DIV       4                                        // 2..64 - should set the input to pll in the range 0.95..2.1MHz (with preference near to 2MHz)
+    #define PLL_VCO_MUL         100                                      // 64..432 where VCO must be 100..432MHz
+    #define PLL_POST_DIVIDE     2                                        // post divide VCO by 2, 4, 6, or 8 to get the system clock speed (range 24.. 100Hz)
+    #define PIN_COUNT           PIN_COUNT_64_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (128 * 1024)                             // 64k SRAM
+  //#define SIZE_OF_CCM         (32 * 1024)                              // 64k Core Coupled Memory
+    #define SIZE_OF_FLASH       (512 * 1024)                             // 512 FLASH
+    #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                          // power supply is in the range 2.7V..3.6V
+    #define PCLK1_DIVIDE        4
+    #define PCLK2_DIVIDE        2
+    #define HCLK_DIVIDE         1
 #elif defined ARDUINO_BLUE_PILL
     #define CRYSTAL_FREQ        8000000
   //#define DISABLE_PLL                                                  // run from clock source directly
@@ -423,7 +439,9 @@
     #define RX_BUFFER_SIZE   (512)
 
   //#define USART1_REMAP                                                 // use USART1 on remapped pins (note that this is channel 0)
-    #define USART2_REMAP                                                 // use USART2 on remapped pins (note that this is channel 1)
+    #if !defined NUCLEO_F411RE
+        #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
+    #endif
     #if defined STM32_P207 || defined STM32F407ZG_SK
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
     #elif !defined STM3240G_EVAL && !defined ARDUINO_BLUE_PILL
@@ -593,6 +611,41 @@
                                        POWER_DOWN(AHB2, RCC_AHB2ENR_OTGFSEN); \
                                        POWER_DOWN(APB2, RCC_APB2ENR_SYSCFGEN); \
                                        SDIO_POWER = SDIO_POWER_POWER_OFF;
+#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+    #define USER_BUTTON_B1             PORTC_BIT13
+
+    #define LED1                       PORTA_BIT5                        // LD2
+
+    #define BLINK_LED                  LED1
+
+    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(A, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(A, BLINK_LED)        // blink the LED, if set as output
+
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(C, (USER_BUTTON_B1 | PORTC_BIT8), (INPUT_PULL_UP)) // PC13 and PC8 configured as input with pull-up
+    #define WATCHDOG_DISABLE()         ((_READ_PORT_MASK(C, (PORTC_BIT8))) == 0) // disable watchdog by pulling PC8 (CN10-2) to 0V at reset
+
+    #define FORCE_BOOT()               ((_READ_PORT_MASK(C, (USER_BUTTON_B1)) == 0) || (SOFTWARE_RESET_DETECTED() && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER))) // hold the user button down at reset to force boot loader mode
+    #define RETAIN_LOADER_MODE()       FORCE_BOOT()                      // force retaining boot loader mode after update
+
+    // LEDs
+    //
+    #define KEYPAD_LEDS  4
+
+                                       // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50),  RGB(0, 255, 0), 0, {185, 192, 192, 198}, _PORTA, LED1}
+
+    #define BUTTON_KEY_DEFINITIONS     {_PORTC, USER_BUTTON_B1, {105, 125, 124, 145}}
+
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/NUCLEO64.bmp"
+
+    // Disable interrupts before jumping to the application
+    //
+    #define RESET_PERIPHERALS()        IRQ0_31_CER  = 0xffffffff; \
+                                       IRQ32_63_CER = 0xffffffff; \
+                                       IRQ64_95_CER = 0xffffffff; \
+                                       IRQ0_31_CPR  = 0xffffffff; \
+                                       IRQ32_63_CPR = 0xffffffff; \
+                                       IRQ64_95_CPR = 0xffffffff;
 #elif defined ARDUINO_BLUE_PILL                                          // STM32F103
     #define BLINK_LED                  PORTC_BIT13                       // green LED
 
@@ -609,7 +662,7 @@
 
     #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/BluePill.bmp"
 
-    // Power down the USB controller and disable interrupts before jumping to the application
+    // Disable interrupts before jumping to the application
     //
     #define RESET_PERIPHERALS()        IRQ0_31_CER  = 0xffffffff; \
                                        IRQ32_63_CER = 0xffffffff; \

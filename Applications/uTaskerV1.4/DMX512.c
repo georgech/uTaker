@@ -11,7 +11,7 @@
     File:      DMX512.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
@@ -32,7 +32,7 @@
 /* =================================================================== */
 
 #if defined FRDM_K66F
-    #define DMX512_MASTER_UART         5                                 // K66 LPUART 0
+    #define DMX512_MASTER_UART         5                                 // K66 LPUART 5
     #define DMX512_RDM_TE_MASTER       PORTB_BIT6                        // master's drive output
     #define DMX512_RDM_TE_SLAVE        PORTB_BIT7                        // slave's drive output
     #define DMX512_SLAVE_UART          3                                 // K66 UART 3

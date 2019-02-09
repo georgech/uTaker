@@ -31,7 +31,7 @@
 #endif
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       // new users who would like to see just a blinking LED before enabling the project's many powerful features can set this
-//#define BLINKY                                                         // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED [can use low power mode]
+#define BLINKY                                                           // to give simplest scheduling of a single task called at 200ms rate that retriggers the watchdog and toggles the board's heartbeat LED [can use low power mode]
 //#define HELLO_WORLD                                                    // gives the classic first step project with just a message on a UART start and echos back input afterwards [enter key shows memory use] (also blinks LED and is identical with or without BLINKY enabled)
 #if defined BLINKY                                                       //
   //#define APPLICATION_WITHOUT_OS                                       // use together with BLINKY to remove all OS components and have a simple main loop and delays (still uses interrupt-free SYSTICK for timing accuracy but not low power mode)
@@ -150,7 +150,7 @@
     //#define tinyK22                                                    // USB memory stick format board with SD card and 120MMHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
     //#define BLAZE_K22                                                  // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
     //#define TWR_K24F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
-      #define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
+    //#define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
 
     //#define KWIKSTIK                                                   // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
     //#define TWR_K40X256                                                // tower board http://www.utasker.com/kinetis/TWR-K40X256.html
@@ -175,7 +175,7 @@
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -243,7 +243,7 @@
     //#define NUCLEO_F103RB                                              // evaluation board with STM32F103RBT6
     //#define NUCLEO_F334R8                                              // evaluation board with STM32F334R8T6 (cortex-m4 with FPU)
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-    //#define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6
+      #define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6 (cortex-m4 with FPU)
 
     // Nucleo 144 range
     //
@@ -258,7 +258,7 @@
     //#define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
-      #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
+    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
@@ -1223,6 +1223,13 @@
     #define TARGET_HW            "STM3210C-EVAL (STM32F107VCT)"
     #define _STM32F107X                                                  // part group
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
+#elif defined NUCLEO_F411RE                                              // nucleo-64
+    #define TARGET_HW            "NUCLEO-F411RE (STM32F411RET6)"
+    #define _STM32F4XX                                                   // part family
+    #define _STM32F411                                                   // part group
+    #define STM32_FPU                                                    // FPU present
+    #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F401RE
     #define TARGET_HW            "NUCLEO-F401RE (STM32F401RET6)"
     #define _STM32F4XX                                                   // part family
@@ -1578,7 +1585,7 @@
 #if defined DEVICE_WITHOUT_USB
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define MICROSOFT_OS_STRING_DESCRIPTOR                           // support MODs
       //#define USB_HOST_SUPPORT                                         // host supported
@@ -2690,6 +2697,7 @@
     #undef USE_MODBUS
     #undef QUICK_DEV_TASKS
     #undef RANDOM_NUMBER_GENERATOR
+    #undef RUN_IN_FREE_RTOS
     #define NO_FLASH_SUPPORT
     #define REMOVE_PORT_INITIALISATIONS
     #define NO_PERIPHERAL_DEMONSTRATIONS

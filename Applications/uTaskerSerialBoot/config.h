@@ -145,6 +145,19 @@
     //#define NUCLEO_L031K6                                              // evaluation board with STM32L031 (cortex-m0+)
     //#define NUCLEO_L432KC                                              // evaluation board with STM32L432 (cortex-m4 with FPU)
 
+    // Nucleo 64 range
+    //
+    //#define NUCLEO_L053R8                                              // evaluation board with STM32L053R8T6
+    //#define NUCLEO_L073RZ                                              // evaluation board with STM32L073RZT6
+    //#define NUCLEO_L152RE                                              // evaluation board with STM32L152RET6
+    //#define NUCLEO_L476RG                                              // evaluation board with STM32L476RGT6
+    //#define NUCLEO_F030RB                                              // evaluation board with STM32F030RBT6
+    //#define NUCLEO_F072RB                                              // evaluation board with STM32F072RBT6
+    //#define NUCLEO_F103RB                                              // evaluation board with STM32F103RBT6
+    //#define NUCLEO_F334R8                                              // evaluation board with STM32F334R8T6 (cortex-m4 with FPU)
+    //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
+      #define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6 (cortex-m4 with FPU)
+
     // Nucleo 144 range
     //
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
@@ -153,7 +166,7 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
 
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
-      #define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
+    //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
     //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
@@ -815,6 +828,13 @@
     #define _STM32F4XX
     #define _STM32F407
     #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined NUCLEO_F411RE                                              // nucleo-64
+    #define TARGET_HW            "NUCLEO-F411RE (STM32F411RET6)"
+    #define _STM32F4XX                                                   // part family
+    #define _STM32F411                                                   // part group
+    #define STM32_FPU                                                    // FPU present
+    #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined ST_MB913C_DISCOVERY
     #define TARGET_HW       "MB913C DISCOVERY (STM32F100RBT6B)"
     #define _STM32F100X                                                  // part group
@@ -1022,7 +1042,7 @@
 #if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-    #define USB_INTERFACE                                                // enable USB driver interface
+  //#define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
         #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)

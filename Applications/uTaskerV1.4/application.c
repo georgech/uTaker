@@ -222,7 +222,7 @@
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-#if !defined HELLO_WORLD
+#if !defined BLINKY && !defined HELLO_WORLD
     static void fnValidatedInit(void);
 #endif
 #if defined DEMO_UDP
@@ -683,7 +683,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
     #endif
 #endif
-#if defined HELLO_WORLD
+#if defined BLINKY || defined HELLO_WORLD
         iAppState = STATE_ACTIVE;                                        // go to working state
 #else
     #if !defined NO_MODIFIABLE_PARAMETERS
@@ -1505,7 +1505,7 @@ static void fnDisplayPhoto(int iOpen)
 }
 #endif
 
-#if !defined HELLO_WORLD
+#if !defined BLINKY && !defined HELLO_WORLD
 // These initialisations are only performed when validated, either at startup or on validation
 //
 static void fnValidatedInit(void)

@@ -70,6 +70,8 @@ static unsigned long ulGPIODRIVE_VALUE[PORTS_AVAILABLE] = {0};
     static unsigned short usCAN_time = 0;                                // CAN timestamp
 #endif
 
+unsigned char uninitialisedRAM[16];
+
 unsigned long vector_ram[(sizeof(VECTOR_TABLE))/sizeof(unsigned long)];  // long word aligned
 
 static unsigned char ucPortFunctions[PORTS_AVAILABLE][PORT_WIDTH] = {{0}};

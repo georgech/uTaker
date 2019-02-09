@@ -88,33 +88,8 @@
 
 #if defined _FREE_RTOS_APPLICATION || defined INC_FREERTOS_H             // {1} FreeRTOS application files can use these additional defines
     #include "config.h"
-  //#define NO_ID_ALLOCATED    0
-  //#define QUEUE_TRANSFER     unsigned short
-  //#define QUEUE_HANDLE       unsigned char
-  //#define CHAR               char
     #define UTASKER_STACK_SIZE          (4 * 1024)
     #define UTASKER_TASK_PRIORITY       0                                // 0 is lowest priority
-  //#define RUN_IN_FREE_RTOS
-  //#define FOREVER_LOOP()     while ((int)1 != (int)0)
-  //typedef unsigned int size_t;
-  //extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size);
-  //extern void *uMemset(void *ptrTo, int ucValue, size_t Size);
-  //#define memset(a,b,c) uMemset(a,b,c)                                 // allow FreeRTOS to use DMA based memset() and memcpy() routines
-  //#define memcpy(a,b,c) uMemcpy(a,b,c)
-  //extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void(*InterruptFunc)(void));
-  //extern QUEUE_TRANSFER fnDebugMsg(CHAR *ucToSend);
-  //extern QUEUE_TRANSFER fnRead(QUEUE_HANDLE driver_id, unsigned char *input_buffer, QUEUE_TRANSFER nr_of_bytes); // read contents of input queue to a buffer
-  //extern QUEUE_TRANSFER fnWrite(QUEUE_HANDLE driver_id, unsigned char *output_buffer, QUEUE_TRANSFER nr_of_bytes);
-  //#define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
-  //#define TICK_UNIT_MS(T) (T * 1000)                                   // tick is defined in ms
-  //#define TICK_UNIT_US(T) (T)                                          // tick is defined in us
-  //#define CORE_CLOCK (40000000)                                        // can't yet access the value...
-  //#define CORE_CLOCK (48000000)                                        // can't yet access the value...
-  //#define CORE_CLOCK (72000000)                                        // can't yet access the value...
-  //#define CORE_CLOCK (120000000)                                       // can't yet access the value...
-  //#define ARM_MATH_CM0PLUS                                             // can't yet access the value...
-  //#define ARM_MATH_CM3                                                 // can't yet access the value...
-  //#define ARM_MATH_CM4                                                 // can't yet access the value...
     #if defined _WINDOWS
         extern void fnSetReg(int iRef, unsigned long ulValue);
         extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress);
