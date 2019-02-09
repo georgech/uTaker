@@ -974,7 +974,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         case _STORAGE_INTERNAL_FLASH:
             Length += (MAX_FILE_LENGTH)(((CAST_POINTER_ARITHMETIC)ptrSector) - ((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)));
             ptrSector = (unsigned char *)((CAST_POINTER_ARITHMETIC)ptrSector & ~(_FLASH_GRANULARITY - 1)); // set to sector boundary
-        #if defined FLASH_BLOCK_COUNT                                    // {203} check whether a block erase can be performed
+        #if FLASH_BLOCK_COUNT > 1                                        // {203} check whether a block erase can be performed
             if (((CAST_POINTER_ARITHMETIC)ptrSector & (FLASH_BLOCK_SIZE - 1)) == 0) { // if the start address is on a block boundary
                 if (Length >= FLASH_BLOCK_SIZE) {                        // and the erase length encloses a block
                     if ((fnFlashNow(FCMD_ERASE_FLASH_BLOCK, (unsigned long *)ptrSector, (unsigned long)0)) != 0) { // erase a single block

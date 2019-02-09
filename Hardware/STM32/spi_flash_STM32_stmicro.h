@@ -11,7 +11,7 @@
     File:      spi_flash_STM32_stmicro.h
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -32,7 +32,6 @@
 
     #if defined SPI_FLASH_MULTIPLE_CHIPS
         static unsigned char fnCheckSTM25Pxxx(int iChipSelect);
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
@@ -40,10 +39,8 @@
             _STORAGE_SPI_FLASH,                                          // type
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
-        #endif
     #else
         static unsigned char fnCheckSTM25Pxxx(void);
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
@@ -51,7 +48,6 @@
             _STORAGE_SPI_FLASH,                                          // type
             0                                                            // not multiple devices
         };
-        #endif
     #endif
 #endif
 
@@ -75,9 +71,7 @@
             ucSPI_FLASH_Type[i] = fnCheckSTM25Pxxx(i);
         }
     #endif
-    #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-    #endif
     }
 #endif
 

@@ -11,7 +11,7 @@
     File:        config.h
     Project:     Single Chip Embedded Internet - boot loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     11.08.2007 Add M5223X SPI FLASH support                              {1}
     16.12.2007 Add SAM7X SPI FLASH support                               {2}
@@ -672,163 +672,15 @@
 
         #define SPI_FLASH_START        (FLASH_START_ADDRESS + SIZE_OF_FLASH) // SPI FLASH starts immediately after FLASH
 
-        #if defined SPI_FLASH_ST                                         // ST SPI FLASH used
-          //#define SPI_FLASH_STM25P05                                   // the available ST chips
-          //#define SPI_FLASH_STM25P10
-          //#define SPI_FLASH_STM25P20
-          //#define SPI_FLASH_STM25P40
-          //#define SPI_FLASH_STM25P80                                               
-          //#define SPI_FLASH_STM25P16                                               
-          //#define SPI_FLASH_STM25P32                                               
-            #define SPI_FLASH_STM25P64
-          //#define SPI_FLASH_STM25P128
-
-            #if defined SPI_FLASH_STM25P05                               // 64k
-                #define SPI_FLASH_PAGES             (1 * 256)                          
-            #elif defined SPI_FLASH_STM25P10                             // 128k
-                #define SPI_FLASH_PAGES             (2 * 256)
-            #elif defined SPI_FLASH_STM25P20                             // 256k
-                #define SPI_FLASH_PAGES             (4 * 256)
-            #elif defined SPI_FLASH_STM25P40                             // 512k
-                #define SPI_FLASH_PAGES             (8 * 256)
-            #elif defined SPI_FLASH_STM25P80                             // 1M
-                #define SPI_FLASH_PAGES             (16 * 256)
-            #elif defined SPI_FLASH_STM25P16                             // 2M
-                #define SPI_FLASH_PAGES             (32 * 256)
-            #elif defined SPI_FLASH_STM25P32                             // 4M
-                #define SPI_FLASH_PAGES             (64 * 256)
-            #elif defined SPI_FLASH_STM25P64                             // 8M
-                #define SPI_FLASH_PAGES             (128 * 256)
-            #elif defined SPI_FLASH_STM25P128                            // 16M
-                #define SPI_FLASH_PAGES             (256 * 256)
-            #endif
-            #define SPI_FLASH_PAGE_LENGTH 256
-            #if defined SPI_DATA_FLASH
-                #define SPI_FLASH_SECTOR_LENGTH (16 * SPI_FLASH_PAGE_LENGTH) // sub-sector size of data FLASH
-            #else
-                #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH) // sector size of code FLASH
-            #endif
-            #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
-        #elif defined SPI_FLASH_MX25L                                    // {26}
-          //#define SPI_FLASH_MX25L12845E                                // specific type used
-            #define SPI_FLASH_MX25L1606E                                 // specific type used
-            #if defined SPI_FLASH_MX25L12845E
-                #define SPI_FLASH_SIZE           (16 * 1024 * 1024)      // 128 Mbits/16 MBytes
-            #else
-                #define SPI_FLASH_SIZE           (2 * 1024 * 1024)       // 16 Mbits/2 MBytes
-            #endif
-            #define SPI_FLASH_PAGE_LENGTH        (256)
-            #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
-            #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)              // sector size of SPI FLASH
-            #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
-            #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH // for compatibility - file system granularity
-          //#define SUPPORT_ERASE_SUSPEND                                // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
-        #elif defined SPI_FLASH_W25Q
-            #define SPI_FLASH_W25Q128
-          //#define SPI_FLASH_W25Q16
-            #if defined SPI_FLASH_W25Q128
-                #define SPI_FLASH_PAGES          (65536)
-            #else
-                #define SPI_FLASH_PAGES          (8192)
-            #endif
-            #define SPI_FLASH_PAGE_LENGTH        (256)
-            #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)              // sub-sector size of SPI FLASH
-            #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)             // half-sector size of SPI FLASH
-            #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)             // sector size of SPI FLASH (not available on A-versions)
-            #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH // for compatibility - file system granularity
-        #elif defined SPI_FLASH_SST25
-          //#define SPI_FLASH_SST25VF010A                                // the supported SST chips
-          //#define SPI_FLASH_SST25LF020A
-          //#define SPI_FLASH_SST25LF040A
-          //#define SPI_FLASH_SST25VF040B
-          //#define SPI_FLASH_SST25VF080B
-            #define SPI_FLASH_SST25VF016B
-          //#define SPI_FLASH_SST25VF032B
-
-            #if defined SPI_FLASH_SST25VF010A                            // 1Mbit (128k)
-                #define SST25_A_VERSION
-                #define SPI_FLASH_PAGES             (32)
-            #elif defined SPI_FLASH_SST25LF020A                          // 2Mbit (256k)
-                #define SST25_A_VERSION
-                #define SPI_FLASH_PAGES             (64)
-            #elif defined SPI_FLASH_SST25LF040A                          // 4Mbit (512k)
-                #define SST25_A_VERSION
-                #define SPI_FLASH_PAGES             (128)
-            #elif defined SPI_FLASH_SST25VF040B                          // 4Mbit (512k)
-                #define SPI_FLASH_PAGES             (128)
-            #elif defined SPI_FLASH_SST25VF080B                          // 8Mbit (1M)
-                #define SPI_FLASH_PAGES             (256)
-            #elif defined SPI_FLASH_SST25VF016B                          // 16Mbit (2M)
-                #define SPI_FLASH_PAGES             (512)
-            #elif defined SPI_FLASH_SST25VF032B                          // 32Mbit (4M)
-                #define SPI_FLASH_PAGES             (1024)
-            #endif
-
-            #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)              // sub-sector size of SPI FLASH
-            #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)             // half-sector size of SPI FLASH
-            #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)             // sector size of SPI FLASH (not available on A-versions)
-
-            #define SPI_FLASH_PAGE_LENGTH        SPI_FLASH_SUB_SECTOR_LENGTH // for compatibility - smallest erasable block
-            #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SUB_SECTOR_LENGTH // for compatibility - file system granularity
-        #else                                                            // AT45DBxxx 
-          //#define SPI_FLASH_AT45DB011                                  // define the ATMEL type used here
-          //#define SPI_FLASH_AT45DB021
-          //#define SPI_FLASH_AT45DB041
-            #define SPI_FLASH_AT45DB081
-          //#define SPI_FLASH_AT45DB161
-          //#define SPI_FLASH_AT45DB321
-          //#define SPI_FLASH_AT45DB642
-            #define SPI_FLASH_AT45XXXXD_TYPE                             // specify that a D-type rather than a B/C type is being used
-
-            #define SPI_FLASH_ATMEL                                      // default if nothing else defined
-            #if defined SPI_FLASH_AT45DB642                              // define whether used in power of 2 mode or not
-                #define SPI_FLASH_PAGE_LENGTH 1056                       // standard page size (B-device only allows 1056)
-              //#define SPI_FLASH_PAGE_LENGTH 1024                       // size when power of 2 mode selected (only possible on D-device)
-                #define SPI_FLASH_PAGES             (32 * 1024)          // 8Meg part
-            #elif defined SPI_FLASH_AT45DB321 || defined SPI_FLASH_AT45DB161
-                #define SPI_FLASH_PAGE_LENGTH 528                        // standard page size (B/C-device only allows 528)
-              //#define SPI_FLASH_PAGE_LENGTH 512                        // size when power of 2 mode selected (only possible on D-device)
-                #if defined SPI_FLASH_AT45DB161
-                    #define SPI_FLASH_PAGES         (4 * 1024)           // 2Meg part
-                #else
-                    #define SPI_FLASH_PAGES         (8 * 1024)           // 4Meg part
-                #endif
-            #else
-                #define SPI_FLASH_PAGE_LENGTH 264                        // standard page size (B-device only allows 264)
-              //#define SPI_FLASH_PAGE_LENGTH 256                        // size when power of 2 mode selected (only possible on D-device)
-                #if defined SPI_FLASH_AT45DB011
-                    #define SPI_FLASH_PAGES         (512)                // 128k part
-                #elif defined SPI_FLASH_AT45DB021
-                    #define SPI_FLASH_PAGES         (1024)               // 256k part
-                #elif defined SPI_FLASH_AT45DB041
-                    #define SPI_FLASH_PAGES         (2 * 1024)           // 512k part
-                #elif defined SPI_FLASH_AT45DB081
-                    #define SPI_FLASH_PAGES         (4 * 1024)           // 1Meg part
-                #endif
-            #endif
-
-            #define SPI_FLASH_BLOCK_LENGTH (8 * SPI_FLASH_PAGE_LENGTH)   // block size - a block can be deleted
-            #define SPI_FLASH_SECTOR_LENGTH (64 * 4 * SPI_FLASH_PAGE_LENGTH) // exception sector 0a is 2k and sector 0b is 62k
-        #endif
-
-        #define SPI_DATA_FLASH_0_SIZE   (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH) 
-        #define SPI_DATA_FLASH_1_SIZE   SPI_DATA_FLASH_0_SIZE 
-        #define SPI_DATA_FLASH_2_SIZE   SPI_DATA_FLASH_0_SIZE
-        #define SPI_DATA_FLASH_3_SIZE   SPI_DATA_FLASH_0_SIZE
         #if defined SPI_FLASH_MULTIPLE_CHIPS
-            #define SPI_FLASH_DEVICE_COUNT  4
             #if SPI_FLASH_DEVICE_COUNT >= 4
-                #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE + SPI_DATA_FLASH_3_SIZE)
                 #define CONFIGURE_CS_LINES()    FIO0SET = (CS0_LINE | CS1_LINE | CS2_LINE | CS3_LINE); FIO0DIR |= (CS0_LINE | CS1_LINE | CS2_LINE | CS3_LINE); _SIM_PORTS
             #elif SPI_FLASH_DEVICE_COUNT >= 3
-                #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE)
                 #define CONFIGURE_CS_LINES()    FIO0SET = (CS0_LINE | CS1_LINE | CS2_LINE); FIO0DIR |= (CS0_LINE | CS1_LINE | CS2_LINE); _SIM_PORTS
             #else
-                #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE)
                 #define CONFIGURE_CS_LINES()    FIO0SET = (CS0_LINE | CS1_LINE); FIO0DIR |= (CS0_LINE | CS1_LINE); _SIM_PORTS
             #endif
         #else
-            #define SPI_DATA_FLASH_SIZE         SPI_DATA_FLASH_0_SIZE
             #define CONFIGURE_CS_LINES()        FIO0SET = CS0_LINE; FIO0DIR |= CS0_LINE; _SIM_PORTS
         #endif
     #elif defined _STM32
@@ -836,7 +688,8 @@
       //#define STM3240G_EVAL                                            // evaluation board with STM32F407IGH6
       //#define ST_MB913C_DISCOVERY                                      // discovery board with STM32F100RB
      // #define ST_MB997A_DISCOVERY                                      // discovery board with STM32F407VGT6
-        #define NUCLEO_F429ZI                                            // evaluation board with STM32F429ZIT6
+        #define NUCLEO_F411RE                                            // evaluation board with STM32F411RET6 (cortex-m4 with FPU)
+      //#define NUCLEO_F429ZI                                            // evaluation board with STM32F429ZIT6
         #if defined STM3210C_EVAL
             #define TARGET_HW       "STM3210C-EVAL (STM32F107VCT)"
         #elif defined STM3240G_EVAL
@@ -845,6 +698,8 @@
             #define TARGET_HW       "MB997A DISCOVERY (STM32F407VGT6)"
         #elif defined ST_MB913C_DISCOVERY
             #define TARGET_HW       "MB913C DISCOVERY (STM32F100RBT6B)"
+        #elif defined NUCLEO_F411RE
+            #define TARGET_HW       "NUCLEO-F411RE (STM32F411RET6)"
         #elif defined NUCLEO_F429ZI
             #define TARGET_HW       "NUCLEO-F429ZI (STM32F429ZI)"
         #endif
@@ -913,6 +768,49 @@
             #define STM32F100RB                                          // exact processor type
             #define PCLK1_DIVIDE        2
             #define PCLK2_DIVIDE        1
+        #elif defined NUCLEO_F411RE
+            #define _STM32F4XX                                           // part family
+            #define _STM32F411                                           // part group
+            #define STM32_FPU                                            // FPU present
+            #define CRYSTAL_FREQ        8000000                          // 4..26MHz possible
+          //#define DISABLE_PLL                                          // run from clock source directly
+          //#define USE_HSI_CLOCK                                        // use internal HSI clock source
+            #define PLL_INPUT_DIV       4                                // 2..64 - should set the input to pll in the range 0.95..2.1MHz (with preference near to 2MHz)
+            #define PLL_VCO_MUL         100                              // 64..432 where VCO must be 100..432MHz
+            #define PLL_POST_DIVIDE     2                                // post divide VCO by 2, 4, 6, or 8 to get the system clock speed (range 24.. 100Hz)
+            #define PIN_COUNT           PIN_COUNT_64_PIN
+            #define PACKAGE_TYPE        PACKAGE_LQFP
+            #define SIZE_OF_RAM         (128 * 1024)                     // 64k SRAM
+            #define SIZE_OF_FLASH       (512 * 1024)                     // 512 FLASH
+            #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                  // power supply is in the range 2.7V..3.6V
+            #define PCLK1_DIVIDE        4
+            #define PCLK2_DIVIDE        2
+            #define HCLK_DIVIDE         1
+            #if defined SPI_SW_UPLOAD
+                #define CS0_LINE                    PORTC_BIT15          // CS0 line used when SPI FLASH is enabled
+                #define CS1_LINE                                         // CS1 line used when extended SPI FLASH is enabled
+                #define CS2_LINE                                         // CS2 line used when extended SPI FLASH is enabled
+                #define CS3_LINE                                         // CS3 line used when extended SPI FLASH is enabled
+
+                #define SPI_CS0_PORT                GPIOC_ODR            // for simulator
+                #define __ASSERT_CS(cs_line)        _CLEARBITS(C, cs_line)
+                #define __NEGATE_CS(cs_line)        _SETBITS(C, cs_line)
+
+                #define SSPDR_X                     SPI1_DR
+                #define SSPSR_X                     SPI1_SR
+
+                // SPI 1 used for SPI Flash interface - speed set to 12.5MHz (PCLK1 100MHz/8)
+                //
+                #define POWER_UP_SPI_FLASH_INTERFACE()      POWER_UP(APB2, (RCC_APB2ENR_SPI1EN))
+                #define POWER_DOWN_SPI_FLASH_INTERFACE()    POWER_DOWN(APB2, (RCC_APB2ENR_SPI1EN))
+                #define CONFIGURE_SPI_FLASH_INTERFACE()     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, CS0_LINE, (OUTPUT_FAST | OUTPUT_PUSH_PULL), CS0_LINE); \
+                _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_SPI1_2_I2S2ext), (SPI1_CLK_A_5 | SPI1_MOSI_A_7), (OUTPUT_FAST | OUTPUT_PUSH_PULL | INPUT_PULL_DOWN)); \
+                _CONFIG_PERIPHERAL_INPUT(A,  (PERIPHERAL_SPI1_2_I2S2ext), (SPI1_MISO_A_6), INPUT_PULL_DOWN); \
+                _RESET_CYCLE_PERIPHERAL(APB2, RCC_APB2RSTR_SPI1RST); \
+                SPI1_CR1 = (SPICR1_BR_PCLK2_DIV2 | SPICR1_MSTR | SPICR1_SSI | SPICR1_CPOL | SPICR1_CPHA | SPICR1_SSM); \
+                SPI1_I2SCFGR = 0; \
+                SPI1_CR1 = (SPICR1_SPE | SPICR1_BR_PCLK2_DIV2 | SPICR1_MSTR | SPICR1_SSI | SPICR1_CPOL | SPICR1_CPHA | SPICR1_SSM)
+            #endif
         #elif defined NUCLEO_F429ZI
           //#define PT_427                                               // development variation
             #define _STM32F4XX                                           // part group
@@ -999,6 +897,165 @@
     #endif
 
 
+
+// General SPI Flash settings
+//
+#if defined SPI_SW_UPLOAD
+    #if defined SPI_FLASH_ST                                             // ST SPI FLASH used
+        //#define SPI_FLASH_STM25P05                                   // the available ST chips
+        //#define SPI_FLASH_STM25P10
+        //#define SPI_FLASH_STM25P20
+        //#define SPI_FLASH_STM25P40
+        //#define SPI_FLASH_STM25P80                                               
+        //#define SPI_FLASH_STM25P16                                               
+        //#define SPI_FLASH_STM25P32                                               
+        #define SPI_FLASH_STM25P64
+        //#define SPI_FLASH_STM25P128
+
+        #if defined SPI_FLASH_STM25P05                                   // 64k
+            #define SPI_FLASH_PAGES             (1 * 256)                          
+        #elif defined SPI_FLASH_STM25P10                                 // 128k
+            #define SPI_FLASH_PAGES             (2 * 256)
+        #elif defined SPI_FLASH_STM25P20                                 // 256k
+            #define SPI_FLASH_PAGES             (4 * 256)
+        #elif defined SPI_FLASH_STM25P40                                 // 512k
+            #define SPI_FLASH_PAGES             (8 * 256)
+        #elif defined SPI_FLASH_STM25P80                                 // 1M
+            #define SPI_FLASH_PAGES             (16 * 256)
+        #elif defined SPI_FLASH_STM25P16                                 // 2M
+            #define SPI_FLASH_PAGES             (32 * 256)
+        #elif defined SPI_FLASH_STM25P32                                 // 4M
+            #define SPI_FLASH_PAGES             (64 * 256)
+        #elif defined SPI_FLASH_STM25P64                                 // 8M
+            #define SPI_FLASH_PAGES             (128 * 256)
+        #elif defined SPI_FLASH_STM25P128                                // 16M
+            #define SPI_FLASH_PAGES             (256 * 256)
+        #endif
+        #define SPI_FLASH_PAGE_LENGTH 256
+        #if defined SPI_DATA_FLASH
+            #define SPI_FLASH_SECTOR_LENGTH (16 * SPI_FLASH_PAGE_LENGTH) // sub-sector size of data FLASH
+        #else
+            #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH)// sector size of code FLASH
+        #endif
+        #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+    #elif defined SPI_FLASH_MX25L                                        // {26}
+      //#define SPI_FLASH_MX25L12845E                                    // specific type used
+        #define SPI_FLASH_MX25L1606E                                     // specific type used
+        #if defined SPI_FLASH_MX25L12845E
+            #define SPI_FLASH_SIZE           (16 * 1024 * 1024)          // 128 Mbits/16 MBytes
+        #else
+            #define SPI_FLASH_SIZE           (2 * 1024 * 1024)           // 16 Mbits/2 MBytes
+        #endif
+        #define SPI_FLASH_PAGE_LENGTH        (256)
+        #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
+        #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                  // sector size of SPI FLASH
+        #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
+        #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH     // for compatibility - file system granularity
+        //#define SUPPORT_ERASE_SUSPEND                                  // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
+    #elif defined SPI_FLASH_W25Q
+        #define SPI_FLASH_W25Q128
+        //#define SPI_FLASH_W25Q16
+        #if defined SPI_FLASH_W25Q128
+            #define SPI_FLASH_PAGES          (65536)
+        #else
+            #define SPI_FLASH_PAGES          (8192)
+        #endif
+        #define SPI_FLASH_PAGE_LENGTH        (256)
+        #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                  // sub-sector size of SPI FLASH
+        #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                 // half-sector size of SPI FLASH
+        #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                 // sector size of SPI FLASH (not available on A-versions)
+        #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH // for compatibility - file system granularity
+    #elif defined SPI_FLASH_SST25
+        //#define SPI_FLASH_SST25VF010A                                  // the supported SST chips
+        //#define SPI_FLASH_SST25LF020A
+        //#define SPI_FLASH_SST25LF040A
+        //#define SPI_FLASH_SST25VF040B
+        //#define SPI_FLASH_SST25VF080B
+        #define SPI_FLASH_SST25VF016B
+        //#define SPI_FLASH_SST25VF032B
+
+        #if defined SPI_FLASH_SST25VF010A                                // 1Mbit (128k)
+            #define SST25_A_VERSION
+            #define SPI_FLASH_PAGES             (32)
+        #elif defined SPI_FLASH_SST25LF020A                              // 2Mbit (256k)
+            #define SST25_A_VERSION
+            #define SPI_FLASH_PAGES             (64)
+        #elif defined SPI_FLASH_SST25LF040A                              // 4Mbit (512k)
+            #define SST25_A_VERSION
+            #define SPI_FLASH_PAGES             (128)
+        #elif defined SPI_FLASH_SST25VF040B                              // 4Mbit (512k)
+            #define SPI_FLASH_PAGES             (128)
+        #elif defined SPI_FLASH_SST25VF080B                              // 8Mbit (1M)
+            #define SPI_FLASH_PAGES             (256)
+        #elif defined SPI_FLASH_SST25VF016B                              // 16Mbit (2M)
+            #define SPI_FLASH_PAGES             (512)
+        #elif defined SPI_FLASH_SST25VF032B                              // 32Mbit (4M)
+            #define SPI_FLASH_PAGES             (1024)
+        #endif
+
+        #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                  // sub-sector size of SPI FLASH
+        #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                 // half-sector size of SPI FLASH
+        #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                 // sector size of SPI FLASH (not available on A-versions)
+
+        #define SPI_FLASH_PAGE_LENGTH        SPI_FLASH_SUB_SECTOR_LENGTH // for compatibility - smallest erasable block
+        #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SUB_SECTOR_LENGTH // for compatibility - file system granularity
+    #else                                                                // AT45DBxxx 
+        //#define SPI_FLASH_AT45DB011                                    // define the ATMEL type used here
+        //#define SPI_FLASH_AT45DB021
+        //#define SPI_FLASH_AT45DB041
+        #define SPI_FLASH_AT45DB081
+        //#define SPI_FLASH_AT45DB161
+        //#define SPI_FLASH_AT45DB321
+        //#define SPI_FLASH_AT45DB642
+        #define SPI_FLASH_AT45XXXXD_TYPE                                 // specify that a D-type rather than a B/C type is being used
+
+        #define SPI_FLASH_ATMEL                                          // default if nothing else defined
+        #if defined SPI_FLASH_AT45DB642                                  // define whether used in power of 2 mode or not
+            #define SPI_FLASH_PAGE_LENGTH 1056                           // standard page size (B-device only allows 1056)
+            //#define SPI_FLASH_PAGE_LENGTH 1024                         // size when power of 2 mode selected (only possible on D-device)
+            #define SPI_FLASH_PAGES             (32 * 1024)              // 8Meg part
+        #elif defined SPI_FLASH_AT45DB321 || defined SPI_FLASH_AT45DB161
+            #define SPI_FLASH_PAGE_LENGTH 528                            // standard page size (B/C-device only allows 528)
+            //#define SPI_FLASH_PAGE_LENGTH 512                          // size when power of 2 mode selected (only possible on D-device)
+            #if defined SPI_FLASH_AT45DB161
+                #define SPI_FLASH_PAGES         (4 * 1024)               // 2Meg part
+            #else
+                #define SPI_FLASH_PAGES         (8 * 1024)               // 4Meg part
+            #endif
+        #else
+            #define SPI_FLASH_PAGE_LENGTH 264                            // standard page size (B-device only allows 264)
+            //#define SPI_FLASH_PAGE_LENGTH 256                          // size when power of 2 mode selected (only possible on D-device)
+            #if defined SPI_FLASH_AT45DB011
+                #define SPI_FLASH_PAGES         (512)                    // 128k part
+            #elif defined SPI_FLASH_AT45DB021
+                #define SPI_FLASH_PAGES         (1024)                   // 256k part
+            #elif defined SPI_FLASH_AT45DB041
+                #define SPI_FLASH_PAGES         (2 * 1024)               // 512k part
+            #elif defined SPI_FLASH_AT45DB081
+                #define SPI_FLASH_PAGES         (4 * 1024)               // 1Meg part
+            #endif
+        #endif
+
+        #define SPI_FLASH_BLOCK_LENGTH (8 * SPI_FLASH_PAGE_LENGTH)       // block size - a block can be deleted
+        #define SPI_FLASH_SECTOR_LENGTH (64 * 4 * SPI_FLASH_PAGE_LENGTH) // exception sector 0a is 2k and sector 0b is 62k
+    #endif
+    #define SPI_DATA_FLASH_0_SIZE   (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH) 
+    #define SPI_DATA_FLASH_1_SIZE   SPI_DATA_FLASH_0_SIZE 
+    #define SPI_DATA_FLASH_2_SIZE   SPI_DATA_FLASH_0_SIZE
+    #define SPI_DATA_FLASH_3_SIZE   SPI_DATA_FLASH_0_SIZE
+    #if defined SPI_FLASH_MULTIPLE_CHIPS
+        #define SPI_FLASH_DEVICE_COUNT  4
+        #if SPI_FLASH_DEVICE_COUNT >= 4
+            #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE + SPI_DATA_FLASH_3_SIZE)
+        #elif SPI_FLASH_DEVICE_COUNT >= 3
+            #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE + SPI_DATA_FLASH_2_SIZE)
+        #else
+            #define SPI_DATA_FLASH_SIZE     (SPI_DATA_FLASH_0_SIZE + SPI_DATA_FLASH_1_SIZE)
+        #endif
+    #else
+        #define SPI_DATA_FLASH_SIZE         SPI_DATA_FLASH_0_SIZE
+    #endif
+#endif
 /**************** Specify a file system for use by FTP, HTML and such functions *******************************/
 //#define USE_PARAMETER_BLOCK                                            // enable a parameter block for storing and retrieving non-volatile information
     #define USE_PAR_SWAP_BLOCK                                           // we support a backup block which can be restored if desired
@@ -1101,14 +1158,13 @@
 
 
 #if defined SUPPORT_MIME_IDENTIFIER
-  #define FILE_HEADER (sizeof(MAX_FILE_LENGTH) + 1)                      // file length followed by MIME identifier
+    #define FILE_HEADER (sizeof(MAX_FILE_LENGTH) + 1)                    // file length followed by MIME identifier
 #else
-  #define FILE_HEADER (sizeof(MAX_FILE_LENGTH))
+    #define FILE_HEADER (sizeof(MAX_FILE_LENGTH))
 #endif
 
 
 #define PHYSICAL_QUEUES  0
-//#define CLOCK_LIMIT      DELAY_LIMIT
 
 
 /**********************************************************************************************************/
@@ -1124,7 +1180,6 @@
 #if defined SPI_SW_UPLOAD
     extern int fnConfigSPIFileSystem(void);
 #endif
-
 
 /************ uTasker task table is defined here but only used by the hardware module initiating the system ***********/
 

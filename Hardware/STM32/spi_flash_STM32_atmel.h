@@ -11,7 +11,7 @@
     File:      spi_flash_STM32_atmel.h
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -32,7 +32,6 @@
 
     #if defined SPI_FLASH_MULTIPLE_CHIPS
         static unsigned char fnCheckAT45dbxxx(int iChipSelect);
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
@@ -40,10 +39,8 @@
             _STORAGE_SPI_FLASH,                                          // type
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
-        #endif
     #else
         static unsigned char fnCheckAT45dbxxx(void);
-        #if !defined BOOT_LOADER                                         // the boot loader doesn't use storage lists
         static const STORAGE_AREA_ENTRY spi_flash_storage = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
@@ -51,7 +48,6 @@
             _STORAGE_SPI_FLASH,                                          // type
             0                                                            // not multiple devices
         };
-        #endif
     #endif
 #endif
 
@@ -80,9 +76,7 @@
             ucSPI_FLASH_Type[i] = fnCheckAT45dbxxx(i);
         }
     #endif
-    #if !defined BOOT_LOADER                                             // the boot loader doesn't use storage lists
         UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
-    #endif
     }
 #endif
 
@@ -165,7 +159,6 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #define iChipSelect 0
     #endif
     unsigned char ucTxCount = 0;
-    volatile unsigned long ulDummy;
     unsigned char ucCommandBuffer[3];
 
     if (SPI_FLASH_Danger[iChipSelect] != 0) {                            // check whether the chip is ready to work, if not wait
@@ -196,14 +189,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     __ASSERT_CS(ulChipSelectLine);                                       // assert chip select low before starting
 
-    ulDummy = SSPDR_X;                                                   // reset receive data flag with dummy read - the rx data is not interesting here
+    (void)SSPDR_X;                                                       // reset receive data flag with dummy read - the rx data is not interesting here
     SSPDR_X = ucCommand;                                                 // send command
 
     #if defined _WINDOWS
     fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
     #endif
     WAIT_TRANSFER_END();                                                 // wait until tx byte has been sent and rx byte has been completely received
-    ulDummy = SSPDR_X;                                                   // reset receive data flag with dummy read - the rx data is not interesting here
+    (void)SSPDR_X;                                                       // reset receive data flag with dummy read - the rx data is not interesting here
 
     switch (ucCommand) {
     case WRITE_BUFFER_1:                                                 // write data to the buffer
@@ -282,7 +275,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SSPDR_X = 0xff;                                              // send data
             WAIT_TRANSFER_END();                                         // wait until tx byte has been sent
         }
-        ulDummy = SSPDR_X;                                               // reset receive data flag with dummy read - the rx data is not interesting here
+        (void)SSPDR_X;                                                   // reset receive data flag with dummy read - the rx data is not interesting here
         while (DataLength-- != 0) {                                      // while data bytes to be read
             SSPDR_X = 0xff;
     #if defined _WINDOWS

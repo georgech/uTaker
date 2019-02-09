@@ -34,6 +34,10 @@
     #define _ENABLE_INTERRUPTS()
 #endif
 
+#if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #define SPI_FLASH_ENABLED 
+#endif
+
 /* =================================================================== */
 /*                       local structure definitions                   */
 /* =================================================================== */
@@ -66,7 +70,7 @@
 /*                          FLASH Interface                            */
 /* =================================================================== */
 
-#if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
+#if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD) && !defined BOOT_LOADER
 static void fnConfigSPIFileSystem(void)
 {
     POWER_UP_SPI_FLASH_INTERFACE();

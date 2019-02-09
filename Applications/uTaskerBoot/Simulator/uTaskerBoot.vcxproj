@@ -810,12 +810,36 @@ Build_STM32.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_Luminary|Win32'">true</ExcludedFromBuild>
     </None>
-    <None Include="..\GNU_Kinetis\Build_Kinetis.bat" />
-    <None Include="..\GNU_Kinetis\make_uTaskerBoot_GNU_Kinetis" />
-    <None Include="..\GNU_LM3SXXXX\Build_LM3SXXXX_BOOT.bat" />
-    <None Include="..\GNU_LM3SXXXX\make_uTaskerBoot_GNU_LM3SXXXX" />
-    <None Include="..\GNU_STM32\Build_STM32.bat" />
-    <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32" />
+    <None Include="..\GNU_Kinetis\Build_Kinetis.bat">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\GNU_Kinetis\make_uTaskerBoot_GNU_Kinetis">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\GNU_LM3SXXXX\Build_LM3SXXXX_BOOT.bat">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\GNU_LM3SXXXX\make_uTaskerBoot_GNU_LM3SXXXX">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32 plus GCC build|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\GNU_STM32\Build_STM32.bat">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\GNU_STM32\make_uTaskerBoot_GNU_STM32">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Win32 Debug and GNU target|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTaskerBoot_STM32|Win32'">true</ExcludedFromBuild>
+    </None>
     <None Include="cursor1.cur" />
     <None Include="small.ico" />
     <None Include="uTasker.ico" />

@@ -117,7 +117,7 @@ BEGIN
     ICON            IDI_ETHERNET1,IDC_MYICON,14,9,20,20
     LTEXT           "µTasker Environment V1.4",IDC_STATIC,49,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright (C) 2004..2018",IDC_STATIC,49,20,119,8
+    LTEXT           "Copyright (C) 2004..2019",IDC_STATIC,49,20,119,8
     DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
     GROUPBOX        "",IDC_STATIC,34,35,163,59
     LTEXT           "To obtain detailed help to the µTasker project send your questions to info_uT@uTasker.com and visit the web site www.uTasker.com",
@@ -149,7 +149,7 @@ BEGIN
     ICON            IDI_ETHERNET1,IDC_MYICON,14,9,20,20
     LTEXT           "µTasker Environment V1.4",IDC_STATIC,49,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright (C) 2004..2018",IDC_STATIC,49,20,119,8
+    LTEXT           "Copyright (C) 2004..2019",IDC_STATIC,49,20,119,8
     DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
     GROUPBOX        "",IDC_STATIC,34,35,163,59
     LTEXT           "The simulated processor has just been reset. Please restart the simulator if required.",
@@ -166,7 +166,7 @@ BEGIN
     ICON            IDI_ETHERNET1,IDC_MYICON,14,9,20,20
     LTEXT           "µTasker Environment V1.4",IDC_STATIC,49,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright (C) 2004..2018",IDC_STATIC,49,20,119,8
+    LTEXT           "Copyright (C) 2004..2019",IDC_STATIC,49,20,119,8
     DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
     GROUPBOX        "",IDC_STATIC,34,35,163,86
     LTEXT           "The simulated device has just experienced a Watchdog timeout which lead to a reset. If this was not intentional there is probably a coding error!!",
@@ -286,7 +286,7 @@ BEGIN
             VALUE "FileDescription", "uTaskerV1-4\0"
             VALUE "FileVersion", "1, 4, 0, 0\0"
             VALUE "InternalName", "uTaskerV1-4\0"
-            VALUE "LegalCopyright", "Copyright © 2004..2018\0"
+            VALUE "LegalCopyright", "Copyright © 2004..2019\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "uTaskerV1-4.exe\0"
             VALUE "PrivateBuild", "\0"

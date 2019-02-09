@@ -21,6 +21,7 @@
     01.11.2018 User flash driver instead of local code                   {6}
     01.11.2018 Use an include file for the clock configuration           {7}
     28.11.2018 Add automatic flash option configuration option           {8}
+    09.02.2019 Add STORAGE_AREA_ENTRY list when both internal and external flash drivers are used {9}
 
 
 */
@@ -60,12 +61,67 @@
     #define SIM_DMA(x)
 #endif
 
+#if !defined ONLY_INTERNAL_FLASH_STORAGE
+    static const STORAGE_AREA_ENTRY default_flash = {                    // {9}
+        0,                                                               // end of list
+        (unsigned char *)(FLASH_START_ADDRESS),                          // start address of internal flash
+        (unsigned char *)(FLASH_START_ADDRESS + (SIZE_OF_FLASH - 1)),    // end of internal flash
+        _STORAGE_INTERNAL_FLASH,                                         // type
+        0                                                                // not multiple devices
+    };
+
+    STORAGE_AREA_ENTRY *UserStorageListPtr = (STORAGE_AREA_ENTRY *)&default_flash; // default entry
+#endif
+
+#if defined SPI_SW_UPLOAD
+    #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25
+            #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
+        #endif
+        #define _SPI_DEFINES
+            #include "spi_flash_STM32_atmel.h"
+            #include "spi_flash_STM32_stmicro.h"
+            #include "spi_flash_STM32_sst25.h"
+        #undef _SPI_DEFINES
+    #endif
+
+    #if !defined SPI_FLASH_DEVICE_COUNT
+        #define SPI_FLASH_DEVICE_COUNT 1
+    #endif
+    static int SPI_FLASH_Danger[SPI_FLASH_DEVICE_COUNT] = {0};           // signal that the FLASH status should be checked before using since there is a danger that it is still busy
+    static unsigned char ucSPI_FLASH_Type[SPI_FLASH_DEVICE_COUNT];       // list of attached FLASH devices
+
+    #ifdef SPI_FLASH_MULTIPLE_CHIPS
+        unsigned long ulChipSelect[SPI_FLASH_DEVICE_COUNT] = {
+            CS0_LINE,
+            CS1_LINE                                                     // at least 2 expected when multiple devices are defined
+        #ifdef CS2_LINE
+            ,CS2_LINE
+            #ifdef CS3_LINE
+            ,CS3_LINE
+            #endif
+        #endif
+        };
+        #define EXTENDED_CS , &iChipSelect
+        #define _EXTENDED_CS  ptrAccessDetails->ucDeviceNumber,
+    #else
+        #define EXTENDED_CS
+        #define _EXTENDED_CS
+    #endif
+    #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent SPI Flash driver code
+        #include "spi_flash_STM32_atmel.h"
+        #include "spi_flash_STM32_stmicro.h"
+        #include "spi_flash_STM32_sst25.h"
+    #undef _SPI_FLASH_INTERFACE
+#endif
+
 #if defined FLASH_ROUTINES || defined FLASH_FILE_SYSTEM || defined USE_PARAMETER_BLOCK || defined SUPPORT_PROGRAM_ONCE // {6}
 /* =================================================================== */
 /*                           FLASH driver                              */
 /* =================================================================== */
     #include "stm32_FLASH.h"                                             // include FLASH driver code
 #endif
+
 
 
 // This routine is called to reset the card
@@ -121,48 +177,6 @@ extern unsigned short fnCRC16(unsigned short usCRC, unsigned char *ptrInput, uns
 }
 
 
-#if defined SPI_SW_UPLOAD
-    #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25
-            #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
-        #endif
-        #define _SPI_DEFINES
-            #include "spi_flash_STM32_atmel.h"
-            #include "spi_flash_STM32_stmicro.h"
-            #include "spi_flash_STM32_sst25.h"
-        #undef _SPI_DEFINES
-    #endif
-
-    #if !defined SPI_FLASH_DEVICE_COUNT
-        #define SPI_FLASH_DEVICE_COUNT 1
-    #endif
-    static int SPI_FLASH_Danger[SPI_FLASH_DEVICE_COUNT] = {0};           // signal that the FLASH status should be checked before using since there is a danger that it is still busy
-    static unsigned char ucSPI_FLASH_Type[SPI_FLASH_DEVICE_COUNT];       // list of attached FLASH devices
-
-    #ifdef SPI_FLASH_MULTIPLE_CHIPS
-        unsigned long ulChipSelect[SPI_FLASH_DEVICE_COUNT] = {
-            CS0_LINE,
-            CS1_LINE                                                     // at least 2 expected when multiple devices are defined
-        #ifdef CS2_LINE
-            ,CS2_LINE
-            #ifdef CS3_LINE
-            ,CS3_LINE
-            #endif
-        #endif
-        };
-        #define EXTENDED_CS , &iChipSelect
-        #define _EXTENDED_CS  ptrAccessDetails->ucDeviceNumber,
-    #else
-        #define EXTENDED_CS
-        #define _EXTENDED_CS
-    #endif
-    #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent SPI Flash driver code
-        #include "spi_flash_STM32_atmel.h"
-        #include "spi_flash_STM32_stmicro.h"
-        #include "spi_flash_STM32_sst25.h"
-    #undef _SPI_FLASH_INTERFACE
-#endif
-
 
 // memcpy implementation
 //
@@ -179,86 +193,6 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     return buffer;
 }
 
-
-#if defined SPI_SW_UPLOAD
-// This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
-// as well as the address in the specific device
-//
-static void fnReadSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
-{
-    #if !defined SPI_FLASH_SST25
-    unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    unsigned short usPageOffset = (unsigned short)(ptrAccessDetails->ulOffset - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
-    #endif
-
-    #if defined SPI_FLASH_ST
-    fnSPI_command(READ_DATA_BYTES, (unsigned long)((unsigned long)(usPageNumber << 8) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-    #elif defined SPI_FLASH_SST25
-    fnSPI_command(READ_DATA_BYTES, ptrAccessDetails->ulOffset, _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-    #else                                                                // ATMEL
-        #if SPI_FLASH_PAGE_LENGTH >= 1024
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 11) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #elif SPI_FLASH_PAGE_LENGTH >= 512
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 10) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #else
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 9) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #endif
-    #endif
-}
-
-// The routine is used to delete an area in SPI Flash, whereby the caller has set the address to the start of a page and limited the erase to a single storage area and device
-//
-static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
-{
-    MAX_FILE_LENGTH BlockLength = SPI_FLASH_PAGE_LENGTH;
-    #if !defined SPI_FLASH_ST
-    unsigned char   ucCommand;
-    #endif
-    #if !defined SPI_FLASH_SST25
-    unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    #endif
-    #if defined SPI_FLASH_ST
-    fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // enable the write
-        #ifdef SPI_DATA_FLASH
-    fnSPI_command(SUB_SECTOR_ERASE, ((unsigned long)usPageNumber << 8), _EXTENDED_CS 0, 0); // delete appropriate sub-sector
-    BlockLength = SPI_FLASH_SUB_SECTOR_LENGTH;
-        #else
-    fnSPI_command(SECTOR_ERASE, ((unsigned long)usPageNumber << 8), _EXTENDED_CS 0, 0); // delete appropriate sector
-    BlockLength = SPI_FLASH_SECTOR_LENGTH;
-        #endif
-    #elif defined SPI_FLASH_SST25
-    fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow byte programming
-        #ifndef SST25_A_VERSION
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_SECTOR_LENGTH) && ((ptrAccessDetails->ulOffset & (SPI_FLASH_SECTOR_LENGTH - 1)) == 0)) { // if a complete 64k sector can be deleted
-        ucCommand = SECTOR_ERASE;                                        // delete block of 64k
-        BlockLength = SPI_FLASH_SECTOR_LENGTH;
-    }
-    else 
-        #endif
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_HALF_SECTOR_LENGTH) && ((ptrAccessDetails->ulOffset & (SPI_FLASH_HALF_SECTOR_LENGTH - 1)) == 0)) {
-        ucCommand = HALF_SECTOR_ERASE;                                   // delete block of 32k
-        BlockLength = SPI_FLASH_HALF_SECTOR_LENGTH;
-    }
-    else {
-        ucCommand = SUB_SECTOR_ERASE;                                    // delete smallest sector of 4k
-        BlockLength = SPI_FLASH_SUB_SECTOR_LENGTH;
-    }
-    fnSPI_command(ucCommand, ptrAccessDetails->ulOffset, _EXTENDED_CS 0, 0);    
-    #else                                                                // ATMEL
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_BLOCK_LENGTH) && (usPageNumber % 8 == 0)) { // if delete range corresponds to a block, use faster block delete
-        BlockLength = SPI_FLASH_BLOCK_LENGTH;
-        ucCommand = BLOCK_ERASE;
-    }
-    else {
-        BlockLength = SPI_FLASH_PAGE_LENGTH;
-        ucCommand = PAGE_ERASE;
-    }
-    fnSPI_command(ucCommand, usPageNumber, _EXTENDED_CS 0, 0);           // delete appropriate page/block
-    #endif
-    return (BlockLength);
-}
-
-#endif
 
 extern int uFileErase(unsigned char *ptrFile, MAX_FILE_LENGTH FileLength)
 {
@@ -281,7 +215,7 @@ extern void fnGetPars(unsigned char *ParLocation, unsigned char *ptrValue, MAX_F
 }
 
 
-#ifdef SPI_SW_UPLOAD
+#if defined SPI_SW_UPLOAD
 extern int fnConfigSPIFileSystem(void)
 {
     POWER_UP_SPI_FLASH_INTERFACE();

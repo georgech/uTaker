@@ -6,6 +6,17 @@
 # 04.07.2018 Add ../../../Hardware/packages.h
 # 15.01.2019 Add peripheral dependences
 
+
+# Compiler flags (thumb mode - little endian)
+# (set to Cortex-M4, Cortex-M7 [with or without hard FPU] or Cortex-M0+ accordingly)
+#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+
+
 # All objects (Hardware, application, uTasker, stack)
 #
 OBJS = Build/serial_loader.o Build/usb_device_loader.o Build/disk_loader.o Build/usb_host_loader.o Build/usb_application.o Build/webInterface.o \
@@ -49,12 +60,6 @@ SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
                 ../../../Hardware/STM32/spi_flash_STM32_stmicro.h \
 				../../../Hardware/STM32/spi_flash_STM32_sst25.h
 
-
-# Compiler flags (thumb mode - little endian)
-#
-#C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
-#C_FLAGS = -mcpu=cortex-m3 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
-C_FLAGS = -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char  -ffunction-sections -fdata-sections -Wundef
 
 all: uTaskerSerialBoot.elf
 
@@ -161,10 +166,8 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 # Link
 # Create output file and show its size
 #
-uTaskerSerialBoot.elf: $(OBJS) uTaskerSTM32.ld uTaskerSTM32_F4.ld uTaskerSTM32_F4_16k.ld
-	$(CC) $(C_FLAGS) -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -TuTaskerSTM32_F4_16k.ld -o uTaskerSerialBoot.elf $(OBJS)
-#	$(CC) $(C_FLAGS) -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -TuTaskerSTM32_F4.ld -o uTaskerSerialBoot.elf $(OBJS)
-#	$(CC) $(C_FLAGS) -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -TuTaskerSTM32.ld -o uTaskerSerialBoot.elf $(OBJS)
+uTaskerSerialBoot.elf: $(OBJS) uTaskerSTM32.ld uTaskerSTM32_F4.ld STM32F4_512_128.ld uTaskerSTM32_F4_16k.ld
+	$(CC) $(C_FLAGS) -TSTM32F4_512_128.ld -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -o uTaskerSerialBoot.elf $(OBJS)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerSerialBoot.elf uTaskerSerialBoot.bin
 	$(CC_SIZE) uTaskerSerialBoot.elf

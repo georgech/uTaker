@@ -1125,10 +1125,10 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define SPI1_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[0])) // SPI-I2S
         #define SPI2_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[1])) // SPI-I2S
         #define SPI3_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[2])) // SPI-I2S
-        #define SYSCFG_BLOCK            ((unsigned char *)(&STM32.SYSCFG))     // System Configuration
-        #define SPI1_BLOCK              SPI1_I2S_BLOCK
-        #define FSMC_BLOCK              ((unsigned char *)(&STM32.FSMC))       // Flexible Static Memory Controller
-        #define QUADSPI_BLOCK           ((unsigned char *)(&STM32.QUADSPI))    // Quad-SPI
+        #define SYSCFG_BLOCK            ((unsigned char *)(&STM32.SYSCFG))     // system configuration
+        #define SPI1_BLOCK              SPI1_I2S_BLOCK                         // for compatibility
+        #define FSMC_BLOCK              ((unsigned char *)(&STM32.FSMC))       // flexible static memory controller
+        #define QUADSPI_BLOCK           ((unsigned char *)(&STM32.QUADSPI))    // quad-SPI
     #else
         #define SPI1_BLOCK              ((unsigned char *)(&STM32.SPI))        // SPI
         #define SPI2_I2S_BLOCK          ((unsigned char *)(&STM32.SPI_I2S[0])) // SPI-I2S
@@ -1188,6 +1188,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define ADC_BLOCK                   0x40012000
         #define SDIO_BLOCK                  0x40012c00
         #define SPI1_BLOCK                  0x40013000
+        #define SPI1_I2S_BLOCK              SPI1_BLOCK                   // for compatibility
         #define SYSCFG_BLOCK                0x40013800
         #define EXTI_BLOCK                  0x40013c00
         #define TIM9_BLOCK                  0x40014000
@@ -7651,9 +7652,9 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
      ((characteristics << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
      ((characteristics << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
-     ((characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
-     ((characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     ((unsigned long)((unsigned long long)characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
+     ((unsigned long)((unsigned long long)characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
+     ((unsigned long)((unsigned long long)characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
     GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
     (((characteristics >> 2)  & (0x0001 & pins)) | \
      ((characteristics >> 1)  & (0x0002 & pins)) | \
@@ -7692,7 +7693,7 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 12) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
      ((characteristics << 14) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
      ((characteristics << 16) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
-     ((characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((unsigned long)((unsigned long long)characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
      ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
@@ -7767,7 +7768,7 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 12) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
      ((characteristics << 14) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
      ((characteristics << 16) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
-     ((characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((unsigned long)((unsigned long long)characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
      ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \

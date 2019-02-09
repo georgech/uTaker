@@ -261,7 +261,7 @@ static void fnDeInitEndpoints(void)
 }
 
 
-// It has been found that the USBHS controller can sent data from SRAM or FLASH source addresses therefore we don't copy the data into an intermediate buffer
+// It has been found that the USBHS controller can send data from SRAM or FLASH source addresses therefore we don't copy the data into an intermediate buffer
 // but instead send it from where it is (assuming that it remains stable)
 // - two buffer pointers are prepared, whereby the second is set to a 4k page boundary so that at least 4k of linear input data can be sent even when its buffer crosses a 4k boundary
 //

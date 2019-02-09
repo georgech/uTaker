@@ -381,7 +381,11 @@
         #define NO_SECRET_KEY
         #define VALID_VERSION_MAGIC_NUMBER  0x56ab                       // magic number
     #else
-        #define uFILE_START        (unsigned char *)(FLASH_START_ADDRESS + 0x60000) // the address where the new application is located when present
+        #if defined SPI_SW_UPLOAD  
+            #define uFILE_START    (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH) // the address where the new application is located when present
+        #else
+            #define uFILE_START    (unsigned char *)(FLASH_START_ADDRESS + 0x60000) // the address where the new application is located when present
+        #endif
         #define FILE_SYSTEM_SIZE   (128 * 1024)                          // maximum size of new application
         static const unsigned char ucKey[] = { 0x62, 0x23, 0x19, 0xde, 0x22, 0xb1 };
       //#define _ENCRYPTED

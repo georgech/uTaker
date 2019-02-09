@@ -583,7 +583,9 @@ const PARS cParameters = {
 #if defined SERIAL_INTERFACE && defined USE_TELNET && defined TELNET_RFC2217_SUPPORT // {101}
     static QUEUE_HANDLE SerialPortID_RFC2217 = NO_ID_ALLOCATED;
 #endif
+#if !defined BLINKY && !defined HELLO_WORLD
 static QUEUE_HANDLE save_handle = NETWORK_HANDLE;                        // temporary debug handle backup
+#endif
 static int iAppState = STATE_INIT;                                       // task state
 
 // Application task
