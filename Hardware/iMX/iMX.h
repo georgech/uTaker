@@ -16797,7 +16797,7 @@ typedef struct stDAC_REGS                                                // {23}
 #define PORT_DSE_LOW               (IOMUXC_SW_PAD_CTL_PAD_DSE_1)                    // digital strength low if digital output
 #define PORT_DSE_HIGH              (IOMUXC_SW_PAD_CTL_PAD_DSE_7)                    // digital strength high if digital output
 
-// Exteded port characteristics
+// Extended port characteristics
 //
 #define PORT_NO_HYSTERISIS         0x00000000                                       // no hysterisis enabled
 #define PORT_WITH_HYSTERISIS       (IOMUXC_SW_PAD_CTL_PAD_HYS)                      // hysterisis enabled
