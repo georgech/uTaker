@@ -1605,7 +1605,7 @@
 #else
     #if !defined KINETIS_KM && !defined K20FX512_120                     // KM's iRTC not yet supported
         #define SUPPORT_RTC                                              // support real time clock
-            #define SUPPORT_RTC_ms                                       // ms RTC support
+          //#define SUPPORT_RTC_ms                                       // ms RTC support
           //#define SUPPORT_RTC_us                                       // us RTC support
     #endif
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
@@ -1614,6 +1614,9 @@
     #elif defined KINETIS_KL && !defined FRDM_KL03Z && !defined FRDM_KL27Z && !defined FRDM_KL28Z && !defined FRDM_KL82Z && !defined TWR_KL82Z72M // FRDM-KL03Z, FRDM-KL27Z, FRDM-KL28Z and FRDM-KL82Z have 32kHz crystals which are used as preference
         #define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
       //#define RTC_USES_RTC_CLKIN                                       // 32.768kHz input on RTC_CLKIN
+    #endif
+    #if defined FRDM_KE15Z
+        #define RTC_CLOCKOUT_ENABLE_32kHz
     #endif
 #endif
 
@@ -4481,6 +4484,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
     #if defined I2C_INTERFACE
+      //#define FM24CL16B_PRESENT
         #define CONFIGURE_MOUSE_INPUTS() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_2, PORT_PS_UP_ENABLE)
         #define MOUSE_LEFT_CLICK()     (_READ_PORT_MASK(C, SWITCH_2) == 0)
         #define MOUSE_UP()             (iUpTilt/16)                           // use accelerometer (see i2c_tests.h and TEST_MMA8451Q, based on I2C)
@@ -4501,109 +4505,109 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define USB_HOST_POWER_OFF()                                         // as the circuit says "electrical protection is not provided - use it at your own risk"
 
     #if !defined FreeLON
-    #define BUTTON_KEY_DEFINITIONS  {_PORTC, SWITCH_2,   {497, 20,  513, 30 }}, \
-                                    {_PORTA, SWITCH_3,   {497, 299, 513, 309}}, \
-                                    {_PORTE, PORTE_BIT24,{155, 4,   171, 17 }}, \
-                                    {_PORTE, PORTE_BIT25,{171, 4,   187, 17 }}, \
-                                    {_PORTD, PORTD_BIT1, {219, 4,   235, 17 }}, \
-                                    {_PORTD, PORTD_BIT3, {235, 4,   251, 17 }}, \
-                                    {_PORTD, PORTD_BIT2, {251, 4,   267, 17 }}, \
-                                    {_PORTD, PORTD_BIT0, {267, 4,   283, 17 }}, \
-                                    {_PORTC, PORTC_BIT4, {283, 4,   299, 17 }}, \
-                                    {_PORTA, PORTA_BIT0, {299, 4,   315, 17 }}, \
-                                    {_PORTE, PORTE_BIT26,{299, 17,  315, 30 }}, \
-                                    {_PORTC, PORTC_BIT3, {318, 7,   334, 20 }}, \
-                                    {_PORTC, PORTC_BIT2, {334, 7,   350, 20 }}, \
-                                    {_PORTA, PORTA_BIT2, {350, 7,   366, 20 }}, \
-                                    {_PORTB, PORTB_BIT23,{366, 7,   382, 20 }}, \
-                                    {_PORTA, PORTA_BIT1, {382, 7,   398, 20 }}, \
-                                    {_PORTB, PORTB_BIT9, {398, 7,   414, 20 }}, \
-                                    {_PORTC, PORTC_BIT17,{414, 7,   430, 20 }}, \
-                                    {_PORTC, PORTC_BIT16,{430, 7,   446, 20 }}, \
-                                    {_PORTC, PORTC_BIT5, {318, 20,  334, 32 }}, \
-                                    {_PORTC, PORTC_BIT7, {334, 20,  350, 32 }}, \
-                                    {_PORTC, PORTC_BIT0, {350, 20,  366, 32 }}, \
-                                    {_PORTC, PORTC_BIT9, {366, 20,  382, 32 }}, \
-                                    {_PORTC, PORTC_BIT8, {382, 20,  398, 32 }}, \
-                                    {_PORTC, PORTC_BIT1, {398, 20,  414, 32 }}, \
-                                    {_PORTB, PORTB_BIT19,{414, 20,  430, 32 }}, \
-                                    {_PORTB, PORTB_BIT18,{430, 20,  446, 32 }}, \
-                                    {_PORTB, PORTB_BIT20,{418, 290, 434, 305}}, \
-                                    {_PORTB, PORTB_BIT2, {354, 305, 370, 320}}, \
-                                    {_PORTB, PORTB_BIT3, {370, 305, 386, 320}}, \
-                                    {_PORTB, PORTB_BIT10,{386, 305, 402, 320}}, \
-                                    {_PORTB, PORTB_BIT11,{402, 305, 418, 320}}, \
-                                    {_PORTC, PORTC_BIT11,{418, 305, 434, 320}}, \
-                                    {_PORTC, PORTC_BIT10,{435, 305, 450, 320}},
+        #define BUTTON_KEY_DEFINITIONS  {_PORTC, SWITCH_2,   {497, 20,  513, 30 }}, \
+                                        {_PORTA, SWITCH_3,   {497, 299, 513, 309}}, \
+                                        {_PORTE, PORTE_BIT24,{155, 4,   171, 17 }}, \
+                                        {_PORTE, PORTE_BIT25,{171, 4,   187, 17 }}, \
+                                        {_PORTD, PORTD_BIT1, {219, 4,   235, 17 }}, \
+                                        {_PORTD, PORTD_BIT3, {235, 4,   251, 17 }}, \
+                                        {_PORTD, PORTD_BIT2, {251, 4,   267, 17 }}, \
+                                        {_PORTD, PORTD_BIT0, {267, 4,   283, 17 }}, \
+                                        {_PORTC, PORTC_BIT4, {283, 4,   299, 17 }}, \
+                                        {_PORTA, PORTA_BIT0, {299, 4,   315, 17 }}, \
+                                        {_PORTE, PORTE_BIT26,{299, 17,  315, 30 }}, \
+                                        {_PORTC, PORTC_BIT3, {318, 7,   334, 20 }}, \
+                                        {_PORTC, PORTC_BIT2, {334, 7,   350, 20 }}, \
+                                        {_PORTA, PORTA_BIT2, {350, 7,   366, 20 }}, \
+                                        {_PORTB, PORTB_BIT23,{366, 7,   382, 20 }}, \
+                                        {_PORTA, PORTA_BIT1, {382, 7,   398, 20 }}, \
+                                        {_PORTB, PORTB_BIT9, {398, 7,   414, 20 }}, \
+                                        {_PORTC, PORTC_BIT17,{414, 7,   430, 20 }}, \
+                                        {_PORTC, PORTC_BIT16,{430, 7,   446, 20 }}, \
+                                        {_PORTC, PORTC_BIT5, {318, 20,  334, 32 }}, \
+                                        {_PORTC, PORTC_BIT7, {334, 20,  350, 32 }}, \
+                                        {_PORTC, PORTC_BIT0, {350, 20,  366, 32 }}, \
+                                        {_PORTC, PORTC_BIT9, {366, 20,  382, 32 }}, \
+                                        {_PORTC, PORTC_BIT8, {382, 20,  398, 32 }}, \
+                                        {_PORTC, PORTC_BIT1, {398, 20,  414, 32 }}, \
+                                        {_PORTB, PORTB_BIT19,{414, 20,  430, 32 }}, \
+                                        {_PORTB, PORTB_BIT18,{430, 20,  446, 32 }}, \
+                                        {_PORTB, PORTB_BIT20,{418, 290, 434, 305}}, \
+                                        {_PORTB, PORTB_BIT2, {354, 305, 370, 320}}, \
+                                        {_PORTB, PORTB_BIT3, {370, 305, 386, 320}}, \
+                                        {_PORTB, PORTB_BIT10,{386, 305, 402, 320}}, \
+                                        {_PORTB, PORTB_BIT11,{402, 305, 418, 320}}, \
+                                        {_PORTC, PORTC_BIT11,{418, 305, 434, 320}}, \
+                                        {_PORTC, PORTC_BIT10,{435, 305, 450, 320}},
 
 
-    #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
+        #define MULTICOLOUR_LEDS        {0, 2}                           // single LED made up of entries 0, 1 and 2
 
-        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
-    #define KEYPAD_LED_DEFINITIONS  \
-        {RGB(255, 0,  0  ), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTB, LED_RED}, \
-        {RGB(0,   255,0  ), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTE, LED_GREEN}, \
-        {RGB(0,   0,  255), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTB, LED_BLUE}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {162, 8,   0, 3 }, _PORTE, PORTE_BIT24}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {178, 8,   0, 3 }, _PORTE, PORTE_BIT25}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {226, 8,   0, 3 }, _PORTD, PORTD_BIT1}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {242, 8,   0, 3 }, _PORTD, PORTD_BIT3}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {258, 8,   0, 3 }, _PORTD, PORTD_BIT2}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {274, 8,   0, 3 }, _PORTD, PORTD_BIT0}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {290, 8,   0, 3 }, _PORTC, PORTC_BIT4}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {306, 8,   0, 3 }, _PORTA, PORTA_BIT0}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {306, 23,  0, 3 }, _PORTE, PORTE_BIT26}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {328, 10,  0, 3 }, _PORTC, PORTC_BIT3}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {344, 10,  0, 3 }, _PORTC, PORTC_BIT2}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {360, 10,  0, 3 }, _PORTA, PORTA_BIT2}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {376, 10,  0, 3 }, _PORTB, PORTB_BIT23}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {392, 10,  0, 3 }, _PORTA, PORTA_BIT1}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {408, 10,  0, 3 }, _PORTB, PORTB_BIT9}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {424, 10,  0, 3 }, _PORTC, PORTC_BIT17}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {440, 10,  0, 3 }, _PORTC, PORTC_BIT16}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {328, 27,  0, 3 }, _PORTC, PORTC_BIT5}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {344, 27,  0, 3 }, _PORTC, PORTC_BIT7}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {360, 27,  0, 3 }, _PORTC, PORTC_BIT0}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {376, 27,  0, 3 }, _PORTC, PORTC_BIT9}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {392, 27,  0, 3 }, _PORTC, PORTC_BIT8}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {408, 27,  0, 3 }, _PORTC, PORTC_BIT1}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {424, 27,  0, 3 }, _PORTB, PORTB_BIT19}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {440, 27,  0, 3 }, _PORTB, PORTB_BIT18}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {426, 297, 0, 3 }, _PORTB, PORTB_BIT20}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {362, 314, 0, 3 }, _PORTB, PORTB_BIT2 }, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {378, 314, 0, 3 }, _PORTB, PORTB_BIT3 }, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {394, 314, 0, 3 }, _PORTB, PORTB_BIT10}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {410, 314, 0, 3 }, _PORTB, PORTB_BIT11}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {426, 314, 0, 3 }, _PORTC, PORTC_BIT11}, \
-        {RGB(0,0,0), RGB(255,0,0),       0, {442, 314, 0, 3 }, _PORTC, PORTC_BIT10},
+            // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+        #define KEYPAD_LED_DEFINITIONS  \
+            {RGB(255, 0,  0  ), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTB, LED_RED}, \
+            {RGB(0,   255,0  ), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTE, LED_GREEN}, \
+            {RGB(0,   0,  255), RGB(0,0,0),  1, {526, 264, 0, 8 }, _PORTB, LED_BLUE}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {162, 8,   0, 3 }, _PORTE, PORTE_BIT24}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {178, 8,   0, 3 }, _PORTE, PORTE_BIT25}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {226, 8,   0, 3 }, _PORTD, PORTD_BIT1}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {242, 8,   0, 3 }, _PORTD, PORTD_BIT3}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {258, 8,   0, 3 }, _PORTD, PORTD_BIT2}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {274, 8,   0, 3 }, _PORTD, PORTD_BIT0}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {290, 8,   0, 3 }, _PORTC, PORTC_BIT4}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {306, 8,   0, 3 }, _PORTA, PORTA_BIT0}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {306, 23,  0, 3 }, _PORTE, PORTE_BIT26}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {328, 10,  0, 3 }, _PORTC, PORTC_BIT3}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {344, 10,  0, 3 }, _PORTC, PORTC_BIT2}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {360, 10,  0, 3 }, _PORTA, PORTA_BIT2}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {376, 10,  0, 3 }, _PORTB, PORTB_BIT23}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {392, 10,  0, 3 }, _PORTA, PORTA_BIT1}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {408, 10,  0, 3 }, _PORTB, PORTB_BIT9}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {424, 10,  0, 3 }, _PORTC, PORTC_BIT17}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {440, 10,  0, 3 }, _PORTC, PORTC_BIT16}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {328, 27,  0, 3 }, _PORTC, PORTC_BIT5}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {344, 27,  0, 3 }, _PORTC, PORTC_BIT7}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {360, 27,  0, 3 }, _PORTC, PORTC_BIT0}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {376, 27,  0, 3 }, _PORTC, PORTC_BIT9}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {392, 27,  0, 3 }, _PORTC, PORTC_BIT8}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {408, 27,  0, 3 }, _PORTC, PORTC_BIT1}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {424, 27,  0, 3 }, _PORTB, PORTB_BIT19}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {440, 27,  0, 3 }, _PORTB, PORTB_BIT18}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {426, 297, 0, 3 }, _PORTB, PORTB_BIT20}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {362, 314, 0, 3 }, _PORTB, PORTB_BIT2 }, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {378, 314, 0, 3 }, _PORTB, PORTB_BIT3 }, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {394, 314, 0, 3 }, _PORTB, PORTB_BIT10}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {410, 314, 0, 3 }, _PORTB, PORTB_BIT11}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {426, 314, 0, 3 }, _PORTC, PORTC_BIT11}, \
+            {RGB(0,0,0), RGB(255,0,0),       0, {442, 314, 0, 3 }, _PORTC, PORTC_BIT10},
 
-    #define KEYPAD "KeyPads/FRDM_K64F.bmp"
+        #define KEYPAD "KeyPads/FRDM_K64F.bmp"
 
-    // Accelerometer interrupt configuration
-    //
-    #define ACC_INT_PRIORITY       PRIORITY_PORT_C_INT
-    #define ACC_INT_PORT           PORTC
-    #define ACC_INT_BIT            PORTC_BIT13
-    #define ACC_INT_ASSERTED()     (_READ_PORT_MASK(C, PORTC_BIT13) == 0)
-    #define ACC_USE_INT2                                                 // avoid using INT1 since it is connected to SW2
+        // Accelerometer interrupt configuration
+        //
+        #define ACC_INT_PRIORITY       PRIORITY_PORT_C_INT
+        #define ACC_INT_PORT           PORTC
+        #define ACC_INT_BIT            PORTC_BIT13
+        #define ACC_INT_ASSERTED()     (_READ_PORT_MASK(C, PORTC_BIT13) == 0)
+        #define ACC_USE_INT2                                             // avoid using INT1 since it is connected to SW2
 
-    // Defines for the WAVE file recording start/stop button
-    //
-    #define WAVE_DISK_START_STOP_INT_PRIORITY    PRIORITY_PORT_A_INT
-    #define WAVE_DISK_START_STOP_INT_PORT        PORTA
-    #define WAVE_DISK_START_STOP_INT_BIT         SWITCH_3
-    #define RECORDER_WAVE_FILE_NAME              "FRDM_K64F.wav"
+        // Defines for the WAVE file recording start/stop button
+        //
+        #define WAVE_DISK_START_STOP_INT_PRIORITY    PRIORITY_PORT_A_INT
+        #define WAVE_DISK_START_STOP_INT_PORT        PORTA
+        #define WAVE_DISK_START_STOP_INT_BIT         SWITCH_3
+        #define RECORDER_WAVE_FILE_NAME              "FRDM_K64F.wav"
 
-    #define MEASURE_LOW_POWER_ON()    //_SETBITS(C, PORTC_BIT16)         // signal when the processor is in sleep mode
-    #define MEASURE_LOW_POWER_OFF()   //_CLEARBITS(C, PORTC_BIT16)       // signal when the processor is in active mode
+        #define MEASURE_LOW_POWER_ON()    //_SETBITS(C, PORTC_BIT16)     // signal when the processor is in sleep mode
+        #define MEASURE_LOW_POWER_OFF()   //_CLEARBITS(C, PORTC_BIT16)   // signal when the processor is in active mode
 
-    #if defined ENC424J600_INTERFACE                                     // if the ENC424J600 is being used as SPI connected Ethernet  controller
-        #define ENC424J600_IRQ       PORTC_BIT4                          // the IRQ line used
-        #define ENC424J600_IRQ_PORT  PORTC                               // the port that the IRQ line is on
-        #define ENC424J600_IRQ_PRIORITY PRIORITY_PORT_C_INT              // the interrupt priority
-    #endif
+        #if defined ENC424J600_INTERFACE                                 // if the ENC424J600 is being used as SPI connected Ethernet  controller
+            #define ENC424J600_IRQ       PORTC_BIT4                      // the IRQ line used
+            #define ENC424J600_IRQ_PORT  PORTC                           // the port that the IRQ line is on
+            #define ENC424J600_IRQ_PRIORITY PRIORITY_PORT_C_INT          // the interrupt priority
+        #endif
 
-    #define LCD_PWRDN_N            (PORTC_BIT5)                          // power down LCD - J1-15 on FRDM-K64F
+        #define LCD_PWRDN_N            (PORTC_BIT5)                      // power down LCD - J1-15 on FRDM-K64F
     #endif
 #elif defined HEXIWEAR_K64F
     #define RGB_G                  (PORTD_BIT0)                          // green LED - if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

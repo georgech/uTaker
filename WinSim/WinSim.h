@@ -70,6 +70,7 @@
     28.02.2017 Add UARTs 6 and 7                                         {52}
     18.05.2017 Add fnLogRx()                                             {53}
     03.08.2018 Add fnInitI2C_FRAM(), fnGetI2CFRAMStart() and fnGetI2CFRAMSize() {54}
+    15.02.2019 Add fnInjectCAN() and fnSimulateCanIn()                   {55}
  
 */
  
@@ -118,6 +119,8 @@
 
 #define SIM_I2C_OUT          65                                          // {51}
 #define SIM_I2C_OUT_REPEATED 66
+
+#define SIM_CAN_MESSAGE      70
 
 #define SIM_TEST_ENUM        80
 #define SIM_TEST_DISCONNECT  81
@@ -350,6 +353,8 @@ extern void fnInjectI2C(unsigned char *ptrInputData, unsigned short usLength, in
 
 extern void fnConfigSimI2C(QUEUE_HANDLE Channel, unsigned long ulSpeed); // {9}
 
+extern void fnInjectCAN(unsigned char *ptrData, unsigned long ulCanID, int iRTR, unsigned char ucLength, int iCAN_controller); // {55}
+
 extern void fnSetProjectDetails(signed char **);
 
 extern void fnConfigSimSCI(QUEUE_HANDLE Channel, unsigned long ulSpeed, TTYTABLE *pars); 
@@ -419,6 +424,10 @@ extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned 
 extern void fnSimulateBreak(int iPort);                                  // {20}
 
 extern unsigned long _fnSimExtSCI(QUEUE_HANDLE Channel, unsigned char ucAddress, unsigned char ucData); // {32}
+
+// CAN
+//
+extern void fnSimulateCanIn(int iChannel, unsigned long ilID, int iRTR, unsigned char *ptrData, unsigned char ucDLC); // {55}
 
 // Special Hardware
 //

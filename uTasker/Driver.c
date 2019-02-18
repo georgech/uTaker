@@ -912,8 +912,12 @@ extern CHAR *fnDebugDec(signed long slNumberToConvert, unsigned char ucStyle, CH
                     *cPtr++ = '0';
                     *cPtr++ = '0';
                     *cPtr++ = '0';
+                    // Fall through intentionally
+                    //
                 case 1:
                     *cPtr++ = '0';
+                    // Fall through intentionally
+                    //
                 default:
                     *cPtr++ = '0';
                     break;

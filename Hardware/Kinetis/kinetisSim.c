@@ -4261,7 +4261,7 @@ extern void fnSimPers(void)
     #endif
                     break;
                 case KE_PORTB_BIT5:
-                    if ((SPI0_C1 & SPI_C1_MSTR) && (!(SIM_PINSEL0 & SIM_PINSEL_SPI0PS)) &&(SPI0_C1 & SPI_C1_SSOE)) {
+                    if (((SPI0_C1 & SPI_C1_MSTR) != 0) && ((SIM_PINSEL0 & SIM_PINSEL_SPI0PS) == 0) && ((SPI0_C1 & SPI_C1_SSOE) != 0)) {
                         ulPeripherals[iPort] |= ulBit;
                         ucPortFunctions[_PORTB][iPin - 8] = PB_5_SPI0_PCS0;
                     }
@@ -10740,7 +10740,7 @@ extern int fnPutBatteryRAMContent(unsigned char ucData, unsigned long ulReferenc
 }
 #endif
 
-#if defined CAN_INTERFACE
+#if (NUMBER_OF_CAN_INTERFACES > 0) && defined CAN_INTERFACE
 static int iLastTxBuffer;
 
 
@@ -10897,6 +10897,7 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
     int iRxAvailable = 0;
     int iOverrun = 0;
     unsigned char ucBuffer;
+    unsigned long ulRxFilter = 0xffffffff;
     if ((ucDataLength == 0) && (iRemodeRequest == 0)) {
         return;                                                          // ignore when reception without data
     }
@@ -10923,9 +10924,10 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
         ulId <<= CAN_STANDARD_SHIFT;
         ulId &= CAN_STANDARD_BITMASK;
     }
+    ulRxFilter = ptrCAN_control->CAN_RXGMASK;                            // filtere mask used for all buffers apart from final two
 
     while (i < NUMBER_CAN_MESSAGE_BUFFERS) {
-        if (ptrMessageBuffer->ulID == ulId) {
+        if ((ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
             iRxAvailable++;
             if (iRemodeRequest != 0) {                                   // remote request being received
                 if ((ptrMessageBuffer->ulCode_Len_TimeStamp & CAN_CODE_FIELD) == MB_TX_SEND_ON_REQ) { // remote message waiting to be sent
@@ -10993,7 +10995,14 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
             }
         }
         ptrMessageBuffer++;
-        i++;
+        switch (i++) {
+        case 14:
+            ulRxFilter = ptrCAN_control->CAN_RX14MASK;
+            break;
+        case 15:
+            ulRxFilter = ptrCAN_control->CAN_RX15MASK;
+            break;
+        }
     }
 
     switch (iChannel) {
@@ -11013,9 +11022,10 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
     }
 
     if (iRxAvailable != 0) {
+        ulRxFilter = ptrCAN_control->CAN_RXGMASK;
         i = 0;
         while (i < NUMBER_CAN_MESSAGE_BUFFERS) {
-            if (ptrMessageBuffer->ulID == ulId) {
+            if ((ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
                 if ((ptrMessageBuffer->ulCode_Len_TimeStamp & CAN_CODE_FIELD) == (MB_RX_FULL)) {
                     ucBuffer = (unsigned char)i;                         // we use this buffer for reception - it will set overrun...
                     iOverrun = 1;
@@ -11023,7 +11033,14 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
                 }
             }
             ptrMessageBuffer++;
-            i++;
+            switch (i++) {
+            case 14:
+                ulRxFilter = ptrCAN_control->CAN_RX14MASK;
+                break;
+            case 15:
+                ulRxFilter = ptrCAN_control->CAN_RX15MASK;
+                break;
+            }
         }
     }
     else {
@@ -11067,6 +11084,14 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
 #endif
 }
     #endif
+
+#if defined CAN_INTERFACE
+extern void fnSimulateCanIn(int iChannel, unsigned long ilID, int iRTR, unsigned char *ptrData, unsigned char ucDLC)
+{
+    static unsigned short usTimeStamp = 0;
+    fnCAN_reception(iChannel, ucDLC, ptrData, ilID, ilID, iRTR, usTimeStamp++, 0);
+}
+#endif
 
 extern void fnSimCAN(int iChannel, int iBufferNumber, int iSpecial)
 {

@@ -1,8 +1,8 @@
-/***********************************************************************
+﻿/***********************************************************************
     Mark Butcher    Bsc (Hons) MPhil MIET
 
     M.J.Butcher Consulting
-    Birchstrasse 20f,    CH-5406, R�tihof
+    Birchstrasse 20f,    CH-5406, Rütihof
     Switzerland
 
     www.uTasker.com    Skype: M_J_Butcher
@@ -2392,7 +2392,7 @@
     #define INIT_WATCHDOG_LED()     _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_1 | SWITCH_2), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(C, SWITCH_2) == 0)   // pull this input down to disable watchdog (connect pin pad 23 to GND at reset)
-    #define FORCE_BOOT()           (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
+    #define FORCE_BOOT()           ((_READ_PORT_MASK(C, SWITCH_1) == 0) || (SOFTWARE_RESET_DETECTED() && (*(BOOT_MAIL_BOX) == RESET_TO_SERIAL_LOADER)))   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
     #define RETAIN_LOADER_MODE()   (_READ_PORT_MASK(C, SWITCH_1) == 0)   // pull this input down to force boot loader mode (connect pin pad 22 to GND at reset)
     #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(C, BLINK_LED)
 

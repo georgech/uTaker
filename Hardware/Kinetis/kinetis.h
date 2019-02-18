@@ -1054,11 +1054,13 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #if BUS_CLOCK > (CORE_CLOCK)
         #error bus clock may not be faster than the system clock!
     #endif
-    #if FLEXBUS_CLOCK > (KINETIS_MAX_SPEED/2)
-        #error flex bus clock frequency out of range: maximum 50MHz
-    #endif
-    #if FLEXBUS_CLOCK > (BUS_CLOCK)
-        #error flex bus clock may not be faster than the bus clock!
+    #if defined FLEXBUS_CLOCK
+        #if FLEXBUS_CLOCK > (KINETIS_MAX_SPEED/2)
+            #error flex bus clock frequency out of range: maximum 50MHz
+        #endif
+        #if FLEXBUS_CLOCK > (BUS_CLOCK)
+            #error flex bus clock may not be faster than the bus clock!
+        #endif
     #endif
     #if FLASH_CLOCK > 25000000
         #error flash clock frequency out of range: maximum 25MHz
@@ -1240,7 +1242,7 @@ typedef struct stRESET_VECTOR
      #define NON_INITIALISED_RAM_SIZE    (4 + PERSISTENT_RAM_SIZE)       // reserve a long word at the end of SRAM for use by random number and serial loader mailbox
 #endif
 
-#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22 || defined KINETIS_K64  || defined KINETIS_K65  || defined KINETIS_K66)
+#if ((defined KINETIS_KL && !defined KINETIS_KL02) || defined KINETIS_K22 || defined KINETIS_K64  || defined KINETIS_K65  || defined KINETIS_K66 || defined KINETIS_KE15)
     #define CLKOUT_AVAILABLE
 #endif
 
@@ -4639,10 +4641,18 @@ typedef struct stVECTOR_TABLE
         #define I2C3_BLOCK                     0x400e7000                // I2C3
     #endif
     #if LPI2C_AVAILABLE > 0
-        #define LPI2C0_BLOCK                   0x400c0000                // LPI2C0
+        #if defined KINETIS_KE                                           // KE14/KE15
+            #define LPI2C0_BLOCK               0x40066000                // LPI2C0
+        #else
+            #define LPI2C0_BLOCK               0x400c0000                // LPI2C0
+        #endif
     #endif
     #if LPI2C_AVAILABLE > 1
-        #define LPI2C1_BLOCK                   0x400c1000                // LPI2C1
+        #if defined KINETIS_KE                                           // KE14/KE15
+            #define LPI2C1_BLOCK               0x40067000                // LPI2C1
+        #else
+            #define LPI2C1_BLOCK               0x400c1000                // LPI2C1
+        #endif
     #endif
     #if LPI2C_AVAILABLE > 2
         #define LPI2C2_BLOCK                   0x40042000                // LPI2C1
@@ -14148,6 +14158,10 @@ typedef struct stKINETIS_LPTMR_CTL
     #else
         #define PC_3_CLKOUT              PORT_MUX_ALT5
     #endif
+#elif defined KINETIS_KE15
+    #define PC_4_RTC_CLKOUT              PORT_MUX_ALT3
+    #define PC_5_RTC_CLKOUT              PORT_MUX_ALT3
+    #define PD_13_RTC_CLKOUT             PORT_MUX_ALT7
 #else
     #if defined KINETIS_K64 && (PIN_COUNT == PIN_COUNT_144_PIN)
         #define PA_6_CLKOUT              PORT_MUX_ALT5
@@ -15707,7 +15721,7 @@ typedef struct stKINETIS_LPI2C_CONTROL
   #define CAN_WRNEN          0x00200000                                  // warning interrupt enable
   #define CAN_LPMACK         0x00100000                                  // low power mode acknowledge
   #define CAN_SRXDIS         0x00020000                                  // self reception disable
-  #define CAN_IRMQ           0x00010000                                  // Individual Rx Masking and Queue enable
+  #define CAN_IRMQ           0x00010000                                  // individual Rx Masking and Queue enable
   #define CAN_LPRIOEN        0x00002000                                  // local priority enable
   #define CAN_AEN            0x00001000                                  // abort enable
   #define CAN_IDAM_A         0x00000000                                  // ID acceptance modes - one full ID
@@ -15759,9 +15773,9 @@ typedef struct stKINETIS_LPI2C_CONTROL
   #define PROPSEG_BIT_TIME8  (7)
 #define CAN0_TIMER           *(volatile unsigned long *)(CAN0_BASE_ADD + 0x8) // CAN Free running timer
 
-#define CAN0_RXGMASK         *(unsigned long *)(CAN0_BASE_ADD + 0x10)    // CAN Rx Global mask
-#define CAN0_RX14MASK        *(unsigned long *)(CAN0_BASE_ADD + 0x14)    // CAN Rx Buffer 14 mask
-#define CAN0_RX15MASK        *(unsigned long *)(CAN0_BASE_ADD + 0x18)    // CAN Rx Buffer 15 mask
+#define CAN0_RXGMASK         *(volatile unsigned long *)(CAN0_BASE_ADD + 0x10) // CAN Rx Global mask (can only be written to in freeze mode)
+#define CAN0_RX14MASK        *(volatile unsigned long *)(CAN0_BASE_ADD + 0x14) // CAN Rx Buffer 14 mask (can only be written to in freeze mode)
+#define CAN0_RX15MASK        *(volatile unsigned long *)(CAN0_BASE_ADD + 0x18) // CAN Rx Buffer 15 mask (can only be written to in freeze mode)
 #define CAN0_ECR             *(volatile unsigned long *)(CAN0_BASE_ADD + 0x1c) // CAN Error Counter Register
 #define CAN0_ESR1            *(volatile unsigned long *)(CAN0_BASE_ADD + 0x20) // CAN Error and Status 1 Register
   #define BIT1ERROR          0x00008000
@@ -15870,9 +15884,9 @@ typedef struct stKINETIS_LPI2C_CONTROL
     #define CAN1_MCR         *(volatile unsigned long *)(CAN1_BASE_ADD + 0x0) // CAN Module Configuration Register (supervisor only)
     #define CAN1_CTRL1       *(volatile unsigned long *)(CAN1_BASE_ADD + 0x4) // CAN Control Register 1
     #define CAN1_TIMER       *(volatile unsigned long *)(CAN1_BASE_ADD + 0x8) // CAN Free running timer
-    #define CAN1_RXGMASK     *(unsigned long *)(CAN1_BASE_ADD + 0x10)    // CAN Rx Global mask
-    #define CAN1_RX14MASK    *(unsigned long *)(CAN1_BASE_ADD + 0x14)    // CAN Rx Buffer 14 mask
-    #define CAN1_RX15MASK    *(unsigned long *)(CAN1_BASE_ADD + 0x18)    // CAN Rx Buffer 15 mask
+    #define CAN1_RXGMASK     *(volatile unsigned long *)(CAN1_BASE_ADD + 0x10) // CAN Rx Global mask (can only be written to in freeze mode)
+    #define CAN1_RX14MASK    *(volatile unsigned long *)(CAN1_BASE_ADD + 0x14) // CAN Rx Buffer 14 mask (can only be written to in freeze mode)
+    #define CAN1_RX15MASK    *(volatile unsigned long *)(CAN1_BASE_ADD + 0x18) // CAN Rx Buffer 15 mask (can only be written to in freeze mode)
     #define CAN1_ECR         *(volatile unsigned long *)(CAN1_BASE_ADD + 0x1c) // CAN Error Counter Register
     #define CAN1_ESR1        *(volatile unsigned long *)(CAN1_BASE_ADD + 0x20) // CAN Error and Status 1 Register
     #define CAN1_IMASK2      *(unsigned long *)(CAN1_BASE_ADD + 0x24)    // CAN Interrupt Mask Register 2
@@ -15925,9 +15939,9 @@ typedef struct stKINETIS_LPI2C_CONTROL
     #define CAN2_MCR         *(volatile unsigned long *)(CAN2_BASE_ADD + 0x0) // CAN Module Configuration Register (supervisor only)
     #define CAN2_CTRL1       *(volatile unsigned long *)(CAN2_BASE_ADD + 0x4) // CAN Control Register 1
     #define CAN2_TIMER       *(volatile unsigned long *)(CAN2_BASE_ADD + 0x8) // CAN Free running timer
-    #define CAN2_RXGMASK     *(unsigned long *)(CAN2_BASE_ADD + 0x10)    // CAN Rx Global mask
-    #define CAN2_RX14MASK    *(unsigned long *)(CAN2_BASE_ADD + 0x14)    // CAN Rx Buffer 14 mask
-    #define CAN2_RX15MASK    *(unsigned long *)(CAN2_BASE_ADD + 0x18)    // CAN Rx Buffer 15 mask
+    #define CAN2_RXGMASK     *(volatile unsigned long *)(CAN2_BASE_ADD + 0x10) // CAN Rx Global mask (can only be written to in freeze mode)
+    #define CAN2_RX14MASK    *(volatile unsigned long *)(CAN2_BASE_ADD + 0x14) // CAN Rx Buffer 14 mask (can only be written to in freeze mode)
+    #define CAN2_RX15MASK    *(volatile unsigned long *)(CAN2_BASE_ADD + 0x18) // CAN Rx Buffer 15 mask (can only be written to in freeze mode)
     #define CAN2_ECR         *(volatile unsigned long *)(CAN2_BASE_ADD + 0x1c) // CAN Error Counter Register
     #define CAN2_ESR1        *(volatile unsigned long *)(CAN2_BASE_ADD + 0x20) // CAN Error and Status 1 Register
     #define CAN2_IMASK2      *(unsigned long *)(CAN2_BASE_ADD + 0x24)    // CAN Interrupt Mask Register 2
@@ -16079,9 +16093,9 @@ typedef struct stKINETIS_CAN_CONTROL
     volatile unsigned long CAN_CTRL1;
     volatile unsigned long CAN_TIMER;
     unsigned long res0;
-    unsigned long CAN_RXGMASK;
-    unsigned long CAN_RX14MASK;
-    unsigned long CAN_RX15MASK;
+    volatile unsigned long CAN_RXGMASK;
+    volatile unsigned long CAN_RX14MASK;
+    volatile unsigned long CAN_RX15MASK;
     volatile unsigned long CAN_ECR;
     volatile unsigned long CAN_ESR1;
     unsigned long CAN_IMASK2;

@@ -90,6 +90,7 @@
     28.02.2017 Increase UARTs from 6 to 8                                {73}
     18.05.2017 Add fnLogRx()                                             {74}
     19.08.2017 Correct W25Q writes to multiple SPI chips                 {75}
+    18.02.2019 Add CAN frame injection                                   {76}
   
 */   
 #include <windows.h>
@@ -412,16 +413,21 @@ _abort_multi:
         break;
 #if NUMBER_EXTERNAL_SERIAL > 0                                           //  {49}
     case RX_EXT_COM0:                                                    // external UART inputs  (there may be less available)
-        fnSimulateSerialIn(NUMBER_SERIAL, (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        fnSimulateSerialIn(NUMBER_SERIAL, (unsigned char *)argv[1], *(unsigned short *)argv[0]);
         break;
     case RX_EXT_COM1:
-        fnSimulateSerialIn((NUMBER_SERIAL + 1), (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        fnSimulateSerialIn((NUMBER_SERIAL + 1), (unsigned char *)argv[1], *(unsigned short *)argv[0]);
         break;
     case RX_EXT_COM2:
-        fnSimulateSerialIn((NUMBER_SERIAL + 2), (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        fnSimulateSerialIn((NUMBER_SERIAL + 2), (unsigned char *)argv[1], *(unsigned short *)argv[0]);
         break;
     case RX_EXT_COM3:
-        fnSimulateSerialIn((NUMBER_SERIAL + 3), (unsigned char*)argv[1], *(unsigned short *)argv[0]);
+        fnSimulateSerialIn((NUMBER_SERIAL + 3), (unsigned char *)argv[1], *(unsigned short *)argv[0]);
+        break;
+#endif
+#if defined CAN_INTERFACE
+    case SIM_CAN_MESSAGE:                                                // {76}
+        fnSimulateCanIn((int)argv[0], (unsigned long)argv[3], (int)argv[4], (unsigned char *)argv[2], (unsigned char)argv[1]);
         break;
 #endif
 #if defined SPI_INTERFACE

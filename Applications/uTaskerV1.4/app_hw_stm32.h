@@ -278,7 +278,7 @@
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
-#elif defined STM32F407ZG_SK
+#elif defined STM32F407ZG_SK || defined STM32_E407
     #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source
@@ -779,7 +779,7 @@
         #define LPUART_REMAP_G                                           // STLink VCOM
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
-    #elif defined STM3241G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK 
+    #elif defined STM3241G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3241G can't use USART 4 and SD card at the same time so needs a modification for this
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
     #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD)     // {6}
@@ -820,7 +820,7 @@
     #else
         #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
     #endif
-    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
+    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI || defined STM32_E407
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
     #elif !defined STM3241G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)
@@ -965,6 +965,10 @@
     #define SENDERS_EMAIL_ADDRESS             "STM32F407ZG-SK@uTasker.com" // fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "STM32F407ZG-SK"           // email subject
     #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM32F407ZG-SK.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM32F407ZG-SK!!";
+#elif defined STM32_E407
+    #define SENDERS_EMAIL_ADDRESS             "STM32-E407@uTasker.com" // fictional Email address of the board being used
+    #define EMAIL_SUBJECT                     "STM32-E407"           // email subject
+    #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM32-E407.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM32-E407!!";
 #elif defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD
     #define SENDERS_EMAIL_ADDRESS             "ST_MB997A@uTasker.com"    // fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "ST_MB997A"                // email subject
@@ -1501,7 +1505,7 @@
     #define KEYPAD "KeyPads/NUCLEO-144.bmp"
 
     #define TIMER_3_PARTIAL_REMAP
-#elif defined STM32_P207 || defined STM32F407ZG_SK                       // F2/F4
+#elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407 // F2/F4
     #if defined STM32F407ZG_SK
         #define USERS_BUTTON           PORTG_BIT6
     #endif
@@ -1549,7 +1553,9 @@
     #define MOUSE_LEFT()               0
     #define MOUSE_RIGHT()              0
 
-    #if defined STM32F407ZG_SK
+    #if defined STM32_E407
+        #define KEYPAD "KeyPads/STM32-E407.bmp"
+    #elif defined STM32F407ZG_SK
         // LEDs
         //
         #define KEYPAD_LEDS  4
@@ -1736,7 +1742,7 @@
       //#define PHY_INTERRUPT                                            // no PHY interrupt is connected
         #define PHY_POLL_LINK                                            // activate polling of the link state
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
-    #elif defined STM32F407ZG_SK
+    #elif defined STM32F407ZG_SK || defined STM32_E407
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
         #define _ST802RT1B                                               // ST802RT1B PHY used on the board
         #define PHY_ADDRESS_           (0x01)                            // address of PHY on board

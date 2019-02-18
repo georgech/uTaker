@@ -266,6 +266,7 @@
     //#define STM3241G_EVAL                                              // evaluation board with STM32F417IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
+    //#define STM32_E407                                                 // ilimex prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
   //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
@@ -342,8 +343,9 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
     #define KINETIS_KE
     #define KINETIS_KE15
-    #define DEVICE_WITHOUT_ETHERNET                                      // KE doesn't have Ethernet controller
-    #define DEVICE_WITHOUT_USB                                           // KE doesn't have USB
+    #define DEVICE_WITHOUT_ETHERNET                                      // KE15 doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KE15 doesn't have USB
+    #define DEVICE_WITHOUT_CAN                                           // KE15 doesn't have CAN controller
 #elif defined TWR_KE18F
     #define TARGET_HW            "TWR-KE18F"
     #define KINETIS_MAX_SPEED    168000000
@@ -1184,7 +1186,6 @@
     #define TARGET_HW            "NUCLEO-XXXX (STM32L432)"             // 80MHz with FPU
     #define _STM32L4XX
     #define _STM32L432                                                   // part type
-    #define STM32_FPU                                                    // FPU present
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
     #define DEVICE_WITHOUT_USB                                           // the STM32 device has USB but the board doesn't allow it to be used directly
     #define DEVICE_WITHOUT_ETHERNET                                      // the STM32 doesn't have ethernet
@@ -1227,7 +1228,6 @@
     #define TARGET_HW            "NUCLEO-F411RE (STM32F411RET6)"
     #define _STM32F4XX                                                   // part family
     #define _STM32F411                                                   // part group
-    #define STM32_FPU                                                    // FPU present
     #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F401RE
@@ -1238,7 +1238,6 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F429ZI
     #define TARGET_HW            "NUCLEO-F429ZI (STM32F429ZI)"
-    #define STM32_FPU                                                    // FPU present
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define _STM32F4XX                                                   // part group
     #define _STM32F42X
@@ -1246,14 +1245,12 @@
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_L476RG
     #define TARGET_HW            "NUCLEO-L476RG (STM32L476RG)"
-    #define STM32_FPU                                                    // FPU present
     #define _STM32L4XX                                                   // part group
     #define _STM32L47X
     #define _STM32L476
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_L496RG
     #define TARGET_HW            "NUCLEO-L496RG (STM32L496RG)"
-    #define STM32_FPU                                                    // FPU present
     #define _STM32L4XX                                                   // part group
     #define _STM32L4X6                                                   // part group
     #define _STM32L49X
@@ -1271,11 +1268,16 @@
     #define TARGET_HW            "STM3240C-EVAL (STM32F407IGH6)"
     #define _STM32F4XX
     #define _STM32F417
-    #define STM32_FPU                                                    // FPU present
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR) // we have the LAN buffers in HEAP and big RX/TX
 #elif defined STM32F407ZG_SK
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
     #define TARGET_HW            "STM32F407ZG-SK"
+    #define _STM32F4XX
+    #define _STM32F407
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined STM32_E407
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #define TARGET_HW            "STM32-E407"
     #define _STM32F4XX
     #define _STM32F407
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
@@ -2634,7 +2636,7 @@
 #elif defined USE_DHCP_CLIENT && defined IP_NETWORK_COUNT &&  (IP_NETWORK_COUNT > 1)
     #define GLOBAL_TIMER_TASK
 #else
-  //#define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
+    #define GLOBAL_TIMER_TASK                                            // enable a task for global timer tasks
 #endif
 #if defined GLOBAL_TIMER_TASK
     #if defined USE_IGMP && (IGMP_MAX_HOSTS > 1)

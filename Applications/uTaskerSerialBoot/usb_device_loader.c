@@ -3489,9 +3489,9 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #else
             DIR_ENTRY_STRUCTURE_FAT32 *file_object = (DIR_ENTRY_STRUCTURE_FAT32 *)&root_file[ucDisk];
     #endif
-            int i = 0;
+            unsigned int ui = 0;
 
-            while (i < (BYTES_PER_SECTOR/sizeof(DIR_ENTRY_STRUCTURE_FAT32))) { // search the first root directory sector (the file of interest is alwas at the start)
+            while (ui < (BYTES_PER_SECTOR/sizeof(DIR_ENTRY_STRUCTURE_FAT32))) { // search the first root directory sector (the file of interest is alwas at the start)
                 if ((file_object->DIR_Name[0] == DIR_NAME_FREE) && (file_object->DIR_Attr == DIR_ATTR_ARCHIVE)) { // {22} deleted file entry found indicates that a deletion has taken place
     #if defined DEBUG_CODE || defined DEBUG_MAC
                     fnDebugMsg("Deleting (1)\r\n");
@@ -3520,7 +3520,7 @@ static int _fnWriteSector(unsigned char ucDisk, unsigned char *ptrBuffer, unsign
     #endif
                 }
                 file_object++;
-                i++;
+                ui++;
             }
     #if !defined USB_MSD_PARAMETER_FILE
         #if defined FAT_EMULATION

@@ -403,6 +403,10 @@ extern int fnConfigureRTC(void *ptrSettings)
     #endif
         }
     #if !defined SUPPORT_SW_RTC && !(defined KINETIS_KE && !defined KINETIS_WITH_SRTC)
+        #if defined RTC_CLOCKOUT_ENABLE_32kHz && defined RTC_CR_CPE
+        RTC_CR |= (RTC_CR_CPE | RTC_CR_CPS_32k);                         // select 32kHz for output on RTC_CLKOUT
+        RTC_CR &= ~(RTC_CR_CLKO);                                        // allow the 32kHz signal to be passed to other peripherals
+        #endif
         RTC_SR = RTC_SR_TCE;                                             // enable counter
     #endif
         break;

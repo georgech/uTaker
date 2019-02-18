@@ -2045,9 +2045,18 @@ extern void fnResetBoard(void)
 #endif
 }
 
-#if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC
+#if defined CLKOUT_AVAILABLE
 extern int fnClkout(int iClockSource)                                    // {120}
 {
+    #if defined KINETIS_WITH_PCC
+    switch (iClockSource) {                                              // set the required clock source to be output on CLKOUT
+    case RTC_CLOCK_OUT:
+        _CONFIG_PERIPHERAL(C, 5, (PC_5_RTC_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (the RTC must be operating for the signal to be present)
+        break;
+    default:
+        return -1;                                                       // unsupported
+    }
+    #else
     unsigned long ulSIM_SOPT2 = (SIM_SOPT2 & ~(SIM_SOPT2_CLKOUTSEL_MASK)); // original control register value with clock source masked
     switch (iClockSource) {                                              // set the required clock source to be output on CLKOUT
     case FLASH_CLOCK_OUT:
@@ -2095,6 +2104,7 @@ extern int fnClkout(int iClockSource)                                    // {120
     _CONFIG_PERIPHERAL(A, 6, (PA_6_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
     #else
     _CONFIG_PERIPHERAL(C, 3, (PC_3_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin
+    #endif
     #endif
     return 0;                                                            // valid clock source has been selected
 }
@@ -2479,17 +2489,21 @@ static void _LowLevelInit(void)
     #include "kinetis_K_CLOCK.h"                                         // K clock configuration
 #endif
 
-#if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC                // select the clock signal to be driven on CLKOUT pin
-    #if defined KINETIS_K64
-      //fnClkout(FLEXBUS_CLOCK_OUT);                                     // select the clock to monitor on CLKOUT
-    #endif
-    #if defined LOW_POWER_OSCILLATOR_CLOCK_OUT
-      //fnClkout(LOW_POWER_OSCILLATOR_CLOCK_OUT);
-    #endif
+#if defined CLKOUT_AVAILABLE                                             // select the clock signal to be driven on CLKOUT pin
+    #if defined KINETIS_WITH_PCC
+    fnClkout(RTC_CLOCK_OUT);
+    #else
+        #if defined KINETIS_K64
+  //fnClkout(FLEXBUS_CLOCK_OUT);                                         // select the clock to monitor on CLKOUT
+        #endif
+        #if defined LOW_POWER_OSCILLATOR_CLOCK_OUT
+  //fnClkout(LOW_POWER_OSCILLATOR_CLOCK_OUT);
+        #endif
   //fnClkout(INTERNAL_IRC48M_CLOCK_OUT);
   //fnClkout(INTERNAL_LIRC_CLOCK_OUT);                                   // equivalent to INTERNAL_MCGIRCLK_CLOCK_OUT
   //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
   //fnClkout(RTC_CLOCK_OUT);
+    #endif
 #endif
 #if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader

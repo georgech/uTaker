@@ -118,10 +118,13 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define ARM_MATH_CM0PLUS                                             // cortex-M0+ to be used
 #elif defined _STM32F7XX                                                 // cortex-M7
     #define ARM_MATH_CM7
+    #define STM32_FPU
 #elif defined _STM32F103X
     #define ARM_MATH_CM3                                                 // cortex-M3 to be used
+    #define STM32_FPU
 #else
     #define ARM_MATH_CM4                                                 // cortex-M4 to be used
+    #define STM32_FPU
 #endif
 
 #if defined STM32_FPU
@@ -292,6 +295,48 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 // ADC configuration
 //
 #define ADC_CONTROLLERS 3
+
+#if defined _STM32F7XX
+    #define PORTS_AVAILABLE      11
+    #define CHIP_HAS_UARTS       8
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         4
+#elif defined _STM32F429 || defined _STM32F427
+    #define PORTS_AVAILABLE      11
+    #define CHIP_HAS_UARTS       8
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         3
+#elif defined _STM32F2XX || defined _STM32F4XX
+    #define PORTS_AVAILABLE      9
+    #define CHIP_HAS_UARTS       6
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         3
+#elif defined _STM32L432 || defined _STM32L0x1
+    #define PORTS_AVAILABLE      8
+    #define CHIP_HAS_UARTS       2
+    #define CHIP_HAS_LPUARTS     1
+    #define CHIP_HAS_I2C         3
+    #define CHIP_HAS_NO_I2C2
+#elif defined _STM32F031
+    #define PORTS_AVAILABLE      6
+    #define CHIP_HAS_UARTS       1
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         3
+    #define CHIP_HAS_NO_I2C2
+#elif defined _STM32L4X5 || defined _STM32L4X6
+    #define PORTS_AVAILABLE      9
+    #define CHIP_HAS_UARTS       6
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         3
+#else
+    #define PORTS_AVAILABLE      5
+    #define CHIP_HAS_UARTS       5
+    #define CHIP_HAS_LPUARTS     0
+    #define CHIP_HAS_I2C         2
+#endif
+
+#define I2C_AVAILABLE            CHIP_HAS_I2C                            // for compatibility
+#define LPI2C_AVAILABLE          0                                       // for compatibility (low power I2C interfaces)
 
 
 // Clock settings
@@ -1089,7 +1134,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define IWDG_BLOCK                  ((unsigned char *)(&STM32.IWDG))       // Independent Watchdog
     #define I2C1_BLOCK                  ((unsigned char *)(&STM32.I2C[0]))     // I2C1
     #define I2C2_BLOCK                  ((unsigned char *)(&STM32.I2C[1]))     // I2C2
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX         // {6}
+    #if CHIP_HAS_I2C > 2
         #define I2C3_BLOCK              ((unsigned char *)(&STM32.I2C[2]))     // I2C3
     #endif
     #define TIM2_BLOCK                  ((unsigned char *)(&STM32.TIM2_3_4_5[0])) // TIM2
@@ -8491,49 +8536,6 @@ typedef struct stADC_SETUP
 //#define ADC_DIFFERENTIAL_B              0x80000000
 
 
-
-
-#if defined _STM32F7XX
-    #define PORTS_AVAILABLE      11
-    #define CHIP_HAS_UARTS       8
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         4
-#elif defined _STM32F429 || defined _STM32F427
-    #define PORTS_AVAILABLE      11
-    #define CHIP_HAS_UARTS       8
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         3
-#elif defined _STM32F2XX || defined _STM32F4XX
-    #define PORTS_AVAILABLE      9
-    #define CHIP_HAS_UARTS       6
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         3
-#elif defined _STM32L432 || defined _STM32L0x1
-    #define PORTS_AVAILABLE      8
-    #define CHIP_HAS_UARTS       2
-    #define CHIP_HAS_LPUARTS     1
-    #define CHIP_HAS_I2C         3
-    #define CHIP_HAS_NO_I2C2
-#elif defined _STM32F031
-    #define PORTS_AVAILABLE      6
-    #define CHIP_HAS_UARTS       1
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         3
-    #define CHIP_HAS_NO_I2C2
-#elif defined _STM32L4X5 || defined _STM32L4X6
-    #define PORTS_AVAILABLE      9
-    #define CHIP_HAS_UARTS       6
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         3
-#else
-    #define PORTS_AVAILABLE      5
-    #define CHIP_HAS_UARTS       5
-    #define CHIP_HAS_LPUARTS     0
-    #define CHIP_HAS_I2C         2
-#endif
-
-#define I2C_AVAILABLE            CHIP_HAS_I2C                            // for compatibility
-#define LPI2C_AVAILABLE          0                                       // for compatibility (low power I2C interfaces)
 
 #define PORT_WIDTH       16
 

@@ -18,6 +18,7 @@
     02.03.2017 Move controller clock source configuration to after setting freeze mode (due to problems with at least some parts) {3}
     14.03.2017 Set CAN clock before entering freeze mode but write further setting after moving to freeze mode {4}
     03.09.2018 Extend to 3 CAN controllers
+    15.02.2019 Wait until freeze mode has been confirmed when setting filters {5}
 
 */
 
@@ -631,6 +632,11 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
     }
 
     ptrCAN_control->CAN_MCR |= (CAN_FRZ | CAN_HALT);                     // move to freeze mode
+    while ((ptrCAN_control->CAN_MCR & CAN_FRZACK) == 0) {                // {5} wait until freeze mode has been entered
+    #if defined _WINDOWS
+        ptrCAN_control->CAN_MCR |= CAN_FRZACK;
+    #endif
+    }
 
     for (i = 0; i < NUMBER_CAN_MESSAGE_BUFFERS; i++) {                   // initialise the requested number of transmit buffers
         if (ucTxCnt == 0) {
@@ -691,7 +697,9 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
             ptrCanQue->TaskToWake = pars->Task_to_wake;
             if ((pars->ulRxID & CAN_EXTENDED_ID) != 0) {
                 if (ptrFirstAllocated == ptrMessageBuffer) {
-                    ptrCAN_control->CAN_RX15MASK = pars->ulRxIDMask;     // first allocated receiver buffer has special mask
+                    do {
+                        ptrCAN_control->CAN_RX15MASK = pars->ulRxIDMask; // first allocated receiver buffer has special mask
+                    } while (ptrCAN_control->CAN_RX15MASK != pars->ulRxIDMask); // even after entereing in to freeze mode is is sometimes found that this register can't be set immediately
                 }
                 else if (ptrSecondAllocated == ptrMessageBuffer) {
                     ptrCAN_control->CAN_RX14MASK = pars->ulRxIDMask;     // second allocated receiver buffer has special mask
@@ -721,6 +729,9 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
         ptrCanQue--;
     }
     ptrCAN_control->CAN_MCR &= ~(CAN_FRZ | CAN_HALT);                    // leave freeze mode and start synchronisation
+    #if defined _WINDOWS
+    ptrCAN_control->CAN_MCR &= ~CAN_FRZACK;
+    #endif
 #endif
 }
 

@@ -134,6 +134,7 @@
     06.10.2018 Allow display of mixed port widths for processor and external ports {113}
     25.12.2018 Only update processor image when its rectangle has been invalidated {114}
     26.12.2018 Add iMX                                                   {115}
+    18.02.2019 Add CAN frame injection                                   {116}
 
     */
 
@@ -4210,6 +4211,19 @@ extern void fnInjectI2C(unsigned char *ptrInputData, unsigned short usLength, in
     else {
         _main(SIM_I2C_OUT, ptr);
     }
+}
+#endif
+
+#if defined CAN_INTERFACE                                                // {116}
+extern void fnInjectCAN(unsigned char *ptrData, unsigned long ulCanID, int iRTR, unsigned char ucLength, int iCAN_controller)
+{
+    char *ptr[5];
+    ptr[0] = (char *)iCAN_controller;
+    ptr[1] = (char *)ucLength;
+    ptr[2] = (char *)ptrData;
+    ptr[3] = (char *)ulCanID;
+    ptr[4] = (char *)iRTR;
+    _main(SIM_CAN_MESSAGE, ptr);
 }
 #endif
 

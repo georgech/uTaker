@@ -712,7 +712,7 @@ extern unsigned long fnSimInts(char *argv[])
                 iMasks |= I2C_INT2;                                      // enough I2C interupts handled in this tick period
             }
             else {
-#if defined I2C_INTERFACE
+    #if defined I2C_INTERFACE
 		        iInts &= ~I2C_INT2;
                 I2C3_SR1 |= I2C_SR1_TxE;                                 // transmitter buffer empty
                 I2C3_SR1 &= ~(I2C_SR1_BTF);                              // transfer not yet complete
@@ -729,7 +729,7 @@ extern unsigned long fnSimInts(char *argv[])
                         }
                     }
                 }
-#endif
+    #endif
             }
         }
     }
@@ -3795,6 +3795,12 @@ extern void fnSimCAN(int iChannel, int iBufferNumber, int iSpecial)
         }
     #endif
     }
+}
+
+extern void fnSimulateCanIn(int iChannel, unsigned long ilID, int iRTR, unsigned char *ptrData, unsigned char ucDLC)
+{
+    static unsigned short usTimeStamp = 0;
+    fnCAN_reception(iChannel, ucDLC, ptrData, ilID, ilID, iRTR, usTimeStamp++, 0);
 }
 #endif
 
