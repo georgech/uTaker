@@ -19,6 +19,7 @@
     14.03.2017 Set CAN clock before entering freeze mode but write further setting after moving to freeze mode {4}
     03.09.2018 Extend to 3 CAN controllers
     15.02.2019 Wait until freeze mode has been confirmed when setting filters {5}
+    20.02.2019 Verify filter setting writes before continuing and optimise code to save space {6}
 
 */
 
@@ -581,6 +582,23 @@ extern void fnInitCAN(CANTABLE *pars)
 #endif
 }
 
+static void fnSetFilterMask(KINETIS_CAN_CONTROL *ptrCAN_control, KINETIS_CAN_BUF *ptrMessageBuffer, unsigned long ulRxIDMask)
+{
+    volatile unsigned long *ptrMaskRegister;
+    if (&ptrCAN_control->CAN_MBUFF15 == ptrMessageBuffer) {
+        ptrMaskRegister = &ptrCAN_control->CAN_RX15MASK;                 // first allocated receiver buffer has unique filter mask
+    }
+    else if (&ptrCAN_control->CAN_MBUFF14 == ptrMessageBuffer) {
+        ptrMaskRegister = &ptrCAN_control->CAN_RX14MASK;                 // second allocated receiver buffer has unique filter mask
+    }
+    else {
+        ptrMaskRegister = &ptrCAN_control->CAN_RXGMASK;                  // subsequent receiver buffers have general filter mask
+    }
+    do {
+        *ptrMaskRegister = ulRxIDMask;                                   // write the mask value
+    } while (*ptrMaskRegister != ulRxIDMask);                            // {6} even after entereing in to freeze mode is is sometimes found that this register can't be set immediately so we write until it sticks
+}
+
 // Hardware configuration of CAN controller
 //
 extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
@@ -602,36 +620,29 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
     unsigned char ucTxCnt = pars->ucTxBuffers;
     unsigned char ucRxCnt = pars->ucRxBuffers;
     KINETIS_CAN_BUF *ptrMessageBuffer;
-    KINETIS_CAN_BUF *ptrFirstAllocated;
-    KINETIS_CAN_BUF *ptrSecondAllocated;
     KINETIS_CAN_CONTROL *ptrCAN_control;
     CANQUE *ptrCanQue;
 
     switch (pars->Channel) {                                             // the CAN controller to use
     case 0:
-        ptrCanQue = can_queue[0];
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN0_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_0;                                 // the first of 16 message buffers in the FlexCan module
         break;
     #if NUMBER_OF_CAN_INTERFACES > 1
     case 1:
-        ptrCanQue = can_queue[1];
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN1_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_1;                                 // the first of 16 message buffers in the FlexCan module
         break;
     #endif
     #if NUMBER_OF_CAN_INTERFACES > 2
     case 2:
-        ptrCanQue = can_queue[2];
         ptrCAN_control = (KINETIS_CAN_CONTROL *)CAN2_BASE_ADD;
-        ptrMessageBuffer = MBUFF0_ADD_2;                                 // the first of 16 message buffers in the FlexCan module
         break;
     #endif
     default:
         return;
     }
-
+    ptrCanQue = can_queue[pars->Channel];
     ptrCAN_control->CAN_MCR |= (CAN_FRZ | CAN_HALT);                     // move to freeze mode
+    ptrMessageBuffer = &ptrCAN_control->CAN_MBUFF0;                      // the first of 16 message buffers in the FlexCan module
     while ((ptrCAN_control->CAN_MCR & CAN_FRZACK) == 0) {                // {5} wait until freeze mode has been entered
     #if defined _WINDOWS
         ptrCAN_control->CAN_MCR |= CAN_FRZACK;
@@ -665,65 +676,32 @@ extern void fnConfigCAN(QUEUE_HANDLE DriverID, CANTABLE *pars)
         ptrMessageBuffer++;
         ptrCanQue++;
     }
-    switch (pars->Channel) {                                             // the CAN controller to use
-    case 0:
-        ptrMessageBuffer = MBUFF15_ADD_0;
-        ptrFirstAllocated = MBUFF15_ADD_0;
-        ptrSecondAllocated = MBUFF14_ADD_0;
-        break;
-    #if NUMBER_OF_CAN_INTERFACES > 1
-    case 1:
-        ptrMessageBuffer = MBUFF15_ADD_1;
-        ptrFirstAllocated = MBUFF15_ADD_1;
-        ptrSecondAllocated = MBUFF14_ADD_1;
-        break;
-    #endif
-    #if NUMBER_OF_CAN_INTERFACES > 2
-    case 2:
-        ptrMessageBuffer = MBUFF15_ADD_2;
-        ptrFirstAllocated = MBUFF15_ADD_2;
-        ptrSecondAllocated = MBUFF14_ADD_2;
-        break;
-    #endif
-    }
-    ptrCanQue = &can_queue[pars->Channel][NUMBER_CAN_MESSAGE_BUFFERS - 1];
+    ptrMessageBuffer = &ptrCAN_control->CAN_MBUFF15;                     // the last of 16 message buffers in the FlexCan module
+    ptrCanQue = &can_queue[pars->Channel][NUMBER_CAN_MESSAGE_BUFFERS - 1]; // start at last receive message buffer
     for (i = 0; i < NUMBER_CAN_MESSAGE_BUFFERS; i++) {                   // initialise the requested number of receive buffers
         if (ucRxCnt == 0) {
             break;
         }
         if (0 == ptrCanQue->DriverID) {                                  // not yet allocated
+            unsigned long ulFilterMask;
+            unsigned long ulReceptionID;
+            unsigned long ulExtendedReception;
             ucRxCnt--;
             ptrCanQue->DriverID = DriverID;
             ptrCanQue->TaskToWake = pars->Task_to_wake;
             if ((pars->ulRxID & CAN_EXTENDED_ID) != 0) {
-                if (ptrFirstAllocated == ptrMessageBuffer) {
-                    do {
-                        ptrCAN_control->CAN_RX15MASK = pars->ulRxIDMask; // first allocated receiver buffer has special mask
-                    } while (ptrCAN_control->CAN_RX15MASK != pars->ulRxIDMask); // even after entereing in to freeze mode is is sometimes found that this register can't be set immediately
-                }
-                else if (ptrSecondAllocated == ptrMessageBuffer) {
-                    ptrCAN_control->CAN_RX14MASK = pars->ulRxIDMask;     // second allocated receiver buffer has special mask
-                }
-                else {
-                    ptrCAN_control->CAN_RXGMASK = pars->ulRxIDMask;      // initialise general acceptance mask for use with subsequent buffers
-                }
-                ptrMessageBuffer->ulID = (pars->ulRxID & CAN_EXTENDED_MASK); // enter reception ID for the buffer
-                ptrMessageBuffer->ulCode_Len_TimeStamp = (MB_RX_EMPTY | IDE); // enable extended ID reception
+                ulFilterMask = pars->ulRxIDMask;
+                ulReceptionID = (pars->ulRxID & CAN_EXTENDED_MASK);
+                ulExtendedReception = (MB_RX_EMPTY | IDE);               // extended reception
             }
-            else {                                                       // standard ID
-                unsigned long ulMask = ((pars->ulRxIDMask << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK);
-                if (ptrFirstAllocated == ptrMessageBuffer) {
-                    ptrCAN_control->CAN_RX15MASK = ulMask;               // first allocated receiver buffer has special mask
-                }
-                else if (ptrSecondAllocated == ptrMessageBuffer) {
-                    ptrCAN_control->CAN_RX14MASK = ulMask;               // second allocated receiver buffer has special mask
-                }
-                else {
-                    ptrCAN_control->CAN_RXGMASK = ulMask;                // initialise general acceptance mask for use with subsequent buffers
-                }
-                ptrMessageBuffer->ulID = ((pars->ulRxID << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK); // enter reception ID for the buffer
-                ptrMessageBuffer->ulCode_Len_TimeStamp = MB_RX_EMPTY;    // enable reception
+            else {
+                ulFilterMask = ((pars->ulRxIDMask << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK);
+                ulReceptionID = ((pars->ulRxID << CAN_STANDARD_SHIFT) & CAN_STANDARD_BITMASK); // enter reception ID for the buffer
+                ulExtendedReception = MB_RX_EMPTY;                       // standard reception
             }
+            fnSetFilterMask(ptrCAN_control, ptrMessageBuffer, ulFilterMask); // {6} set filter mask
+            ptrMessageBuffer->ulID = ulReceptionID;                      // enter reception ID for the buffer
+            ptrMessageBuffer->ulCode_Len_TimeStamp = ulExtendedReception;// enable reception at the buffer
         }
         ptrMessageBuffer--;
         ptrCanQue--;

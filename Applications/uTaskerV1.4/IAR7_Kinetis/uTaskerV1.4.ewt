@@ -3630,6 +3630,15 @@
     </file>
   </group>
   <group>
+    <name>Test</name>
+    <group>
+      <name>LTC_AES</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\NXP\LTC_TEST\ltc_aes.c</name>
+      </file>
+    </group>
+  </group>
+  <group>
     <name>uTasker</name>
     <group>
       <name>MODBUS</name>
@@ -3638,6 +3647,36 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\uTasker\MODBUS\modbus.h</name>
+      </file>
+    </group>
+    <group>
+      <name>uCANopen</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CANopen.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_driver.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_Emergency.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_HBconsumer.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_PDO.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SDO.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SYNC.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\crc16-ccitt.c</name>
       </file>
     </group>
     <group>
@@ -3766,6 +3805,9 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\snmp_mib_handlers.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\..\uCANopenApp.c</name>
   </file>
   <file>
     <name>$PROJ_DIR$\..\usb_application.c</name>

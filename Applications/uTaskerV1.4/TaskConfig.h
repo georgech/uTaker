@@ -35,50 +35,51 @@
     10.11.2017 Add MQTT task                                             {14}
     04.05.2018 Add DMX512 task                                           {15}
     20.01.2019 Add HELLO_WORLD configuration                             {16}
+    19.02.2019 Add CANopen task                                          {17}
 
 */
  
 
 /******************************** The tasks used in the system ********************************************/
 /* Warning - each task must use a unique letter equivalent to the start of its task name                  */
-#define TASK_WATCHDOG           'W'                                      // watchdog task
-#define TASK_ETHERNET           'E'                                      // ethernet task
+#define TASK_TTY                ' '                                      // pseudo task used to receive TTY event messages from
 #define TASK_ARP                'A'                                      // ARP task
-#define TASK_TCP                'T'                                      // TCP task
+#define TASK_APPLICATION        'a'                                      // application task
+#define TASK_CANOPEN            'C'                                      // {17} CANopen task
+#define TASK_CAN_SIM            'c'                                      // CAN simulator task
 #define TASK_DHCP               'D'                                      // DHCP task
 #define TASK_DNS                'd'                                      // DNS task
-#define TASK_POP3               'P'                                      // POP 3 task
-#define TASK_PPP                'U'                                      // PPP task
-#define TASK_SMTP               'S'                                      // SMTP task
+#define TASK_ETHERNET           'E'                                      // ethernet task
 #define TASK_FTP                'F'                                      // FTP task
-#define TASK_TFTP               't'                                      // TFTP task
-#define TASK_APPLICATION        'a'                                      // application task
-#define TASK_CAN_SIM            'c'                                      // CAN simulator task
-#define TASK_DEBUG              'm'                                      // debugger (maintenance) task
-#define TASK_TIMER              'p'                                      // timer task for global timer use
-#define TASK_LCD                'L'                                      // application LCD task
-#define TASK_KEY                'K'                                      // keyboard scanning task
-#define TASK_NETWORK_INDICATOR  'N'                                      // task displaying network activity
-#define TASK_DATA_SOCKET        's'                                      // task handling data socket
-#define TASK_ICMP               'i'                                      // this is a pseudotask for sending ping results
-#define TASK_IGMP               'I'                                      // {10} IGMP task
-#define TASK_LOW_POWER          'l'                                      // task supporting power saving
-#define TASK_SNMP               'n'                                      // SnMP protocol task
-#define TASK_USB                'u'                                      // USB task
 #define TASK_USB_HOST           'H'                                      // {13} USB host task
-#define TASK_MODBUS             'O'                                      // MODBUS task
-#define TASK_MASS_STORAGE       'M'                                      // {5} mass storage task
-#define TASK_ZERO_CONFIG        'z'                                      // {7} zero config task
+#define TASK_IGMP               'I'                                      // {10} IGMP task
+#define TASK_ICMP               'i'                                      // this is a pseudotask for sending ping results
+#define TASK_KEY                'K'                                      // keyboard scanning task
 #define TASK_TIME_KEEPER        'k'                                      // {12} time keeper task (RTC/SNTP)
+#define TASK_LCD                'L'                                      // application LCD task
+#define TASK_LOW_POWER          'l'                                      // task supporting power saving
+#define TASK_MASS_STORAGE       'M'                                      // {5} mass storage task
+#define TASK_DEBUG              'm'                                      // debugger (maintenance) task
+#define TASK_NETWORK_INDICATOR  'N'                                      // task displaying network activity
+#define TASK_SNMP               'n'                                      // SnMP protocol task
+#define TASK_MODBUS             'O'                                      // MODBUS task
+#define TASK_POP3               'P'                                      // POP 3 task
+#define TASK_TIMER              'p'                                      // timer task for global timer use
 #define TASK_MQTT               'Q'                                      // {14} MQTT task
-#define TASK_DMX512             '5'                                      // {15} DMX512 task
-#define TASK_TTY                ' '                                      // pseudo task used to receive TTY event messages from
-
+#define TASK_SMTP               'S'                                      // SMTP task
+#define TASK_DATA_SOCKET        's'                                      // task handling data socket
+#define TASK_TCP                'T'                                      // TCP task
+#define TASK_TFTP               't'                                      // TFTP task
+#define TASK_PPP                'U'                                      // PPP task
+#define TASK_USB                'u'                                      // USB task
+#define TASK_WATCHDOG           'W'                                      // watchdog task
+#define TASK_ZERO_CONFIG        'z'                                      // {7} zero config task
 #define TASK_STEPPER_MOTOR      '0'
 #define TASK_DEV_1              '1'
 #define TASK_DEV_2              '2'
 #define TASK_DEV_3              '3'
 #define TASK_DEV_4              '4'
+#define TASK_DMX512             '5'                                      // {15} DMX512 task
 #undef  OWN_TASK
 
 extern void fnHTTP_task(TTASKTABLE *ptrTaskTable);
@@ -117,6 +118,7 @@ extern void fnZeroConfig(TTASKTABLE *);                                  // {7}
 extern void fnTimeKeeper(TTASKTABLE *ptrTaskTable);                      // {12}
 extern void fnMQTT(TTASKTABLE *ptrTaskTable);                            // {14}
 extern void fnDMX512(TTASKTABLE *ptrTaskTable);                          // {15}
+extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable);                     // {17}
 #if defined STEPPER_MOTOR_EXAMPLE
     extern void fnStepper(TTASKTABLE *);
 #endif
@@ -237,6 +239,9 @@ const UTASK_TASK ctNodes[] = {                                           // we u
 #if defined STEPPER_MOTOR_EXAMPLE
     TASK_STEPPER_MOTOR,
 #endif
+#if defined CAN_INTERFACE && defined SUPPORT_CANopen
+    TASK_CANOPEN,
+#endif
 #if defined QUICK_DEV_TASKS && (!defined BLINKY && !defined HELLO_WORLD) // {16}
     TASK_DEV_1,
     TASK_DEV_2,
@@ -279,12 +284,12 @@ const UTASKTABLEINIT ctTaskTable[] = {
     {"O-MOD",     fnMODBUS,     MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // MODBUS task  
 #endif
 #if defined _EXE && defined ETH_INTERFACE && (!defined BLINKY || defined HELLO_WORLD)
-    {"app",       fnApplication,  MEDIUM_QUEUE, (DELAY_LIMIT)((0.5 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
+    {"app",       fnApplication,MEDIUM_QUEUE, (DELAY_LIMIT)((0.5 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
 #elif (!defined BLINKY || defined HELLO_WORLD)
-    {"app",       fnApplication,  MEDIUM_QUEUE, (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
+    {"app",       fnApplication,MEDIUM_QUEUE, (DELAY_LIMIT)((0.10 * SEC) + (PHY_POWERUP_DELAY)), 0, UTASKER_STOP}, // application - start after Ethernet to be sure we have Ethernet handle
 #endif
 #if defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined FLASH_FAT || defined MANAGED_FILES || defined USB_MSD_HOST
-    {"MassSt",    fnMassStorage,  MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
+    {"MassSt",    fnMassStorage,MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP}, // mass storage task
 #endif
 #if defined USE_MQTT_CLIENT || defined USE_MQTT_BROKER                   // {14}
     {"Q-mqtt",    fnMQTT,       SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP },
@@ -315,6 +320,9 @@ const UTASKTABLEINIT ctTaskTable[] = {
 #endif
 #if defined USE_ZERO_CONFIG
     {"zero",      fnZeroConfig, SMALL_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
+#endif
+#if defined CAN_INTERFACE && defined SUPPORT_CANopen
+    {"CANopen",   fnTaskCANopen,MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},
 #endif
 #if defined SUPPORT_LCD
     {"LCD",       fnLCD,        MEDIUM_QUEUE, (DELAY_LIMIT)(NO_DELAY_RESERVE_MONO), 0, UTASKER_STOP},

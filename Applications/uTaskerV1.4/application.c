@@ -130,6 +130,7 @@
     04.05.2018 Add DMX512                                                {109}
     02.06.2018 Zero optional user UART callback handlers                 {110}
     05.07.2018 Add SPI tests                                             {111}
+    19.02.2019 Add uCANopen                                              {112}
 
 */
 
@@ -731,6 +732,9 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
     #if defined USE_TELNET || defined USE_TELNET_CLIENT
         uTaskerStateChange(TASK_DEBUG, UTASKER_ACTIVATE);                // schedule the debug task so that it can configure telnet use
     #endif
+    #if defined CAN_INTERFACE && defined SUPPORT_CANopen                 // {112}
+        uTaskerStateChange(TASK_CANOPEN, UTASKER_ACTIVATE);              // schedule the CANopen task so that it can start its operation 
+    #endif  
 #endif
 #if defined SERIAL_INTERFACE && defined DEMO_UART                        // {32} this serial interface is used for debug output and menu based control
         if (NO_ID_ALLOCATED == (SerialPortID = fnSetNewSerialMode(0, FOR_I_O))) { // open serial port for I/O

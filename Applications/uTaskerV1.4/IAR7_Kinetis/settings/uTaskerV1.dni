@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=-1060269978
+Checksum=182455484
 [DisAssemblyWindow]
 NumStates=_ 1
 State 1=_ 1
@@ -61,7 +61,7 @@ OnlineReset=Software
 PrevWtdReset=System
 LeaveRunning=0
 [PlDriver]
-MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKL28Z512xxx7.ddf
+MemConfigValue=D:\Programs\IAR Systems\Embedded Workbench 7.5\arm\CONFIG\debugger\NXP\MKE15Z256xxx7.ddf
 FirstRun=0
 [ArmDriver]
 EnableCache=1
@@ -180,6 +180,11 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
+[Breakpoints]
+Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis.c}.977.5" 0 0 0 0 "" 0 "" 0
+Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.2960.1" 0 0 0 0 "" 0 "" 0
+Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.1632.9" 0 0 0 0 "" 0 "" 0
+Count=3
 [ETMTraceWindow]
 PortWidth=4
 PortMode=0
@@ -220,6 +225,21 @@ Fmt2={W}1:ulLastCapture	4	4
 [Trace1]
 Enabled=0
 ShowSource=1
+[Disassemble mode]
+mode=3
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\application.c}.608.5" 0 0 1 "" 0 "" 0
+Count=1
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Aliases]
+Count=0
+SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=1
@@ -230,27 +250,3 @@ Exclusions=
 Enabled=0
 [CallStackStripe]
 ShowTiming=1
-[Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "0x00004E30" 0 0 1 "" 0 "" 0
-Bp1=_ 0 "EMUL_CODE" "0x00005130" 0 0 1 "" 0 "" 0
-Bp2=_ 0 "EMUL_CODE" "0x000013D0" 0 0 1 "" 0 "" 0
-Bp3=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\debug.c}.4133.15" 0 0 1 "" 0 "" 0
-Bp4=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\..\uTasker\crypto.c}.133.5" 0 0 1 "" 0 "" 0
-Count=5
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[Disassemble mode]
-mode=3
-[Breakpoints]
-Bp0=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Hardware\Kinetis\kinetis.c}.896.5" 0 0 0 0 "" 0 "" 0
-Bp1=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.2906.5" 0 0 0 0 "" 0 "" 0
-Bp2=_ "STD_CODE" "{D:\MJBC\Internal\Freescale\Kinetis\workspace\uTaskerV1.4.12_master\Applications\uTaskerV1.4\application.c}.1626.9" 0 0 0 0 "" 0 "" 0
-Count=3
-[Aliases]
-Count=0
-SuppressDialog=0

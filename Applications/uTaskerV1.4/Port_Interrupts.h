@@ -22,6 +22,7 @@
     11.12.2015 Add DMA port mirroring reference                           {7}
     19.10.2017 Add DMA_SPI_BURST reference (DMA port trigger of SPI Tx/Rx sequence controlled by DMA) {8}
     20.01.2019 Add iMX
+    19.02.2019 fnSendCAN() removed
     Note that the external interrupt tests are not suitable for LPC210x as in this file
 
     The file is otherwise not specifically linked in to the project since it
@@ -104,15 +105,9 @@
         #else
                         fnDebugMsg("4");
         #endif
-        #if defined CAN_INTERFACE && defined TEST_CAN
-                        fnSendCAN(1);                                    // {4}
-        #endif
                         break;
                     case IRQ5_EVENT:
                         fnDebugMsg("5");
-        #if defined CAN_INTERFACE && defined TEST_CAN
-                        fnSendCAN(7);                                    // {4}
-        #endif
                         break;
                     case IRQ7_EVENT:
                         fnDebugMsg("7");

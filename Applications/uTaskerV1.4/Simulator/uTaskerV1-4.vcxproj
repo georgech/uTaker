@@ -1721,6 +1721,15 @@ Build_Luminary.bat</Command>
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c" />
     <ClCompile Include="..\..\..\uTasker\SPI_drv.c" />
     <ClCompile Include="..\..\..\uTasker\time_keeper.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CANopen.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_driver.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_Emergency.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_HBconsumer.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_PDO.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SDO.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SYNC.c" />
+    <ClCompile Include="..\..\..\uTasker\uCANopen\crc16-ccitt.c" />
     <ClCompile Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.c" />
     <ClCompile Include="..\..\..\WinSim\Komodo\komodo.c" />
     <ClCompile Include="..\..\..\WinSim\serial_dev.c">
@@ -1887,6 +1896,7 @@ Build_Luminary.bat</Command>
     </ClCompile>
     <ClCompile Include="..\nRF24201.c" />
     <ClCompile Include="..\snmp_mib_handlers.c" />
+    <ClCompile Include="..\uCANopenApp.c" />
     <ClCompile Include="..\usb_application.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='uTasker Coldfire plus GNU build|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -3627,7 +3637,12 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PORTS.h" />
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PIT.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PORTS.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_PWM.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
@@ -4699,8 +4714,12 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_device.h" />
-    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_device.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_USB_OTG.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\stack\PPP\arch\cc.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\perf.h" />
     <ClInclude Include="..\..\..\stack\PPP\arch\sys_arch.h" />
@@ -4811,6 +4830,17 @@ Build_Luminary.bat</Command>
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\types.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\visibility.h" />
     <ClInclude Include="..\..\..\stack\SSL\wolfssl-3.9.6\wc_port.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CANopen.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_driver.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_Emergency.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_HBconsumer.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_PDO.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SDO.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SDOmaster.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SYNC.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_trace.h" />
+    <ClInclude Include="..\..\..\uTasker\uCANopen\crc16-ccitt.h" />
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_CoPro_Cmds.h" />
     <ClInclude Include="..\..\..\uTasker\uGLCDLIB\FT_Gpu.h" />
     <ClInclude Include="..\..\..\utasker\uglcdlib\glcd_st7565s.h" />

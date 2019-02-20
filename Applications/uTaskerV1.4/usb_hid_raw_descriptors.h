@@ -11,7 +11,7 @@
     File:      usb_hid_raw_descriptors.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
@@ -111,7 +111,7 @@ static const unsigned char ucRawReport[] = {
 	0x81, 0x02,                                                          // input (array)
 	0x95, HID_RAW_RX_SIZE,                                               // report count
 	0x09, 0x02,                                                          // usage
-	0x91, 0x02,                                                          // Output (array)
+	0x91, 0x02,                                                          // output (array)
 	0xc0                                                                 // end collection
 };
 #endif

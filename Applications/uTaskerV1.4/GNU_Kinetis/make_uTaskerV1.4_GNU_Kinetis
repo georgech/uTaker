@@ -38,6 +38,7 @@
 # 06.09.2018 Add arm_bitreversal.c, arm_cfft_q15.c and arm_cfft_radix4_q15.c
 # 09.10.2018 Add sha256_mbedTLS.c
 # 13.10.2018 Add Kinetis/kinetis_CMP.h
+# 20.02.2019 Add CANopen
 
 #
 # When changing the project target check that the C_FLAGS selection (just below) and the linker script file (at bottom) matches the processor being used
@@ -56,8 +57,10 @@ C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-en
 #
 OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Build/DMX512.o Build/NetworkIndicator.o Build/usb_application.o Build/snmp_mib_handlers.o Build/FreeMaster.o Build/nRF24201.o Build/FreeRTOSapplication.o \
        Build/MODBUS.o Build/modbus_app.o \
+	   Build/uCANopenApp.o \
        Build/mass_storage.o \
-       Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o  \
+       Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o \
+       Build/CANopen.o Build/CO_driver.o Build/CO_Emergency.o Build/CO_HBconsumer.o Build/CO_NMT_Heartbeat.o Build/CO_PDO.o Build/CO_SDO.o Build/CO_SYNC.o Build/crc16-ccitt.o \
        Build/aes_mbedTLS.o Build/sha256_mbedTLS.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o Build/arm_abs_f32.o \
        Build/arm_bitreversal.o Build/arm_cfft_q15.o Build/arm_cfft_radix4_q15.o \
@@ -94,8 +97,21 @@ DEPENDS_CMSIS = ../config.h \
        ../../../Hardware/CMSIS_DSP/arm_const_structs.h \
        ../../../Hardware/CMSIS_DSP/core_cm4.h \
        ../../../Hardware/CMSIS_DSP/cmsis_compiler.h \
-       ../../../Hardware/CMSIS_DSP/cmsis_gcc.h \
-       make_uTaskerV1.4_GNU_Kinetis
+       ../../../Hardware/CMSIS_DSP/cmsis_gcc.h
+
+CANOPEN_DEPENDS = ../config.h \
+       ../CO_OD.h \
+       ../../../uTasker/uCANopen/CANopen.h \
+       ../../../uTasker/uCANopen/CO_driver.h \
+	   ../../../uTasker/uCANopen/CO_Emergency.h \
+	   ../../../uTasker/uCANopen/CO_HBconsumer.h \
+	   ../../../uTasker/uCANopen/CO_NMT_Heartbeat.h \
+	   ../../../uTasker/uCANopen/CO_PDO.h \
+	   ../../../uTasker/uCANopen/CO_SDO.h \
+	   ../../../uTasker/uCANopen/CO_SDOmaster.h \
+	   ../../../uTasker/uCANopen/CO_SYNC.h \
+	   ../../../uTasker/uCANopen/CO_trace.h \
+	   ../../../uTasker/uCANopen/crc16-ccitt.h
        
 
 FREERTOS_INC = ../../../FreeRTOS/Source/include
@@ -205,6 +221,8 @@ Build/nRF24201.o: ../nRF24201.c $(DEPENDS) ../application.h
 Build/FreeRTOSapplication.o: ../FreeRTOSapplication.c $(DEPENDS) $(DEPENDS_FREERTOS) ../application.h
 		$(CC) $(C_FLAGS) $(INC) $(FREERTOS_INCLUDE) $(OPTS) ../FreeRTOSapplication.c -o Build/FreeRTOSapplication.o
 
+Build/uCANopenApp.o: ../uCANopenApp.c $(DEPENDS) ../CO_OD.c ../CO_OD.h ../application.h
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../uCANopenApp.c -o Build/uCANopenApp.o
 
 
 
@@ -358,6 +376,35 @@ Build/FT_CoPro_Cmds.o: ../../../uTasker/uGLCDLIB/FT_CoPro_Cmds.c $(DEPENDS) ../a
 Build/mass_storage.o: ../../../uTasker/utFAT/mass_storage.c $(DEPENDS) ../../../uTasker/utFAT/mass_storage.h ../../../uTasker/utFAT/NAND_driver.h
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/utFAT/mass_storage.c -o Build/mass_storage.o
 
+# CANopen
+#
+Build/CANopen.o: ../../../uTasker/uCANopen/CANopen.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CANopen.c -o Build/CANopen.o
+
+Build/CO_driver.o: ../../../uTasker/uCANopen/CO_driver.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_driver.c -o Build/CO_driver.o
+
+Build/CO_Emergency.o: ../../../uTasker/uCANopen/CO_Emergency.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_Emergency.c -o Build/CO_Emergency.o
+
+Build/CO_HBconsumer.o: ../../../uTasker/uCANopen/CO_HBconsumer.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_HBconsumer.c -o Build/CO_HBconsumer.o
+
+Build/CO_NMT_Heartbeat.o: ../../../uTasker/uCANopen/CO_NMT_Heartbeat.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_NMT_Heartbeat.c -o Build/CO_NMT_Heartbeat.o
+
+Build/CO_PDO.o: ../../../uTasker/uCANopen/CO_PDO.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_PDO.c -o Build/CO_PDO.o
+
+Build/CO_SDO.o: ../../../uTasker/uCANopen/CO_SDO.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_SDO.c -o Build/CO_SDO.o
+
+Build/CO_SYNC.o: ../../../uTasker/uCANopen/CO_SYNC.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_SYNC.c -o Build/CO_SYNC.o
+
+Build/crc16-ccitt.o: ../../../uTasker/uCANopen/crc16-ccitt.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/crc16-ccitt.c -o Build/crc16-ccitt.o
+
 # Special packages
 ##################
 
@@ -460,14 +507,14 @@ Build/port.o : ../../../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c $(DEPENDS_F
 # Create output file and show its size
 # $(LINKER) $(C_FLAGS) -I../../uTaskerV1.4 -D _GNU -D _KINETIS -g -Os -Wl,-Map=uTaskerV1.4.map -nostartfiles -TK_1M_256.ld -o uTaskerV1.4.elf $(OBJS) $(OBJS2)
 uTaskerV1.4.elf: $(OBJS) $(OBJS2) K_2M_1M.ld K_2M_256.ld K_1M_256.ld K_1M_128.ld K_512_64.ld K_256_256.ld K_256_64.ld K_256_32.ld K_128_24.ld K_128_16.ld K_64_16.ld KL_128_96.ld KL_256_32.ld KL_128_32.ld KL_128_16.ld KL_64_8.ld KL_32_4.ld KV5_1M_256.ld KV_512_96.ld KV_32_8.ld KE_64_4.ld KE_256_32.ld KE_128_16.ld KE_8_1.ld KEA_128_16.ld KEA_64_4.ld  KEA_32_4.ld KEA_8_1.ld KM_128_16.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_2M_1M.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map,"uTaskerV1.4.map" -o "uTaskerV1.4.elf" $(OBJS) $(OBJS2)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=srec uTaskerV1.4.elf uTaskerV1.4.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=ihex uTaskerV1.4.elf uTaskerV1.4.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --only-section=.f_config --output-target=binary uTaskerV1.4.elf uTaskerV1.4.bin
 	$(CC_SIZE) uTaskerV1.4.elf
 
 uTaskerV1.4_BM.elf: $(OBJS) $(OBJS2_BM) K_2M_1M_BM.ld K_2M_256_BM.ld K_1M_256_BM.ld K_1M_128_BM.ld K_512_64_BM.ld K_256_256_BM.ld K_256_64_BM.ld K_128_24_BM.ld K_128_16_BM.ld K_64_16_BM.ld KL_128_96_BM.ld KL_256_32_BM.ld KL_128_32_BM.ld KL_128_16_BM.ld KL_64_8_BM.ld KL_32_4_BM.ld KV_32_8_BM.ld KV_512_96_BM.ld KE_256_32_BM.ld KE_128_16_BM.ld KE_64_4_BM.ld KEA_128_16_BM.ld KEA_64_4_BM.ld KEA_32_4_BM.ld K_1M_128_Blaze.ld KM_128_16_BM.ld
-	$(CC_LNK) $(C_FLAGS) -Os -g -TK_2M_1M_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
+	$(CC_LNK) $(C_FLAGS) -Os -g -TK_1M_256_BM.ld -nostartfiles -Xlinker --gc-sections -lm -Wl,-Map=uTaskerV1.4_BM.map -o uTaskerV1.4_BM.elf $(OBJS) $(OBJS2_BM)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=srec uTaskerV1.4_BM.elf uTaskerV1.4_BM.srec
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerV1.4_BM.elf uTaskerV1.4_BM.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerV1.4_BM.elf uTaskerV1.4_BM.bin

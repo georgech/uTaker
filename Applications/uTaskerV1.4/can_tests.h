@@ -20,6 +20,7 @@
     14.12.2011 Construct CAN test messages to avoid compiler using memcpy() {2}
     23.12.2011 Add two port CAN test when two CAN controllers are present {3}
     27.12.2011 Add fnSendCAN_message() for general CAN message transmission {4}
+    19.02.2019 fnSendCAN() removed
 
 */
 
@@ -36,7 +37,6 @@
 
     #if defined CAN_INTERFACE && defined TEST_CAN
         static void fnInitCANInterface(void);
-        static void fnSendCAN(int key);
     #endif
 
 
@@ -308,29 +308,4 @@ extern void fnSendCAN_message(int iChannel, unsigned char ucType, unsigned char 
     #endif
     }
 }
-
-static void fnSendCAN(int key)
-{
-    unsigned char ucTestMessage[8];                                      // {2}
-    int i = 0;
-    if (key == 1) {
-        while (i < 8) {
-            ucTestMessage[i] = (i + 1);                                  // test message 1,2,3,4,5,6,7,8
-            i++;
-        }
-        fnSendCAN_message(0, CAN_TX_ACK_ON, ucTestMessage, (unsigned char)sizeof(ucTestMessage)); // send data to the default ID with acknowledge of successful delievery
-    }
-    else if (key == 7) {
-        while (i < 8) {
-            ucTestMessage[i] = (8 - i);                                  // test message 8,7,6,5,4,3,2,1
-            i++;
-        }
-    #if !defined TEST_FIRST_CAN_ONLY && (NUMBER_OF_CAN_INTERFACES > 1)   // {3}
-        fnSendCAN_message(1, CAN_TX_ACK_ON, ucTestMessage, (unsigned char)sizeof(ucTestMessage)); // send data to the default ID with acknowledge of successful delievery
-    #else
-        fnSendCAN_message(0, CAN_TX_ACK_ON, ucTestMessage, (unsigned char)sizeof(ucTestMessage));
-    #endif
-    }
-}
 #endif
-

@@ -2563,22 +2563,22 @@ static const unsigned char system_clock_fraction[SUPPORTED_BAUD_RATES + 1] = {
 #if defined LPUART_IRC48M
 static const unsigned short IRC48M_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
 #if !defined KINETIS_KL && !defined NO_UART_FRACTION_CONTROL && !defined KINETIS_KE15 && !defined KINETIS_KE18
-    (48000000 / 16 / 300),                                               // set 300 divide
-    (48000000 / 16 / 600),                                               // set 600 divide
-    (48000000 / 16 / 1200),                                              // set 1200 divide
-    (48000000 / 16 / 2400),                                              // set 2400 divide
-    (48000000 / 16 / 4800),                                              // set 4800 divide
-    (48000000 / 16 / 9600),                                              // set 9600 divide
-    (48000000 / 16 / 14400),                                             // set 14400 divide
-    (48000000 / 16 / 19200),                                             // set 19200 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 300),                                   // set 300 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 600),                                   // set 600 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 1200),                                  // set 1200 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 2400),                                  // set 2400 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 4800),                                  // set 4800 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 9600),                                  // set 9600 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 14400),                                 // set 14400 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 19200),                                 // set 19200 divide
     #if defined SUPPORT_MIDI_BAUD_RATE
-    (48000000 / 16 / 31250),                                             // set 31250 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 31250),                                 // set 31250 divide
     #endif
-    (48000000 / 16 / 38400),                                             // set 38400 divide
-    (48000000 / 16 / 57600),                                             // set 57600 divide
-    (48000000 / 16 / 115200),                                            // set 115200 divide
-    (48000000 / 16 / 230400),                                            // set 230400 divide
-    (48000000 / 16 / 250000),                                            // set 250000 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 38400),                                 // set 38400 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 57600),                                 // set 57600 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 115200),                                // set 115200 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 230400),                                // set 230400 divide
+    (SPECIAL_LPUART_CLOCK / 16 / 250000),                                // set 250000 divide
 #else
     (unsigned short)((((float)((float)48000000 / (float)(16 * 300)) + (float)0.5) * (float)2) / 2), // set 300 divide (rounded)
     (unsigned short)((((float)((float)48000000 / (float)(16 * 600)) + (float)0.5) * (float)2) / 2), // set 600 divide (rounded)
@@ -3300,7 +3300,7 @@ static void _fnConfigSimSCI(QUEUE_HANDLE Channel, TTYTABLE *pars, unsigned short
     else {                                                               // remaining UARTs are clocked from the bus clock
         #if LPUARTS_AVAILABLE > 0
         if (Channel >= UARTS_AVAILABLE) {
-            ulBaudRate = (unsigned long)((float)SPECIAL_LPUART_CLOCK /((float)usDivider)/16);
+            ulBaudRate = (unsigned long)((float)ulSpecialClock /((float)usDivider)/16);
         }
         else {
         #endif

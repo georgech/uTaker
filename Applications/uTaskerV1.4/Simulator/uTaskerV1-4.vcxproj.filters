@@ -114,6 +114,12 @@
     <Filter Include="WinSim\SIMiMX\SIMKinetis">
       <UniqueIdentifier>{b656e3d0-d378-472e-9a0f-b11a778266a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="WinSim\SIMkinetis">
+      <UniqueIdentifier>{90733953-b20d-4628-9d52-f36384c35403}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uTasker\uCANopen">
+      <UniqueIdentifier>{555c5ba6-cb34-40fb-8532-fdc0da65992d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -592,6 +598,36 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\NE64\NE64.c">
       <Filter>Hardware\NE64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\crc16-ccitt.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\uCANopenApp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CANopen.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_driver.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_Emergency.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_HBconsumer.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_PDO.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SDO.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SYNC.c">
+      <Filter>uTasker\uCANopen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1686,6 +1722,42 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_K27_K28.h">
       <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\iMX\iMX_PIT.h">
+      <Filter>Hardware\iMX</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CANopen.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_driver.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_Emergency.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_HBconsumer.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_PDO.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SDO.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SDOmaster.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_SYNC.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\CO_trace.h">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\uTasker\uCANopen\crc16-ccitt.h">
+      <Filter>uTasker\uCANopen</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

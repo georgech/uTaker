@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MKL27Z64xxx4	NXP MKL27Z64xxx4</state>
+          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -128,7 +128,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -145,21 +145,21 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MKL27Z64xxx4	NXP MKL27Z64xxx4</state>
+          <state>MK64FN1M0xxx12	NXP MK64FN1M0xxx12</state>
         </option>
         <option>
           <name>FPU2</name>
           <version>0</version>
-          <state>0</state>
+          <state>4</state>
         </option>
         <option>
           <name>NrRegs</name>
           <version>0</version>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>NEON</name>
@@ -168,7 +168,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
       </data>
     </settings>
@@ -729,7 +729,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\KL_64_16.icf</state>
+          <state>$PROJ_DIR$\settings\K_2M_256.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -2013,7 +2013,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MKL82Z128xxx7	NXP MKL82Z128xxx7</state>
+          <state>MK28FN2M0xxx15	NXP MK28FN2M0xxx15</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -2052,7 +2052,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -2069,21 +2069,21 @@
         <option>
           <name>CoreVariant</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>MKL82Z128xxx7	NXP MKL82Z128xxx7</state>
+          <state>MK28FN2M0xxx15	NXP MK28FN2M0xxx15</state>
         </option>
         <option>
           <name>FPU2</name>
           <version>0</version>
-          <state>0</state>
+          <state>4</state>
         </option>
         <option>
           <name>NrRegs</name>
           <version>0</version>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>NEON</name>
@@ -2092,7 +2092,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>24</version>
-          <state>35</state>
+          <state>39</state>
         </option>
       </data>
     </settings>
@@ -2653,7 +2653,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>$PROJ_DIR$\settings\KL_128_96_BM.icf</state>
+          <state>$PROJ_DIR$\settings\K_2M_1M_BM.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -3634,6 +3634,19 @@
     </file>
   </group>
   <group>
+    <name>Test</name>
+    <group>
+      <name>LTC_AES</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\NXP\LTC_TEST\ltc_aes.c</name>
+        <excluded>
+          <configuration>Flash</configuration>
+          <configuration>Flash_BM</configuration>
+        </excluded>
+      </file>
+    </group>
+  </group>
+  <group>
     <name>uTasker</name>
     <group>
       <name>MODBUS</name>
@@ -3642,6 +3655,36 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\uTasker\MODBUS\modbus.h</name>
+      </file>
+    </group>
+    <group>
+      <name>uCANopen</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CANopen.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_driver.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_Emergency.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_HBconsumer.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_PDO.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SDO.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SYNC.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\crc16-ccitt.c</name>
       </file>
     </group>
     <group>
@@ -4019,6 +4062,9 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\snmp_mib_handlers.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\..\uCANopenApp.c</name>
   </file>
   <file>
     <name>$PROJ_DIR$\..\usb_application.c</name>

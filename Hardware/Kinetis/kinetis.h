@@ -15833,9 +15833,9 @@ typedef struct stKINETIS_LPI2C_CONTROL
 #define CAN_CODE_FIELD       0x0f000000                                 // CODE field mask
 #define CAN_RX_CODE_FIELD    0x07000000
 
-#define SRR                  0x00400000                                 // Substitute remote request
+#define SRR                  0x00400000                                 // substitute remote request
 #define IDE                  0x00200000                                 // ID extended bit
-#define RTR                  0x00100000                                 // Remote transmission request
+#define RTR                  0x00100000                                 // remote transmission request
 
 #define CAN_LENGTH_AND_TIME  0x000fffff
 #define CAN_KEEP_CONTENTS    0x00ffffff
@@ -16107,8 +16107,25 @@ typedef struct stKINETIS_CAN_CONTROL
     unsigned long res1[2];
     volatile unsigned long CAN_CRCR;
     unsigned long CAN_RXFGMASK;
-    volatile unsigned long CAN_RXFIR;
-    unsigned long res2[524];
+    volatile unsigned long CAN_RXFIR; // 0x4c
+    unsigned long res2[12];
+    KINETIS_CAN_BUF CAN_MBUFF0;
+    KINETIS_CAN_BUF CAN_MBUFF1;
+    KINETIS_CAN_BUF CAN_MBUFF2;
+    KINETIS_CAN_BUF CAN_MBUFF3;
+    KINETIS_CAN_BUF CAN_MBUFF4;
+    KINETIS_CAN_BUF CAN_MBUFF5;
+    KINETIS_CAN_BUF CAN_MBUFF6;
+    KINETIS_CAN_BUF CAN_MBUFF7;
+    KINETIS_CAN_BUF CAN_MBUFF8;
+    KINETIS_CAN_BUF CAN_MBUFF9;
+    KINETIS_CAN_BUF CAN_MBUFF10;
+    KINETIS_CAN_BUF CAN_MBUFF11;
+    KINETIS_CAN_BUF CAN_MBUFF12;
+    KINETIS_CAN_BUF CAN_MBUFF13;
+    KINETIS_CAN_BUF CAN_MBUFF14;
+    KINETIS_CAN_BUF CAN_MBUFF15;
+    unsigned long res3[448];
     unsigned long CAN_RXIMR0;
     unsigned long CAN_RXIMR1;
     unsigned long CAN_RXIMR2;

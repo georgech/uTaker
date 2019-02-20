@@ -45,7 +45,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MKL27Z64xxx4.ddf</state>
+          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MK66FN2M0xxx18.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -85,7 +85,7 @@
         </option>
         <option>
           <name>OCDynDriverList</name>
-          <state>PEMICRO_ID</state>
+          <state>JLINK_ID</state>
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
@@ -113,7 +113,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashKLx764KROM.board</state>
+          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashK65Fxxx256K.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>
@@ -461,7 +461,7 @@
         </option>
         <option>
           <name>OCProbeConfig</name>
-          <state>$TOOLKIT_DIR$\config\debugger\NXP\L5K.ProbeConfig</state>
+          <state></state>
         </option>
         <option>
           <name>CMSISDAPProbeConfigRadio</name>
@@ -3323,7 +3323,7 @@
         </option>
         <option>
           <name>MemFile</name>
-          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MKL82Z128xxx7.ddf</state>
+          <state>$TOOLKIT_DIR$\CONFIG\debugger\NXP\MK28FN2M0xxx15.ddf</state>
         </option>
         <option>
           <name>RunToEnable</name>
@@ -3363,7 +3363,7 @@
         </option>
         <option>
           <name>OCDynDriverList</name>
-          <state>JLINK_ID</state>
+          <state>CMSISDAP_ID</state>
         </option>
         <option>
           <name>OCLastSavedByProductVersion</name>
@@ -3391,7 +3391,7 @@
         </option>
         <option>
           <name>FlashLoadersV3</name>
-          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashKL8xZ7128KROM.board</state>
+          <state>$TOOLKIT_DIR$\config\flashloader\NXP\FlashK65Fxxx256K.board</state>
         </option>
         <option>
           <name>OCImagesSuppressCheck1</name>
@@ -3739,7 +3739,7 @@
         </option>
         <option>
           <name>OCProbeConfig</name>
-          <state>$TOOLKIT_DIR$\config\debugger\NXP\L5K.ProbeConfig</state>
+          <state></state>
         </option>
         <option>
           <name>CMSISDAPProbeConfigRadio</name>
