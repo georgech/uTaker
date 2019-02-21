@@ -383,7 +383,7 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
             CO_RXCAN_CONS_HB);
 
 #if CO_NO_SDO_CLIENT == 1
-    err = CO_SDOclient_init(
+    CO_SDOclient_init(
             CO->SDOclient,
             CO->SDO[0],
             (CO_SDOclientPar_t*) &OD_SDOClientParameter[0],
@@ -391,8 +391,6 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
             CO_RXCAN_SDO_CLI,
             CO->CANmodule[0],
             CO_TXCAN_SDO_CLI);
-
-    if(err){CO_delete(CANbaseAddress); return err;}
 #endif
 
 #if CO_NO_TRACE > 0

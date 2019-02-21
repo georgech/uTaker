@@ -658,6 +658,11 @@
               <FileType>1</FileType>
               <FilePath>..\DMX512.c</FilePath>
             </File>
+            <File>
+              <FileName>uCANopenApp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\uCANopenApp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -882,6 +887,56 @@
               <FileName>w_aes.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>uCANopen</GroupName>
+          <Files>
+            <File>
+              <FileName>CANopen.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CANopen.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_Emergency.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_Emergency.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_HBconsumer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_HBconsumer.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_NMT_Heartbeat.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_PDO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_PDO.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_SDO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_SDO.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_SYNC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_SYNC.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc16-ccitt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\crc16-ccitt.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1538,6 +1593,11 @@
               <FileType>1</FileType>
               <FilePath>..\DMX512.c</FilePath>
             </File>
+            <File>
+              <FileName>uCANopenApp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\uCANopenApp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1762,6 +1822,56 @@
               <FileName>w_aes.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\stack\SSL\wolfssl-3.9.6\w_aes.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>uCANopen</GroupName>
+          <Files>
+            <File>
+              <FileName>CANopen.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CANopen.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_Emergency.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_Emergency.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_HBconsumer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_HBconsumer.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_NMT_Heartbeat.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_NMT_Heartbeat.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_PDO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_PDO.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_SDO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_SDO.c</FilePath>
+            </File>
+            <File>
+              <FileName>CO_SYNC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\CO_SYNC.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc16-ccitt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\uTasker\uCANopen\crc16-ccitt.c</FilePath>
             </File>
           </Files>
         </Group>

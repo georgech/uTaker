@@ -82,7 +82,7 @@ void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule){
     CANmodule->CANnormal = true;
 }
 
-
+#if 0
 /******************************************************************************/
 CO_ReturnError_t CO_CANmodule_init(
         CO_CANmodule_t         *CANmodule,
@@ -125,7 +125,7 @@ CO_ReturnError_t CO_CANmodule_init(
     }
 
     /**** HARDWARE CONFIGURATION ****/
-#if 0
+
     /* soft reset */
     MCF_FlexCAN_CANMCR |= MCF_FlexCAN_CANMCR_SOFTRST;
 
@@ -208,9 +208,9 @@ CO_ReturnError_t CO_CANmodule_init(
     //Enable all buffer interrupts (can be either Rx or Tx interrupt depending on buffer configuration)
     MCF_FlexCAN_IMASK = 0xFF;
     MCF_FlexCAN_IFLAG = 0xFF;
-#endif
     return CO_ERROR_NO;
 }
+#endif
 
 
 /******************************************************************************/
@@ -296,29 +296,34 @@ CO_CANtx_t *CO_CANtxBufferInit(
 
 /******************************************************************************/
 extern QUEUE_HANDLE CANopen_interface_ID0;
-extern void fnSendCAN_message(int iChannel, unsigned char ucType, unsigned char *ptrData, unsigned char ucMessageLength);
-// CAN message controls
-//
-#define DEFAULT_MSG       0x00
-#define SPECIFIED_ID      0x80
-#define GET_CAN_TX_ERROR  0x80
-#define TX_REMOTE_FRAME   0x40                                           // transmit data in response to a remote frame
-#define GET_CAN_RX_ID     0x40
-#define TX_REMOTE_STOP    0x20
-#define GET_CAN_RX_TIME_STAMP 0x20
-#define GET_CAN_RX_REMOTE 0x10
-#define CAN_TX_ACK_ON     0x10                                           // ack when tx successful
-#define GET_CAN_TX_REMOTE_ERROR 0x08
-#define FREE_CAN_RX_REMOTE 0x04
-#define CAN_TX_MSG_MASK   0xf0
 
-CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
+static int fnSendCAN_frame(QUEUE_HANDLE CANopen_interface_ID, unsigned char *ucData, unsigned char ucLength, unsigned short usIdent)
+{
+    QUEUE_TRANSFER transferDetails;
+    unsigned char ucMessage[12];
+    usIdent >>= 5;
+    ucMessage[0] = 0;
+    ucMessage[1] = 0;
+    ucMessage[2] = (unsigned char)(usIdent >> 8);
+    ucMessage[3] = (unsigned char)(usIdent);
+    uMemcpy(&ucMessage[4], ucData, ucLength);
+    ucLength += 4;
+    if ((usIdent & 0x0010) != 0) {                                       // if responding to a remote transmission request
+        transferDetails |= (ucLength | CAN_TX_ACK_ON | SPECIFIED_ID |TX_REMOTE_FRAME);
+    }
+    else {
+        transferDetails = (ucLength | CAN_TX_ACK_ON | SPECIFIED_ID);
+    }
+    return (fnWrite(CANopen_interface_ID, ucMessage, transferDetails) == ucLength);
+}
+
+CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
+{
     CO_ReturnError_t err = CO_ERROR_NO;
   //uint16_t addr = CANmodule->CANbaseAddress;
-    uint8_t i;
+  //uint8_t i;
 
-    /* Verify overflow */
-    if(buffer->bufferFull){
+    if (buffer->bufferFull != 0) {                                       // verify overflow
         if(!CANmodule->firstCANtxMessage){
             /* don't set error, if bootup message is still on buffers */
             CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_CAN_TX_OVERFLOW, CO_EMC_CAN_OVERRUN, /*buffer->CMSGSID*/0);
@@ -328,10 +333,10 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
 
     /* Try to find a free sending buffer */
     /* Here, we use buffer 14 & 15 for Tx */
-    i=14; //initial sending buffer index
+  //i=14; //initial sending buffer index
 #if 1
-    if (fnWrite(CANopen_interface_ID0, buffer->data, (QUEUE_TRANSFER)(buffer->DLC | CAN_TX_ACK_ON)) != buffer->DLC) {
-        buffer->bufferFull = true; // if no buffer is free, message will be sent by interrupt
+    if (fnSendCAN_frame(CANopen_interface_ID0, buffer->data, buffer->DLC, buffer->ident) == 0) {
+        buffer->bufferFull = true;                                       // if no buffer is free, message will be sent by interrupt
         CANmodule->CANtxCount++;
     }
 #else
@@ -509,7 +514,7 @@ extern void fnCANopenTxOK(int iCanRef)
                 MCF_CANMB_DATA_WORD_4(ICODE) = (uint16_t)(((buffer->data[6]) << 8) | (buffer->data[7]));
                 MCF_CANMB_CTRL(ICODE) = (uint8_t)(MCF_CANMB_CTRL_CODE(0b1000) | MCF_CANMB_CTRL_LENGTH(buffer->DLC)); //Tx MB active
 #endif
-                fnWrite(CANopen_interface_ID0, buffer->data, (QUEUE_TRANSFER)(buffer->DLC | CAN_TX_ACK_ON));
+                fnSendCAN_frame(CANopen_interface_ID0, buffer->data, buffer->DLC, buffer->ident);
                 break;                      /* exit for loop */
             }
             buffer++;

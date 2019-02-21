@@ -629,6 +629,12 @@
     <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SYNC.c">
       <Filter>uTasker\uCANopen</Filter>
     </ClCompile>
+    <ClCompile Include="..\CO_OD.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\uTasker\uCANopen\CO_SDOmaster.c">
+      <Filter>uTasker\uCANopen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ADC_Timers.h">
@@ -1758,6 +1764,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\uTasker\uCANopen\crc16-ccitt.h">
       <Filter>uTasker\uCANopen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CO_OD.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

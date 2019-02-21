@@ -60,7 +60,7 @@ OBJS = Build/application.o Build/debug.o Build/webInterface.o Build/KeyScan.o Bu
 	   Build/uCANopenApp.o \
        Build/mass_storage.o \
        Build/GLCD.o Build/LCD.o Build/FT_CoPro_Cmds.o \
-       Build/CANopen.o Build/CO_driver.o Build/CO_Emergency.o Build/CO_HBconsumer.o Build/CO_NMT_Heartbeat.o Build/CO_PDO.o Build/CO_SDO.o Build/CO_SYNC.o Build/crc16-ccitt.o \
+       Build/CANopen.o Build/CO_driver.o Build/CO_SDOmaster.o Build/CO_Emergency.o Build/CO_HBconsumer.o Build/CO_NMT_Heartbeat.o Build/CO_PDO.o Build/CO_SDO.o Build/CO_SYNC.o Build/crc16-ccitt.o \
        Build/aes_mbedTLS.o Build/sha256_mbedTLS.o Build/w_aes.o Build/aes_cbc.o Build/cbc128.o Build/aes_core.o \
        Build/arm_bitreversal2.o Build/arm_cfft_f32.o Build/arm_cfft_radix8_f32.o Build/arm_cmplx_mag_f32.o Build/arm_common_tables.o Build/arm_const_structs.o Build/arm_max_f32.o Build/arm_sin_cos_f32.o Build/arm_abs_f32.o \
        Build/arm_bitreversal.o Build/arm_cfft_q15.o Build/arm_cfft_radix4_q15.o \
@@ -383,6 +383,9 @@ Build/CANopen.o: ../../../uTasker/uCANopen/CANopen.c $(DEPENDS) $(CANOPEN_DEPEND
 
 Build/CO_driver.o: ../../../uTasker/uCANopen/CO_driver.c $(DEPENDS) $(CANOPEN_DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_driver.c -o Build/CO_driver.o
+
+Build/CO_SDOmaster.o: ../../../uTasker/uCANopen/CO_SDOmaster.c $(DEPENDS) $(CANOPEN_DEPENDS)
+		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_SDOmaster.c -o Build/CO_SDOmaster.o
 
 Build/CO_Emergency.o: ../../../uTasker/uCANopen/CO_Emergency.c $(DEPENDS) $(CANOPEN_DEPENDS)
 		$(CC) $(C_FLAGS) $(INC) $(OPTS) ../../../uTasker/uCANopen/CO_Emergency.c -o Build/CO_Emergency.o

@@ -752,7 +752,7 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
     Counter &= ~CAN_TX_MSG_MASK;
     ucRtnCnt = (unsigned char)Counter;
 
-    if (ucTxMode & (TX_REMOTE_FRAME | TX_REMOTE_STOP)) {                 // only one remote transmit buffer allowed
+    if ((ucTxMode & (TX_REMOTE_FRAME | TX_REMOTE_STOP)) != 0) {          // only one remote transmit buffer allowed
         for (; i < NUMBER_CAN_MESSAGE_BUFFERS; i++) { 
             if (ptrCanQue->DriverID == DriverID) {                       // find a buffer belonging to us
                 if (ptrCanQue->ucMode & CAN_TX_BUF_REMOTE) {             // active remote buffer found
@@ -800,8 +800,8 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
 
     for (; i < NUMBER_CAN_MESSAGE_BUFFERS; i++) {
         if (ptrCanQue->DriverID == DriverID) {                           // find a buffer belonging to us
-            if ((ptrCanQue->ucMode & CAN_TX_BUF_FREE) && (!(TX_REMOTE_STOP & ucTxMode))) {  // if the transmit buffer is free and not stopping transmission
-                if (TX_REMOTE_FRAME & ucTxMode) {                        // depositing a message to be sent on a remote request
+            if (((ptrCanQue->ucMode & CAN_TX_BUF_FREE) != 0) && ((TX_REMOTE_STOP & ucTxMode) == 0)) { // if the transmit buffer is free and not stopping transmission
+                if ((TX_REMOTE_FRAME & ucTxMode) != 0) {                 // depositing a message to be sent on a remote request
                     if (ptrCanQue->ulPartnerID & CAN_EXTENDED_ID) {
                         ulExtendedID = (IDE | MB_TX_SEND_ON_REQ | ((unsigned long)Counter << 16)); // use extended destination ID                           
                     }
@@ -812,7 +812,7 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
                     ptrCanQue->ucMode = (CAN_TX_BUF | CAN_TX_BUF_ACTIVE | CAN_TX_BUF_REMOTE | (CAN_TX_ACK_ON & ucTxMode)); // mark that the buffer is in use
                 }
                 else {
-                    if (ucTxMode & SPECIFIED_ID) {                       // is the user specifying a destination ID or can default be used?
+                    if ((ucTxMode & SPECIFIED_ID) != 0) {                // is the user specifying a destination ID or can default be used?
                         unsigned long ulPartnerID = 0;
                         ulPartnerID = *ptBuffer++;
                         ulPartnerID <<= 8;
@@ -821,7 +821,7 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
                         ulPartnerID |= *ptBuffer++;
                         ulPartnerID <<= 8;
                         ulPartnerID |= *ptBuffer++;
-                        if (ulPartnerID & CAN_EXTENDED_ID) {
+                        if ((ulPartnerID & CAN_EXTENDED_ID) != 0) {
                             ulExtendedID = IDE;
                             ptrMessageBuffer->ulID = (ulPartnerID & ~CAN_EXTENDED_ID); // send to specified extended ID address
                         }
@@ -832,7 +832,7 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
                     }
                     else {                                               // transmission to default ID
                         if ((ptBuffer == 0) && (Counter == 0)) {         // remote frame request -  after transmission the buffer will become a receiver until read or freed
-                            if (ptrCanQue->ulOwnID & CAN_EXTENDED_ID) {
+                            if ((ptrCanQue->ulOwnID & CAN_EXTENDED_ID) != 0) {
                                 ulExtendedID = (MB_TX_SEND_ONCE | RTR | IDE); // use extended destination ID
                             }
                             else {
@@ -842,7 +842,7 @@ extern unsigned char fnCAN_tx(QUEUE_HANDLE Channel, QUEUE_HANDLE DriverID, unsig
                             ptrCanQue->ucMode = (CAN_TX_BUF | CAN_RX_REMOTE_RX | CAN_TX_BUF_ACTIVE | CAN_TX_BUF_REMOTE);
                         }
                         else {
-                            if (ptrCanQue->ulPartnerID & CAN_EXTENDED_ID) {
+                            if ((ptrCanQue->ulPartnerID & CAN_EXTENDED_ID) != 0) {
                                 ulExtendedID = IDE;                          // use extended destination ID
                             }
                             ptrMessageBuffer->ulID = (ptrCanQue->ulPartnerID & ~CAN_EXTENDED_ID); // send to default ID address

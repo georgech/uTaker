@@ -7244,26 +7244,26 @@ static unsigned char fnGetID_Data(int iActions, CHAR *ptrInput, unsigned char *u
         if (ucBlockLength == 0) {
             break;
         }
-        if (iActions & EXTRACT_CAN_EXTENDED_ID) {                       // extract first an ID 
+        if ((iActions & EXTRACT_CAN_EXTENDED_ID) != 0) {                // extract first an ID 
             ulID |= CAN_EXTENDED_ID;                                    // mark that the id is an extended id rather than a standard id
         }
-        if ((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) || (ucBlockLength > 6)) {
+        if (((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) != 0) || (ucBlockLength > 6)) {
             *ucMessage++ = (unsigned char)(ulID >> 24);
             ucLength++;
         }
-        if ((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) || (ucBlockLength > 4)) {
+        if (((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) != 0) || (ucBlockLength > 4)) {
             *ucMessage++ = (unsigned char)(ulID >> 16);
             ucLength++;
         }
-        if ((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) || (ucBlockLength > 2)) {
+        if (((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) != 0) || (ucBlockLength > 2)) {
             *ucMessage++ = (unsigned char)(ulID >> 8);
             ucLength++;
         }
-        if ((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) || (ucBlockLength > 0)) {
+        if (((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) != 0) || (ucBlockLength > 0)) {
             *ucMessage++ = (unsigned char)(ulID);
             ucLength++;
         }
-        if (iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) {
+        if ((iActions & (EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID)) != 0) {
             ptrInput = fnSkipWhiteSpace(ptrInput);
             iActions &= ~(EXTRACT_CAN_EXTENDED_ID | EXTRACT_CAN_ID);     // id flags only valid as first parameter
         }

@@ -3673,6 +3673,9 @@
         <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SDO.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SDOmaster.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\..\uTasker\uCANopen\CO_SYNC.c</name>
       </file>
       <file>

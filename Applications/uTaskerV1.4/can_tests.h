@@ -26,10 +26,14 @@
 
 #if defined CAN_INTERFACE && !defined _CAN_CONFIG
     #define _CAN_CONFIG
-
-    #define TEST_CAN                                                     // test CAN operation
-      //#define PARTNER_CAN                                              // quick set of CAN partner addresses (use this when testing between two boards running the same test - one with and one without this)
-      //#define TEST_FIRST_CAN_ONLY
+    #if defined SUPPORT_CANopen
+        extern QUEUE_HANDLE CANopen_interface_ID0;
+        #define CAN_interface_ID0  CANopen_interface_ID0
+    #else
+        #define TEST_CAN                                                 // test CAN operation
+          //#define PARTNER_CAN                                          // quick set of CAN partner addresses (use this when testing between two boards running the same test - one with and one without this)
+          //#define TEST_FIRST_CAN_ONLY
+    #endif
 
 /* =================================================================== */
 /*                 local function prototype declarations               */
@@ -226,7 +230,8 @@ static void fnInitCANInterface(void)                                     // {1}
     CAN_interface_ID1 = fnOpen(TYPE_CAN, FOR_I_O, &tCANParameters);      // open interface
     #endif
 }
-
+#endif
+#if defined _CAN_INIT_CODE && defined CAN_INTERFACE && defined USE_MAINTENANCE
 // Test interface for sending CAN messages to the specified channel
 //
 extern void fnSendCAN_message(int iChannel, unsigned char ucType, unsigned char *ptrData, unsigned char ucMessageLength) // {4}
