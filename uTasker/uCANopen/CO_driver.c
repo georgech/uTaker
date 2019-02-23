@@ -54,6 +54,8 @@
 extern const CO_CANbitRateData_t  CO_CANbitRateData[8];
 extern CO_t *CO;
 
+#define REMOTE_FRAME_FLAG    0x8000
+
 
 /******************************************************************************/
 void CO_CANsetConfigurationMode(uint16_t CANbaseAddress){
@@ -246,11 +248,14 @@ CO_ReturnError_t CO_CANrxBufferInit(
         buffer->pFunct = pFunct;
 
         /* CAN identifier and CAN mask, bit aligned with CAN module */
-        buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
+      //buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
+        buffer->ident = (uint16_t)((ident & 0x07FF));
         if (rtr != 0) {
-            buffer->ident |= 0x0010;
+            buffer->ident |= REMOTE_FRAME_FLAG;
         }
-        buffer->mask = (uint16_t) (((mask & 0x07FF)<<5) | 0x0080);
+      //buffer->mask = (uint16_t) (((mask & 0x07FF)<<5) | 0x0080);
+        buffer->mask = (uint16_t)((mask & 0x07FF) | 0x0004);
+
 
         /* Set CAN hardware module filter and mask. */
         if (CANmodule->useCANrxFilters != 0) {
@@ -281,9 +286,10 @@ CO_CANtx_t *CO_CANtxBufferInit(
         buffer = &CANmodule->txArray[index];
 
         /* CAN identifier, DLC and rtr, bit aligned with CAN module transmit buffer */
-        buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
+      //buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
+        buffer->ident = (uint16_t)(ident & 0x07FF);
         if (rtr != 0) {
-            buffer->ident |= 0x0010;
+            buffer->ident |= REMOTE_FRAME_FLAG;
         }
 
         buffer->DLC = noOfBytes;
@@ -296,25 +302,34 @@ CO_CANtx_t *CO_CANtxBufferInit(
 
 /******************************************************************************/
 extern QUEUE_HANDLE CANopen_interface_ID0;
+extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength);
 
 static int fnSendCAN_frame(QUEUE_HANDLE CANopen_interface_ID, unsigned char *ucData, unsigned char ucLength, unsigned short usIdent)
 {
+    int iRtn = 0;
     QUEUE_TRANSFER transferDetails;
     unsigned char ucMessage[12];
-    usIdent >>= 5;
-    ucMessage[0] = 0;
-    ucMessage[1] = 0;
-    ucMessage[2] = (unsigned char)(usIdent >> 8);
-    ucMessage[3] = (unsigned char)(usIdent);
     uMemcpy(&ucMessage[4], ucData, ucLength);
     ucLength += 4;
-    if ((usIdent & 0x0010) != 0) {                                       // if responding to a remote transmission request
-        transferDetails |= (ucLength | CAN_TX_ACK_ON | SPECIFIED_ID |TX_REMOTE_FRAME);
+    if ((usIdent & REMOTE_FRAME_FLAG) != 0) {                                       // if responding to a remote transmission request
+        transferDetails |= (ucLength | CAN_TX_ACK_ON | SPECIFIED_ID | TX_REMOTE_FRAME);
+        usIdent &= ~(REMOTE_FRAME_FLAG);
+        fnDebugMsg("(RTR) ");
     }
     else {
         transferDetails = (ucLength | CAN_TX_ACK_ON | SPECIFIED_ID);
     }
-    return (fnWrite(CANopen_interface_ID, ucMessage, transferDetails) == ucLength);
+    ucMessage[0] = 0;
+    ucMessage[1] = 0;
+    ucMessage[2] = (unsigned char)(usIdent >> 8);
+    ucMessage[3] = (unsigned char)(usIdent);
+    iRtn = (fnWrite(CANopen_interface_ID, ucMessage, transferDetails) == ucLength);
+    if (iRtn != 0) {
+        fnDebugMsg("CANopen Tx: ");
+        fnDisplayCANopen(usIdent, &ucMessage[4], (ucLength - 4));
+        fnDebugMsg("\r\n");
+    }
+    return iRtn;
 }
 
 CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)

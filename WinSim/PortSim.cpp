@@ -750,17 +750,22 @@ static void fnExecute(int iFile, int iType)
     }
 }
 
-static unsigned char fnExtractHexPair(unsigned char *ptrHexPair)
+static int fnExtractHexPair(unsigned char *ptrHexPair, unsigned char *ucValue)
 {
     unsigned char ucNibble1 = (*ptrHexPair++ - '0');
     unsigned char ucNibble2 = (*ptrHexPair - '0');
     if (ucNibble1 > 9) {
         ucNibble1 -= ('A' - '9' - 1);
     }
+    if (*ptrHexPair == 0) {
+        *ucValue = ucNibble1;
+        return 1;
+    }
     if (ucNibble2 > 9) {
         ucNibble2 -= ('A' - '9' - 1);
     }
-    return ((ucNibble1 << 4) | ucNibble2);
+    *ucValue = ((ucNibble1 << 4) | ucNibble2);
+    return 0;
 }
 
 
@@ -785,10 +790,32 @@ static void fnInjectHardware_change(int iFile, int iCANmode)
             if (iCANmode != 0) {                                         // {14}separator
                 switch (++iCanField) {
                 case 1:                                                  // ID
-                    ulCanID = (fnExtractHexPair(&ucCAN_field[2]) << 24);
-                    ulCanID |= (fnExtractHexPair(&ucCAN_field[4]) << 16);
-                    ulCanID |= (fnExtractHexPair(&ucCAN_field[6]) << 8);
-                    ulCanID |= fnExtractHexPair(&ucCAN_field[8]);
+                    {
+                        unsigned char ucValue;
+                        if (fnExtractHexPair(&ucCAN_field[2], &ucValue) != 0) {
+                        }
+                        else {
+                            ulCanID = (ucValue << 24);
+                            if (fnExtractHexPair(&ucCAN_field[4], &ucValue) != 0) {
+                                ulCanID >>= 20;                          // standard ID such as 0x3fa
+                                ulCanID |= (ucValue & 0xf);
+                            }
+                            else {
+                                ulCanID |= (ucValue << 16);
+                                if (fnExtractHexPair(&ucCAN_field[6], &ucValue) != 0) {
+                                }
+                                else {
+                                    ulCanID |= (ucValue << 8);
+                                    if (fnExtractHexPair(&ucCAN_field[8], &ucValue) != 0) {
+                                    }
+                                    else {
+                                        ulCanID |= (ucValue);
+                                        ulCanID |= 0x80000000;           // mark that it is an extended address
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
                 case 2:                                                  // RTR
                     if (ucCAN_field[0] == '1') {
@@ -814,7 +841,7 @@ static void fnInjectHardware_change(int iFile, int iCANmode)
                     unsigned char *ptrData = ucCAN_field;
                     int iLen = ucDLC;
                     while (iLen-- != 0) {
-                        ucCAN_field[iDataIndex++] = fnExtractHexPair(ptrData);
+                        fnExtractHexPair(ptrData, &ucCAN_field[iDataIndex++]);
                         ptrData += 3;
                     }
                     fnInjectCAN(ucCAN_field, ulCanID, iRTR, ucDLC, 0);

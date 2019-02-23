@@ -12208,9 +12208,11 @@ typedef struct stKINETIS_LPTMR_CTL
   #endif
     #define SIM_FCFG1                        *(volatile unsigned long *)(SIM_BLOCK + 0x104c) // FLASH Configuration Register 1
     #define SIM_FCFG2                        *(volatile unsigned long *)(SIM_BLOCK + 0x1050) // FLASH Configuration Register 2 (read-only)
-    #if !defined KINETIS_KL
+    #if !defined KINETIS_KL || defined KINETIS_KL82
+        #define SIM_UIDH_ADD                 (volatile unsigned long *)(SIM_BLOCK + 0x1054) // Unique Identification Register High (read-only)
         #define SIM_UIDH                     *(volatile unsigned long *)(SIM_BLOCK + 0x1054) // Unique Identification Register High (read-only)
     #endif
+    #define SIM_UIDMH_ADD                    (volatile unsigned long *)(SIM_BLOCK + 0x1058) // Unique Identification Register High (read-only)
     #define SIM_UIDMH                        *(volatile unsigned long *)(SIM_BLOCK + 0x1058) // Unique Identification Register Mid-High (read-only)
     #define SIM_UIDML                        *(volatile unsigned long *)(SIM_BLOCK + 0x105c) // Unique Identification Register Mid-Low (read-only)
     #define SIM_UIDL                         *(volatile unsigned long *)(SIM_BLOCK + 0x1060) // Unique Identification Register Low (read-only)

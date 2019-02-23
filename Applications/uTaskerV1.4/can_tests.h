@@ -239,7 +239,7 @@ extern void fnSendCAN_message(int iChannel, unsigned char ucType, unsigned char 
     QUEUE_HANDLE CAN_interface = CAN_interface_ID0;
     #if !defined TEST_FIRST_CAN_ONLY && (NUMBER_OF_CAN_INTERFACES > 1)
     if (iChannel == 1) {
-        CAN_interface = CAN_interface_ID1;
+//        CAN_interface = CAN_interface_ID1;
     }
     #endif
 

@@ -80,8 +80,12 @@
 
 #if defined _KINETIS                                                     // only on Kinetis parts
 
-#if defined CAN_INTERFACE && defined SIM_KOMODO
-    #include "..\..\WinSim\Komodo\komodo.h" 
+#if defined CAN_INTERFACE
+    #if defined SIM_KOMODO
+        #include "..\..\WinSim\Komodo\komodo.h" 
+    #else
+        #define Komodo int 
+    #endif
 #endif
 
 #define PROGRAM_ONCE_AREA_SIZE   64                                      // 64 bytes in 8 blocks of 8 bytes
@@ -10884,7 +10888,7 @@ static void fnBufferSent(int iBuffer, int iRemote)
 #endif
 }
 
-    #if !defined _LOCAL_SIMULATION && defined SIM_KOMODO
+    #if !defined _LOCAL_SIMULATION
 // Komodo has received something on the CAN bus
 //
 static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned char *ptrData, unsigned long ulId, int iExtendedAddress, int iRemodeRequest, unsigned short usTimeStamp, Komodo km)
@@ -10924,13 +10928,17 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
         ulId <<= CAN_STANDARD_SHIFT;
         ulId &= CAN_STANDARD_BITMASK;
     }
-    ulRxFilter = ptrCAN_control->CAN_RXGMASK;                            // filtere mask used for all buffers apart from final two
+    else {
+        ulId = iExtendedAddress;
+    }
+    ulRxFilter = ptrCAN_control->CAN_RXGMASK;                            // filter mask used for all buffers apart from final two
 
     while (i < NUMBER_CAN_MESSAGE_BUFFERS) {
-        if ((ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
+        if ((((ptrMessageBuffer->ulCode_Len_TimeStamp & IDE) != 0) == (iExtendedAddress != 0)) && (ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
             iRxAvailable++;
             if (iRemodeRequest != 0) {                                   // remote request being received
                 if ((ptrMessageBuffer->ulCode_Len_TimeStamp & CAN_CODE_FIELD) == MB_TX_SEND_ON_REQ) { // remote message waiting to be sent
+    #if defined SIM_KOMODO
                     int iResult;
                     km_can_packet_t pkt;
                     unsigned long arb_count = 0;
@@ -10987,6 +10995,7 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
                         break;
                     }
                     return;
+    #endif
                 }
             }
             else if ((ptrMessageBuffer->ulCode_Len_TimeStamp & CAN_CODE_FIELD) == MB_RX_EMPTY) {
@@ -10995,7 +11004,7 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
             }
         }
         ptrMessageBuffer++;
-        switch (i++) {
+        switch (++i) {
         case 14:
             ulRxFilter = ptrCAN_control->CAN_RX14MASK;
             break;
@@ -11025,7 +11034,7 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
         ulRxFilter = ptrCAN_control->CAN_RXGMASK;
         i = 0;
         while (i < NUMBER_CAN_MESSAGE_BUFFERS) {
-            if ((ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
+            if ((((ptrMessageBuffer->ulCode_Len_TimeStamp & IDE) != 0) == (iExtendedAddress != 0)) && (ptrMessageBuffer->ulID & ulRxFilter) == (ulId & ulRxFilter)) {
                 if ((ptrMessageBuffer->ulCode_Len_TimeStamp & CAN_CODE_FIELD) == (MB_RX_FULL)) {
                     ucBuffer = (unsigned char)i;                         // we use this buffer for reception - it will set overrun...
                     iOverrun = 1;
@@ -11033,7 +11042,7 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
                 }
             }
             ptrMessageBuffer++;
-            switch (i++) {
+            switch (++i) {
             case 14:
                 ulRxFilter = ptrCAN_control->CAN_RX14MASK;
                 break;
@@ -11089,7 +11098,15 @@ static void fnCAN_reception(int iChannel, unsigned char ucDataLength, unsigned c
 extern void fnSimulateCanIn(int iChannel, unsigned long ilID, int iRTR, unsigned char *ptrData, unsigned char ucDLC)
 {
     static unsigned short usTimeStamp = 0;
-    fnCAN_reception(iChannel, ucDLC, ptrData, ilID, ilID, iRTR, usTimeStamp++, 0);
+    unsigned long ilID_extended;
+    if ((ilID & 0x80000000) != 0) {
+        ilID_extended = ilID & ~0x80000000;
+        ilID = 0;
+    }
+    else {
+        ilID_extended = 0;
+    }
+    fnCAN_reception(iChannel, ucDLC, ptrData, ilID, ilID_extended, iRTR, usTimeStamp++, 0);
 }
 #endif
 
@@ -11253,7 +11270,7 @@ extern void fnSimCAN(int iChannel, int iBufferNumber, int iSpecial)
         // fall through
     #endif
     case MB_TX_SEND_ONCE:                                           
-        if (ptrMessageBuffer->ulCode_Len_TimeStamp & RTR) {              // remote frame is to be transmitted
+        if ((ptrMessageBuffer->ulCode_Len_TimeStamp & RTR) != 0) {       // remote frame is to be transmitted
     #if defined _LOCAL_SIMULATION
         #if defined _TX_OK
             // The buffer converts automatically to a receive buffer
@@ -11441,6 +11458,7 @@ _rx_int:
                 }
                 km_can_async_submit(km, iChannel, KM_CAN_ONE_SHOT, &pkt, ucTxDataLength, (const unsigned char *)ucData); // send
                 iResult = km_can_async_collect(km, 10, &arb_count);      // collect the result of the last transmission
+iResult = KM_OK;
                 switch (iResult) {
                 case KM_OK:
                     fnBufferSent(((iChannel << 24) | iLastTxBuffer), SIM_CAN_TX_OK);

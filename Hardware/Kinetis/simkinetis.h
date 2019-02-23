@@ -2176,7 +2176,7 @@ typedef struct stKINETIS_SIM
     #endif
     unsigned long SIM_FCFG1;
     unsigned long SIM_FCFG2;
-    #if defined KINETIS_KL
+    #if defined KINETIS_KL && !defined KINETIS_KL82
         unsigned long ulRes2c;
     #else
         unsigned long SIM_UIDH;

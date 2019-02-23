@@ -33,7 +33,10 @@
 
 #define OWN_TASK                            TASK_CANOPEN
 
-#define CANOPEN_NODE_ID                     10
+#define CANOPEN_NODE_ID                     0x4c
+//#define CANOPEN_NODE_ID                     0x7a
+
+extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength);
 
 extern void tmrTask_thread(void);
 extern void fnCANopenRx(int iCanRef, unsigned long ulID, unsigned char *ucInputMessage, int iLength, unsigned short usTimeStamp);
@@ -41,6 +44,9 @@ extern void fnCANopenTxOK(int iCanRef);
 extern int uCANopenInit(QUEUE_HANDLE CAN_interface_ID, unsigned char ucNodeID);
 extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID);
 #define E_TIMER_CAN_MS                      1
+
+#define OPENCAN_DATA_TYPE_SDO               1
+#define OPENCAN_DATA_TYPE_NMT_CONTROL       2
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -67,6 +73,7 @@ extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID);
 /* =================================================================== */
 
 static QUEUE_HANDLE fnInitCANopenInterface(void);
+
 
 /* =================================================================== */
 /*                                task                                 */
@@ -150,30 +157,24 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
                 }
                 if (Length != 0) {
                     int i = 0;
-                    int iLength;
                     unsigned long ulID;
                     unsigned short usTimeStamp;
-                    unsigned char *ptrData;
 
-                    if (ucInputMessage[i] & CAN_MSG_RX) {
+                    if ((ucInputMessage[i] & CAN_MSG_RX) != 0) {
                         fnDebugMsg("CAN RX");
                     }
                     else {
                         fnDebugMsg("CAN REMOTE RX");
                     }
-
-                    if (ucInputMessage[i++] & CAN_RX_OVERRUN) {
+                    if ((ucInputMessage[i++] & CAN_RX_OVERRUN) != 0) {
                         fnDebugMsg(" [OVERRUN!!]");
                     }
-
                     fnDebugMsg(": TimeStamp = ");
                     usTimeStamp = ucInputMessage[i++];
                     usTimeStamp <<= 8;
                     usTimeStamp |= ucInputMessage[i++];
-                    fnDebugHex(usTimeStamp, (WITH_LEADIN | WITH_TERMINATOR | 2));
-
+                    fnDebugHex(usTimeStamp, (WITH_LEADIN | WITH_TERMINATOR | sizeof(usTimeStamp)));
                     fnDebugMsg(" ID = ");
-
                     ulID = ucInputMessage[i++];
                     ulID <<= 8;
                     ulID |= ucInputMessage[i++];
@@ -181,29 +182,14 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
                     ulID |= ucInputMessage[i++];
                     ulID <<= 8;
                     ulID |= ucInputMessage[i++];
-
-                    if ((ulID & CAN_EXTENDED_ID) != 0) {
-                        fnDebugHex((ulID & ~CAN_EXTENDED_ID), (WITH_LEADIN | WITH_TERMINATOR | 4));
-                    }
-                    else {
-                        fnDebugHex(ulID, (WITH_LEADIN | WITH_TERMINATOR | 2));
-                    }
-                    ptrData = &ucInputMessage[i];
-
                     if (Length > 7) {
                         Length -= 7;                                     // remove info to leave data length
-                        iLength = Length;
-                        fnDebugMsg(" Data =");
-
-                        while (Length-- != 0) {                          // display received message
-                            fnDebugHex(ucInputMessage[i++], (WITH_LEADIN | WITH_TERMINATOR | WITH_SPACE | 1));
-                        }
                     }
                     else {
-                        iLength = 0;
-                        fnDebugMsg(" No Data");
+                        Length = 0;
                     }
-                    fnCANopenRx(0, ulID, ptrData, iLength, usTimeStamp);
+                    fnDisplayCANopen(ulID, &ucInputMessage[i], (unsigned char)Length);
+                    fnCANopenRx(0, ulID, &ucInputMessage[i], Length, usTimeStamp);  // handle reception at CANopen layer
                 }
                 fnDebugMsg("\r\n");
                 break;
@@ -216,20 +202,204 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
     uCANopenPoll(CANopen_interface_ID0);                                 // polling
 }
 
+static void fnDisplayData(unsigned char *ptrData, QUEUE_TRANSFER Length, int iDataType)
+{
+    switch (iDataType) {
+    case OPENCAN_DATA_TYPE_NMT_CONTROL:
+        fnDebugMsg(" Node");
+        fnDebugHex(*(ptrData + 1), (WITH_SPACE | WITH_LEADIN | sizeof(unsigned char)));
+        fnDebugMsg(" \x22Go to '");
+        switch (*ptrData) {
+        case 0x02:
+            fnDebugMsg("stopped");
+            break;
+        case 0x80:
+            fnDebugMsg("pre-");
+            // Fall through intentionally
+            //
+        case 0x01:
+            fnDebugMsg("operational");
+            break;
+        case 0x81:
+            fnDebugMsg("reset node");
+            break;
+        case 0x82:
+            fnDebugMsg("reset communication");
+            break;
+        default:
+            fnDebugMsg("?");
+            break;
+        }
+        fnDebugMsg("'\x22");
+        break;
+    case OPENCAN_DATA_TYPE_SDO:
+        {
+            unsigned char ucSubIndex;
+            unsigned char ucCommand = *ptrData++;
+            unsigned short usOD = *ptrData++;
+            usOD |= (*ptrData++ << 8);
+            ucSubIndex = *ptrData++;
+            fnDebugMsg(" ");
+            switch ((ucCommand >> 5)) {                                  // CCS - client command specifier
+            case 0:
+                fnDebugMsg("segment download");
+                break;
+            case 1:
+                fnDebugMsg("initiating download");
+                break;
+            case 2:
+                fnDebugMsg("initiating upload");
+                break;
+            case 3:
+                fnDebugMsg("segment upload");
+                break;
+            case 4:
+                fnDebugMsg("aborting");
+                break;
+            case 5:
+                fnDebugMsg("block upload");
+                break;
+            case 6:
+                fnDebugMsg("block download");
+                break;
+            default:
+                fnDebugMsg("?");
+                break;
+            }
+            if ((ucCommand & 0x02) != 0) {                               // all data in single frame
+                fnDebugMsg(" expedited");
+                if ((ucCommand & 0x01) != 0) {                           // number of bytes [in data 4..7] that do not contain data    
+                    fnDebugDec(((ucCommand >> 2) & 0x3), WITH_SPACE);
+                }
+            }
+            fnDebugMsg(" OD =");
+            fnDebugHex(usOD, (WITH_LEADIN | WITH_SPACE | sizeof(usOD)));
+            fnDebugMsg(":");
+            fnDebugHex(ucSubIndex, (sizeof(ucSubIndex)));
+            Length -= 4;
+        }
+        break;
+    default:
+        break;
+    }
+    fnDebugMsg(" Data =");
+    while (Length-- != 0) {                                              // display received message
+        fnDebugHex(*ptrData++, (WITH_LEADIN | WITH_TERMINATOR | WITH_SPACE | 1));
+    }
+}
+
+extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength)
+{
+    int iDataType = 0;
+    fnDebugMsg("0x");
+    if ((ulID & CAN_EXTENDED_ID) != 0) {
+        fnDebugHex((ulID & ~CAN_EXTENDED_ID), (WITH_TERMINATOR | sizeof(ulID)));
+    }
+    else {
+        CHAR cBuf[5];
+        fnBufferHex(ulID, (WITH_TERMINATOR | sizeof(unsigned short)), cBuf);
+        fnDebugMsg(&cBuf[1]);
+    }
+    fnDebugMsg(" [Node-ID = ");
+    fnDebugHex((ulID & 0x7f), (WITH_LEADIN | WITH_TERMINATOR | sizeof(unsigned char)));
+    fnDebugMsg(" COM-Object: ");
+    switch ((ulID >> 7) & 0x0f) {
+    case 0x0:                                            // receive only at slave
+        fnDebugMsg("NMT control");
+        iDataType = OPENCAN_DATA_TYPE_NMT_CONTROL;
+        break;
+    case 0x1:
+        if ((ulID & 0x7f) == 0) {
+            fnDebugMsg("SYNC");                          // receive only at slave
+        }
+        else {
+            fnDebugMsg("EMCY");                          // slave transmits
+        }
+        break;
+    case 0x2:
+        fnDebugMsg("TIME");                              // receive only at slave
+        break;
+    case 0x3:
+        fnDebugMsg("Tx PDO 1");                          // slave transmission
+        break;
+    case 0x4:
+        fnDebugMsg("Rx PDO 1");                          // slave reception
+        break;
+    case 0x5:
+        fnDebugMsg("Tx PDO 2");                          // slave transmission
+        break;
+    case 0x6:
+        fnDebugMsg("Rx PDO 2");                          // slave reception
+        break;
+    case 0x7:
+        fnDebugMsg("Tx PDO 3");                          // slave transmission
+        break;
+    case 0x8:
+        fnDebugMsg("Rx PDO 3");                          // slave reception
+        break;
+    case 0x9:
+        fnDebugMsg("Tx PDO 4");                          // slave transmission
+        break;
+    case 0xa:
+        fnDebugMsg("Rx PDO 4");                          // slave reception
+        break;
+    case 0xb:
+        fnDebugMsg("Tx SDO");                            // slave transmission
+        iDataType = OPENCAN_DATA_TYPE_SDO;
+        break;
+    case 0xc:
+        fnDebugMsg("Rx SDO");                            // slave reception
+        iDataType = OPENCAN_DATA_TYPE_SDO;
+        break;
+    case 0xe:
+        if ((ulID & 0x7f) == 0xe4) {
+            fnDebugMsg("LSS Tx");                        // slave transmission
+        }
+        else if ((ulID & 0x7f) == 0xe5) {
+            fnDebugMsg("LSS Rx");                        // slave reception
+        }
+        else {
+            fnDebugMsg("NMT monitor");                   // slave transmission
+        }
+        break;
+    default:
+        fnDebugMsg("?");                                 // unknown function code
+        break;
+    }
+    fnDebugMsg("]");
+    if (ucLength > 0) {
+        fnDisplayData(ptrData, ucLength, iDataType);
+    }
+    else {
+        fnDebugMsg(" No Data");
+    }
+}
+
 static QUEUE_HANDLE fnInitCANopenInterface(void)
 {
     CANTABLE tCANParameters;                                             // table for passing information to driver
+    QUEUE_HANDLE CANopenHandle;
 
     tCANParameters.Task_to_wake = OWN_TASK;                              // wake us on buffer events
     tCANParameters.Channel = 0;                                          // CAN0 interface
     tCANParameters.ulSpeed = 250000;                                     // 250k speed
-    tCANParameters.ulTxID = (CAN_EXTENDED_ID | 121);                     // default ID of destination (not extended)
-    tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000 | 122);        // our ID (extended)
-    tCANParameters.ulRxIDMask = 0x00080000;
+    tCANParameters.ulTxID = (121);                                       // default ID of destination (not used by CANopen)
+    tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000);              // our ID (extended)
+    tCANParameters.ulRxIDMask = CAN_STANDARD_MASK /*0x00080000*/;        // receive only extended address with 0x80000 set
     tCANParameters.usMode = 0;                                           // use normal mode
     tCANParameters.ucTxBuffers = 2;                                      // assign two tx buffers for use
-    tCANParameters.ucRxBuffers = 3;                                      // assign three rx buffers for use
-    return (fnOpen(TYPE_CAN, FOR_I_O, &tCANParameters));                 // open CAN interface
+    tCANParameters.ucRxBuffers = 1;                                      // assign one rx buffers for extended ID use
+    CANopenHandle = fnOpen(TYPE_CAN, FOR_I_O, &tCANParameters);          // open CAN interface
+    tCANParameters.ulRxID = 0;                                           // broadcast address
+    tCANParameters.ulRxIDMask = CAN_STANDARD_MASK;                       // accept ID 0
+    tCANParameters.ucTxBuffers = 0;
+    tCANParameters.ucRxBuffers = 1;
+    fnConfigCAN(CANopenHandle, &tCANParameters);                         // configure 1 buffer for this logical channel
+    tCANParameters.ulRxID = CANOPEN_NODE_ID;                             // our network ID
+    tCANParameters.ulRxIDMask = 0x7f;                                    // accept only our node ID
+    tCANParameters.ucRxBuffers = 1;
+    fnConfigCAN(CANopenHandle, &tCANParameters);                         // configure 1 buffer for this logical channel
+    return CANopenHandle;                                                // open CAN interface
 }
 #endif
 
