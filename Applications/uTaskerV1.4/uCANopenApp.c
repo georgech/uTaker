@@ -34,7 +34,7 @@
 #define OWN_TASK                            TASK_CANOPEN
 
 #define CANOPEN_NODE_ID                     0x4c
-//#define CANOPEN_NODE_ID                     0x7a
+//#define CANOPEN_NODE_ID                   0x7a
 
 extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength);
 
@@ -47,6 +47,7 @@ extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID);
 
 #define OPENCAN_DATA_TYPE_SDO               1
 #define OPENCAN_DATA_TYPE_NMT_CONTROL       2
+#define OPENCAN_DATA_TYPE_NMT_MONITOR       3
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -205,6 +206,28 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
 static void fnDisplayData(unsigned char *ptrData, QUEUE_TRANSFER Length, int iDataType)
 {
     switch (iDataType) {
+    case OPENCAN_DATA_TYPE_NMT_MONITOR:
+        fnDebugMsg(" \x22");
+        switch (*ptrData) {
+        case 0x00:
+            fnDebugMsg("Boot up");
+            break;
+        case 0x04:
+            fnDebugMsg("Stopped");
+            break;
+        case 0x7f:
+            fnDebugMsg("Pre-");
+            // Fall through intentionally
+            //
+        case 0x05:
+            fnDebugMsg("Operational");
+            break;
+        default:
+            fnDebugMsg("?");
+            break;
+        }
+        fnDebugMsg("\x22");
+        break;
     case OPENCAN_DATA_TYPE_NMT_CONTROL:
         fnDebugMsg(" Node");
         fnDebugHex(*(ptrData + 1), (WITH_SPACE | WITH_LEADIN | sizeof(unsigned char)));
@@ -360,6 +383,7 @@ extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigne
         }
         else {
             fnDebugMsg("NMT monitor");                   // slave transmission
+            iDataType = OPENCAN_DATA_TYPE_NMT_MONITOR;
         }
         break;
     default:
@@ -385,7 +409,7 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     tCANParameters.ulSpeed = 250000;                                     // 250k speed
     tCANParameters.ulTxID = (121);                                       // default ID of destination (not used by CANopen)
     tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000);              // our ID (extended)
-    tCANParameters.ulRxIDMask = CAN_STANDARD_MASK /*0x00080000*/;        // receive only extended address with 0x80000 set
+    tCANParameters.ulRxIDMask = CAN_STANDARD_MASK /*0x00080000*/;        // receive extended address with 0x80000 set
     tCANParameters.usMode = 0;                                           // use normal mode
     tCANParameters.ucTxBuffers = 2;                                      // assign two tx buffers for use
     tCANParameters.ucRxBuffers = 1;                                      // assign one rx buffers for extended ID use
