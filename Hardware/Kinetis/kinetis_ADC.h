@@ -11,7 +11,7 @@
     File:      kinetis_ADC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.06.2013 Add ADC result to interrupt call-back                     {41}
     30.09.2013 Add ADC A/B input multiplexer control                     {54}
@@ -229,7 +229,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     case ADC_CFG1_MODE_12:                                               // conversion mode - single-ended 12 bit or differential 13 bit
         usStandardValue >>= 4;
         if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0800) {
+            if ((usStandardValue & 0x0800) != 0) {
                 usStandardValue |= 0xf000;                               // sign extend
             }
         }
@@ -242,7 +242,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     case ADC_CFG1_MODE_10:                                               // conversion mode - single-ended 10 bit or differential 11 bit
         usStandardValue >>= 6;
         if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0200) {
+            if ((usStandardValue & 0x0200) != 0) {
                 usStandardValue |= 0xfc00;                               // sign extend
             }
         }
@@ -255,7 +255,7 @@ static unsigned short fnConvertADCvalue(KINETIS_ADC_REGS *ptrADC, unsigned short
     case ADC_CFG1_MODE_8:                                                // conversion mode - single-ended 8 bit or differential 9 bit
         usStandardValue >>= 8;
         if (ptrADC->ADC_SC1A & ADC_SC1A_DIFF) {                          // differential mode
-            if (usStandardValue & 0x0080) {
+            if ((usStandardValue & 0x0080) != 0) {
                 usStandardValue |= 0xff00;                               // sign extend
             }
         }

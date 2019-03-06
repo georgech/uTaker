@@ -11,7 +11,7 @@
     File:      crypto.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.10.2018 Add SHA256 with mmCAU support (for 1 block)
     
@@ -99,7 +99,7 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     WRITE_ONE_TO_CLEAR(LTC0_CW, (LTC_CW_CM | LTC_CW_CDS | LTC_CW_CICV | LTC_CW_CCR | LTC_CW_CKR | LTC_CW_CPKA | LTC_CW_CPKB | LTC_CW_CPKN | LTC_CW_CPKE | LTC_CW_COF | LTC_CW_CIF)); // clear internal registers
     LTC0_CTL = (LTC_CTL_IFS | LTC_CTL_OFS | LTC_CTL_KIS | LTC_CTL_KOS | LTC_CTL_CIS | LTC_CTL_COS); // enable byte swap for registers to be used
   //if (iDecrypt != 0) {
-  //    LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC | LTC_MD_AAI_DK);    // AES key for decryption (this sets the error interrupt but allow descrypt to operate - setting AES algorithm doesn't trigger error interrupt but causes descrpt to fail)
+  //    LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC | LTC_MD_AAI_DK);     // AES key for decryption (this sets the error interrupt but allow decrypt to operate - setting AES algorithm doesn't trigger error interrupt but causes descrpt to fail)
   //}
   //else {
         LTC0_MD = (LTC_MD_ALG_AES | LTC_MD_AAI_CBC);                     // AES key for encryption

@@ -11,7 +11,7 @@
     File:      Tty_drv.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     22.02.2007 WAKE_BLOCKED_TX allow TX_FREE on char <= level (was < level) {1}. Remove check on tx done {2}
     17.03.2007 Add check fnWakeBlockedTx when transmission complete for DMA mode {3}
@@ -50,6 +50,7 @@
     03.05.2017 Add optional modulo tx buffer alignment                   {36}
     09.05.2017 Add transmission pause mode                               {37}
     05.05.2018 Add UART_HW_TRIGGERED_TX_MODE                             {38}
+    05.03.2019 Add input buffer peek support                             {39}
 
 */
 
@@ -120,6 +121,9 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 {
     TTYQUE *ptTTYQue;
     QUEUE_TRANSFER rtn_val = 0;
+#if defined SERIAL_SUPPORT_PEEK                                          // {39}
+    int iPeek = 0;
+#endif
 
     uDisable_Interrupt();                                                // disable all interrupts
 
@@ -272,10 +276,17 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
         }
         break;
 
+#if defined SERIAL_SUPPORT_PEEK                                          // {39}
+    case CALL_PEEK_NEWEST:
+    case CALL_PEEK_OLDEST:
+        // Fall-through intentionally
+        //
+        iPeek = 1;                                                       // mark that we are peeking reading and not reading
+#endif
     case CALL_READ:                                                      // read data from the queue
         ptTTYQue = (struct stTTYQue *)(que_ids[DriverID].input_buffer_control); // set to input control block
 #if defined (SUPPORT_MSG_MODE) || defined (SUPPORT_MSG_CNT) || defined (UART_BREAK_SUPPORT)
-        if (ptTTYQue->opn_mode & (MSG_MODE | MSG_MODE_RX_CNT | MSG_BREAK_MODE)) {
+        if ((ptTTYQue->opn_mode & (MSG_MODE | MSG_MODE_RX_CNT | MSG_BREAK_MODE)) != 0) {
     #if defined SUPPORT_MSG_MODE_EXTRACT                                 // {29}
             if (Counter == 0) {
                 Counter = 1;
@@ -286,7 +297,13 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
                     uEnable_Interrupt();                                 // enable interrupts
                     return rtn_val;
                 }
+    #if defined SERIAL_SUPPORT_PEEK                                      // {39}
+                if (iPeek == 0) {
+                    --ptTTYQue->msgs;                                    // delete this message (or its length)
+                }
+    #else
                 --ptTTYQue->msgs;                                        // delete this message (or its length)
+    #endif
     #if defined SUPPORT_MSG_MODE_EXTRACT
             }
     #endif
@@ -295,9 +312,12 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX_FREERUN  // {32}
         if ((ptTTYQue->ucDMA_mode & (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_BREAK)) == (UART_RX_DMA)) { // if receiver is free-running in DMA mode
             fnPrepareRxDMA(channel, (unsigned char *)&(ptTTYQue->tty_queue), 0); // update the input with present DMA reception information
-
     #if defined SUPPORT_FLOW_CONTROL && defined SUPPORT_HW_FLOW          // handle CTS control when the buffer is critical
-            if (((ptTTYQue->opn_mode & RTS_CTS) != 0) && ((ptTTYQue->ucState & RX_HIGHWATER) == 0) // RTS/CTS for receiver
+            if (
+        #if defined SERIAL_SUPPORT_PEEK                                  // {39}
+            (iPeek == 0) &&
+        #endif
+                ((ptTTYQue->opn_mode & RTS_CTS) != 0) && ((ptTTYQue->ucState & RX_HIGHWATER) == 0) // RTS/CTS for receiver
         #if defined SUPPORT_FLOW_HIGH_LOW
             && ((ptTTYQue->tty_queue.chars >= ptTTYQue->high_water_level)))
         #else
@@ -313,8 +333,13 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
     #endif
         }
 #endif
+#if defined SERIAL_SUPPORT_PEEK                                          // {39}
+        if (iPeek != 0) {
+            uEnable_Interrupt();                                         // enable interrupts
+            return fnGetBufPeek(&ptTTYQue->tty_queue, ptBuffer, Counter, (ucCallType == CALL_PEEK_NEWEST));
+        }
+#endif
         rtn_val = fnGetBuf(&ptTTYQue->tty_queue, ptBuffer, Counter);     // interrupts are re-enabled as soon as no longer critical
-
 #if defined SERIAL_SUPPORT_DMA                                           // {12}
         if (((ptTTYQue->ucDMA_mode & UART_RX_DMA_HALF_BUFFER) != 0) && ((ptTTYQue->msgs & 0x1) == 0)) { // complete message extracted, set to next half buffer
             if (ptTTYQue->tty_queue.get < ptTTYQue->tty_queue.QUEbuffer + (ptTTYQue->tty_queue.buf_length/2)) {
@@ -325,7 +350,6 @@ static QUEUE_TRANSFER entry_tty(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             }
         }
 #endif
-
 #if defined SUPPORT_FLOW_CONTROL
         if (((ptTTYQue->opn_mode & (USE_XON_OFF | RTS_CTS)) && (ptTTYQue->ucState & RX_HIGHWATER)) // flow control support for receiver
     #if defined SUPPORT_FLOW_HIGH_LOW

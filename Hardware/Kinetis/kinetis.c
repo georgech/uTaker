@@ -70,6 +70,7 @@
     08.07.2018 Add optional power loss interrupt support (SUPPORT_LOW_VOLTAGE_DETECTION) {136}
     29.09.2018 Allow memcpy() type DMA to be pre-empted by higher priority DMA channels {137}
     13.10.2018 Add comparator support                                    {138}
+    06.03.2019 Random number pointer set during variable initialisation  {139}
 
 */
 
@@ -214,7 +215,7 @@ static int iInterruptLevel = 0;                                          // pres
     static unsigned long ulPeripheralNeedsClock = 0;                     // {96} stop mode is blocked if a peripheral is in use that needs a clock that will be stopped
 #endif
 #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
-    unsigned short *ptrSeed;
+    unsigned short *ptrSeed = RANDOM_SEED_LOCATION;                       // {139}
 #endif
 #if defined FLASH_ROUTINES || defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
     static unsigned long ulFlashRow[FLASH_ROW_SIZE/sizeof(unsigned long)] = {0}; // FLASH row backup buffer (on long word boundary)
@@ -436,9 +437,6 @@ extern int main(void)
     else {
         ptrTopOfUsedMemory = __sfe(".data");
     }
-#endif
-#if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
-    ptrSeed = RANDOM_SEED_LOCATION;                                      // {23}
 #endif
     fnInitHW();                                                          // perform hardware initialisation (note that we do not have heap yet)
 #if !defined APPLICATION_WITHOUT_OS
@@ -888,8 +886,8 @@ INITHW void fnInitHW(void)                                               // perf
     #endif
     };
     #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
-    static unsigned short usRandomSeed = 0;
-    ptrSeed = &usRandomSeed;
+  //static unsigned short usRandomSeed = 0;
+  //ptrSeed = &usRandomSeed;
     #endif
     fnInitialiseDevice(ulPortPullups);
 #endif

@@ -436,19 +436,15 @@ extern QUEUE_TRANSFER fnGetBufPeek(QUEQUE *ptQUEQue, unsigned char *output_buffe
         }
     }
 
-    if (nr_of_bytes != 0) {
+    if ((nr_of_bytes != 0) && (output_buffer != 0)) {
         if ((ptrGet + nr_of_bytes) >= ptQUEQue->buffer_end) {            // we have a circular buffer and can either copy once or must copy twice
             QUEUE_TRANSFER FirstCopy = (QUEUE_TRANSFER)(ptQUEQue->buffer_end - ptrGet); // we need double copy
-            if (output_buffer) {
-                uMemcpy(output_buffer, ptrGet, FirstCopy);
-                output_buffer += FirstCopy;
-                uMemcpy(output_buffer, ptQUEQue->QUEbuffer, (nr_of_bytes - FirstCopy));
-            }
+            uMemcpy(output_buffer, ptrGet, FirstCopy);
+            output_buffer += FirstCopy;
+            uMemcpy(output_buffer, ptQUEQue->QUEbuffer, (nr_of_bytes - FirstCopy));
         }
-        else {
-            if (output_buffer) {                                         // we can do it with a single copy
-                uMemcpy(output_buffer, ptrGet, nr_of_bytes);
-            }
+        else {                                                           // we can do it with a single copy
+            uMemcpy(output_buffer, ptrGet, nr_of_bytes);
         }
     }
     return nr_of_bytes;                                                  // return the number of bytes copied
