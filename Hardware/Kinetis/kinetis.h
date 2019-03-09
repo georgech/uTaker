@@ -1312,6 +1312,7 @@ typedef struct stRESET_VECTOR
     #define UARTS_AVAILABLE         3
 #elif defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66
     #define UARTS_AVAILABLE         5
+    #define UART_ERROR_INTERRUPT_VECTOR                                  // each UART has an independent error interrupt
 #elif defined KINETIS_KL02 || defined KINETIS_KL05 || defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KL33 || defined KINETIS_KL43 || defined KINETIS_KEA8
     #define UARTS_AVAILABLE         1
     #define UART_WITHOUT_MODEM_CONTROL
@@ -16378,7 +16379,7 @@ typedef struct stKINETIS_CAN_CONTROL
   #define UART_C2_TIE                    0x80                            // transmit interrupt or DMA transfer enable
 #define UART0_S1                         *(volatile unsigned char *)(UART0_BLOCK + 0x04)   // UART 0 Status Register 1 (read-only)
   #define UART_S1_PF                     0x01                            // parity error flag
-  #define UART_S1_FE                     0x02                            // framing error flag
+  #define UART_S1_FE                     0x02                            // framing error flag (blocks further reception until cleared by reading this register with it set followed by a read of the data register)
   #define UART_S1_NF                     0x04                            // noise flag
   #define UART_S1_OR                     0x08                            // receiver overrun flag
   #define UART_S1_IDLE                   0x10                            // idle line flag

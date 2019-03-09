@@ -15,6 +15,7 @@
     *********************************************************************
     07.01.2019 Add return value to fnConfigureUARTpin() and handle UART_RTS_RS485_MANUAL_MODE case when channel operated in manual RS485 mode
     09.01.2019 Shared with iMX project
+    09.03.2019 Add error handling to devices with independent error interrupt {1}
 
 
 */
@@ -29,6 +30,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
     int iInterruptID = 0;
     unsigned char ucPriority = 0;
     void (*InterruptFunc)(void) = 0;
+    #if defined UART_ERROR_INTERRUPT_VECTOR                              // {1}
+    void (*InterruptErrorFunc)(void) = 0;
+    unsigned char ucErrorPriority = 0;
+    #endif
     switch (Channel) {
     #if defined FIRST_LPUART_CHANNEL
     case FIRST_LPUART_CHANNEL:
@@ -522,6 +527,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
             ucPriority = PRIORITY_UART0;
             InterruptFunc = _SCI0_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI0_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART0;
+        #endif
             break;
         #if defined SUPPORT_HW_FLOW
             #if defined UART0_MANUAL_RTS_CONTROL
@@ -649,6 +658,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
             ucPriority = PRIORITY_UART1;
             InterruptFunc = _SCI1_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI1_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART1;
+        #endif
             break;
 
         #if defined SUPPORT_HW_FLOW
@@ -767,6 +780,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
             ucPriority = PRIORITY_UART2;
             InterruptFunc = _SCI2_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI2_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART2;
+        #endif
             break;
 
         #if defined SUPPORT_HW_FLOW
@@ -867,6 +884,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
             ucPriority = PRIORITY_UART3;
             InterruptFunc = _SCI3_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI3_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART3;
+        #endif
             break;
 
         #if defined SUPPORT_HW_FLOW
@@ -955,6 +976,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             iInterruptID = irq_UART4_ID;                                 // UART4 transmitter/receiver interrupt vector ID
             ucPriority = PRIORITY_UART4;
             InterruptFunc = _SCI4_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI4_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART4;
+        #endif
             break;
 
         #if defined SUPPORT_HW_FLOW
@@ -1035,6 +1060,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
             iInterruptID = irq_UART5_ID;                                 // UART5 transmitter/receiver interrupt vector ID
             ucPriority = PRIORITY_UART5;
             InterruptFunc = _SCI5_Interrupt;
+        #if defined UART_ERROR_INTERRUPT_VECTOR                          // {1}
+            InterruptErrorFunc = _SCI5_Error_Interrupt;
+            ucErrorPriority = PRIORITY_ERROR_UART5;
+        #endif
             break;
 
         #if defined SUPPORT_HW_FLOW
@@ -1117,6 +1146,11 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
     if (InterruptFunc != 0) {                                            // if the interrupt handler is to be installed
         fnEnterInterrupt(iInterruptID, ucPriority, InterruptFunc);       // enter UART/LPUART interrupt handler
+    #if defined UART_ERROR_INTERRUPT_VECTOR                              // {1}
+        if (InterruptErrorFunc != 0) {
+            fnEnterInterrupt((iInterruptID + 1), ucErrorPriority, InterruptErrorFunc); // enter UART error interrupt handler
+        }
+    #endif
     }
     return 0;
 }

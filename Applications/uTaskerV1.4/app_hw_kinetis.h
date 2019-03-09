@@ -59,6 +59,7 @@
     24.04.2017 Add FT800 interface configuration (tested on FRDM-K64F)   {31}
     14.05.2017 Add FRDM_KL28Z
     29.09.2017 Add FRDM_KE15Z
+    09.03.2019 Add PRIORITY_ERROR_UART0 to PRIORITY_ERROR_UART5 interrupt priorities
 
     Application specific hardware configuration
 */
@@ -1604,7 +1605,7 @@
     #endif
 #else
     #if !defined KINETIS_KM && !defined K20FX512_120                     // KM's iRTC not yet supported
-        #define SUPPORT_RTC                                              // support real time clock
+      //#define SUPPORT_RTC                                              // support real time clock
           //#define SUPPORT_RTC_ms                                       // ms RTC support
           //#define SUPPORT_RTC_us                                       // us RTC support
     #endif
@@ -3289,6 +3290,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_UART3             2
     #define PRIORITY_UART4             2
     #define PRIORITY_UART5             2
+    #define PRIORITY_ERROR_UART0       2
+    #define PRIORITY_ERROR_UART1       2
+    #define PRIORITY_ERROR_UART2       2
+    #define PRIORITY_ERROR_UART3       2
+    #define PRIORITY_ERROR_UART4       2
+    #define PRIORITY_ERROR_UART5       2
     #define PRIORITY_LPUART0           2
     #define PRIORITY_LPUART1           2
     #define PRIORITY_LPUART2           2
@@ -3380,6 +3387,12 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define PRIORITY_UART3             9
     #define PRIORITY_UART4             8
     #define PRIORITY_UART5             7
+    #define PRIORITY_ERROR_UART0       7
+    #define PRIORITY_ERROR_UART1       7
+    #define PRIORITY_ERROR_UART2       7
+    #define PRIORITY_ERROR_UART3       7
+    #define PRIORITY_ERROR_UART4       7
+    #define PRIORITY_ERROR_UART5       7
     #define PRIORITY_LPUART0           7
     #define PRIORITY_LPUART1           7
     #define PRIORITY_LPUART2           7

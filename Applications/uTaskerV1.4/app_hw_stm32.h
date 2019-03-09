@@ -279,10 +279,15 @@
 
     #define CORE_VOLTAGE        VCORE_RANGE_1                            // normal core voltage operation
 #elif defined STM32F407ZG_SK || defined STM32_E407
-    #define CRYSTAL_FREQ        25000000
   //#define DISABLE_PLL                                                  // run from clock source directly
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source
-    #define PLL_INPUT_DIV       25                                       // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+    #if defined STM32_E407
+        #define CRYSTAL_FREQ    12000000
+        #define PLL_INPUT_DIV   12                                       // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+    #else
+        #define CRYSTAL_FREQ    25000000
+        #define PLL_INPUT_DIV   25                                       // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+    #endif
     #define PLL_VCO_MUL         336                                      // 192 ..432 where VCO must be 192..432MHz
     #define PLL_POST_DIVIDE     2                                        // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
     #define PIN_COUNT           PIN_COUNT_144_PIN
@@ -413,6 +418,20 @@
         #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH)    // sector size of code FLASH
     #endif
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+#elif defined SPI_FLASH_MX25L
+  //#define SPI_FLASH_MX25L1606E
+    #define SPI_FLASH_MX25L12845E
+    #if defined SPI_FLASH_MX25L12845E
+        #define SPI_FLASH_SIZE           (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
+    #else
+        #define SPI_FLASH_SIZE           (2 * 1024 * 1024)               // 16 Mbits/2 MBytes
+    #endif
+    #define SPI_FLASH_PAGE_LENGTH        (256)
+    #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
+    #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
+    #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
+    #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
+  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
 #elif defined SPI_FLASH_SST25
   //#define SPI_FLASH_SST25VF010A                                        // the supported SST chips
   //#define SPI_FLASH_SST25LF020A
@@ -487,7 +506,7 @@
     #define SPI_FLASH_SECTOR_LENGTH (64 * 4 * SPI_FLASH_PAGE_LENGTH)     // exception sector 0a is 2k and sector 0b is 62k
 #endif
 
-#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI
+#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI || defined STM32_E407
     // SPI FLASH system setup
     //
     //#define SPI_FLASH_MULTIPLE_CHIPS                                   // activate when multiple physical chips are used
@@ -659,7 +678,7 @@
         #define GET_SDCARD_WP_STATE() 0                                  // write protection disabled (change to read switch if required)
 
         #define CONFIGURE_SDCARD_DETECT_INPUT() _CONFIG_PORT_INPUT(E, PORTE_BIT0, (INPUT_PULL_UP | PULLUP_BIT0))
-        #define SDCARD_DETECTION()           (!_READ_PORT_MASK(E, PORTE_BIT0))
+        #define SDCARD_DETECTION()            (_READ_PORT_MASK(E, PORTE_BIT0) == 0)
     #endif
 #endif
 
@@ -779,10 +798,10 @@
         #define LPUART_REMAP_G                                           // STLink VCOM
     #elif defined WISDOM_STM32F407 || defined STM32F746G_DISCO || defined NUCLEO_F031K6
         #define DEMO_UART    0                                           // use UART channel 0 (USART 1 since ST USARTs count from 1)
-    #elif defined STM3241G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+    #elif defined STM3241G_EVAL || defined STM32_P207 || defined STM32F407ZG_SK
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1) - the STM3241G can't use USART 4 and SD card at the same time so needs a modification for this
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
-    #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD)     // {6}
+    #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD) || defined STM32_E407 // {6}
         #define DEMO_UART    5                                           // use UART channel 5 (USART 6 since ST USARTs count from 1)
     #else
         #define DEMO_UART    1                                           // use UART channel 1 (USART 2 since ST USARTs count from 1)
@@ -820,7 +839,7 @@
     #else
         #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
     #endif
-    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI || defined STM32_E407
+    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
     #elif !defined STM3241G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)
@@ -1221,6 +1240,8 @@
                                        {_PORTC, TAMPER_BUTTON,   {156, 372, 171, 385}}
 
     #define KEYPAD "KeyPads/STM3241G-EVAL.bmp"
+
+    #define GPIO_DEFAULT_INPUT_H       0xdfff                            // set to PORTH_BIT15 low to detect SD card on STM3241G_EVAL
 #elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
     #define USER_BUTTON_B1             PORTC_BIT13
 
@@ -1391,6 +1412,7 @@
                                        {_PORTA, WAKEUP_BUTTON,   {111, 374, 126, 388}}, \
                                        {_PORTC, TAMPER_BUTTON,   {155, 374, 171, 388}}
 
+    #define GPIO_DEFAULT_INPUT_E       0xfffe                            // set to 0xfffe to detect SD card on STM3210C_EVAL
 
     #define KEYPAD "KeyPads/STM32F1-EVAL.bmp"
 #elif defined ST_MB997A_DISCOVERY                                        // F4
@@ -1505,6 +1527,54 @@
     #define KEYPAD "KeyPads/NUCLEO-144.bmp"
 
     #define TIMER_3_PARTIAL_REMAP
+#elif defined STM32_E407
+    #define WKUP_BUTTON                PORTA_BIT0
+
+    #define LED1                       PORTC_BIT13                        // green LED
+    #define LED2                       PORTC_BIT0
+    #define LED3                       PORTC_BIT2
+    #define LED4                       PORTC_BIT3
+
+    #define DEMO_LED_1                 (LED1 >> 13)
+    #define DEMO_LED_2                 (LED2 << 1)
+    #define DEMO_LED_3                 (LED3)
+    #define DEMO_LED_4                 (LED4)
+    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3 | DEMO_LED_4)
+
+    #define DEMO_INPUT_PORT            GPIOC_IDR
+    #define DEMO_LED_PORT              GPIOC_ODR
+    #define BLINK_LED                  LED1
+
+    #define ENABLE_LED_PORT()
+    #define MEASURE_LOW_POWER_ON()     
+    #define MEASURE_LOW_POWER_OFF()
+
+    #define CONFIG_TEST_OUTPUT()
+    #define TOGGLE_TEST_OUTPUT()
+
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
+    #else
+        #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(C, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #endif    
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(C, BLINK_LED)        // blink the LED, if set as output
+
+    #define INIT_WATCHDOG_DISABLE()    _CONFIG_PORT_INPUT(A, (WKUP_BUTTON), (FLOATING_INPUT)) // PA0 configured as input (pull-up on board)
+    #define WATCHDOG_DISABLE()         (_READ_PORT_MASK(A, (WKUP_BUTTON)) == 0) // disable watchdog by holding the user button down at reset
+
+    // LEDs
+    //
+    #define KEYPAD_LEDS  1
+
+                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS      {RGB(0,255,0),RGB(50,50,50),  1, {75, 33, 86, 42}, _PORTC, LED1}
+
+    #define EXTENDED_USER_BUTTONS
+    #define BUTTON_KEY_DEFINITIONS     {_PORTA, WKUP_BUTTON,   {72, 12, 96, 30}, 1, 0}
+
+    #define GPIO_DEFAULT_INPUT_A       0xfffe                            // initial state of WKUP_BUTTON input (not presed)
+
+    #define KEYPAD "KeyPads/STM32-E407.bmp"
 #elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407 // F2/F4
     #if defined STM32F407ZG_SK
         #define USERS_BUTTON           PORTG_BIT6
@@ -1919,18 +1989,39 @@
     #define TIMER_3_FULL_REMAP                                           // timer 3 ch1 = PC6, ch2 = PC7, ch3 = PC8, ch4= PC9
 #endif
 
-
-#define GPIO_DEFAULT_INPUT_A       0xffff                                // initial port input states for simulator
-#define GPIO_DEFAULT_INPUT_B       0xffff
-#define GPIO_DEFAULT_INPUT_C       0xffff
-#define GPIO_DEFAULT_INPUT_D       0xffff
-#define GPIO_DEFAULT_INPUT_E       0xfffe                                // set to 0xfffe to detect SD card on STM3210C_EVAL
-#define GPIO_DEFAULT_INPUT_F       0xffff
-#define GPIO_DEFAULT_INPUT_G       0xffff
-#define GPIO_DEFAULT_INPUT_H       0xdfff                                // set to 0xdfff to detect SD card on STM3241G_EVAL
-#define GPIO_DEFAULT_INPUT_I       0xffff
-#define GPIO_DEFAULT_INPUT_J       0xffff
-#define GPIO_DEFAULT_INPUT_K       0xffff
+#if !defined GPIO_DEFAULT_INPUT_A
+    #define GPIO_DEFAULT_INPUT_A   0xffff                                // initial port input states for simulator
+#endif
+#if !defined GPIO_DEFAULT_INPUT_B
+    #define GPIO_DEFAULT_INPUT_B   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_C
+    #define GPIO_DEFAULT_INPUT_C   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_D
+    #define GPIO_DEFAULT_INPUT_D   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_E
+    #define GPIO_DEFAULT_INPUT_E   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_F
+    #define GPIO_DEFAULT_INPUT_F   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_G
+    #define GPIO_DEFAULT_INPUT_G   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_H
+    #define GPIO_DEFAULT_INPUT_H   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_I
+    #define GPIO_DEFAULT_INPUT_I   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_J
+    #define GPIO_DEFAULT_INPUT_J   0xffff
+#endif
+#if !defined GPIO_DEFAULT_INPUT_K
+    #define GPIO_DEFAULT_INPUT_K   0xffff
+#endif
 
 #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined STM32F746G_DISCO // {2}
     // User port mapping

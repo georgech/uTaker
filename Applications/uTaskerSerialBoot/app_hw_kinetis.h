@@ -37,6 +37,7 @@
     26.07.2017 Add DMA channel and priority configuration                {12}
     05.10.2017 Add modbus configuration                                  {13}
     16.10.2017 Add FRDM_KE15Z
+    09.03.2019 Add PRIORITY_ERROR_UART0 to PRIORITY_ERROR_UART5 interrupt priorities
 
     Application specific hardware configuration
 
@@ -1350,6 +1351,12 @@
     #define PRIORITY_UART3             2
     #define PRIORITY_UART4             2
     #define PRIORITY_UART5             2
+    #define PRIORITY_ERROR_UART0       2
+    #define PRIORITY_ERROR_UART1       2
+    #define PRIORITY_ERROR_UART2       2
+    #define PRIORITY_ERROR_UART3       2
+    #define PRIORITY_ERROR_UART4       2
+    #define PRIORITY_ERROR_UART5       2
     #define PRIORITY_LPUART0           2
     #define PRIORITY_LPUART1           2
     #define PRIORITY_LPUART2           2
@@ -1459,6 +1466,12 @@
     #define PRIORITY_UART3             6
     #define PRIORITY_UART4             6
     #define PRIORITY_UART5             6
+    #define PRIORITY_ERROR_UART0       2
+    #define PRIORITY_ERROR_UART1       2
+    #define PRIORITY_ERROR_UART2       2
+    #define PRIORITY_ERROR_UART3       2
+    #define PRIORITY_ERROR_UART4       2
+    #define PRIORITY_ERROR_UART5       2
     #define PRIORITY_LPUART5           5
     #define PRIORITY_LPUART4           5
     #define PRIORITY_LPUART3           5

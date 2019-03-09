@@ -53,6 +53,7 @@
     04.01.2019 Add local defines MANUAL_MODEM_CONTROL, MANUAL_MODEM_CONTROL_LPUART and MANUAL_MODEM_CONTROL_UART to better control modem mode operation {216}
     07.01.2019 Allow UART0_MANUAL_RTS_CONTROL..UARTn_MANUAL_RTS_CONTROL to allow automatic RTS control in RS485 mode on UARTs {217}
     09.01.2019 Share LPUART driver with iMX project
+    09.03.2019 Add framing error handling in Rx DMA mode by devices with independent error interrupt {218}
 
 */
 
@@ -373,6 +374,9 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
 #endif
 #if defined USER_DEFINED_UART_TX_FRAME_COMPLETE
     static void (*fnUserTxEndIrq[UARTS_AVAILABLE + LPUARTS_AVAILABLE])(QUEUE_LIMIT) = {0};
+#endif
+#if defined UART_ERROR_INTERRUPT_VECTOR                                  // {218}
+    unsigned long ulFrameingErrors[UARTS_AVAILABLE] = {0};
 #endif
 
 
@@ -774,6 +778,19 @@ static __interrupt void _SCI0_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART0_BLOCK, 0, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 0 error interrupt
+//
+static __interrupt void _SCI0_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART0_S1;                                                      // read the error source
+    (void)UART0_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[0]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 #if UARTS_AVAILABLE > 1 && (LPUARTS_AVAILABLE < 2 || defined LPUARTS_PARALLEL)
 // UART 1 interrupt handler
@@ -800,6 +817,19 @@ static __interrupt void _SCI1_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART1_BLOCK, 1, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 1 error interrupt
+//
+static __interrupt void _SCI1_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART1_S1;                                                      // read the error source
+    (void)UART1_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[1]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 #if (UARTS_AVAILABLE > 2 && (LPUARTS_AVAILABLE < 3 || defined LPUARTS_PARALLEL)) || (UARTS_AVAILABLE == 1 && LPUARTS_AVAILABLE == 2)
 // UART 2 interrupt handler
@@ -826,6 +856,19 @@ static __interrupt void _SCI2_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART2_BLOCK, 2, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 2 error interrupt
+//
+static __interrupt void _SCI2_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART2_S1;                                                      // read the error source
+    (void)UART2_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[2]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 #if UARTS_AVAILABLE > 3
 // UART 3 interrupt handler
@@ -843,6 +886,19 @@ static __interrupt void _SCI3_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART3_BLOCK, 3, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 3 error interrupt
+//
+static __interrupt void _SCI3_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART3_S1;                                                      // read the error source
+    (void)UART3_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[3]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 #if UARTS_AVAILABLE > 4
 // UART 4 interrupt handler
@@ -860,6 +916,19 @@ static __interrupt void _SCI4_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART4_BLOCK, 4, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 4 error interrupt
+//
+static __interrupt void _SCI4_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART4_S1;                                                      // read the error source
+    (void)UART4_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[4]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 #if UARTS_AVAILABLE > 5
 // UART 5 interrupt handler
@@ -877,6 +946,19 @@ static __interrupt void _SCI5_Interrupt(void)                            // UART
     #endif
     _UART_interrupt((KINETIS_UART_CONTROL *)UART5_BLOCK, 5, iFlags);     // call generic UART handler
 }
+
+    #if defined UART_ERROR_INTERRUPT_VECTOR
+// UART 5 error interrupt
+//
+static __interrupt void _SCI5_Error_Interrupt(void)                      // {218} independent error interrupt handler
+{
+    // Used to clear framing error in DMA rx mode
+    //
+    (void)UART5_S1;                                                      // read the error source
+    (void)UART5_D;                                                       // read the data register (resets the framing error flag which otherwise inhibits further reception
+    ulFrameingErrors[5]++;                                               // count the number of framing errors detected for statistic purposes
+}
+    #endif
 #endif
 
 #include "kinetis_uart_pins.h"                                           // include fnConfigureUARTpin() for configuring LPUART/UART pins and entering related interrupt handlers 
@@ -2316,6 +2398,9 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         if ((pars->ucDMAConfig & UART_RX_DMA_BREAK) != 0) {              // if breaks are to terminate reception
             uart_reg->UART_BDH |= (UART_BDH_LBKDIE);                     // enable break detection interrupt
         }
+        #endif
+        #if defined UART_ERROR_INTERRUPT_VECTOR
+        uart_reg->UART_C3 |= (UART_C3_FEIE);                             // {218} enable framing error interrupt in RX DMA mode so that the framing error state can be cleared
         #endif
         fnPrepareRxDMA_mode(pars->ucDMAConfig, Channel);                 // prepare the rx DMA mode that is required
     }
