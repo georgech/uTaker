@@ -39,6 +39,7 @@
 # 09.10.2018 Add sha256_mbedTLS.c
 # 13.10.2018 Add Kinetis/kinetis_CMP.h
 # 20.02.2019 Add CANopen
+# 09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
 
 #
 # When changing the project target check that the C_FLAGS selection (just below) and the linker script file (at bottom) matches the processor being used
@@ -170,17 +171,18 @@ PERIPH_DEP = ../../../Hardware/Kinetis/spi_sc16IS7xx.h \
              ../../../Hardware/Kinetis/kinetis_KV_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KW_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KM_CLOCK.h \
-             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h
+             ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h \
+			 ../../../Hardware/SPI_Memory/spi_flash_interface.h
 
 # SPI FLASH dependencies
 #
-SPI_FLASH_DEP = ../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h \
-                ../../../Hardware/Kinetis/spi_flash_kinetis_stmicro.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_sst25.h \
-				../../../Hardware/Kinetis/spi_flash_w25q.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_MX25L.h \
-                ../../../Hardware/Kinetis/spi_eeprom_kinetis_25AA160.h
+SPI_FLASH_DEP = ../../../Hardware/SPI_Memory/spi_flash_kinetis_atmel.h \
+                ../../../Hardware/SPI_Memory/spi_flash_kinetis_stmicro.h \
+				../../../Hardware/SPI_Memory/spi_flash_kinetis_sst25.h \
+				../../../Hardware/SPI_Memory/spi_flash_w25q.h \
+				../../../Hardware/SPI_Memory/spi_flash_s25fl1-k.h \
+				../../../Hardware/SPI_Memory/spi_flash_MX25L.h \
+                ../../../Hardware/SPI_Memory/spi_eeprom_25AA160.h
 
 
 

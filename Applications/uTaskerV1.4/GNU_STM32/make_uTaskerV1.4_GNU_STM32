@@ -7,6 +7,7 @@
 # 04.07.2018 Add ../../../Hardware/packages.h
 # 01.11.2018 Add AES, SHA, DSP, MQTT and crypto
 # 15.01.2019 Add stm32_USB_OTG.h and stm32_USB_device.h dependencies 
+# 09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
 #
 
 # Compiler flags (thumb mode - little endian)
@@ -80,13 +81,19 @@ PERIPH_DEP = ../../../Hardware/STM32/stm32_UART.h \
              ../../../Hardware/STM32/stm32_ENET.h \
 			 ../../../Hardware/STM32/stm32_USB_OTG.h \
 			 ../../../Hardware/STM32/stm32_USB_device.h \
-             ../../../Hardware/STM32/stm32_CLOCK.h
+             ../../../Hardware/STM32/stm32_CLOCK.h \
+			 ../../../Hardware/SPI_Memory/spi_flash_interface.h
 
 # SPI FLASH dependencies
 #
-SPI_FLASH_DEP = ../../../Hardware/STM32/spi_flash_STM32_atmel.h \
-                ../../../Hardware/STM32/spi_flash_STM32_stmicro.h \
-				../../../Hardware/STM32/spi_flash_STM32_sst25.h
+SPI_FLASH_DEP = ../../../Hardware/SPI_Memory/spi_flash_STM32_atmel.h \
+                ../../../Hardware/SPI_Memory/spi_flash_STM32_stmicro.h \
+				../../../Hardware/SPI_Memory/spi_flash_STM32_sst25.h \
+                ../../../Hardware/SPI_Memory/spi_flash_MX25L.h \
+                ../../../Hardware/SPI_Memory/spi_flash_STM32_MX66L.h \
+                ../../../Hardware/SPI_Memory/spi_flash_s25fl1-k.h \
+				../../../Hardware/SPI_Memory/spi_eeprom_25AA160.h
+
 
 
 all: uTaskerV1.4.elf uTaskerV1.4_BM.elf

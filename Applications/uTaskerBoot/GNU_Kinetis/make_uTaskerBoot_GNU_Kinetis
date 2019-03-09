@@ -6,6 +6,7 @@
 # 13.07.2017 Add peripheral and SPI Flash dependencies
 # 03.07.2018 Add -Wundef in order to discover any undefined definitions
 # 04.07.2018 Add ../../../Hardware/packages.h
+# 09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
 
 # All objects (Hardware, application, uTasker, stack)
 #
@@ -38,15 +39,18 @@ PERIPH_DEP = ../../../Hardware/Kinetis/kinetis_FLASH.h \
              ../../../Hardware/Kinetis/kinetis_KW_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KM_CLOCK.h \
              ../../../Hardware/Kinetis/kinetis_KE_CLOCK.h \
-             ../../../Hardware/Kinetis/kinetis_PORTS.h
+             ../../../Hardware/Kinetis/kinetis_PORTS.h \
+             ../../../Hardware/SPI_Memory/spi_flash_interface.h
 
 # SPI FLASH dependencies
 #
-SPI_FLASH_DEP = ../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h \
-                ../../../Hardware/Kinetis/spi_flash_kinetis_stmicro.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_sst25.h \
-				../../../Hardware/Kinetis/spi_flash_w25q.h \
-				../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h
+SPI_FLASH_DEP = ../../../Hardware/SPI_Memory/spi_flash_kinetis_atmel.h \
+                ../../../Hardware/SPI_Memory/spi_flash_kinetis_stmicro.h \
+				../../../Hardware/SPI_Memory/spi_flash_kinetis_sst25.h \
+				../../../Hardware/SPI_Memory/spi_flash_w25q.h \
+				../../../Hardware/SPI_Memory/spi_flash_s25fl1-k.h \
+				../../../Hardware/SPI_Memory/spi_flash_MX25L.h \
+                ../../../Hardware/SPI_Memory/spi_eeprom_25AA160.h
 
 all: uTaskerBoot.elf
 
