@@ -2129,6 +2129,8 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 #define CAN_EXTENDED_MASK             0x1fffffff
 #define CAN_STANDARD_MASK             0x7ff
 
+#define NUMBER_CAN_MESSAGE_BUFFERS    (NUMBER_CAN_RX_MAILBOXES)
+
 typedef struct stSTM_CAN_CONTROL                                         // {12}
 {
     unsigned long CAN_MCR;

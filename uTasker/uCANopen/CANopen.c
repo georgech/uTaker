@@ -576,7 +576,6 @@ void CO_process_TPDO(
 
 
 #define TMR_TASK_INTERVAL   (1000)          /* Interval of tmrTask thread in microseconds */
-#define INCREMENT_1MS(var)  (var++)         /* Increment 1ms variable in tmrTask */
 static unsigned short   CO_timer1ms = 0U;   /* variable increments each millisecond */
 extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID)
 {
@@ -594,29 +593,18 @@ extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID)
 /* timer thread executes in constant intervals ********************************/
 extern void tmrTask_thread(void)
 {
-
-    //for(;;) {
-
-    /* sleep for interval */
-
-    INCREMENT_1MS(CO_timer1ms);
-
-    if (CO->CANmodule[0]->CANnormal) {
+    CO_timer1ms++;                                                       // the number of ms passed (overflows at 64k)
+    if (CO->CANmodule[0]->CANnormal != 0) {
         bool_t syncWas;
-
-        /* Process Sync and read inputs */
-        syncWas = CO_process_SYNC_RPDO(CO, TMR_TASK_INTERVAL);
+        syncWas = CO_process_SYNC_RPDO(CO, TMR_TASK_INTERVAL);           // process sync and read inputs
 
         /* Further I/O or nonblocking application code may go here. */
 
-        /* Write outputs */
-        CO_process_TPDO(CO, syncWas, TMR_TASK_INTERVAL);
+        CO_process_TPDO(CO, syncWas, TMR_TASK_INTERVAL);                 // write outputs
 
-        /* verify timer overflow */
-        if (0) {
+        if (0) {                                                         // verify timer overflow
             CO_errorReport(CO->em, CO_EM_ISR_TIMER_OVERFLOW, CO_EMC_SOFTWARE_INTERNAL, 0U);
         }
     }
-    //}
 }
 #endif

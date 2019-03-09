@@ -54,6 +54,10 @@
     01.11.2018 Use an include file for the clock configuration           {39}
     28.11.2018 Add automatic flash option configuration option           {40}
     13.01.2019 Include USB-OTG header                                    {41}
+    06.03.2019 Random number pointer set during variable initialisation  {42}
+    08.03.2019 Initialise clock before performing Keil initialisation and enable access to FPU {43}
+    09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
+    09.03.2019 Add 25AA160 SPI EEPROM support                            {44}
 
 */
 
@@ -85,7 +89,7 @@
     #endif
     #if defined _COMPILE_KEIL
         extern void __main(void);                                        // Keil library initialisation routine
-        #define START_CODE __main
+        #define START_CODE _init                                         // {43}
     #elif defined COMPILE_IAR
         extern void __iar_program_start(void);                           // IAR library initialisation routine
         #define START_CODE __iar_program_start
@@ -180,16 +184,23 @@ static void STM32_LowLevelInit(void);
 #if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
     static void fnConfigSPIFileSystem(void);
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_MX66L
+        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_S25FL1_K
             #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
         #endif
         #define _SPI_DEFINES
-            #include "spi_flash_STM32_atmel.h"
-            #include "spi_flash_STM32_stmicro.h"
-            #include "spi_flash_STM32_sst25.h"
-            #include "spi_flash_STM32_MX66L.h"
+            #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+            #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+            #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+            #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+            #include "../SPI_Memory/spi_flash_MX25L.h"
+            #include "../SPI_Memory/spi_flash_s25fl1-k.h"
         #undef _SPI_DEFINES
     #endif
+#endif
+#if defined SPI_EEPROM_FILE_SYSTEM
+    #define _SPI_EEPROM_DEFINES                                          // {44}
+        #include "../SPI_Memory/spi_eeprom_25AA160.h"
+    #undef _SPI_EEPROM_DEFINES
 #endif
 
 /* =================================================================== */
@@ -197,7 +208,7 @@ static void STM32_LowLevelInit(void);
 /* =================================================================== */
 
 #if defined RANDOM_NUMBER_GENERATOR
-    unsigned short *ptrSeed;
+    unsigned short *ptrSeed = RANDOM_SEED_LOCATION;                      // {42} we put an uninitialised variable on to the stack for use as a random seed
 #endif
 
 static volatile int iInterruptLevel = 0;
@@ -234,11 +245,18 @@ static volatile int iInterruptLevel = 0;
         #define _EXTENDED_CS
     #endif
     #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent SPI Flash driver code
-        #include "spi_flash_STM32_atmel.h"
-        #include "spi_flash_STM32_stmicro.h"
-        #include "spi_flash_STM32_sst25.h"
-        #include "spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+        #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+        #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _SPI_FLASH_INTERFACE
+#endif
+#if defined SPI_EEPROM_FILE_SYSTEM
+    #define _SPI_EEPROM_INTERFACE                                        // {44}
+        #include "../SPI_Memory/spi_eeprom_25AA160.h"
+    #undef _SPI_EEPROM_INTERFACE
 #endif
 
 #if defined CAN_INTERFACE
@@ -285,8 +303,7 @@ typedef void (*tIsrFunc)(void);
         #define HEAP_START_ADDRESS    _keil_ram_size()
         #define __disable_interrupt() __disable_irq()                    // KEIL intrinsics
         #define __enable_interrupt()  __enable_irq()
-      //#define __sleep_mode()                                           //__asm("wfi"); Keil doesn't support inline assembly in Thumb mode so this is defined in the startup assembler file
-        extern void __sleep_mode(void);
+        #define __sleep_mode()        __wfi()
     #else                                                                // disable interrupt in assembler code
         extern unsigned char __heap_end__;
         #if defined ROWLEY_2
@@ -332,9 +349,6 @@ extern int main(void)
 #if defined MULTISTART
     MULTISTART_TABLE *ptrInfo;
     unsigned char *pucHeapStart;
-#endif
-#if defined RANDOM_NUMBER_GENERATOR   
-    ptrSeed = RANDOM_SEED_LOCATION;                                      // we put an uninitialised variable on to the stack for use as a random seed
 #endif
 #if defined COMPILE_IAR
     if (__sfe(".bss") > __sfe(".data")) {                                // set last used SRAM address
@@ -386,6 +400,15 @@ _abort_multi:
 }
 #endif
 
+#if defined _COMPILE_KEIL                                                // {43}
+// Keil demands the use of a __main() call to correctly initialise variables - it then calls main()
+//
+extern void _init(void)
+{
+    STM32_LowLevelInit();                                                // configure watchdog and set the CPU to operating speed
+    __main();                                                            // Keil initialises variables and then calls main()
+}
+#endif
 
 #if defined RANDOM_NUMBER_GENERATOR
 // How the random number seed is set depends on the hardware possibilities available.
@@ -2295,13 +2318,11 @@ INITHW void fnInitHW(void)                                               // perf
         ((ADC12_15_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
     #endif
     };
-    #if defined RANDOM_NUMBER_GENERATOR                                  // note that the target works differently
-    static unsigned short usRandomSeed = 0;
-    ptrSeed = &usRandomSeed;
-    #endif
     fnInitialiseDevice((void *)usPortPullups);
 #endif
+#if defined _WINDOWS || !defined _COMPILE_KEIL
     STM32_LowLevelInit();                                                // perform low-level initialisation
+#endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
     INIT_WATCHDOG_DISABLE();                                             // initialise ready for checking of watchdog diabled
     if (WATCHDOG_DISABLE() == 0) {
@@ -2318,12 +2339,17 @@ INITHW void fnInitHW(void)                                               // perf
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     fnConfigSPIFileSystem();                                             // configure SPI interface for maximum possible speed
     #define _CHECK_SPI_CHIPS                                             // insert manufacturer dependent code to detect the SPI Flash devices
-        #include "spi_flash_STM32_atmel.h"
-        #include "spi_flash_STM32_stmicro.h"
-        #include "spi_flash_STM32_sst25.h"
-        #include "spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+        #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+        #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _CHECK_SPI_CHIPS
     #endif
+#endif
+#if defined SPI_EEPROM_FILE_SYSTEM                                       // {44}
+    #include "../SPI_Memory/spi_eeprom_25AA160.h"
 #endif
 #if defined _WINDOWS_
     {
@@ -2437,7 +2463,7 @@ extern void __init_gnu_data(void)
     unsigned char *ptrData = &__data_start__;
     const unsigned char *ptrFlash = &__data_load_start__;
     unsigned long ulInitDataLength = (&__data_end__ - &__data_start__);
-    while (ulInitDataLength--) {                                         // initialise data
+    while (ulInitDataLength-- != 0) {                                    // initialise data
         *ptrData++ = *ptrFlash++;
     }
 
@@ -2445,14 +2471,14 @@ extern void __init_gnu_data(void)
     ptrFlash = &__text_load_start__;
     if (ptrData != ptrFlash) {
         ulInitDataLength = (&__text_end__ - &__text_start__);
-        while (ulInitDataLength--) {                                     // initialise text
+        while (ulInitDataLength-- != 0) {                                // initialise text
             *ptrData++ = *ptrFlash++;
         }
     }
 
     ptrData = &__bss_start__;
     ulInitDataLength = (&__bss_end__ - &__bss_start__);
-    while (ulInitDataLength--) {                                         // initialise bss
+    while (ulInitDataLength-- != 0) {                                    // initialise bss
         *ptrData++ = 0;
     }
 }
@@ -2521,6 +2547,9 @@ static void STM32_LowLevelInit(void)
     ptrVect->ptrPendSV        = irq_default;
     ptrVect->ptrSVCall        = irq_default;
     #endif
+#endif
+#if defined STM32_FPU                                                    // {43}
+    CPACR |= (0xf << 20);                                                // enable access to FPU
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // if uMemcpy()/uMemset() is to use DMA enable the DMA controller used by it
     #if MEMCPY_CHANNEL > 7
