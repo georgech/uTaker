@@ -8,15 +8,13 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:      spi_eeprom_kinetis_25AA160.h (Microchip)
+    File:      spi_eeprom_25AA160.h (Microchip)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
-
-#if defined SPI_FLASH_MX25L
 
 #if defined _SPI_EEPROM_DEFINES
     #if !defined SPI_FLASH_FIFO_DEPTH
@@ -291,5 +289,4 @@ static void fnSPI_EEPROM_command(unsigned char ucCommand, unsigned long ulPageNu
     REMOVE_SPI_FLASH_MODE();
     #endif
 }
-#endif
 #endif

@@ -2300,7 +2300,7 @@ extern unsigned long fnGetExtFlashSize(void)
     #define SPI_FLASH_DEVICE_COUNT         1
 #endif
 
-    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L // {14}
+    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_MX66L // {14}
 
 static unsigned char ucAT45DBXXX[SPI_DATA_FLASH_SIZE];                   // all SPI FLASH devices in one buffer
 
@@ -3502,7 +3502,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
     }
     return 0xff;
 }
-    #elif defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
+    #elif defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L || defined SPI_FLASH_MX66L
 
 static unsigned char ucS25FLI_K[SPI_DATA_FLASH_SIZE] = {0};
 
@@ -3531,7 +3531,7 @@ static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
         #define MEMORY_TYPE       0x40
         #define MEMORY_CAPACITY   0x16                                   // S25FL116K
     #endif
-#elif defined SPI_FLASH_MX25L
+#elif defined SPI_FLASH_MX25L || defined SPI_FLASH_MX66L
     #define MANUFACTURER_MACRONIX 0xc2                                   // Macronix's manufacturer ID
     #define SPI_FLASH_DEVICE_TYPE 0x20
 
@@ -3541,6 +3541,10 @@ static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
     #elif defined SPI_FLASH_MX25L1606E
         #define MEMORY_TYPE       0x20
         #define MEMORY_CAPACITY   0x15                                   // MX25L1606 - 2MBytes
+    #else
+        #define MEMORY_TYPE       0x20
+        #define MEMORY_CAPACITY   0x14
+
     #endif
 #endif
 
@@ -3718,7 +3722,7 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
         case 0xab:
             if (ulAccessAddress[iSel] == 0) {
                 ulAccessAddress[iSel] = 1;
-    #if defined SPI_FLASH_MX25L
+    #if defined SPI_FLASH_MX25L || defined SPI_FLASH_MX66L
                 return (MANUFACTURER_MACRONIX);                          // Macronix
     #else
                 return (MANUFACTURER_SPANSION);                          // Spansion
@@ -3732,7 +3736,7 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
         case 0x9f:                                                       // read JEDEC ID
             iState[iSel]++;
             if (iState[iSel] == 1) {
-    #if defined SPI_FLASH_MX25L
+    #if defined SPI_FLASH_MX25L || defined SPI_FLASH_MX66L
                 return (MANUFACTURER_MACRONIX);                          // Macronix
     #else
                 return (MANUFACTURER_SPANSION);                          // Spansion

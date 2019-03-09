@@ -87,7 +87,7 @@ USER_KEY user_keys[] = {
         RECT       button_area;
     #if defined EXTENDED_USER_BUTTONS                                    // {12}
         int        iInverted;                                            // pressing the button has an inverted effect
-        int        iInitiallyOn;                                         // thsi can be set to represent a initially pressed state
+        int        iInitiallyOn;                                         // this can be set to represent an initially pressed state
     #endif
     } _USER_BUTTON;
 

@@ -33,8 +33,8 @@
 
 #define OWN_TASK                            TASK_CANOPEN
 
-#define CANOPEN_NODE_ID                     0x4c
-//#define CANOPEN_NODE_ID                   0x7a
+#define CANOPEN_RX_NODE_ID                  0x7a                         // we receive this node-ID
+#define CANOPEN_TX_NODE_ID                  0x37                         // this is the node-ID hat we use when transmitting
 
 extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength);
 
@@ -86,21 +86,22 @@ QUEUE_HANDLE CANopen_interface_ID0 = NO_ID_ALLOCATED;
 //
 extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
 {
-  //static QUEUE_HANDLE CANopen_interface_ID0 = NO_ID_ALLOCATED;
     QUEUE_HANDLE PortIDInternal = ptrTaskTable->TaskID;                  // queue ID for task input
     unsigned char ucInputMessage[SMALL_MESSAGE];                         // reserve space for receiving messages
     QUEUE_TRANSFER Length;
 
     if (NO_ID_ALLOCATED == CANopen_interface_ID0) {                      // first call
+        fnDebugMsg("CANopen ");
         CANopen_interface_ID0 = fnInitCANopenInterface();
-        if (uCANopenInit(CANopen_interface_ID0, CANOPEN_NODE_ID) != 0) { // initialise the CANopen stack
-            fnDebugMsg("CANopen failed\r\n");
+        if (uCANopenInit(CANopen_interface_ID0, CANOPEN_TX_NODE_ID) != 0) { // initialise the CANopen stack
+            fnDebugMsg("failed\r\n");
         }
         else {
+            fnDebugMsg("initialised\r\n");
             uTaskerGlobalMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.001 * SEC), E_TIMER_CAN_MS); // start a 1ms timer
             uTaskerStateChange(OWN_TASK, UTASKER_POLLING);               // set the task to polling mode
         }
-        return;
+        return;                                                          // initialisation complete (we return when polling, for CAN receptions and at 1ms timer eent)
     }
 
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
@@ -399,6 +400,8 @@ extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigne
     }
 }
 
+// Configure the CAN interface
+//
 static QUEUE_HANDLE fnInitCANopenInterface(void)
 {
     CANTABLE tCANParameters;                                             // table for passing information to driver
@@ -408,8 +411,8 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     tCANParameters.Channel = 0;                                          // CAN0 interface
     tCANParameters.ulSpeed = 250000;                                     // 250k speed
     tCANParameters.ulTxID = (121);                                       // default ID of destination (not used by CANopen)
-    tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000);              // our ID (extended)
-    tCANParameters.ulRxIDMask = CAN_STANDARD_MASK /*0x00080000*/;        // receive extended address with 0x80000 set
+    tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000 | CANOPEN_RX_NODE_ID); // extended node ID that we receive
+    tCANParameters.ulRxIDMask = (CAN_EXTENDED_MASK | 0x00080000 | CANOPEN_RX_NODE_ID); // receive extended address with 0x80000 set and exactly matching the node ID
     tCANParameters.usMode = 0;                                           // use normal mode
     tCANParameters.ucTxBuffers = 2;                                      // assign two tx buffers for use
     tCANParameters.ucRxBuffers = 1;                                      // assign one rx buffers for extended ID use
@@ -419,8 +422,8 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     tCANParameters.ucTxBuffers = 0;
     tCANParameters.ucRxBuffers = 1;
     fnConfigCAN(CANopenHandle, &tCANParameters);                         // configure 1 buffer for this logical channel
-    tCANParameters.ulRxID = CANOPEN_NODE_ID;                             // our network ID
-    tCANParameters.ulRxIDMask = 0x7f;                                    // accept only our node ID
+    tCANParameters.ulRxID = CANOPEN_RX_NODE_ID;                          // node ID that we receive
+    tCANParameters.ulRxIDMask = 0x7f;                                    // accept only exact node ID
     tCANParameters.ucRxBuffers = 1;
     fnConfigCAN(CANopenHandle, &tCANParameters);                         // configure 1 buffer for this logical channel
     return CANopenHandle;                                                // open CAN interface

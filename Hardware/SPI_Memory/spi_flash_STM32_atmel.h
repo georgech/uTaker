@@ -131,7 +131,7 @@
 
 
 // Command supported only by D-device
-    //
+//
 #define SECTOR_ERASE             0x7c
 #define READ_ARRAY_LOW_FREQ      0x03
 #define READ_MANUFACTURER_ID     0x9f
@@ -188,7 +188,6 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SET_SPI_FLASH_MODE();
 
     __ASSERT_CS(ulChipSelectLine);                                       // assert chip select low before starting
-
     (void)SSPDR_X;                                                       // reset receive data flag with dummy read - the rx data is not interesting here
     SSPDR_X = ucCommand;                                                 // send command
 

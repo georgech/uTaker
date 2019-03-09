@@ -378,6 +378,8 @@ extern unsigned char fnSPI_FlashExt_available(int iExtension);
     #define MX25L6445                 4
     #define MX25L12845                5
 
+    #define MX66L51235F               1
+
 typedef struct stSTORAGE_AREA_ENTRY                                      // {28}
 {
     void          *ptrNext;                                              // pointer to the next storage type available, or zero at end of list

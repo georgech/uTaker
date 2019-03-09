@@ -15,6 +15,7 @@
     *********************************************************************
     20.01.2017 Add 2MByte Flash support                                  {1}
     28.11.2018 Add fnSetFlashOption()                                    {2}
+    09.03.2019 Include generic SPI interface                             {3}
 
 */
 
@@ -160,178 +161,15 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 }
 #endif
 
-#if defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
-    #if defined SPI_FLASH_ENABLED
-// This routine reads data from the defined device into a buffer. The access details inform of the length to be read (already limited to maximum possible length for the device)
-// as well as the address in the specific device
+#if defined SPI_FLASH_ENABLED                                            // if SPI memory driver required
+// Include generic SPI flash routines
+// static void fnReadSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer);
+// static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer);
+// static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails);
+// static void fnReadSPI_EEPROM(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer);
+// static void fnWriteSPI_EEPROM(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer);
 //
-static void fnReadSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
-{
-    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_MX66L
-    unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    unsigned short usPageOffset = (unsigned short)(ptrAccessDetails->ulOffset - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
-    #endif
-
-    #if defined SPI_FLASH_ST
-    fnSPI_command(READ_DATA_BYTES, (unsigned long)((unsigned long)(usPageNumber << 8) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_MX66L
-    fnSPI_command(READ_DATA_BYTES, ptrAccessDetails->ulOffset, _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-    #else                                                                // ATMEL
-        #if SPI_FLASH_PAGE_LENGTH >= 1024
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 11) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #elif SPI_FLASH_PAGE_LENGTH >= 512
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 10) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #else
-    fnSPI_command(CONTINUOUS_ARRAY_READ, (unsigned long)((unsigned long)(usPageNumber << 9) | (usPageOffset)), _EXTENDED_CS ptrBuffer, ptrAccessDetails->BlockLength);
-        #endif
-    #endif
-}
-
-// This routine writes data from a buffer to an area in SPI Flash (the caller has already defined the data to a particular area and device)
-//
-static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffer)
-{
-    MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
-    unsigned long Destination = ptrAccessDetails->ulOffset;
-    unsigned short usDataLength;
-    #if defined SPI_FLASH_SST25
-    int iMultipleWrites = 0;
-    if (Length == 0) {
-        return;                                                          // ignore if length is zero
-    }
-    if (Destination & 0x1) {                                             // start at odd SPI address, requires an initial byte write
-        fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);               // command write enable to allow byte programming
-        fnSPI_command(BYTE_PROG, Destination++, _EXTENDED_CS ptrBuffer++, 1);// program last byte 
-        if (--Length == 0) {                                             // single byte write so complete
-            return ;
-        }
-    }
-    fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow programming
-    #else
-    unsigned short usPageNumber = (unsigned short)(Destination/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    unsigned short usPageOffset = (unsigned short)(Destination - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
-    #endif
-    while (Length != 0) {
-        usDataLength = (unsigned short)Length;
-    #if defined SPI_FLASH_ST || defined SPI_FLASH_MX66L
-        if (usDataLength > (SPI_FLASH_PAGE_LENGTH - usPageOffset)) {
-            usDataLength = (SPI_FLASH_PAGE_LENGTH - usPageOffset);
-        }
-        fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);               // write enable
-        #if defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K
-        fnSPI_command(PAGE_PROG, ((usPageNumber * SPI_FLASH_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
-        #else
-        fnSPI_command(PAGE_PROG, (usPageNumber << 8) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength);// copy new content
-        #endif
-        Length -= usDataLength;
-        ptrBuffer += usDataLength;
-        usPageNumber++;
-        usPageOffset = 0;
-    #elif defined SPI_FLASH_SST25
-        #if defined SST25_A_VERSION
-            #define AAI_LENGTH 1
-        #else
-            #define AAI_LENGTH 2
-        #endif
-        if (usDataLength > 1) {
-            if (iMultipleWrites == 0) {
-                fnSPI_command(AAI_WORD_PROG, Destination, _EXTENDED_CS ptrBuffer, AAI_LENGTH); // program 2 bytes (1 byte for A type)
-                iMultipleWrites = 1;                                     // mark that we are in a AAI sequence
-            }
-            else {
-                fnSPI_command(AAI_WORD_PROG, Destination, _EXTENDED_CS ptrBuffer, 0); // continue in AAI sequence - note that the data length is zero but this is used to differentiate - always pairs are written
-            }
-            Destination += AAI_LENGTH;
-            Length -= AAI_LENGTH;
-            ptrBuffer += AAI_LENGTH;
-        }
-        else {
-            if (iMultipleWrites != 0) {
-                fnSPI_command(WRITE_DISABLE, 0, _EXTENDED_CS 0, 0);      // first close AAI sequence
-                fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);       // command write enable to allow byte programming
-            }
-            fnSPI_command(BYTE_PROG, Destination, _EXTENDED_CS ptrBuffer, 1); // program last byte 
-            break;               
-        }
-    #else                                                                // ATMEL
-        if ((usPageOffset != 0) || (Length < SPI_FLASH_PAGE_LENGTH)) {   // are we writing a partial page?
-            fnSPI_command(MAIN_TO_BUFFER_1, usPageNumber, _EXTENDED_CS 0, 0); // copy main memory to buffer
-        }
-        if (usDataLength > (SPI_FLASH_PAGE_LENGTH - usPageOffset)) {
-            usDataLength = (SPI_FLASH_PAGE_LENGTH - usPageOffset);
-        }
-        fnSPI_command(WRITE_BUFFER_1, usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength);// copy new content
-        fnSPI_command(PROG_FROM_BUFFER_1, usPageNumber, _EXTENDED_CS 0, 0); // program to main memory
-        Length -= usDataLength;
-        ptrBuffer += usDataLength;
-        usPageNumber++;
-        usPageOffset = 0;
-    #endif
-    }
-    #if defined SPI_FLASH_SST25
-    fnSPI_command(WRITE_DISABLE, 0, _EXTENDED_CS 0, 0);                  // disable writes on exist
-    #endif
-}
-
-// The routine is used to delete an area in SPI Flash, whereby the caller has set the address to the start of a page and limited the erase to a single storage area and device
-//
-static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
-{
-    MAX_FILE_LENGTH BlockLength = SPI_FLASH_PAGE_LENGTH;
-    #if !defined SPI_FLASH_ST
-    unsigned char   ucCommand;
-    #endif
-    #if !defined SPI_FLASH_SST25 && !defined SPI_FLASH_MX66L
-    unsigned short usPageNumber = (unsigned short)(ptrAccessDetails->ulOffset/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    #endif
-    #if defined SPI_FLASH_ST
-    fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // enable the write
-        #if defined SPI_DATA_FLASH
-    fnSPI_command(SUB_SECTOR_ERASE, ((unsigned long)usPageNumber << 8), _EXTENDED_CS 0, 0); // delete appropriate sub-sector
-    BlockLength = SPI_FLASH_SUB_SECTOR_LENGTH;
-        #else
-    fnSPI_command(SECTOR_ERASE, ((unsigned long)usPageNumber << 8), _EXTENDED_CS 0, 0); // delete appropriate sector
-    BlockLength = SPI_FLASH_SECTOR_LENGTH;
-        #endif
-    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_MX66L
-    fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow byte programming
-        #if !defined SST25_A_VERSION
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_SECTOR_LENGTH) && ((ptrAccessDetails->ulOffset & (SPI_FLASH_SECTOR_LENGTH - 1)) == 0)) { // if a complete 64k sector can be deleted
-        ucCommand = SECTOR_ERASE;                                        // delete block of 64k
-        BlockLength = SPI_FLASH_SECTOR_LENGTH;
-    }
-    else 
-        #endif
-        #if defined SPI_FLASH_MX66L
-    {
-        ucCommand = SECTOR_ERASE;                                        // delete smallest sector of 4k
-        BlockLength = SPI_FLASH_SECTOR_LENGTH;
-    }
-        #else
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_HALF_SECTOR_LENGTH) && ((ptrAccessDetails->ulOffset & (SPI_FLASH_HALF_SECTOR_LENGTH - 1)) == 0)) {
-        ucCommand = HALF_SECTOR_ERASE;                                   // delete block of 32k
-        BlockLength = SPI_FLASH_HALF_SECTOR_LENGTH;
-    }
-    else {
-        ucCommand = SUB_SECTOR_ERASE;                                    // delete smallest sector of 4k
-        BlockLength = SPI_FLASH_SUB_SECTOR_LENGTH;
-    }
-        #endif
-    fnSPI_command(ucCommand, ptrAccessDetails->ulOffset, _EXTENDED_CS 0, 0);    
-    #else                                                                // ATMEL
-    if ((ptrAccessDetails->BlockLength >= SPI_FLASH_BLOCK_LENGTH) && (usPageNumber % 8 == 0)) { // if delete range corresponds to a block, use faster block delete
-        BlockLength = SPI_FLASH_BLOCK_LENGTH;
-        ucCommand = BLOCK_ERASE;
-    }
-    else {
-        BlockLength = SPI_FLASH_PAGE_LENGTH;
-        ucCommand = PAGE_ERASE;
-    }
-    fnSPI_command(ucCommand, usPageNumber, _EXTENDED_CS 0, 0);           // delete appropriate page/block
-    #endif
-    return (BlockLength);
-}
-    #endif  
+    #include "../SPI_Memory/spi_flash_interface.h"                       // {3}
 #endif
 
     #if !defined _ST_FLASH_UNIFORM_GRANULARITY || defined _WINDOWS

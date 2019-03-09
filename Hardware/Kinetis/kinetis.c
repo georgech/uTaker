@@ -71,6 +71,7 @@
     29.09.2018 Allow memcpy() type DMA to be pre-empted by higher priority DMA channels {137}
     13.10.2018 Add comparator support                                    {138}
     06.03.2019 Random number pointer set during variable initialisation  {139}
+    09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
 
 */
 
@@ -191,17 +192,17 @@ static void _LowLevelInit(void);
         #define SPI_FLASH_ATMEL                                          // default if not otherwise defined
     #endif
     #define _SPI_DEFINES
-        #include "spi_flash_kinetis_atmel.h"
-        #include "spi_flash_kinetis_stmicro.h"
-        #include "spi_flash_kinetis_sst25.h"
-        #include "spi_flash_w25q.h"
-        #include "spi_flash_kinetis_s25fl1-k.h"
-        #include "spi_flash_kinetis_MX25L.h"
+        #include "../SPI_Memory/spi_flash_kinetis_atmel.h"
+        #include "../SPI_Memory/spi_flash_kinetis_stmicro.h"
+        #include "../SPI_Memory/spi_flash_kinetis_sst25.h"
+        #include "../SPI_Memory/spi_flash_w25q.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
     #undef _SPI_DEFINES
 #endif
-#if (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+#if defined SPI_EEPROM_FILE_SYSTEM
     #define _SPI_EEPROM_DEFINES                                          // {135}
-        #include "spi_eeprom_kinetis_25AA160.h"
+        #include "../SPI_Memory/spi_eeprom_25AA160.h"
     #undef _SPI_EEPROM_DEFINES
 #endif
 
@@ -282,16 +283,18 @@ static int iInterruptLevel = 0;                                          // pres
 #endif
 
 #define _SPI_FLASH_INTERFACE                                             // insert manufacturer dependent SPI Flash driver code
-    #include "spi_flash_kinetis_atmel.h"
-    #include "spi_flash_kinetis_stmicro.h"
-    #include "spi_flash_kinetis_sst25.h"
-    #include "spi_flash_w25q.h"
-    #include "spi_flash_kinetis_s25fl1-k.h"
-    #include "spi_flash_kinetis_MX25L.h"
+    #include "../SPI_Memory/spi_flash_kinetis_atmel.h"
+    #include "../SPI_Memory/spi_flash_kinetis_stmicro.h"
+    #include "../SPI_Memory/spi_flash_kinetis_sst25.h"
+    #include "../SPI_Memory/spi_flash_w25q.h"
+    #include "../SPI_Memory/spi_flash_s25fl1-k.h"
+    #include "../SPI_Memory/spi_flash_MX25L.h"
 #undef _SPI_FLASH_INTERFACE
-#define _SPI_EEPROM_INTERFACE                                            // {135}
-    #include "spi_eeprom_kinetis_25AA160.h"
-#undef _SPI_EEPROM_INTERFACE
+#if defined SPI_EEPROM_FILE_SYSTEM
+    #define _SPI_EEPROM_INTERFACE                                            // {135}
+        #include "../SPI_Memory/spi_eeprom_25AA160.h"
+    #undef _SPI_EEPROM_INTERFACE
+#endif
 
 
 /* =================================================================== */
@@ -1001,15 +1004,15 @@ INITHW void fnInitHW(void)                                               // perf
     CONFIGURE_SPI_FLASH_INTERFACE();                                     // configure SPI interface for maximum possible speed (after TICK has been configured due to potential use of delay routine)
     #define _CHECK_SPI_CHIPS                                             // insert manufacturer dependent code
     #if defined SPI_FILE_SYSTEM
-        #include "spi_flash_kinetis_atmel.h"
-        #include "spi_flash_kinetis_stmicro.h"
-        #include "spi_flash_kinetis_sst25.h"
-        #include "spi_flash_w25q.h"
-        #include "spi_flash_kinetis_s25fl1-k.h"
-        #include "spi_flash_kinetis_MX25L.h"
+        #include "../SPI_Memory/spi_flash_kinetis_atmel.h"
+        #include "../SPI_Memory/spi_flash_kinetis_stmicro.h"
+        #include "../SPI_Memory/spi_flash_kinetis_sst25.h"
+        #include "../SPI_Memory/spi_flash_w25q.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
     #endif
     #if defined SPI_EEPROM_FILE_SYSTEM                                   // {135}
-        #include "spi_eeprom_kinetis_25AA160.h"
+        #include "../SPI_Memory/spi_eeprom_25AA160.h"
     #endif
     #undef _CHECK_SPI_CHIPS
 #endif
