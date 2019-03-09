@@ -4193,48 +4193,6 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_eeprom_kinetis_25AA160.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_sst25.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32 plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\spi_sc16IS7xx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker STM32|Win32'">true</ExcludedFromBuild>
@@ -4550,6 +4508,18 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_eeprom_kinetis_25AA160.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_interface.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_atmel.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_sst25.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_stmicro.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_MX25L.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_s25fl1-k.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_atmel.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_MX66L.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_sst25.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_stmicro.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_w25q.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\simSTM32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary plus GNU build|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Luminary|Win32'">true</ExcludedFromBuild>
@@ -4559,38 +4529,6 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker AVR32|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis plus GNU build|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\STM32\STM32.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>

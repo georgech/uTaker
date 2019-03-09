@@ -120,6 +120,9 @@
     <Filter Include="uTasker\uCANopen">
       <UniqueIdentifier>{555c5ba6-cb34-40fb-8532-fdc0da65992d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\SPI_Memory">
+      <UniqueIdentifier>{5ca32d1d-912b-4e12-b7f8-71b3812e252e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\application.c">
@@ -706,15 +709,6 @@
     <ClInclude Include="..\..\..\WinSim\WinSim.h">
       <Filter>WinSim</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_atmel.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_sst25.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_stmicro.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port.h">
       <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
     </ClInclude>
@@ -847,9 +841,6 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_LLWU.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_w25q.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
     <ClInclude Include="..\user_glcd_fonts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -858,9 +849,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k00.h">
       <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_s25fl1-k.h">
-      <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h">
       <Filter>Hardware\Kinetis</Filter>
@@ -1174,9 +1162,6 @@
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_timer_pins.h">
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_flash_kinetis_MX25L.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\uTasker\usb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1294,23 +1279,8 @@
     <ClInclude Include="..\..\..\stack\SSL\mbedtls-2.6\mbedtls\x509_crt.h">
       <Filter>TCP/IP\MQTTS\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\Kinetis\spi_eeprom_kinetis_25AA160.h">
-      <Filter>Hardware\Kinetis</Filter>
-    </ClInclude>
     <ClInclude Include="..\app_hw_stm32.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_atmel.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_MX66L.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_sst25.h">
-      <Filter>Hardware\STM32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Hardware\STM32\spi_flash_STM32_stmicro.h">
-      <Filter>Hardware\STM32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\STM32\STM32.h">
       <Filter>Hardware\STM32</Filter>
@@ -1767,6 +1737,42 @@
     </ClInclude>
     <ClInclude Include="..\CO_OD.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_eeprom_kinetis_25AA160.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_atmel.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_sst25.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_stmicro.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_w25q.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_atmel.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_MX66L.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_sst25.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_STM32_stmicro.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_s25fl1-k.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_interface.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_MX25L.h">
+      <Filter>Hardware\SPI_Memory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
