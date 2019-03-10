@@ -48,7 +48,6 @@
 
 #if defined CAN_INTERFACE && defined SUPPORT_CANopen
 #include "CANopen.h"
-#define CANOPEN_INSTANCES
 
 /* If defined, global variables will be used, otherwise CANopen objects will
    be generated with _calloc(). */
@@ -63,10 +62,9 @@ typedef unsigned short    MAX_MALLOC;                                    // up t
 extern void *uMalloc(MAX_MALLOC);
 #define _calloc(a,b) uMalloc(a*b)
 
-
 /* Global variables ***********************************************************/
     extern const CO_OD_entry_t CO_OD[CO_OD_NoOfElements];  /* Object Dictionary array */
-    CO_t *CO = 0;
+    CO_t *CO[CANOPEN_INSTANCES] = {0};
 
     static CO_CANrx_t          *CO_CANmodule_rxArray0;
     static CO_CANtx_t          *CO_CANmodule_txArray0;
@@ -164,87 +162,83 @@ extern void *uMalloc(MAX_MALLOC);
 
 
 /******************************************************************************/
-CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRate)
+CO_t *CO_init(uint8_t instance, uint8_t nodeId, QUEUE_HANDLE CAN_interface_ID)
 {
     int16_t i;
 #if CO_NO_TRACE > 0
     uint32_t CO_traceBufferSize[CO_NO_TRACE];
 #endif
+    CO_t *ptrCO_instance = CO[instance];
     HEAP_REQUIREMENTS CAN_heap = fnHeapFree();                           // the amount of heap free before CANopen is initialised
-
+#if defined _WINDOWS
     /* Verify parameters from CO_OD */
-    if(   sizeof(OD_TPDOCommunicationParameter_t) != sizeof(CO_TPDOCommPar_t)
+    if (sizeof(OD_TPDOCommunicationParameter_t) != sizeof(CO_TPDOCommPar_t)
        || sizeof(OD_TPDOMappingParameter_t) != sizeof(CO_TPDOMapPar_t)
        || sizeof(OD_RPDOCommunicationParameter_t) != sizeof(CO_RPDOCommPar_t)
-       || sizeof(OD_RPDOMappingParameter_t) != sizeof(CO_RPDOMapPar_t))
-    {
-        return CO_ERROR_PARAMETERS;
+       || sizeof(OD_RPDOMappingParameter_t) != sizeof(CO_RPDOMapPar_t)) {
+        return 0;
     }
 
     #if CO_NO_SDO_CLIENT == 1
-    if(sizeof(OD_SDOClientParameter_t) != sizeof(CO_SDOclientPar_t)){
-        return CO_ERROR_PARAMETERS;
+    if (sizeof(OD_SDOClientParameter_t) != sizeof(CO_SDOclientPar_t)) {
+        return 0;
     }
     #endif
-
+#endif
     /* Verify CANopen Node-ID */
     if ((nodeId < 1) || (nodeId > 127)) {
-        return CO_ERROR_PARAMETERS;
+        return 0;
     }
-
 
     // Initialize CANopen object
     //
-    if (CO == NULL) {
-        CO = (CO_t *)uMalloc(sizeof(CO_t));
-        CO->CANmodule[0]                    = (CO_CANmodule_t *)    _calloc(1, sizeof(CO_CANmodule_t));
+    if (ptrCO_instance == NULL) {
+        ptrCO_instance = CO[instance] = (CO_t *)uMalloc(sizeof(CO_t));
+        ptrCO_instance->CANmodule[0]        = (CO_CANmodule_t *)    _calloc(1, sizeof(CO_CANmodule_t));
         CO_CANmodule_rxArray0               = (CO_CANrx_t *)        _calloc(CO_RXCAN_NO_MSGS, sizeof(CO_CANrx_t));
         CO_CANmodule_txArray0               = (CO_CANtx_t *)        _calloc(CO_TXCAN_NO_MSGS, sizeof(CO_CANtx_t));
         for (i = 0; i < CO_NO_SDO_SERVER; i++) {
-            CO->SDO[i]                      = (CO_SDO_t *)          _calloc(1, sizeof(CO_SDO_t));
+            ptrCO_instance->SDO[i]          = (CO_SDO_t *)          _calloc(1, sizeof(CO_SDO_t));
         }
         CO_SDO_ODExtensions                 = (CO_OD_extension_t*)  _calloc(CO_OD_NoOfElements, sizeof(CO_OD_extension_t));
-        CO->em                              = (CO_EM_t *)           _calloc(1, sizeof(CO_EM_t));
-        CO->emPr                            = (CO_EMpr_t *)         _calloc(1, sizeof(CO_EMpr_t));
-        CO->NMT                             = (CO_NMT_t *)          _calloc(1, sizeof(CO_NMT_t));
-        CO->SYNC                            = (CO_SYNC_t *)         _calloc(1, sizeof(CO_SYNC_t));
+        ptrCO_instance->em                  = (CO_EM_t *)           _calloc(1, sizeof(CO_EM_t));
+        ptrCO_instance->emPr                = (CO_EMpr_t *)         _calloc(1, sizeof(CO_EMpr_t));
+        ptrCO_instance->NMT                 = (CO_NMT_t *)          _calloc(1, sizeof(CO_NMT_t));
+        ptrCO_instance->SYNC                = (CO_SYNC_t *)         _calloc(1, sizeof(CO_SYNC_t));
         for (i = 0; i < CO_NO_RPDO; i++) {
-            CO->RPDO[i]                     = (CO_RPDO_t *)         _calloc(1, sizeof(CO_RPDO_t));
+            ptrCO_instance->RPDO[i]         = (CO_RPDO_t *)         _calloc(1, sizeof(CO_RPDO_t));
         }
         for (i = 0; i < CO_NO_TPDO; i++) {
-            CO->TPDO[i]                     = (CO_TPDO_t *)         _calloc(1, sizeof(CO_TPDO_t));
+            ptrCO_instance->TPDO[i]         = (CO_TPDO_t *)         _calloc(1, sizeof(CO_TPDO_t));
         }
-        CO->HBcons                          = (CO_HBconsumer_t *)   _calloc(1, sizeof(CO_HBconsumer_t));
+        ptrCO_instance->HBcons              = (CO_HBconsumer_t *)   _calloc(1, sizeof(CO_HBconsumer_t));
         CO_HBcons_monitoredNodes            = (CO_HBconsNode_t *)   _calloc(CO_NO_HB_CONS, sizeof(CO_HBconsNode_t));
       #if CO_NO_SDO_CLIENT == 1
-        CO->SDOclient                       = (CO_SDOclient_t *)    _calloc(1, sizeof(CO_SDOclient_t));
+        ptrCO_instance->SDOclient           = (CO_SDOclient_t *)    _calloc(1, sizeof(CO_SDOclient_t));
       #endif
       #if CO_NO_TRACE > 0
-        for(i=0; i<CO_NO_TRACE; i++) {
-            CO->trace[i]                    = (CO_trace_t *)        _calloc(1, sizeof(CO_trace_t));
+        for (i = 0; i < CO_NO_TRACE; i++) {
+            ptrCO_instance->trace[i]        = (CO_trace_t *)        _calloc(1, sizeof(CO_trace_t));
             CO_traceTimeBuffers[i]          = (uint32_t *)          _calloc(OD_traceConfig[i].size, sizeof(uint32_t));
             CO_traceValueBuffers[i]         = (int32_t *)           _calloc(OD_traceConfig[i].size, sizeof(int32_t));
-            if(CO_traceTimeBuffers[i] != NULL && CO_traceValueBuffers[i] != NULL) {
+            if ((CO_traceTimeBuffers[i] != NULL) && (CO_traceValueBuffers[i] != NULL)) {
                 CO_traceBufferSize[i] = OD_traceConfig[i].size;
-            } else {
+            }
+            else {
                 CO_traceBufferSize[i] = 0;
             }
         }
       #endif
     }
     CAN_heap -= fnHeapFree();                                            // the amount of heap allocated for CANopen use
-  //CO->CANmodule[0]->CANnormal = false;
-  //CO_CANsetConfigurationMode(CANbaseAddress);
 
-  /* Configure object variables */
-  //CO->CANmodule[0]->CANbaseAddress = 0;
-    CO->CANmodule[0]->CANmsgBuffSize = NUMBER_CAN_MESSAGE_BUFFERS;
-    CO->CANmodule[0]->rxArray = CO_CANmodule_rxArray0;
-    CO->CANmodule[0]->rxSize = CO_RXCAN_NO_MSGS;
-    CO->CANmodule[0]->txArray = CO_CANmodule_txArray0;
-    CO->CANmodule[0]->txSize = CO_TXCAN_NO_MSGS;
-    CO->CANmodule[0]->firstCANtxMessage = 1;
-
+    ptrCO_instance->CANmodule[0]->CANmsgBuffSize = NUMBER_CAN_MESSAGE_BUFFERS;
+    ptrCO_instance->CANmodule[0]->rxArray = CO_CANmodule_rxArray0;
+    ptrCO_instance->CANmodule[0]->rxSize = CO_RXCAN_NO_MSGS;
+    ptrCO_instance->CANmodule[0]->txArray = CO_CANmodule_txArray0;
+    ptrCO_instance->CANmodule[0]->txSize = CO_TXCAN_NO_MSGS;
+    ptrCO_instance->CANmodule[0]->firstCANtxMessage = 1;
+    ptrCO_instance->CANmodule[0]->CAN_interface_ID = CAN_interface_ID;
 
     for (i = 0; i < CO_NO_SDO_SERVER; i++) {
         uint32_t COB_IDClientToServer;
@@ -261,54 +255,54 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
         }
 
         CO_SDO_init(
-                CO->SDO[i],
+            ptrCO_instance->SDO[i],
                 COB_IDClientToServer,
                 COB_IDServerToClient,
                 OD_H1200_SDO_SERVER_PARAM+i,
-                i==0 ? 0 : CO->SDO[0],
+                i==0 ? 0 : ptrCO_instance->SDO[0],
                &CO_OD[0],
                 CO_OD_NoOfElements,
                 CO_SDO_ODExtensions,
                 nodeId,
-                CO->CANmodule[0],
+            ptrCO_instance->CANmodule[0],
                 CO_RXCAN_SDO_SRV+i,
-                CO->CANmodule[0],
+            ptrCO_instance->CANmodule[0],
                 CO_TXCAN_SDO_SRV+i);
     }
 
     // Initialise emergency object
     //
     CO_EM_init(
-            CO->em,
-            CO->emPr,
-            CO->SDO[0],
+        ptrCO_instance->em,
+        ptrCO_instance->emPr,
+        ptrCO_instance->SDO[0],
            &OD_errorStatusBits[0],
             ODL_errorStatusBits_stringLength,
            &OD_errorRegister,
            &OD_preDefinedErrorField[0],
             ODL_preDefinedErrorField_arrayLength,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_TXCAN_EMERG,
             CO_CAN_ID_EMERGENCY + nodeId);
 
     // Initialise hearthbeat object
     //
     CO_NMT_init(
-            CO->NMT,
-            CO->emPr,
+        ptrCO_instance->NMT,
+        ptrCO_instance->emPr,
             nodeId,
             500,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_RXCAN_NMT,
             CO_CAN_ID_NMT_SERVICE,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_TXCAN_HB,
             CO_CAN_ID_HEARTBEAT + nodeId);
 
 
 #if CO_NO_NMT_MASTER == 1
     NMTM_txBuff = CO_CANtxBufferInit(/* return pointer to 8-byte CAN data buffer, which should be populated */
-            CO->CANmodule[0], /* pointer to CAN module used for sending this message */
+        ptrCO_instance->CANmodule[0], /* pointer to CAN module used for sending this message */
             CO_TXCAN_NMT,     /* index of specific buffer inside CAN module */
             0x0000,           /* CAN identifier */
             0,                /* rtr */
@@ -319,36 +313,36 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
     // Initialise synch object
     //
     CO_SYNC_init(
-            CO->SYNC,
-            CO->em,
-            CO->SDO[0],
-           &CO->NMT->operatingState,
+        ptrCO_instance->SYNC,
+        ptrCO_instance->em,
+        ptrCO_instance->SDO[0],
+           &ptrCO_instance->NMT->operatingState,
             OD_COB_ID_SYNCMessage,
             OD_communicationCyclePeriod,
             OD_synchronousCounterOverflowValue,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_RXCAN_SYNC,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_TXCAN_SYNC);
 
     // Initialise process data objects (reception)
     //
     for (i = 0; i < CO_NO_RPDO; i++) {
-        CO_CANmodule_t *CANdevRx = CO->CANmodule[0];
+        CO_CANmodule_t *CANdevRx = ptrCO_instance->CANmodule[0];
         uint16_t CANdevRxIdx = (CO_RXCAN_RPDO + i);
         CO_RPDO_init(
-                CO->RPDO[i],
-                CO->em,
-                CO->SDO[0],
-                CO->SYNC,
-               &CO->NMT->operatingState,
+            ptrCO_instance->RPDO[i],
+            ptrCO_instance->em,
+            ptrCO_instance->SDO[0],
+            ptrCO_instance->SYNC,
+               &ptrCO_instance->NMT->operatingState,
                 nodeId,
                 ((i<4) ? (CO_CAN_ID_RPDO_1+i*0x100) : 0),
                 0,
                 (CO_RPDOCommPar_t*) &OD_RPDOCommunicationParameter[i],
                 (CO_RPDOMapPar_t*) &OD_RPDOMappingParameter[i],
-                OD_H1400_RXPDO_1_PARAM+i,
-                OD_H1600_RXPDO_1_MAPPING+i,
+                (OD_H1400_RXPDO_1_PARAM + i),
+                (OD_H1600_RXPDO_1_MAPPING + i),
                 CANdevRx,
                 CANdevRxIdx);
     }
@@ -357,10 +351,10 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
     //
     for (i = 0; i < CO_NO_TPDO; i++) {
         CO_TPDO_init(
-                CO->TPDO[i],
-                CO->em,
-                CO->SDO[0],
-               &CO->NMT->operatingState,
+            ptrCO_instance->TPDO[i],
+            ptrCO_instance->em,
+            ptrCO_instance->SDO[0],
+               &ptrCO_instance->NMT->operatingState,
                 nodeId,
                 ((i<4) ? (CO_CAN_ID_TPDO_1+i*0x100) : 0),
                 0,
@@ -368,36 +362,36 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
                 (CO_TPDOMapPar_t*) &OD_TPDOMappingParameter[i],
                 OD_H1800_TXPDO_1_PARAM+i,
                 OD_H1A00_TXPDO_1_MAPPING+i,
-                CO->CANmodule[0],
+            ptrCO_instance->CANmodule[0],
                 CO_TXCAN_TPDO+i);
     }
 
     CO_HBconsumer_init(
-            CO->HBcons,
-            CO->em,
-            CO->SDO[0],
+        ptrCO_instance->HBcons,
+        ptrCO_instance->em,
+        ptrCO_instance->SDO[0],
            &OD_consumerHeartbeatTime[0],
             CO_HBcons_monitoredNodes,
             CO_NO_HB_CONS,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_RXCAN_CONS_HB);
 
 #if CO_NO_SDO_CLIENT == 1
     CO_SDOclient_init(
-            CO->SDOclient,
-            CO->SDO[0],
+        ptrCO_instance->SDOclient,
+        ptrCO_instance->SDO[0],
             (CO_SDOclientPar_t*) &OD_SDOClientParameter[0],
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_RXCAN_SDO_CLI,
-            CO->CANmodule[0],
+        ptrCO_instance->CANmodule[0],
             CO_TXCAN_SDO_CLI);
 #endif
 
 #if CO_NO_TRACE > 0
     for(i=0; i<CO_NO_TRACE; i++) {
         CO_trace_init(
-            CO->trace[i],
-            CO->SDO[0],
+            ptrCO_instance->trace[i],
+            ptrCO_instance->SDO[0],
             OD_traceConfig[i].axisNo,
             CO_traceTimeBuffers[i],
             CO_traceValueBuffers[i],
@@ -414,13 +408,14 @@ CO_ReturnError_t CO_init(int32_t CANbaseAddress, uint8_t nodeId, uint16_t bitRat
             OD_INDEX_TRACE + i);
     }
 #endif
-    return CO_ERROR_NO;
+    return ptrCO_instance;
 }
 
-extern int uCANopenInit(QUEUE_HANDLE CAN_interface_ID, unsigned char ucNodeID)
+extern int uCANopenInit(int iInstance, QUEUE_HANDLE CAN_interface_ID, unsigned char ucNodeID)
 {
-    if (CO_init(0, ucNodeID, 0) == 0) {
-        CO_CANsetNormalMode(CO->CANmodule[0]);
+    CO_t *ptrCO_instance = CO_init((unsigned char)iInstance, ucNodeID, CAN_interface_ID);
+    if (ptrCO_instance != 0) {
+        CO_CANsetNormalMode(ptrCO_instance->CANmodule[0]);
         return 0;
     }
     return -1;
@@ -542,68 +537,64 @@ bool_t CO_process_SYNC_RPDO(
     int16_t i;
     bool_t syncWas = false;
 
-    switch(CO_SYNC_process(CO->SYNC, timeDifference_us, OD_synchronousWindowLength)){
-        case 1:     //immediately after the SYNC message
-            syncWas = true;
-            break;
-        case 2:     //outside SYNC window
-            CO_CANclearPendingSyncPDOs(CO->CANmodule[0]);
-            break;
+    switch (CO_SYNC_process(CO->SYNC, timeDifference_us, OD_synchronousWindowLength)) {
+    case 1:     //immediately after the SYNC message
+        syncWas = true;
+        break;
+    case 2:     //outside SYNC window
+        CO_CANclearPendingSyncPDOs(CO->CANmodule[0]);
+        break;
     }
 
-    for(i=0; i<CO_NO_RPDO; i++){
+    for (i = 0; i < CO_NO_RPDO; i++) {
         CO_RPDO_process(CO->RPDO[i], syncWas);
     }
-
     return syncWas;
 }
 
 
 /******************************************************************************/
-void CO_process_TPDO(
-        CO_t                   *CO,
-        bool_t                  syncWas,
-        uint32_t                timeDifference_us)
+void CO_process_TPDO(CO_t *CO, bool_t syncWas, uint32_t timeDifference_us)
 {
     int16_t i;
 
-    /* Verify PDO Change Of State and process PDOs */
-    for(i=0; i<CO_NO_TPDO; i++){
-        if(!CO->TPDO[i]->sendRequest) CO->TPDO[i]->sendRequest = CO_TPDOisCOS(CO->TPDO[i]);
+    for (i = 0; i < CO_NO_TPDO; i++) {                                   // for each possile PDO
+        if (CO->TPDO[i]->sendRequest == 0) {                             // if no transmission is presently being requested
+            CO->TPDO[i]->sendRequest = CO_TPDOisCOS(CO->TPDO[i]);        // verify if TPDO value has changed and request transmission if it has
+        }
         CO_TPDO_process(CO->TPDO[i], CO->SYNC, syncWas, timeDifference_us);
     }
 }
 
 
 #define TMR_TASK_INTERVAL   (1000)          /* Interval of tmrTask thread in microseconds */
-static unsigned short   CO_timer1ms = 0U;   /* variable increments each millisecond */
-extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID)
+
+extern int uCANopenPoll(int iInstance, unsigned long CO_timer1ms)
 {
-    unsigned short timer1msCopy, timer1msDiff;
-    static unsigned short timer1msPrevious = 0;
-
-    timer1msCopy = CO_timer1ms;
-    timer1msDiff = (timer1msCopy - timer1msPrevious); // the number of ms elapsed since last poll
-    timer1msPrevious = timer1msCopy;
-
-    /* CANopen process */
-    return (CO_process(CO, timer1msDiff, NULL));
+    static unsigned long ulTimer1msPrevious = 0;
+    CO_t *ptrCO_instance = CO[iInstance];
+    unsigned long ulTimer1msCopy;
+    unsigned short usTimer1msDiff;
+    ulTimer1msCopy = CO_timer1ms;
+    usTimer1msDiff = (unsigned short)(ulTimer1msCopy - ulTimer1msPrevious); // the number of ms elapsed since last poll
+    ulTimer1msPrevious = ulTimer1msCopy;
+    return (CO_process(ptrCO_instance, usTimer1msDiff, NULL));           // CANopen process
 }
 
 /* timer thread executes in constant intervals ********************************/
-extern void tmrTask_thread(void)
+extern void tmrTask_thread(int iInstance)
 {
-    CO_timer1ms++;                                                       // the number of ms passed (overflows at 64k)
-    if (CO->CANmodule[0]->CANnormal != 0) {
+    CO_t *ptrCO_instance = CO[iInstance];
+    if (ptrCO_instance->CANmodule[0]->CANnormal != 0) {
         bool_t syncWas;
-        syncWas = CO_process_SYNC_RPDO(CO, TMR_TASK_INTERVAL);           // process sync and read inputs
+        syncWas = CO_process_SYNC_RPDO(ptrCO_instance, TMR_TASK_INTERVAL); // process sync and read inputs
 
         /* Further I/O or nonblocking application code may go here. */
 
-        CO_process_TPDO(CO, syncWas, TMR_TASK_INTERVAL);                 // write outputs
+        CO_process_TPDO(ptrCO_instance, syncWas, TMR_TASK_INTERVAL);     // write outputs
 
         if (0) {                                                         // verify timer overflow
-            CO_errorReport(CO->em, CO_EM_ISR_TIMER_OVERFLOW, CO_EMC_SOFTWARE_INTERNAL, 0U);
+            CO_errorReport(ptrCO_instance->em, CO_EM_ISR_TIMER_OVERFLOW, CO_EMC_SOFTWARE_INTERNAL, 0U);
         }
     }
 }

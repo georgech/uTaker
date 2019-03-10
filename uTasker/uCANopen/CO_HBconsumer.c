@@ -86,29 +86,29 @@ static void CO_HBcons_monitoredNodeConfig(
     uint16_t NodeID;
     CO_HBconsNode_t *monitoredNode;
 
-    if(idx >= HBcons->numberOfMonitoredNodes) return;
-
-    NodeID = (uint16_t)((HBconsTime>>16)&0xFF);
+    if (idx >= HBcons->numberOfMonitoredNodes) {
+        return;
+    }
+    NodeID = (uint16_t)((HBconsTime >> 16) & 0xff);
     monitoredNode = &HBcons->monitoredNodes[idx];
     monitoredNode->time = (uint16_t)HBconsTime;
     monitoredNode->NMTstate = 0;
     monitoredNode->monStarted = false;
 
     /* is channel used */
-    if(NodeID && monitoredNode->time){
-        COB_ID = NodeID + 0x700;
+    if ((NodeID != 0) && (monitoredNode->time != 0)) {
+        COB_ID = (NodeID + 0x700);
     }
-    else{
+    else {
         COB_ID = 0;
         monitoredNode->time = 0;
     }
-
     /* configure Heartbeat consumer CAN reception */
     CO_CANrxBufferInit(
             HBcons->CANdevRx,
             HBcons->CANdevRxIdxStart + idx,
             COB_ID,
-            0x7FF,
+            0x7ff,
             0,
             (void*)&HBcons->monitoredNodes[idx],
             CO_HBcons_receive);
@@ -177,13 +177,12 @@ CO_ReturnError_t CO_HBconsumer_init(
         uint16_t                CANdevRxIdxStart)
 {
     uint8_t i;
-
+#if defined _WINDOWS
     /* verify arguments */
-    if(HBcons==NULL || em==NULL || SDO==NULL || HBconsTime==NULL ||
-        monitoredNodes==NULL || CANdevRx==NULL){
+    if (HBcons==NULL || em==NULL || SDO==NULL || HBconsTime==NULL || monitoredNodes==NULL || CANdevRx==NULL) {
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
+#endif
     /* Configure object variables */
     HBcons->em = em;
     HBcons->HBconsTime = HBconsTime;
@@ -193,12 +192,12 @@ CO_ReturnError_t CO_HBconsumer_init(
     HBcons->CANdevRx = CANdevRx;
     HBcons->CANdevRxIdxStart = CANdevRxIdxStart;
 
-    for(i=0; i<HBcons->numberOfMonitoredNodes; i++)
+    for (i = 0; i < HBcons->numberOfMonitoredNodes; i++) {
         CO_HBcons_monitoredNodeConfig(HBcons, i, HBcons->HBconsTime[i]);
+    }
 
     /* Configure Object dictionary entry at index 0x1016 */
-    CO_OD_configure(SDO, OD_H1016_CONSUMER_HB_TIME, CO_ODF_1016, (void*)HBcons, 0, 0);
-
+    CO_OD_configure(SDO, OD_H1016_CONSUMER_HB_TIME, CO_ODF_1016, (void*)HBcons, 0, 0); // consumer heartbeat time
     return CO_ERROR_NO;
 }
 

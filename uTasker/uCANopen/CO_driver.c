@@ -52,7 +52,7 @@
 
 
 extern const CO_CANbitRateData_t  CO_CANbitRateData[8];
-extern CO_t *CO;
+extern CO_t *CO[CANOPEN_INSTANCES];
 
 #define REMOTE_FRAME_FLAG    0x8000
 
@@ -216,8 +216,9 @@ CO_ReturnError_t CO_CANmodule_init(
 
 
 /******************************************************************************/
-void CO_CANmodule_disable(CO_CANmodule_t *CANmodule){
-    CO_CANsetConfigurationMode(CANmodule->CANbaseAddress);
+void CO_CANmodule_disable(CO_CANmodule_t *CANmodule)
+{
+    CO_CANsetConfigurationMode(CANmodule->CAN_interface_ID);
 }
 
 
@@ -239,7 +240,7 @@ CO_ReturnError_t CO_CANrxBufferInit(
 {
     CO_ReturnError_t ret = CO_ERROR_NO;
 
-    if((CANmodule!=NULL) && (object!=NULL) && (pFunct!=NULL) && (index < CANmodule->rxSize)){
+    if ((CANmodule != NULL) && (object != NULL) && (pFunct != NULL) && (index < CANmodule->rxSize)) {
         /* buffer, which will be configured */
         CO_CANrx_t *buffer = &CANmodule->rxArray[index];
 
@@ -249,23 +250,20 @@ CO_ReturnError_t CO_CANrxBufferInit(
 
         /* CAN identifier and CAN mask, bit aligned with CAN module */
       //buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
-        buffer->ident = (uint16_t)((ident & 0x07FF));
+        buffer->ident = (uint16_t)((ident & CAN_INDEX_WIDTH));
         if (rtr != 0) {
             buffer->ident |= REMOTE_FRAME_FLAG;
         }
       //buffer->mask = (uint16_t) (((mask & 0x07FF)<<5) | 0x0080);
-        buffer->mask = (uint16_t)((mask & 0x07FF) | 0x0004);
-
-
+        buffer->mask = (uint16_t)((mask & CAN_INDEX_WIDTH)/* | 0x0004*/);
         /* Set CAN hardware module filter and mask. */
-        if (CANmodule->useCANrxFilters != 0) {
-            //filters are not used. 
-        }
+      //if (CANmodule->useCANrxFilters != 0) {
+      //    //filters are not used. 
+      //}
     }
     else{
         ret = CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
     return ret;
 }
 
@@ -281,13 +279,13 @@ CO_CANtx_t *CO_CANtxBufferInit(
 {
     CO_CANtx_t *buffer = NULL;
 
-    if((CANmodule != NULL) && (index < CANmodule->txSize)){
+    if ((CANmodule != NULL) && (index < CANmodule->txSize)) {
         /* get specific buffer */
         buffer = &CANmodule->txArray[index];
 
         /* CAN identifier, DLC and rtr, bit aligned with CAN module transmit buffer */
       //buffer->ident = (uint16_t) ((ident & 0x07FF)<<5);
-        buffer->ident = (uint16_t)(ident & 0x07FF);
+        buffer->ident = (uint16_t)(ident & CAN_INDEX_WIDTH);
         if (rtr != 0) {
             buffer->ident |= REMOTE_FRAME_FLAG;
         }
@@ -339,7 +337,7 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
   //uint8_t i;
 
     if (buffer->bufferFull != 0) {                                       // verify overflow
-        if(!CANmodule->firstCANtxMessage){
+        if(CANmodule->firstCANtxMessage == 0){
             /* don't set error, if bootup message is still on buffers */
             CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_CAN_TX_OVERFLOW, CO_EMC_CAN_OVERRUN, /*buffer->CMSGSID*/0);
         }
@@ -350,7 +348,7 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
     /* Here, we use buffer 14 & 15 for Tx */
   //i=14; //initial sending buffer index
 #if 1
-    if (fnSendCAN_frame(CANopen_interface_ID0, buffer->data, buffer->DLC, buffer->ident) == 0) {
+    if (fnSendCAN_frame(CANmodule->CAN_interface_ID, buffer->data, buffer->DLC, buffer->ident) == 0) {
         buffer->bufferFull = true;                                       // if no buffer is free, message will be sent by interrupt
         CANmodule->CANtxCount++;
     }
@@ -466,9 +464,9 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule){
 #endif
 }
 
-extern void fnCANopenRx(int iCanRef, unsigned long ulID, unsigned char *ucInputMessage, int iLength, unsigned short usTimeStamp)
+extern void fnCANopenRx(int iInstance, unsigned long ulID, unsigned char *ucInputMessage, int iLength, unsigned short usTimeStamp)
 {
-    CO_CANmodule_t *CANmodule = CO->CANmodule[iCanRef];
+    CO_CANmodule_t *CANmodule = CO[iInstance]->CANmodule[0];
     uint16_t rcvMsgIdent;       /* identifier of the received message */
     uint16_t index;             /* index of received message */
     CO_CANrx_t *buffer = NULL;  /* receive message buffer from CO_CANmodule_t object. */
@@ -497,9 +495,9 @@ extern void fnCANopenRx(int iCanRef, unsigned long ulID, unsigned char *ucInputM
 }
 
 
-extern void fnCANopenTxOK(int iCanRef)
+extern void fnCANopenTxOK(int iInstance)
 {
-    CO_CANmodule_t *CANmodule = CO->CANmodule[iCanRef];
+    CO_CANmodule_t *CANmodule = CO[iInstance]->CANmodule[0];
     /* First CAN message (bootup) was sent successfully */
     CANmodule->firstCANtxMessage = false;
     /* clear flag from previous message */
@@ -529,7 +527,7 @@ extern void fnCANopenTxOK(int iCanRef)
                 MCF_CANMB_DATA_WORD_4(ICODE) = (uint16_t)(((buffer->data[6]) << 8) | (buffer->data[7]));
                 MCF_CANMB_CTRL(ICODE) = (uint8_t)(MCF_CANMB_CTRL_CODE(0b1000) | MCF_CANMB_CTRL_LENGTH(buffer->DLC)); //Tx MB active
 #endif
-                fnSendCAN_frame(CANopen_interface_ID0, buffer->data, buffer->DLC, buffer->ident);
+                fnSendCAN_frame(CANmodule->CAN_interface_ID, buffer->data, buffer->DLC, buffer->ident);
                 break;                      /* exit for loop */
             }
             buffer++;

@@ -253,24 +253,27 @@ CO_ReturnError_t CO_SYNC_init(
         uint16_t                CANdevTxIdx)
 {
     uint8_t len = 0;
-
+#if defined _WINDOWS
     /* verify arguments */
-    if(SYNC==NULL || em==NULL || SDO==NULL || operatingState==NULL ||
-        CANdevRx==NULL || CANdevTx==NULL){
+    if (SYNC==NULL || em==NULL || SDO==NULL || operatingState==NULL || CANdevRx==NULL || CANdevTx==NULL) {
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
+#endif
     /* Configure object variables */
-    SYNC->isProducer = (COB_ID_SYNCMessage&0x40000000L) ? true : false;
-    SYNC->COB_ID = COB_ID_SYNCMessage&0x7FF;
+    SYNC->isProducer = (COB_ID_SYNCMessage & 0x40000000L) ? true : false;
+    SYNC->COB_ID = (COB_ID_SYNCMessage & 0x7FF);
 
     SYNC->periodTime = communicationCyclePeriod;
     SYNC->periodTimeoutTime = communicationCyclePeriod / 2 * 3;
     /* overflow? */
-    if(SYNC->periodTimeoutTime < communicationCyclePeriod) SYNC->periodTimeoutTime = 0xFFFFFFFFL;
+    if (SYNC->periodTimeoutTime < communicationCyclePeriod) {
+        SYNC->periodTimeoutTime = 0xFFFFFFFFL;
+    }
 
     SYNC->counterOverflowValue = synchronousCounterOverflowValue;
-    if(synchronousCounterOverflowValue) len = 1;
+    if (synchronousCounterOverflowValue != 0) {
+        len = 1;
+    }
 
     SYNC->curentSyncTimeIsInsideWindow = true;
 
@@ -287,9 +290,9 @@ CO_ReturnError_t CO_SYNC_init(
     SYNC->CANdevRxIdx = CANdevRxIdx;
 
     /* Configure Object dictionary entry at index 0x1005, 0x1006 and 0x1019 */
-    CO_OD_configure(SDO, OD_H1005_COBID_SYNC,        CO_ODF_1005, (void*)SYNC, 0, 0);
-    CO_OD_configure(SDO, OD_H1006_COMM_CYCL_PERIOD,  CO_ODF_1006, (void*)SYNC, 0, 0);
-    CO_OD_configure(SDO, OD_H1019_SYNC_CNT_OVERFLOW, CO_ODF_1019, (void*)SYNC, 0, 0);
+    CO_OD_configure(SDO, OD_H1005_COBID_SYNC,        CO_ODF_1005, (void*)SYNC, 0, 0); // COB-ID SYNC message
+    CO_OD_configure(SDO, OD_H1006_COMM_CYCL_PERIOD,  CO_ODF_1006, (void*)SYNC, 0, 0); // communication cycle period
+    CO_OD_configure(SDO, OD_H1019_SYNC_CNT_OVERFLOW, CO_ODF_1019, (void*)SYNC, 0, 0); // synchronous counter overflow
 
     /* configure SYNC CAN reception */
     CO_CANrxBufferInit(
@@ -325,22 +328,25 @@ uint8_t CO_SYNC_process(
     uint8_t ret = 0;
     uint32_t timerNew;
 
-    if(*SYNC->operatingState == CO_NMT_OPERATIONAL || *SYNC->operatingState == CO_NMT_PRE_OPERATIONAL){
+    if ((*SYNC->operatingState == CO_NMT_OPERATIONAL) || (*SYNC->operatingState == CO_NMT_PRE_OPERATIONAL)) {
         /* update sync timer, no overflow */
-        timerNew = SYNC->timer + timeDifference_us;
-        if(timerNew > SYNC->timer) SYNC->timer = timerNew;
-
+        timerNew = (SYNC->timer + timeDifference_us);
+      //if (timerNew > SYNC->timer) {
+            SYNC->timer = timerNew;
+      //}
         /* was SYNC just received */
-        if(SYNC->CANrxNew){
+        if (SYNC->CANrxNew != 0) {
             SYNC->timer = 0;
             ret = 1;
             SYNC->CANrxNew = false;
         }
 
         /* SYNC producer */
-        if(SYNC->isProducer && SYNC->periodTime){
-            if(SYNC->timer >= SYNC->periodTime){
-                if(++SYNC->counter > SYNC->counterOverflowValue) SYNC->counter = 1;
+        if ((SYNC->isProducer != 0) && (SYNC->periodTime != 0)) {
+            if (SYNC->timer >= SYNC->periodTime) {
+                if (++SYNC->counter > SYNC->counterOverflowValue) {
+                    SYNC->counter = 1;
+                }
                 SYNC->timer = 0;
                 ret = 1;
                 SYNC->CANrxToggle = SYNC->CANrxToggle ? false : true;
@@ -350,35 +356,35 @@ uint8_t CO_SYNC_process(
         }
 
         /* Synchronous PDOs are allowed only inside time window */
-        if(ObjDict_synchronousWindowLength){
-            if(SYNC->timer > ObjDict_synchronousWindowLength){
-                if(SYNC->curentSyncTimeIsInsideWindow){
+        if (ObjDict_synchronousWindowLength != 0) {
+            if (SYNC->timer > ObjDict_synchronousWindowLength) {
+                if (SYNC->curentSyncTimeIsInsideWindow != 0) {
                     ret = 2;
                 }
                 SYNC->curentSyncTimeIsInsideWindow = false;
             }
             else{
-                SYNC->curentSyncTimeIsInsideWindow = true;
+                SYNC->curentSyncTimeIsInsideWindow  = true;
             }
         }
-        else{
+        else {
             SYNC->curentSyncTimeIsInsideWindow = true;
         }
 
         /* Verify timeout of SYNC */
-        if(SYNC->periodTime && SYNC->timer > SYNC->periodTimeoutTime && *SYNC->operatingState == CO_NMT_OPERATIONAL)
+        if ((SYNC->periodTime != 0) && (SYNC->timer > SYNC->periodTimeoutTime) && (*SYNC->operatingState == CO_NMT_OPERATIONAL)) {
             CO_errorReport(SYNC->em, CO_EM_SYNC_TIME_OUT, CO_EMC_COMMUNICATION, SYNC->timer);
+        }
     }
     else {
         SYNC->CANrxNew = false;
     }
 
     /* verify error from receive function */
-    if(SYNC->receiveError != 0U){
+    if (SYNC->receiveError != 0U) {
         CO_errorReport(SYNC->em, CO_EM_SYNC_LENGTH, CO_EMC_SYNC_DATA_LENGTH, (uint32_t)SYNC->receiveError);
         SYNC->receiveError = 0U;
     }
-
     return ret;
 }
 #endif

@@ -157,6 +157,8 @@ extern "C" {
  *     See DS301 V4.2.
  */
 
+#define CAN_OBJECT_ENTRY_DOESNT_EXIST            0xffff
+
 
 /**
  * SDO abort codes.
@@ -857,7 +859,7 @@ void CO_OD_configure(
  * @param SDO This object.
  * @param index Index of the object in Object dictionary.
  *
- * @return Sequence number of the @ref CO_SDO_objectDictionary entry, 0xFFFF if not found.
+ * @return Sequence number of the @ref CO_SDO_objectDictionary entry, 0xFFFF [CAN_OBJECT_ENTRY_DOESNT_EXIST] if not found.
  */
 uint16_t CO_OD_find(CO_SDO_t *SDO, uint16_t index);
 

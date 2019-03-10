@@ -135,18 +135,17 @@ CO_ReturnError_t CO_EM_init(
         uint16_t                CANdevTxIdx,
         uint16_t                CANidTxEM)
 {
-    uint8_t i;
-
+  //uint8_t i;
+#if defined _WINDOWS
     /* verify arguments */
-    if(em==NULL || emPr==NULL || SDO==NULL || errorStatusBits==NULL ||
-        errorStatusBitsSize<6U || errorRegister==NULL || preDefErr==NULL || CANdev==NULL){
+    if (em==NULL || emPr==NULL || SDO==NULL || errorStatusBits==NULL || errorStatusBitsSize<6U || errorRegister==NULL || preDefErr==NULL || CANdev==NULL) {
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
+#endif
     /* Configure object variables */
     em->errorStatusBits         = errorStatusBits;
     em->errorStatusBitsSize     = errorStatusBitsSize;
-    em->bufEnd                  = em->buf + (CO_EM_INTERNAL_BUFFER_SIZE * 8);
+    em->bufEnd                  = (em->buf + (CO_EM_INTERNAL_BUFFER_SIZE * 8));
     em->bufWritePtr             = em->buf;
     em->bufReadPtr              = em->buf;
     em->bufFull                 = 0U;
@@ -160,9 +159,7 @@ CO_ReturnError_t CO_EM_init(
     emPr->inhibitEmTimer        = 0U;
 
     /* clear error status bits */
-    for(i=0U; i<errorStatusBitsSize; i++){
-        em->errorStatusBits[i] = 0U;
-    }
+    uMemset(em->errorStatusBits, 0, errorStatusBitsSize);
 
     /* Configure Object dictionary entry at index 0x1003 and 0x1014 */
     CO_OD_configure(SDO, OD_H1003_PREDEF_ERR_FIELD, CO_ODF_1003, (void*)emPr, 0, 0U);

@@ -142,7 +142,7 @@ void CO_memcpySwap8(void* dest, const void* src){
     cdest[7] = csrc[7];
 }
 #endif
-#ifdef CO_BIG_ENDIAN
+#if defined CO_BIG_ENDIAN
 void CO_memcpySwap2(void* dest, const void* src){
     char *cdest;
     char *csrc;
@@ -374,11 +374,9 @@ CO_ReturnError_t CO_SDO_init(
 
 
 /******************************************************************************/
-void CO_SDO_initCallback(
-        CO_SDO_t               *SDO,
-        void                  (*pFunctSignal)(void))
+void CO_SDO_initCallback(CO_SDO_t *SDO, void (*pFunctSignal)(void))
 {
-    if(SDO != NULL){
+    if (SDO != NULL) {
         SDO->pFunctSignal = pFunctSignal;
     }
 }
@@ -396,18 +394,15 @@ void CO_OD_configure(
     uint16_t entryNo;
 
     entryNo = CO_OD_find(SDO, index);
-    if(entryNo < 0xFFFFU){
+    if (entryNo != CAN_OBJECT_ENTRY_DOESNT_EXIST) {
         CO_OD_extension_t *ext = &SDO->ODExtensions[entryNo];
         uint8_t maxSubIndex = SDO->OD[entryNo].maxSubIndex;
-
         ext->pODFunc = pODFunc;
         ext->object = object;
-        if((flags != NULL) && (flagsSize != 0U) && (flagsSize == maxSubIndex)){
-            uint16_t i;
+        if ((flags != NULL) && (flagsSize != 0U) && (flagsSize == maxSubIndex)) {
+          //uint16_t i;
             ext->flags = flags;
-            for(i=0U; i<=maxSubIndex; i++){
-                ext->flags[i] = 0U;
-            }
+            uMemset(ext->flags, 0, (maxSubIndex * sizeof(ext->flags)));
         }
         else{
             ext->flags = NULL;
@@ -417,75 +412,81 @@ void CO_OD_configure(
 
 
 /******************************************************************************/
-uint16_t CO_OD_find(CO_SDO_t *SDO, uint16_t index){
+uint16_t CO_OD_find(CO_SDO_t *SDO, uint16_t index)
+{
     /* Fast search in ordered Object Dictionary. If indexes are mixed, this won't work. */
     /* If Object Dictionary has up to 2^N entries, then N is max number of loop passes. */
     uint16_t cur, min, max;
     const CO_OD_entry_t* object;
 
     min = 0U;
-    max = SDO->ODSize - 1U;
-    while(min < max){
-        cur = (min + max) / 2;
+    max = (SDO->ODSize - 1U);
+    while (min < max) {
+        cur = ((min + max) / 2);
         object = &SDO->OD[cur];
         /* Is object matched */
-        if(index == object->index){
+        if (index == object->index) {
             return cur;
         }
-        if(index < object->index){
+        if (index < object->index) {
             max = cur;
-            if(max) max--;
+            if (max != 0) {
+                max--;
+            }
         }
-        else
+        else {
             min = cur + 1U;
+        }
     }
 
-    if(min == max){
+    if (min == max){
         object = &SDO->OD[min];
         /* Is object matched */
-        if(index == object->index){
+        if (index == object->index){
             return min;
         }
     }
 
-    return 0xFFFFU;  /* object does not exist in OD */
+    return CAN_OBJECT_ENTRY_DOESNT_EXIST;  /* object does not exist in OD */
 }
 
 
 /******************************************************************************/
-uint16_t CO_OD_getLength(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex){
-    const CO_OD_entry_t* object = &SDO->OD[entryNo];
+uint16_t CO_OD_getLength(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex)
+{
+    const CO_OD_entry_t *object;
 
-    if(entryNo == 0xFFFFU){
+    if (entryNo == CAN_OBJECT_ENTRY_DOESNT_EXIST) {
         return 0U;
     }
+    object = &SDO->OD[entryNo];
 
-    if(object->maxSubIndex == 0U){    /* Object type is Var */
-        if(object->pData == 0){ /* data type is domain */
+    if (object->maxSubIndex == 0U) {    /* Object type is Var */
+        if (object->pData == 0) { /* data type is domain */
             return CO_SDO_BUFFER_SIZE;
         }
-        else{
+        else {
             return object->length;
         }
     }
-    else if(object->attribute != 0U){ /* Object type is Array */
-        if(subIndex == 0U){
-            return 1U;
+    else if (object->attribute != 0U) { /* Object type is Array */
+        if (subIndex == 0U) {
+            return (uint16_t)1;
         }
-        else if(object->pData == 0){
+        else if (object->pData == 0) {
             /* data type is domain */
             return CO_SDO_BUFFER_SIZE;
         }
         else{
-            return object->length;
+            return (object->length);
         }
     }
-    else{                            /* Object type is Record */
-        if(((const CO_OD_entryRecord_t*)(object->pData))[subIndex].pData == 0){
+    else {                            /* Object type is Record */
+        if (((const CO_OD_entryRecord_t*)(object->pData))[subIndex].pData == 0) {
             /* data type is domain */
-            return CO_SDO_BUFFER_SIZE;
+            return (uint16_t)CO_SDO_BUFFER_SIZE;
         }
-        else{
+        else {
             return ((const CO_OD_entryRecord_t*)(object->pData))[subIndex].length;
         }
     }
@@ -493,64 +494,67 @@ uint16_t CO_OD_getLength(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex){
 
 
 /******************************************************************************/
-uint16_t CO_OD_getAttribute(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex){
+uint16_t CO_OD_getAttribute(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex)
+{
     const CO_OD_entry_t* object = &SDO->OD[entryNo];
 
-    if(entryNo == 0xFFFFU){
+    if (entryNo == CAN_OBJECT_ENTRY_DOESNT_EXIST) {
         return 0U;
     }
 
-    if(object->maxSubIndex == 0U){   /* Object type is Var */
+    if (object->maxSubIndex == 0U) {   /* Object type is Var */
         return object->attribute;
     }
-    else if(object->attribute != 0U){/* Object type is Array */
+    else if (object->attribute != 0U) { /* Object type is Array */
         bool_t exception_1003 = false;
         uint16_t attr = object->attribute;
 
         /* Special exception: Object 1003,00 should be writable */
-        if(object->index == 0x1003 && subIndex == 0) {
+        if ((object->index == 0x1003) && (subIndex == 0)) {
             exception_1003 = true;
             attr |= CO_ODA_WRITEABLE;
         }
 
-        if(subIndex == 0U  && exception_1003 == false){
+        if ((subIndex == 0U) && (exception_1003 == false)) {
             /* First subIndex is readonly */
             attr &= ~(CO_ODA_WRITEABLE | CO_ODA_RPDO_MAPABLE);
             attr |= CO_ODA_READABLE;
         }
         return attr;
     }
-    else{                            /* Object type is Record */
+    else {                            /* Object type is Record */
         return ((const CO_OD_entryRecord_t*)(object->pData))[subIndex].attribute;
     }
 }
 
 
 /******************************************************************************/
-void* CO_OD_getDataPointer(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex){
-    const CO_OD_entry_t* object = &SDO->OD[entryNo];
+void *CO_OD_getDataPointer(CO_SDO_t *SDO, uint16_t entryNo, uint8_t subIndex)
+{
+    const CO_OD_entry_t *object;
 
-    if(entryNo == 0xFFFFU){
+    if (entryNo == CAN_OBJECT_ENTRY_DOESNT_EXIST) {
         return 0;
     }
+    object = &SDO->OD[entryNo];
 
-    if(object->maxSubIndex == 0U){   /* Object type is Var */
-        return object->pData;
+    if (object->maxSubIndex == 0U) {   /* Object type is Var */
+        return (object->pData);
     }
-    else if(object->attribute != 0U){/* Object type is Array */
-        if(subIndex==0){
+    else if (object->attribute != 0U) {/* Object type is Array */
+        if (subIndex == 0) {
             /* this is the data, for the subIndex 0 in the array */
-            return (void*) &object->maxSubIndex;
+            return (void *)&object->maxSubIndex;
         }
-        else if(object->pData == 0){
+        else if (object->pData == 0) {
             /* data type is domain */
             return 0;
         }
-        else{
-            return (void*)(((int8_t*)object->pData) + ((subIndex-1) * object->length));
+        else {
+            return (void *)(((int8_t *)object->pData) + ((subIndex - 1) * object->length));
         }
     }
-    else{                            /* Object Type is Record */
+    else {                            /* Object Type is Record */
         return ((const CO_OD_entryRecord_t*)(object->pData))[subIndex].pData;
     }
 }
@@ -666,7 +670,7 @@ uint32_t CO_SDO_readOD(CO_SDO_t *SDO, uint16_t SDOBufferSize){
     SDO->ODF_arg.firstSegment = false;
 
     /* swap data if processor is not little endian (CANopen is) */
-#ifdef CO_BIG_ENDIAN
+#if defined CO_BIG_ENDIAN
     if((SDO->ODF_arg.attribute & CO_ODA_MB_VALUE) != 0){
         uint16_t len = SDO->ODF_arg.dataLength;
         uint8_t *buf1 = SDO->ODF_arg.data;
@@ -707,7 +711,7 @@ uint32_t CO_SDO_writeOD(CO_SDO_t *SDO, uint16_t length){
     }
 
     /* swap data if processor is not little endian (CANopen is) */
-#ifdef CO_BIG_ENDIAN
+#if defined CO_BIG_ENDIAN
     if((SDO->ODF_arg.attribute & CO_ODA_MB_VALUE) != 0){
         uint16_t len = SDO->ODF_arg.dataLength;
         uint8_t *buf1 = SDO->ODF_arg.data;

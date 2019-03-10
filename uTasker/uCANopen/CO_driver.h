@@ -44,9 +44,15 @@
  */
 
 
-#ifndef CO_DRIVER_H
+#if !defined CO_DRIVER_H
 #define CO_DRIVER_H
 
+#if !defined _LITTLE_ENDIAN
+    #define CO_BIG_ENDIAN
+#endif
+#if !defined CAN_INDEX_WIDTH
+    #define CAN_INDEX_WIDTH     0x07ff                                   // only standard ID supported (not extended)
+#endif
 
 /* For documentation see file drvTemplate/CO_driver.h */
 
@@ -373,7 +379,8 @@ typedef struct{
 
 /* CAN module object. */
 typedef struct{
-    uint16_t            CANbaseAddress;
+    QUEUE_HANDLE        CAN_interface_ID;
+  //uint16_t            CANbaseAddress;
     CO_CANrxMsg_t      *CANmsgBuff;
     uint8_t             CANmsgBuffSize;
     CO_CANrx_t         *rxArray;

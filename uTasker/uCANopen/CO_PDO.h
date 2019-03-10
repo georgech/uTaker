@@ -125,7 +125,7 @@ typedef struct{
 /**
  * TPDO communication parameter. The same as record from Object dictionary (index 0x1800+).
  */
-typedef struct{
+typedef struct {
     uint8_t             maxSubIndex;    /**< Equal to 6 */
     /** Communication object identifier for transmitting message. Meaning of the specific bits:
         - Bit  0-10: COB-ID for PDO, to change it bit 31 must be set.
@@ -139,7 +139,7 @@ typedef struct{
         - 241-251: Not used.
         - 252-253: Transmited only on reception of Remote Transmission Request.
         - 254:     Manufacturer specific.
-        - 255:     Asinchronous, specification in device profile. */
+        - 255:     Asynchronous, specification in device profile. */
     uint8_t             transmissionType;
     /** Minimum time between transmissions of the PDO in 100micro seconds.
     Zero disables functionality. */
@@ -154,7 +154,17 @@ typedef struct{
         - 1-240:   The SYNC message with the counter value equal to this value
                    shall be regarded as the first received SYNC message. */
     uint8_t             SYNCStartValue;
-}CO_TPDOCommPar_t;
+} CO_TPDOCommPar_t;
+
+#define TPDO_TYPE_SYNCHRONOUS_DEVICE_PROFILE     0
+#define TPDO_TYPE_SYNCHRONOUS_AFTER_SYNCH_FIRST  1
+#define TPDO_TYPE_SYNCHRONOUS_AFTER_SYNCH_LAST   240
+#define TPDO_TYPE_UNUSED_FIRST                   241
+#define TPDO_TYPE_UNUSES_LAST                    251
+#define TPDO_TYPE_REMOTE_REQUEST_FIRST           252
+#define TPDO_TYPE_REMOTE_REQUEST_LAST            253
+#define TPDO_TYPE_MANUFACTURER_SPECIFIC          254
+#define TPDO_TYPE_ASYNCHRONOUS                   255
 
 
 /**
@@ -194,7 +204,7 @@ typedef struct{
     uint8_t             restrictionFlags;/**< From CO_RPDO_init() */
     /** True, if PDO is enabled and valid */
     bool_t              valid;
-    /** True, if PDO synchronous (transmissionType <= 240) */
+    /** True, if PDO synchronous (transmissionType <= TPDO_TYPE_SYNCHRONOUS_AFTER_SYNCH_LAST) */
     bool_t              synchronous;
     /** Data length of the received PDO message. Calculated from mapping */
     uint8_t             dataLength;

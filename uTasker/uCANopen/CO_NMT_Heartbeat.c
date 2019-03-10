@@ -110,11 +110,12 @@ CO_ReturnError_t CO_NMT_init(
         uint16_t                HB_txIdx,
         uint16_t                CANidTxHB)
 {
+#if defined _WINDOWS
     /* verify arguments */
-    if(NMT==NULL || emPr==NULL || NMT_CANdev==NULL || HB_CANdev==NULL){
+    if (NMT==NULL || emPr==NULL || NMT_CANdev==NULL || HB_CANdev==NULL) {
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
+#endif
     /* blinking bytes */
     NMT->LEDflickering          = 0;
     NMT->LEDblinking            = 0;
@@ -139,7 +140,7 @@ CO_ReturnError_t CO_NMT_init(
             NMT_CANdev,         /* CAN device */
             NMT_rxIdx,          /* rx buffer index */
             CANidRxNMT,         /* CAN identifier */
-            0x7FF,              /* mask */
+            CAN_INDEX_WIDTH,    /* mask */
             0,                  /* rtr */
             (void*)NMT,         /* object passed to receive function */
             CO_NMT_receive);    /* this function will process received message */

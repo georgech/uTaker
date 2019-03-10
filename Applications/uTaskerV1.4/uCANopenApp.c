@@ -38,11 +38,11 @@
 
 extern void fnDisplayCANopen(unsigned long ulID, unsigned char *ptrData, unsigned char ucLength);
 
-extern void tmrTask_thread(void);
-extern void fnCANopenRx(int iCanRef, unsigned long ulID, unsigned char *ucInputMessage, int iLength, unsigned short usTimeStamp);
-extern void fnCANopenTxOK(int iCanRef);
-extern int uCANopenInit(QUEUE_HANDLE CAN_interface_ID, unsigned char ucNodeID);
-extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID);
+extern void tmrTask_thread(int iInstance);
+extern void fnCANopenRx(int iInstance, unsigned long ulID, unsigned char *ucInputMessage, int iLength, unsigned short usTimeStamp);
+extern void fnCANopenTxOK(int iInstance);
+extern int uCANopenInit(int iInstance, QUEUE_HANDLE CAN_interface_ID, unsigned char ucNodeID);
+extern void uCANopenPoll(int iInstance, unsigned long ulCAN_ms);
 #define E_TIMER_CAN_MS                      1
 
 #define OPENCAN_DATA_TYPE_SDO               1
@@ -74,6 +74,7 @@ extern int uCANopenPoll(QUEUE_HANDLE CAN_interface_ID);
 /* =================================================================== */
 
 static QUEUE_HANDLE fnInitCANopenInterface(void);
+static unsigned long ulCANopen_ms = 0;
 
 
 /* =================================================================== */
@@ -93,7 +94,7 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
     if (NO_ID_ALLOCATED == CANopen_interface_ID0) {                      // first call
         fnDebugMsg("CANopen ");
         CANopen_interface_ID0 = fnInitCANopenInterface();
-        if (uCANopenInit(CANopen_interface_ID0, CANOPEN_TX_NODE_ID) != 0) { // initialise the CANopen stack
+        if (uCANopenInit(0, CANopen_interface_ID0, CANOPEN_TX_NODE_ID) != 0) { // initialise the CANopen stack
             fnDebugMsg("failed\r\n");
         }
         else {
@@ -108,7 +109,8 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on source
         case TIMER_EVENT:
             uTaskerGlobalMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.001 * SEC), E_TIMER_CAN_MS); // start next 1ms timer
-            tmrTask_thread();                                            // 1ms rate
+            ulCANopen_ms++;
+            tmrTask_thread(0);                                           // 1ms rate
             break;
         case INTERRUPT_EVENT:                                            // interrupt event without data
             switch (ucInputMessage[MSG_INTERRUPT_EVENT]) {
@@ -201,7 +203,7 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
             break;
         }
     }
-    uCANopenPoll(CANopen_interface_ID0);                                 // polling
+    uCANopenPoll(0, ulCANopen_ms);                                       // CANopen polling
 }
 
 static void fnDisplayData(unsigned char *ptrData, QUEUE_TRANSFER Length, int iDataType)

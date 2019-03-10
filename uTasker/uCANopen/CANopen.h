@@ -141,7 +141,7 @@ typedef struct{
 
 
 /** CANopen object */
-    extern CO_t *CO;
+    extern CO_t *CO[CANOPEN_INSTANCES];
 
 
 /**
@@ -167,17 +167,16 @@ typedef struct{
  *
  * Function must be called in the communication reset section.
  *
- * @param CANbaseAddress Address of the CAN module, passed to CO_CANmodule_init().
+ * @param CANopen_instance (0..x)
  * @param nodeId Node ID of the CANopen device (1 ... 127).
- * @param nodeId CAN bit rate.
  *
  * @return #CO_ReturnError_t: CO_ERROR_NO, CO_ERROR_ILLEGAL_ARGUMENT,
  * CO_ERROR_OUT_OF_MEMORY, CO_ERROR_ILLEGAL_BAUDRATE
  */
-CO_ReturnError_t CO_init(
-        int32_t                 CANbaseAddress,
+ CO_t * CO_init(
+        uint8_t                 CANopen_instance,
         uint8_t                 nodeId,
-        uint16_t                bitRate);
+        QUEUE_HANDLE            CAN_interface_ID);
 
 
 /**

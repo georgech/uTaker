@@ -198,12 +198,12 @@ CO_ReturnError_t CO_SDOclient_init(
         CO_CANmodule_t         *CANdevTx,
         uint16_t                CANdevTxIdx)
 {
+#if defined _WINDOWS
     /* verify arguments */
-    if(SDO_C==NULL || SDO==NULL || SDOClientPar==NULL || SDOClientPar->maxSubIndex!=3 ||
-        CANdevRx==NULL || CANdevTx==NULL){
+    if (SDO_C==NULL || SDO==NULL || SDOClientPar==NULL || SDOClientPar->maxSubIndex!=3 || CANdevRx==NULL || CANdevTx==NULL) {
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
-
+#endif
     /* Configure object variables */
     SDO_C->state = SDO_STATE_NOTDEFINED;
     SDO_C->CANrxNew = false;
@@ -251,9 +251,7 @@ CO_SDOclient_return_t CO_SDOclient_setup(
     uint8_t idNode;
 
     /* verify parameters */
-    if(SDO_C == NULL || (COB_IDClientToServer&0x7FFFF800L) != 0 ||
-            (COB_IDServerToClient&0x7FFFF800L) != 0 || nodeIDOfTheSDOServer > 127)
-    {
+    if ((SDO_C == NULL) || ((COB_IDClientToServer & 0x7FFFF800L) != 0) || ((COB_IDServerToClient & 0x7FFFF800L) != 0) || (nodeIDOfTheSDOServer > 127)) {
         return CO_SDOcli_wrongArguments;
     }
 
@@ -262,18 +260,18 @@ CO_SDOclient_return_t CO_SDOclient_setup(
     SDO_C->CANrxNew = false;
 
     /* setup Object Dictionary variables */
-    if((COB_IDClientToServer & 0x80000000L) != 0 || (COB_IDServerToClient & 0x80000000L) != 0 || nodeIDOfTheSDOServer == 0){
+    if (((COB_IDClientToServer & 0x80000000L) != 0) || ((COB_IDServerToClient & 0x80000000L) != 0) || (nodeIDOfTheSDOServer == 0)) {
         /* SDO is NOT used */
         idCtoS = 0x80000000L;
         idStoC = 0x80000000L;
         idNode = 0;
     }
-    else{
-        if(COB_IDClientToServer == 0 || COB_IDServerToClient == 0){
+    else {
+        if ((COB_IDClientToServer == 0) || (COB_IDServerToClient == 0)) {
             idCtoS = 0x600 + nodeIDOfTheSDOServer;
             idStoC = 0x580 + nodeIDOfTheSDOServer;
         }
-        else{
+        else {
             idCtoS = COB_IDClientToServer;
             idStoC = COB_IDServerToClient;
         }
@@ -285,12 +283,12 @@ CO_SDOclient_return_t CO_SDOclient_setup(
     SDO_C->SDOClientPar->nodeIDOfTheSDOServer = idNode;
 
     /* configure SDO client CAN reception, if differs. */
-    if(SDO_C->COB_IDClientToServerPrev != idCtoS || SDO_C->COB_IDServerToClientPrev != idStoC) {
+    if ((SDO_C->COB_IDClientToServerPrev != idCtoS) || (SDO_C->COB_IDServerToClientPrev != idStoC)) {
         CO_CANrxBufferInit(
                 SDO_C->CANdevRx,            /* CAN device */
                 SDO_C->CANdevRxIdx,         /* rx buffer index */
                 (uint16_t)idStoC,           /* CAN identifier */
-                0x7FF,                      /* mask */
+                0x7ff,                      /* mask */
                 0,                          /* rtr */
                 (void*)SDO_C,               /* object passed to receive function */
                 CO_SDOclient_receive);      /* this function will process received message */
