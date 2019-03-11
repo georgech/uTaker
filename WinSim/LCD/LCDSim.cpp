@@ -11,7 +11,7 @@
     File:      LCDSim.cpp
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     13.02.2007 Improve LCD re-draw {1} and correct initialisation in 4-line mode {2}
     05.05.2009 Add graphic LCD support - T6963C controller - SUPPORT_GLCD
@@ -157,8 +157,8 @@ static tLCD_MEM   tDisplayMem;
 static tLCD_Info  LCD_Info;
 static RECT rectLcd;
 
-static tLCDFONT       font_tbl[(16*16)];
-static unsigned int   font5x11[(16*16)][8];
+static tLCDFONT       font_tbl[(16 * 16)];
+static unsigned int   font5x11[(16 * 16)][8];
 #if defined LCD_SIMULATE_BACKLIGHT
     static int        nNewBacklight = 0;
     static int        nBackLightOn = 0;
@@ -183,6 +183,69 @@ extern void fnSizeLCD(int iProcessorHeight, int iProcessorWidth);
 
 static int iLCD_initialise = 0;
 
+#if defined _GENERATE_C_FONT_TABLE
+#include "conio.h"
+#include "Fcntl.h"
+#include "io.h"
+#include <sys/stat.h>
+
+static void fnGenerateFontTable(tLCDFONT *font_tbl)
+{
+    int i = 0;
+    unsigned char ucChar[5];
+    int iFile;
+    char ucBuffer[1024];
+    _sopen_s(&iFile, "font.c", (_O_TRUNC | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
+
+
+    while (i++ < 256) {
+        ucChar[0] = (((font_tbl->font_y6 & 0x10) != 0) << 6);
+        ucChar[0] |= (((font_tbl->font_y5 & 0x10) != 0) << 5);
+        ucChar[0] |= (((font_tbl->font_y4 & 0x10) != 0) << 4);
+        ucChar[0] |= (((font_tbl->font_y3 & 0x10) != 0) << 3);
+        ucChar[0] |= (((font_tbl->font_y2 & 0x10) != 0) << 2);
+        ucChar[0] |= (((font_tbl->font_y1 & 0x10) != 0) << 1);
+        ucChar[0] |= (((font_tbl->font_y0 & 0x10) != 0));
+
+        ucChar[1] = (((font_tbl->font_y6 & 0x08) != 0) << 6);
+        ucChar[1] |= (((font_tbl->font_y5 & 0x08) != 0) << 5);
+        ucChar[1] |= (((font_tbl->font_y4 & 0x08) != 0) << 4);
+        ucChar[1] |= (((font_tbl->font_y3 & 0x08) != 0) << 3);
+        ucChar[1] |= (((font_tbl->font_y2 & 0x08) != 0) << 2);
+        ucChar[1] |= (((font_tbl->font_y1 & 0x08) != 0) << 1);
+        ucChar[1] |= (((font_tbl->font_y0 & 0x08) != 0));
+
+        ucChar[2] = (((font_tbl->font_y6 & 0x04) != 0) << 6);
+        ucChar[2] |= (((font_tbl->font_y5 & 0x04) != 0) << 5);
+        ucChar[2] |= (((font_tbl->font_y4 & 0x04) != 0) << 4);
+        ucChar[2] |= (((font_tbl->font_y3 & 0x04) != 0) << 3);
+        ucChar[2] |= (((font_tbl->font_y2 & 0x04) != 0) << 2);
+        ucChar[2] |= (((font_tbl->font_y1 & 0x04) != 0) << 1);
+        ucChar[2] |= (((font_tbl->font_y0 & 0x04) != 0));
+
+        ucChar[3] = (((font_tbl->font_y6 & 0x02) != 0) << 6);
+        ucChar[3] |= (((font_tbl->font_y5 & 0x02) != 0) << 5);
+        ucChar[3] |= (((font_tbl->font_y4 & 0x02) != 0) << 4);
+        ucChar[3] |= (((font_tbl->font_y3 & 0x02) != 0) << 3);
+        ucChar[3] |= (((font_tbl->font_y2 & 0x02) != 0) << 2);
+        ucChar[3] |= (((font_tbl->font_y1 & 0x02) != 0) << 1);
+        ucChar[3] |= (((font_tbl->font_y0 & 0x02) != 0));
+
+        ucChar[4] = (((font_tbl->font_y6 & 0x01) != 0) << 6);
+        ucChar[4] |= (((font_tbl->font_y5 & 0x01) != 0) << 5);
+        ucChar[4] |= (((font_tbl->font_y4 & 0x01) != 0) << 4);
+        ucChar[4] |= (((font_tbl->font_y3 & 0x01) != 0) << 3);
+        ucChar[4] |= (((font_tbl->font_y2 & 0x01) != 0) << 2);
+        ucChar[4] |= (((font_tbl->font_y1 & 0x01) != 0) << 1);
+        ucChar[4] |= (((font_tbl->font_y0 & 0x01) != 0));
+
+        sprintf(ucBuffer, "{ 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x },\n", ucChar[0], ucChar[1], ucChar[2], ucChar[3], ucChar[4]);
+        _write(iFile, ucBuffer, strlen(ucBuffer));
+        font_tbl++;
+    }
+    _close(iFile);
+}
+#endif
 
 
 extern int fnInitLCD(RECT &rt, int iHeight, int iWidth)
@@ -809,7 +872,7 @@ static void Initfont(void)
         font_tbl[i+0x90] = font_tbl[0x20];        
     }
    
-    font5x11[0xF0][0] = 0x10;    font5x11[0xF0][1] =    0x10, font5x11[0xF0][2] = 0x10; // extended charcters
+    font5x11[0xF0][0] = 0x10;    font5x11[0xF0][1] =    0x10, font5x11[0xF0][2] = 0x10; // extended characters
     font5x11[0xF1][0] = 0x01;    font5x11[0xF1][1] =    0x01, font5x11[0xF1][2] = 0x01;
     font5x11[0xE2][0] = 0x10;    font5x11[0xE2][1] =    0x10, font5x11[0xE2][2] = 0x10;
     font5x11[0xE4][0] = 0x10;    font5x11[0xE4][1] =    0x10, font5x11[0xE4][2] = 0x10;
@@ -818,6 +881,9 @@ static void Initfont(void)
     font5x11[0xF9][0] = 0x01;    font5x11[0xF9][1] =    0x01, font5x11[0xF9][2] = 0x0E;
     font5x11[0xEA][0] = 0x02;    font5x11[0xEA][1] =    0x12, font5x11[0xEA][2] = 0x0C;
     font5x11[0xFF][0] = 0x1F;    font5x11[0xFF][1] =    0x1F, font5x11[0xFF][2] = 0x1F;
+#if defined _GENERATE_C_FONT_TABLE
+    fnGenerateFontTable(font_tbl);
+#endif
 }
 
 // Interpretation of received command
@@ -867,7 +933,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             tDisplayMem.ucDDRAMLineLength = LCD_Info.ucDDRAMLineLength[tDisplayMem.ucLines-1];
             tDisplayMem.uiDDRamLength = LCD_Info.uiDDRamLength[tDisplayMem.ucLines-1];
         }
-        else if ((ulCmd & LCD_CURSOR_OR_LCD_SHIFT) != 0) {               // shift right
+        else if ((ulCmd & LCD_CURSOR_OR_LCD_SHIFT) != 0) {               // shift left
             if ((ulCmd & LCD_DDRRAM_SHIFT_RIGHT) == 0) {
                 if ((ulCmd & LCD_DDRRAM_DISPLAYSHIFT) != 0) {
                     if (++tDisplayMem.ucShiftPosition > (tDisplayMem.ucDDRAMLineLength-1)) { //shift whole display
@@ -888,16 +954,16 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                     }
                 }
             }
-            else {                                                       //shift left
+            else {                                                       // shift right
                 if ((ulCmd & LCD_DDRRAM_DISPLAYSHIFT) != 0) {
-                    if (tDisplayMem.ucShiftPosition > 0) {               //shift whole display
+                    if (tDisplayMem.ucShiftPosition > 0) {               // shift whole display
                         tDisplayMem.ucShiftPosition--;
                     }
                     else {
                         tDisplayMem.ucShiftPosition = (tDisplayMem.ucDDRAMLineLength - 1);
                     }
                 }
-                else {                                                   //shift cursor only
+                else {                                                   // shift cursor only
                     if (++tDisplayMem.ucLocX > (tDisplayMem.ucDDRAMLineLength - 1)) {
                         tDisplayMem.ucLocX = 0;
                         if (++tDisplayMem.ucLocY >= tDisplayMem.ucLines) {

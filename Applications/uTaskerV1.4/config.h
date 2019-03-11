@@ -243,7 +243,7 @@
     //#define NUCLEO_F103RB                                              // evaluation board with STM32F103RBT6
     //#define NUCLEO_F334R8                                              // evaluation board with STM32F334R8T6 (cortex-m4 with FPU)
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-      #define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6 (cortex-m4 with FPU)
+    //#define NUCLEO_F411RE                                              // evaluation board with STM32F411RET6 (cortex-m4 with FPU)
 
     // Nucleo 144 range
     //
@@ -263,10 +263,10 @@
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    //#define STM3241G_EVAL                                              // evaluation board with STM32F417IGH6
+    //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
-    //#define STM32_E407                                                 // ilimex prototyping board with STM32F407ZGT6
+      #define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
   //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
@@ -1367,7 +1367,8 @@
     // Specify the SPI flash type used
     //
   //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
-  //#define SPI_FLASH_MX25L                                              // use Macronix SPI flash rather than ATMEL
+  //#define SPI_FLASH_MX66L
+    #define SPI_FLASH_MX25L                                              // use Macronix SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
   //#define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
@@ -1498,6 +1499,7 @@
   //#define SERIAL_SUPPORT_ECHO                                          // enable echo mode in rx driver
   //#define SERIAL_SUPPORT_ESCAPE                                        // enable escape sequencing in driver
   //#define SERIAL_SUPPORT_SCAN                                          // serial receiver supports scanning of input buffer for a sequence
+    #define SERIAL_SUPPORT_PEEK
   //#define SUPPORT_HW_FLOW                                              // support RTS/CTS flow control and other possible modem signals
       //#define UART_WITHOUT_MODEM_CONTROL                               // test overriding automatic modem support
       //#define UART_FRAME_END_COMPLETE
@@ -1517,8 +1519,8 @@
     #define LOG_UART_RX                                                  // log UART receptions to simulation files "UARTx.sim"
 
     #if defined USE_MODBUS
-        #define MODBUS_RTU                                               // support binary RTU mode
-        #define MODBUS_ASCII                                             // support ASCII mode
+      //#define MODBUS_RTU                                               // support binary RTU mode
+      //#define MODBUS_ASCII                                             // support ASCII mode
         #define STRICT_MODBUS_SERIAL_MODE                                // automatically adjust the character length according to mode
         #if defined FRDM_KL02Z
             #define MODBUS_SERIAL_INTERFACES      1
@@ -1762,7 +1764,9 @@
             #define SIM_HW_PORT_NUMBER  1234                             // port number used by out HW simulator
         #define SIM_KOMODO                                               // use Komodo as simulator CAN extension
             #define KOMODO_USB_PORT 1                                    // use this USB port (0 or 1) - any additional monitor program sharing the Komodo can use the other port
-      //#define SUPPORT_CANopen                                          // include CANopen support
+        #define SUPPORT_CANopen                                          // include CANopen support
+            #define CANOPEN_INSTANCES     1
+            #define CAN_INDEX_WIDTH       (0x07ff | 0x0800)              // extended ID support
     #else
         #define NUMBER_CAN   0                                           // no physical queue needed
     #endif
@@ -2398,7 +2402,15 @@
 // Character LCD
 //
 //#define SUPPORT_LCD                                                    // enable a task for interfacing to a character LCD (see user's guide at http://www.utasker.com/docs/uTasker/uTaskerLCD.PDF and video at https://youtu.be/YJEzxSqVtss)
-#if defined SUPPORT_LCD
+  //#define AVAGO_HCMS_CHAR_LCD                                          // Avago Technologies 5x7 AlphaNumericDisplay
+#if defined AVAGO_HCMS_CHAR_LCD
+    #define LCD_LINES              1                                     // use 1 x 8 LCD
+    #define LCD_CHARACTERS         8
+    #define LCD_ON_COLOUR          (COLORREF)RGB(0,0,0)                  // RGB colour of LCD when backlight is on
+    #define LCD_OFF_COLOUR         (COLORREF)RGB(0,0,0)                  // RGB colour of LCD when backlight is off
+    #define LCD_PIXEL_COLOUR       (COLORREF)RGB(255,0,0)                // RGB colour of LCD pixels
+    #define LCD_PARTNER_TASK       TASK_APPLICATION
+#elif defined SUPPORT_LCD
     #define LCD_LINES              2                                     // use 2 x 16 LCD
     #define LCD_CHARACTERS         16                                    // options are 1:8 / 1:16 / 1:20 / 1:24 / 1:40 / 2:x / 4:x
     #define LCD_ON_COLOUR          (COLORREF)RGB(60,220,60)              // RGB colour of LCD when backlight is on

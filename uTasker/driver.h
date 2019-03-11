@@ -1081,7 +1081,9 @@ extern size_t uStrlenSafe(const CHAR *ptrStr, size_t MaxStrLength); // {88}
 
 extern void uMemset_long(unsigned long *ptrTo, unsigned long ulValue, size_t Size); // {19}
 extern void uMemcpy_long(unsigned long *ptrTo, const unsigned long *ptrFrom, size_t Size); // {19}
-extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size); // {54}
+#if defined UREVERSEMEMCPY
+    extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size); // {54}
+#endif
 
 extern unsigned short uStrEquiv(const CHAR *ptrTo, const CHAR *ptrFrom);
 extern CHAR *uStrstr(const CHAR *ptrStringToScan, const CHAR *ptrStringToMatch); // {85}

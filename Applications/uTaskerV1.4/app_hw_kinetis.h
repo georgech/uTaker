@@ -60,6 +60,7 @@
     14.05.2017 Add FRDM_KL28Z
     29.09.2017 Add FRDM_KE15Z
     09.03.2019 Add PRIORITY_ERROR_UART0 to PRIORITY_ERROR_UART5 interrupt priorities
+    11.03.2019 Add AVAGO_HCMS_CHAR_LCD (dot matrix display)
 
     Application specific hardware configuration
 */
@@ -9805,7 +9806,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 //
 typedef unsigned long LCD_BUS_PORT_SIZE;                                 // we use 32 bit ports
 typedef unsigned long LCD_CONTROL_PORT_SIZE;
-#if defined FRDM_KL82Z
+#if defined FRDM_KL82Z || defined AVAGO_HCMS_CHAR_LCD
     #define LCD_BUS_8BIT                                                 // data bus in 8 bit mode
 #else                                                                    // choose data bus width
   //#define LCD_BUS_8BIT                                                 // data bus in 8 bit mode
@@ -9963,20 +9964,40 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define O_SET_CONTROL_HIGH(x)   _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SIM_PORTS;
 #endif
 
-// Drive the control lines R/W + LCD Backlight '1', RS + E '0' and the data lines with all high impedance at start up
-// enable clocks to port first
-//
-#define INITIALISE_LCD_CONTROL_LINES()       SET_DATA_LINES_INPUT(); \
-                                             O_SET_CONTROL_LOW(O_CONTROL_LINES); O_SET_CONTROL_HIGH(O_LCD_BACKLIGHT); \
-                                             _SIM_PORTS; SET_CONTROL_LINES_OUTPUT(O_CONTROL_LINES | O_LCD_BACKLIGHT);
+#if defined AVAGO_HCMS_CHAR_LCD
+    #define HCMS_DISPLAY_RESET              PORTD_BIT3
+    #define HCMS_DISPLAY_CLOCK              PORTD_BIT1
+    #define HCMS_DISPLAY_CHIP_ENABLE        PORTD_BIT0
+    #define HCMS_DISPLAY_RS                 PORTD_BIT4
+    #define HCMS_DISPLAY_DATA_TO_DISPLAY    PORTD_BIT2
+    // Configure ports and hold the display in reset (with chip enable high and clock low)
+    //
+    #define INITIALISE_LCD_CONTROL_LINES()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (HCMS_DISPLAY_RESET | HCMS_DISPLAY_CLOCK | HCMS_DISPLAY_CHIP_ENABLE | HCMS_DISPLAY_RS | HCMS_DISPLAY_DATA_TO_DISPLAY), (HCMS_DISPLAY_CHIP_ENABLE | HCMS_DISPLAY_RS | HCMS_DISPLAY_DATA_TO_DISPLAY), PORT_SRE_SLOW)
 
-#define LCD_DRIVE_DATA()       SET_DATA_LINES_OUTPUT();  SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT();
-                               // ensure data bus outputs (delay) by repetitions according to processor speed
 
-#define CLOCK_EN_HIGH()        O_SET_CONTROL_HIGH(O_CONTROL_EN);
-                               // clock EN to high state - repreat to slow down (delay)
+    #define LCD_DRIVE_DATA()       SET_DATA_LINES_OUTPUT();  SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT();
+                                   // ensure data bus outputs (delay) by repetitions according to processor speed
 
-#define DELAY_ENABLE_CLOCK_HIGH() O_SET_CONTROL_LOW(O_CONTROL_EN);
+    #define CLOCK_EN_HIGH()        O_SET_CONTROL_HIGH(O_CONTROL_EN);
+                                   // clock EN to high state - repreat to slow down (delay)
+
+    #define DELAY_ENABLE_CLOCK_HIGH() O_SET_CONTROL_LOW(O_CONTROL_EN);
+#else
+    // Drive the control lines R/W + LCD Backlight '1', RS + E '0' and the data lines with all high impedance at start up
+    // enable clocks to port first
+    //
+    #define INITIALISE_LCD_CONTROL_LINES()       SET_DATA_LINES_INPUT(); \
+                                                 O_SET_CONTROL_LOW(O_CONTROL_LINES); O_SET_CONTROL_HIGH(O_LCD_BACKLIGHT); \
+                                                 _SIM_PORTS; SET_CONTROL_LINES_OUTPUT(O_CONTROL_LINES | O_LCD_BACKLIGHT);
+
+    #define LCD_DRIVE_DATA()       SET_DATA_LINES_OUTPUT();  SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT();
+                                   // ensure data bus outputs (delay) by repetitions according to processor speed
+
+    #define CLOCK_EN_HIGH()        O_SET_CONTROL_HIGH(O_CONTROL_EN);
+                                   // clock EN to high state - repreat to slow down (delay)
+
+    #define DELAY_ENABLE_CLOCK_HIGH() O_SET_CONTROL_LOW(O_CONTROL_EN);
+#endif
 
 // SLCD
 //

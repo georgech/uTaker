@@ -98,7 +98,7 @@
 #include "Fcntl.h"
 #include "io.h"
 #include <sys/stat.h>
-#if _VC80_UPGRADE>=0x0600
+#if _VC80_UPGRADE >= 0x0600
     #include <share.h>
 #endif
 
