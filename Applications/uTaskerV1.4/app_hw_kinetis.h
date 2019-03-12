@@ -9973,15 +9973,10 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     // Configure ports and hold the display in reset (with chip enable high and clock low)
     //
     #define INITIALISE_LCD_CONTROL_LINES()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (HCMS_DISPLAY_RESET | HCMS_DISPLAY_CLOCK | HCMS_DISPLAY_CHIP_ENABLE | HCMS_DISPLAY_RS | HCMS_DISPLAY_DATA_TO_DISPLAY), (HCMS_DISPLAY_CHIP_ENABLE | HCMS_DISPLAY_RS | HCMS_DISPLAY_DATA_TO_DISPLAY), PORT_SRE_SLOW)
-
-
-    #define LCD_DRIVE_DATA()       SET_DATA_LINES_OUTPUT();  SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT(); SET_DATA_LINES_OUTPUT();
-                                   // ensure data bus outputs (delay) by repetitions according to processor speed
-
-    #define CLOCK_EN_HIGH()        O_SET_CONTROL_HIGH(O_CONTROL_EN);
-                                   // clock EN to high state - repreat to slow down (delay)
-
-    #define DELAY_ENABLE_CLOCK_HIGH() O_SET_CONTROL_LOW(O_CONTROL_EN);
+    #undef O_SET_CONTROL_LOW
+    #undef O_SET_CONTROL_HIGH
+    #define O_SET_CONTROL_LOW(x)    _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x); _CLEARBITS(D, x)
+    #define O_SET_CONTROL_HIGH(x)   _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x); _SETBITS(D, x)
 #else
     // Drive the control lines R/W + LCD Backlight '1', RS + E '0' and the data lines with all high impedance at start up
     // enable clocks to port first

@@ -66,6 +66,19 @@
 
 #define LCD_BUSY 0x80
 
+#define MAX_TX_DBUF  40
+
+#define INIT_FUNCTION_SET          0x30
+#if defined LCD_BUS_4BIT
+    #define INIT_FUNCTION_SET_MODE 0x20
+#else
+    #define _fnWriteDisplay        fnWriteDisplay
+    #define INIT_FUNCTION_SET_MODE 0x30
+#endif
+#define DISPLAY_OFF_NO_CURSOR      0x08
+#define CLEAR_DISPLAY              0x01
+#define DISPLAY_ON_NO_CURSOR       0x0c
+
 
 #if defined _HW_SAM7X || defined _HW_AVR32 || defined _LPC23XX || defined _LPC17XX || defined _STM32 || defined _KINETIS
     #define _ACCESSTYPE1                                                 // define access type best suited to these processor types
@@ -665,13 +678,19 @@ static const unsigned char ucFont[256][5] = {
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#if defined _WINDOWS
-    static int iCompleted = 1;
-#endif
+static unsigned char ucTXDisp[MAX_TX_DBUF];                              // display output buffer
+static unsigned char ucDispCount = 0;
+static unsigned char ucDispSend = 0;                                     // the number of bytes already sent to display
+static LCD_CONTROL_PORT_SIZE DisplayTextMode = 0;
 
 #if defined AVAGO_HCMS_CHAR_LCD                                          // {11}
-    static unsigned char ucPixels[(2 * LCD_CHARACTERS) * BYTES_PER_HCMS_CHARACTER] = {0}; // pixel buffer twice the width of the HW so that the content can be shifted
+    static unsigned char ucPixels[(2 * LCD_CHARACTERS) * BYTES_PER_HCMS_CHARACTER] = { 0 }; // pixel buffer twice the width of the HW so that the content can be shifted
     static int iPixelLocation = 0;
+#endif
+
+#if defined _WINDOWS
+    static int iCompleted = 1;
+    static unsigned char ucLastRead = 0xff;                              // {7}
 #endif
 
 
@@ -747,108 +766,85 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
 }
 
 
-/**************************************************************************************************************/
-#define MAX_TX_DBUF  40
-static unsigned char ucTXDisp[MAX_TX_DBUF];                              // display output buffer
-static unsigned char ucDispCount = 0;
-static unsigned char ucDispSend = 0;                                     // the number of bytes already sent to display
-static LCD_CONTROL_PORT_SIZE DisplayTextMode = 0;
-#if defined _WINDOWS 
-    static unsigned char ucLastRead = 0xff;                              // {7}
-#endif
-
-#define INIT_FUNCTION_SET          0x30
-#if defined LCD_BUS_4BIT
-    #define INIT_FUNCTION_SET_MODE 0x20
-#else
-    #define _fnWriteDisplay        fnWriteDisplay
-    #define INIT_FUNCTION_SET_MODE 0x30
-#endif
-#define DISPLAY_OFF_NO_CURSOR      0x08
-#define CLEAR_DISPLAY              0x01
-#define DISPLAY_ON_NO_CURSOR       0x0c
-
-
 static unsigned char fnReadDisplay(LCD_CONTROL_PORT_SIZE rs)
 {
-#if defined AVAGO_HCMS_CHAR_LCD && !defined _WINDOWS                     // {11}
+#if defined AVAGO_HCMS_CHAR_LCD
     return 0;                                                            // we don't support reading from the AVAGO HCMS display so just return 0
 #else
     #if defined LCD_BUS_4BIT
     LCD_BUS_PORT_SIZE RdData_lsb;
     #endif
     LCD_BUS_PORT_SIZE RdData_msb;
-#if defined _ACCESSTYPE1                                                 // {8}
+    #if defined _ACCESSTYPE1                                             // {8}
     SET_CONTROL_LINES(rs | O_WRITE_READ);                                // set required rs level and command read
     SET_DATA_LINES_INPUT();                                              // ensure the data lines are inputs
-#else
+    #else
     LCD_CONTROL_PORT_SIZE Control = (LCD_CONTROL_PORT_SIZE)(O_CONTROL_PORT_DAT & ~(O_CONTROL_LINES)); // backup other outputs of control port
 
     O_CONTROL_PORT_DAT = (Control | rs | O_WRITE_READ);                  // set required rs level and command read
     IO_BUS_PORT_DDR &= ~LCD_BUS_MASK;                                    // ensure the data lines are inputs
-#endif
+    #endif
 
     CLOCK_EN_HIGH();                                                     // then clock EN to high state - tAS >= 40ns
                                                                          // date will be ready within about 100ns
     RdData_msb = (LCD_CONTROL_PORT_SIZE)(IO_BUS_PORT_DAT_IN & LCD_BUS_MASK); // read data in
-#if DATA_SHIFT_LEFT > 0
+    #if DATA_SHIFT_LEFT > 0
     RdData_msb >>= DATA_SHIFT_LEFT;                                      // shift into position {2}
-#elif DATA_SHIFT_RIGHT > 0
+    #elif DATA_SHIFT_RIGHT > 0
     RdData_msb <<= DATA_SHIFT_RIGHT;                                     // shift into position {2}
-#endif
+    #endif
 
-#if defined _ACCESSTYPE2                                                 // {8}
+    #if defined _ACCESSTYPE2                                             // {8}
     O_SET_CONTROL_LOW(O_CONTROL_EN);                                     // then set clock EN low PWEH >= 220ns
-#else
+    #else
     O_CONTROL_PORT_DAT &= ~(O_CONTROL_EN);                               // then set clock EN low PWEH >= 220ns
-#endif
+    #endif
 
-#if defined LCD_BUS_4BIT
+    #if defined LCD_BUS_4BIT
     // Since we are in 4 bit mode we must repeat clocking to ensure read is completed
     //
     DELAY_ENABLE_CLOCK_HIGH();                                           // ensure the second read is not too fast when in 4 bit mode {1}
     CLOCK_EN_HIGH();
 
     RdData_lsb = (LCD_BUS_PORT_SIZE)(IO_BUS_PORT_DAT_IN & LCD_BUS_MASK); // read data in
-    #if DATA_SHIFT_LEFT > 0
+        #if DATA_SHIFT_LEFT > 0
     RdData_lsb >>= DATA_SHIFT_LEFT;                                      // shift into position {2}
-    #elif DATA_SHIFT_RIGHT > 0
+        #elif DATA_SHIFT_RIGHT > 0
     RdData_lsb <<= DATA_SHIFT_RIGHT;                                     // shift into position {2}
-    #endif
-
-    #if defined _ACCESSTYPE2                                             // {8}
+        #endif
+        #if defined _ACCESSTYPE2                                         // {8}
     O_SET_CONTROL_LOW(O_CONTROL_EN);
-    #else
+        #else
     O_CONTROL_PORT_DAT &= ~(O_CONTROL_EN);
+        #endif
     #endif
-#endif
 
    // RS and R/W can be set back if required 10ns after EN falling edge
    // Data will remain stable at least 20ns
    // EN could then be reactivated with a periodicity of 500ns
     //
-#if defined _ACCESSTYPE1                                                 // {8}
+    #if defined _ACCESSTYPE1                                             // {8}
     SET_DATA_LINES_OUTPUT();                                             // ensure data bus outputs (between cycles)
-#else
+    #else
     IO_BUS_PORT_DDR |= LCD_BUS_MASK;                                     // ensure data bus outputs (between cycles)
-#endif
-#if defined _WINDOWS
+    #endif
+    #if defined _WINDOWS
     if (rs == 0) {
         RdData_msb &= ~LCD_BUSY;                                         // avoid blocking when simulating
     }
-    #if defined LCD_BUS_4BIT                                             // {7}
+        #if defined LCD_BUS_4BIT                                         // {7}
     RdData_msb = (ucLastRead & 0xf0);
     RdData_lsb = (ucLastRead << 4);
-    #else
+        #else
     RdData_msb = ucLastRead;                                             // return the previously read value from last write command
-    #endif
+        #endif
     ucLastRead = 0;                                                      // single-shot due to the way that the LCD simulatro works
-#endif
-#if defined LCD_BUS_4BIT
+    #endif
+    #if defined LCD_BUS_4BIT
    return ((unsigned char)(RdData_msb | (RdData_lsb >> 4)));             // return the data byte read
-#else
+    #else
    return ((unsigned char)RdData_msb);
-#endif
+    #endif
 #endif
 }
 
