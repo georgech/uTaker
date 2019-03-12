@@ -2410,6 +2410,7 @@
     #define LCD_OFF_COLOUR         (COLORREF)RGB(0,0,0)                  // RGB colour of LCD when backlight is off
     #define LCD_PIXEL_COLOUR       (COLORREF)RGB(255,0,0)                // RGB colour of LCD pixels
     #define LCD_PARTNER_TASK       TASK_APPLICATION
+  //#define LCD_CYRILLIC_FONT                                            // use cyrillic extended ASCII character set instead of standard extended
 #elif defined SUPPORT_LCD
     #define LCD_LINES              2                                     // use 2 x 16 LCD
     #define LCD_CHARACTERS         16                                    // options are 1:8 / 1:16 / 1:20 / 1:24 / 1:40 / 2:x / 4:x

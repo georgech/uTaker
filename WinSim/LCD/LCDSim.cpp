@@ -36,6 +36,7 @@
     15.03.2015 Introduce faster bitmap based LCD                         {19}
     19.02.2017 Add FT800 emulation                                       {20}
     28.08.2018 Add segment LED simulation                                {21}
+    11.03.2019 Add AVAGO_HCMS_CHAR_LCD simulation mode                   {22}
 
     */
 
@@ -48,6 +49,8 @@
 #define _EXCLUDE_WINDOWS_
 #include "config.h"
 #include "lcd.h"
+
+//#define _GENERATE_C_FONT_TABLE
 
 extern HWND ghWnd;
 
@@ -182,6 +185,12 @@ static void DrawLcdLine(HWND hwnd);
 extern void fnSizeLCD(int iProcessorHeight, int iProcessorWidth);
 
 static int iLCD_initialise = 0;
+#if defined AVAGO_HCMS_CHAR_LCD                                          // {22}
+    static unsigned char ucCommandWord[2] = {0};
+    static int iPixelBufferIndex = 0;
+    static unsigned char ucPixelBuffer[5 * LCD_CHARACTERS] = {0};
+    static unsigned char ucPixelBufferBackup[5 * LCD_CHARACTERS] = {0};
+#endif
 
 #if defined _GENERATE_C_FONT_TABLE
 #include "conio.h"
@@ -890,9 +899,29 @@ static void Initfont(void)
 //
 static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
 {
+    #if !defined AVAGO_HCMS_CHAR_LCD
     unsigned char ucAddr;
-
+    #endif
     if (bRS == 0) {                                                      // is is a command ?
+    #if defined AVAGO_HCMS_CHAR_LCD                                      // {22}
+        if ((ulCmd & 0x80) != 0) {
+            // Command word 1
+            //
+            ucCommandWord[1] = (unsigned char)(ulCmd & 0x7f);
+        }
+        else {
+            // Command word 0
+            //
+            if ((ucCommandWord[0] & 0x40) == 0) {
+                if ((ulCmd & 0x40) != 0) {
+                    // Leaving sleep mode so draw screen content
+                    //
+                    DrawLcdLine(ghWnd);
+                }
+            }
+            ucCommandWord[0] = (unsigned char)ulCmd;
+        }
+    #else
         unsigned char i;
         if ((ulCmd & LCD_DDR_RAM_ADR) != 0) {                            // set the RAM address
             tDisplayMem.ucRAMselect = DDRAM;
@@ -1013,8 +1042,21 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             tDisplayMem.ucRAMselect = DDRAM;
             fnInvalidateLCD();
         }
+    #endif
     }
     else {                                                               // read/write command
+    #if defined AVAGO_HCMS_CHAR_LCD                                      // {22}
+        ucPixelBuffer[iPixelBufferIndex++] = (unsigned char)ulCmd;       // collect the complete set of pixels
+        if (iPixelBufferIndex >= sizeof(ucPixelBuffer)) {
+            iPixelBufferIndex = 0;
+            if ((ucCommandWord[0] & 0x40) != 0) {
+                // Not in sleep mode so redraw the screen content
+                //
+                tDisplayMem.ucLCDon = 1;
+                DrawLcdLine(ghWnd);
+            }
+        }
+    #else
         if (tDisplayMem.ucRAMselect == CGRAM) {
             unsigned int *pCharLine = (UINT*)&font_tbl[tDisplayMem.ucCGRAMaddr/8].font_y0;
             pCharLine += (tDisplayMem.ucCGRAMaddr % 8);
@@ -1028,12 +1070,11 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
             }
         }        
         else {
-            ulCmd &= 0xFF;           
                                                                          // save character
             tDisplayMem.ddrRam[LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY]+tDisplayMem.ucLocX] = (unsigned char)(ulCmd);
 
-            if (tDisplayMem.ucLCDshiftEnable) {
-                if (!tDisplayMem.ucCursorInc__Dec) {
+            if (tDisplayMem.ucLCDshiftEnable != 0) {
+                if (tDisplayMem.ucCursorInc__Dec == 0) {
                     if (tDisplayMem.ucShiftPosition > 0) {
                         tDisplayMem.ucShiftPosition--;
                     }
@@ -1050,7 +1091,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
         }
 
         if ((tDisplayMem.ucCursorInc__Dec != 0)) {                       // new cursor position
-            if (++tDisplayMem.ucLocX > (tDisplayMem.ucDDRAMLineLength-1)) {
+            if (++tDisplayMem.ucLocX > (tDisplayMem.ucDDRAMLineLength - 1)) {
                 tDisplayMem.ucLocX = 0;
                 if (++tDisplayMem.ucLocY >= tDisplayMem.ucLines) {
                     tDisplayMem.ucLocY = 0;
@@ -1082,6 +1123,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 }
             }
         }
+    #endif
     }
     return 0;
 }
@@ -1103,6 +1145,33 @@ static unsigned int    uiBlockCursor[8] = {0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0
 static unsigned int    uiLargeCursor[8] = {0x1f, 0x1f, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00};
 static unsigned int    uiLowCursor[8]   = {0x00, 0x00, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+#if defined AVAGO_HCMS_CHAR_LCD                                          // {22}
+static void DisplayCharNew(HDC hdc, RECT rect, POINT point, unsigned char *pBits, UINT nPixels, UINT nFactor, int iShort)
+{
+    DWORD dwTextColor = LCD_PIXEL_COLOUR, dwCurColor = LCD_ON_COLOUR, dwThisCol;
+    if (nBackLightOn == 0) {
+        dwCurColor = LCD_OFF_COLOUR;                                     // without backlight the pixel color is modified
+    }
+
+    UINT z1 =0, z2 = 0;
+                                                                         // draw a character
+    for (UINT k = 0; k < 5; k++) {                                       // rows
+        for (UINT shift = 0x01; shift <= 0x80; shift <<= 1) {            // columns
+            dwThisCol = ((*pBits & shift) ? dwTextColor :  dwCurColor);
+            for (z1 = 0; z1 < nFactor; z1++) {
+                for (z2 = 0; z2 < nPixels; z2++) {
+                    SetPixelV(hdc, (point.x + z2), (point.y + z1), dwThisCol);
+                }
+            }
+            point.y += nFactor;                                          // new pixel for the column
+        }
+        *pBits++;
+        point.x += nPixels;                                              // new pixel for the line
+        point.y = rect.top;                                              // next pixel for the column 
+    }
+}
+
+#else
 static void DisplayCharNew(HDC hdc, RECT rect, POINT point, UINT *pBits, UINT nPixels, UINT nFactor, int iShort)
 {
     DWORD dwTextColor = LCD_PIXEL_COLOUR, dwCurColor = LCD_ON_COLOUR, dwThisCol;
@@ -1113,11 +1182,11 @@ static void DisplayCharNew(HDC hdc, RECT rect, POINT point, UINT *pBits, UINT nP
     UINT z1 =0, z2 = 0;
                                                                          // draw a character
     for (UINT k = 0; k < 8; k++) {                                       // lines
-        for (UINT shift = 0x10; shift>0; shift>>=1) {                    // columns
+        for (UINT shift = 0x10; shift > 0; shift >>= 1) {                // columns
             dwThisCol = ((*pBits & shift) ? dwTextColor :  dwCurColor);
             for (z1 = 0; z1 < nFactor; z1++) {
                 for (z2 = 0; z2 < nPixels; z2++) {
-                    SetPixelV(hdc, point.x+z2, point.y+z1, dwThisCol);
+                    SetPixelV(hdc, (point.x + z2), (point.y + z1), dwThisCol);
                 }
             }
             point.x += nPixels;;                                         // new pixel for the column
@@ -1127,6 +1196,7 @@ static void DisplayCharNew(HDC hdc, RECT rect, POINT point, UINT *pBits, UINT nP
         point.x = rect.left;                                             // next pixel for the column 
     }
 }
+#endif
 
 
 // Redraw the LCD
@@ -1144,7 +1214,7 @@ static void DrawLcdLine(HWND hwnd)
     unsigned char ucBit;
     unsigned char ucColBit = 0x01;
     #endif
-#else
+#elif !defined AVAGO_HCMS_CHAR_LCD
     unsigned int save;
 #endif
     int i,j;
@@ -1162,7 +1232,9 @@ static void DrawLcdLine(HWND hwnd)
 	unsigned long ulGraphicAdd = 0;
 #else
     UCHAR pCurrent;
+    #if !defined AVAGO_HCMS_CHAR_LCD
     int iHandleCursor;
+    #endif
 #endif
 
     nFactor = 4;
@@ -1390,7 +1462,7 @@ static void DrawLcdLine(HWND hwnd)
             continue;
         }
 
-        pCurrent = tDisplayMem.ucShiftPosition+LCD_Info.uiLCDStartLine[i];
+        pCurrent = (tDisplayMem.ucShiftPosition + LCD_Info.uiLCDStartLine[i]);
 
         if (pCurrent >= (LCD_Info.uiDDRAMStartLine[i%2] + tDisplayMem.ucDDRAMLineLength)) {
             pCurrent = pCurrent-tDisplayMem.ucDDRAMLineLength;
@@ -1400,7 +1472,23 @@ static void DrawLcdLine(HWND hwnd)
         point.x = rect.left;
         point.y = rect.top;
 
-        for (j = 0; j < LCD_Info.ucNrOfVisibleCharacters; j++) {
+        for (j = 0; j < LCD_Info.ucNrOfVisibleCharacters; j++) {         // for each chanarcter on the present line
+    #if defined AVAGO_HCMS_CHAR_LCD                                      // {22}
+            int iCharacterStart = (j * 5);
+            int k;
+            rect.left = uiCharStart[j];                                  // point.x = rect.left; 
+            point.x = uiCharStart[j];
+            point.y = rect.top;
+            for (k = 0; k < 5; k++) {
+                if (ucPixelBuffer[iCharacterStart + k] != ucPixelBufferBackup[iCharacterStart + k]) {
+                    // Change found in a character
+                    //
+                    memcpy(&ucPixelBufferBackup[iCharacterStart], &ucPixelBuffer[iCharacterStart], 5);
+                    DisplayCharNew(hdc, rect, point, &ucPixelBufferBackup[iCharacterStart], nPixels, nFactor, 0);
+                    break;
+                }
+            }
+    #else
             if ((pCurrent == (LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY] + tDisplayMem.ucLocX)) && ((tDisplayMem.ucCursorOn != 0) || (tDisplayMem.ucCursorBlinkOn != 0))) {
                 iHandleCursor = 1;
             }
@@ -1412,11 +1500,11 @@ static void DrawLcdLine(HWND hwnd)
             // and odd RAM locations are used for lower half
             //
             if ((tDisplayMem.ucFontType == 2) && (tDisplayMem.ddrRam[pCurrent] < 0x10)) {
-                pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent]  & 0xFFFE];
+                pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent]  & 0xfffe];
             }
             else {
                 if ((usOldValue[i][j] == (unsigned short)((unsigned char)(tDisplayMem.ddrRam[pCurrent]))) && (iHandleCursor == 0)) {
-                    goto dont_display;                                   // don't bother drawing this one
+                    goto dont_display;                                   // don't bother drawing this one since it hasn't changed
                 }
                 usOldValue[i][j] = (unsigned short)((unsigned char)(tDisplayMem.ddrRam[pCurrent])); // validate
                 pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent]];
@@ -1428,11 +1516,11 @@ static void DrawLcdLine(HWND hwnd)
             
             if (iHandleCursor != 0) {
                 usOldValue[i][j] |= 0x8000;                              // ensure updated next time around to avoid cursor left on
-                if (ucBlinkCursor) {
+                if (ucBlinkCursor != 0) {
                     pBits = uiBlockCursor;
                     DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
                     if ((tDisplayMem.ucLines == 1) && (tDisplayMem.ucFontType == FONT_5X11)) {
-                        point.y = rectLines[i+1].top;
+                        point.y = rectLines[i + 1].top;
                         pBits = uiLargeCursor;
                         DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
                     }
@@ -1440,30 +1528,30 @@ static void DrawLcdLine(HWND hwnd)
                 else {
                     if (tDisplayMem.ucFontType == FONT_5X11) {
                         DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
-                        point.y = rectLines[i+1].top;
+                        point.y = rectLines[i + 1].top;
 
-                        if (tDisplayMem.ddrRam[pCurrent & 0xFFFE] < 0x10) {
+                        if (tDisplayMem.ddrRam[pCurrent & 0xfffe] < 0x10) {
                             pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent | 0x01]];
                         }
                         else {                        
                             pBits = (UINT*)&font5x11[tDisplayMem.ddrRam[pCurrent]];
                         }
-                        if (tDisplayMem.ucCursorOn) {
-                            save = *(pBits+2);
-                            *(pBits+2) = 0xFF;
+                        if (tDisplayMem.ucCursorOn != 0) {
+                            save = *(pBits + 2);
+                            *(pBits + 2) = 0xff;
                             DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 1);
-                            *(pBits+2) = save;
+                            *(pBits + 2) = save;
                         }
                         else {
                             DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 1);
                         }
                     }
                     else {
-                       if (tDisplayMem.ucCursorOn) {
-                           save = *(pBits+7);
-                           *(pBits+7) = 0xFF;
+                       if (tDisplayMem.ucCursorOn != 0) {
+                           save = *(pBits + 7);
+                           *(pBits + 7) = 0xff;
                            DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
-                           *(pBits+7) = save;
+                           *(pBits + 7) = save;
                        }
                        else {
                            DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
@@ -1473,11 +1561,10 @@ static void DrawLcdLine(HWND hwnd)
             }
             else {
                 DisplayCharNew(hdc, rect, point, pBits, nPixels, nFactor, 0);
-
                 if (tDisplayMem.ucFontType == 2) {                       // show also lower part of the character
-                    point.y = rectLines[i+1].top;
+                    point.y = rectLines[i + 1].top;
                     
-                    if (tDisplayMem.ddrRam[pCurrent & 0xFFFE] < 0x10) {  // special handling for user defined characters
+                    if (tDisplayMem.ddrRam[pCurrent & 0xfffe] < 0x10) {  // special handling for user defined characters
                         pBits = (UINT*)&font_tbl[tDisplayMem.ddrRam[pCurrent] | 0x01];
                     }
                     else {                    
@@ -1492,6 +1579,7 @@ dont_display:
             if (++pCurrent == (LCD_Info.uiDDRAMStartLine[i%2]+tDisplayMem.ucDDRAMLineLength)) {
                 pCurrent = LCD_Info.uiDDRAMStartLine[i%2];
             }
+    #endif
         }
     }
 #endif
@@ -2879,6 +2967,9 @@ extern "C" int CollectCommand(bool bRS, unsigned long ulByte)            // {17}
     return 0;
 #elif defined SUPPORT_GLCD || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE
     GraphicLCDCommand(bRS, ulByte);
+    return 0;
+#elif defined AVAGO_HCMS_CHAR_LCD
+    LCDCommand(bRS, (unsigned char)ulByte);
     return 0;
 #else                                                                    // character LCD
     int iReturn = 0xff;
