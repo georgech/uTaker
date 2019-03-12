@@ -1798,6 +1798,19 @@
         #define PHY_INTERRUPT          PORTB_BIT14                       // use PHY interrupt
         #define PHY_INT_PORT           PORTB
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(B, PHY_INTERRUPT)
+    #elif defined STM32_E407
+        #define _LAN8720
+        #define PHY_ADDRESS_           0x00                              // address of PHY on DiscoverMo board (RMII mode)
+        #define VNDR_MDL               0x0f                              // vendor model number
+        #define MDL_REV                0x00                              // model revision number
+        #define PHY_IDENTIFIER         (0x0007c000 | (VNDR_MDL << 4) | MDL_REV) // SMSC identifier
+        #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
+        #define ETH_TXD_TX_EN_G                                          // TXD0, TXD1 and TX_EN on port G
+        #define CONFIG_PHY_STRAPS()                                      // dummy
+      //#define PHY_INTERRUPT                                            // no PHY interrupt is connected
+        #define PHY_INTERRUPT          PORTA_BIT3                        // use PHY interrupt
+        #define PHY_INT_PORT           PORTA
+        #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(A, PHY_INTERRUPT)
     #elif defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD       // {6}
         #define _LAN8720
         #define PHY_ADDRESS_           0x00                              // address of PHY on DiscoverMo board (RMII mode)
@@ -1812,7 +1825,7 @@
       //#define PHY_INTERRUPT                                            // no PHY interrupt is connected
         #define PHY_POLL_LINK                                            // activate polling of the link state
         #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR            // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
-    #elif defined STM32F407ZG_SK || defined STM32_E407
+    #elif defined STM32F407ZG_SK
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
         #define _ST802RT1B                                               // ST802RT1B PHY used on the board
         #define PHY_ADDRESS_           (0x01)                            // address of PHY on board

@@ -85,7 +85,7 @@ extern int fnPortState(CHAR cPortBit)
     case '4':
         return (_READ_PORT_MASK(D, LED2) != 0);
     }
-    #elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+    #elif defined STM32_P207 || defined STM32F407ZG_SK
     switch (cPortBit) {
     case '1':
         return (_READ_PORT_MASK(F, LED1) != 0);
@@ -95,6 +95,17 @@ extern int fnPortState(CHAR cPortBit)
         return (_READ_PORT_MASK(F, LED3) != 0);
     case '4':
         return (_READ_PORT_MASK(F, LED4) != 0);
+    }
+    #elif defined STM32_E407
+    switch (cPortBit) {
+    case '1':
+        return (_READ_PORT_MASK(C, LED1) != 0);
+    case '2':
+        return (_READ_PORT_MASK(C, LED2) != 0);
+    case '3':
+        return (_READ_PORT_MASK(C, LED3) != 0);
+    case '4':
+        return (_READ_PORT_MASK(C, LED4) != 0);
     }
     #else                                                                // used when LEDs are all on the same port
     switch (cPortBit) {
@@ -280,7 +291,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
     default:
         break;
     }
-#elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+#elif defined STM32_P207 || defined STM32F407ZG_SK
     switch (cPortBit) {
     case '1':
         if ((GPIOF_MODER & 0x00003000) == 0x00001000) {                  // PORTF_BIT6 [(1 << (6 * 2)) | (1 << ((6 * 2) + 1))]
@@ -299,6 +310,31 @@ extern int fnPortInputConfig(CHAR cPortBit)
         break;
     case '4':
         if ((GPIOF_MODER & 0x000c0000) == 0x00040000) {                  // PORTF_BIT9
+            return 0;
+        }
+        break;
+    default:
+        break;
+    }
+#elif defined STM32_E407
+    switch (cPortBit) {
+    case '1':
+        if ((GPIOC_MODER & 0x0c000000) == 0x04000000) {                  // PORTC_BIT13 [(1 << (13 * 2)) | (1 << ((13 * 2) + 1))]
+            return 0;                                                    // configured as output
+        }
+        break;
+    case '2':
+        if ((GPIOC_MODER & 0x00000003) == 0x00000001) {                  // PORTC_BIT0
+            return 0;
+        }
+        break;
+    case '3':
+        if ((GPIOC_MODER & 0x00000030) == 0x00000010) {                  // PORTC_BIT2
+            return 0;
+        }
+        break;
+    case '4':
+        if ((GPIOC_MODER & 0x000000c0) == 0x00000040) {                  // PORTC_BIT3
             return 0;
         }
         break;
@@ -448,7 +484,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(D, (DEMO_LED_4 << PORT_SHIFT), (INPUT_PULL_UP));// configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
             break;
-#elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+#elif defined STM32_P207 || defined STM32F407ZG_SK
         case 0:
             _CONFIG_PORT_INPUT(F, LED1, (INPUT_PULL_UP));                // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
@@ -463,6 +499,23 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             break;
         case 3:
             _CONFIG_PORT_INPUT(F, LED4, (INPUT_PULL_UP));                // configure as input with pull-up
+            temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
+            break;
+#elif defined STM32_E407
+        case 0:
+            _CONFIG_PORT_INPUT(C, LED1, (INPUT_PULL_UP));                // configure as input with pull-up
+            temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
+            break;
+        case 1:
+            _CONFIG_PORT_INPUT(C, LED2, (INPUT_PULL_UP));                // configure as input with pull-up
+            temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_2;     // set present bit as input
+            break;
+        case 2:
+            _CONFIG_PORT_INPUT(C, LED3, (INPUT_PULL_UP));                // configure as input with pull-up
+            temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_3;     // set present bit as input
+            break;
+        case 3:
+            _CONFIG_PORT_INPUT(C, LED4, (INPUT_PULL_UP));                // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
             break;
 #else                                                                    // STM3210C_EVAL
@@ -598,7 +651,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(D, (DEMO_LED_4 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)) // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;      // set present bit as output
             break;
-#elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+#elif defined STM32_P207 || defined STM32F407ZG_SK
         case 0:
             _CONFIG_PORT_OUTPUT(F, (DEMO_LED_1 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
@@ -613,6 +666,23 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             break;
         case 3:
             _CONFIG_PORT_OUTPUT(F, (DEMO_LED_4 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
+            temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;      // set present bit as output
+            break;
+#elif defined STM32_E407
+        case 0:
+            _CONFIG_PORT_OUTPUT(C, (LED1), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
+            temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
+            break;
+        case 1:
+            _CONFIG_PORT_OUTPUT(C, (LED2), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
+            temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_2;      // set present bit as output
+            break;
+        case 2:
+            _CONFIG_PORT_OUTPUT(C, (LED3), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
+            temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_3;      // set present bit as output
+            break;
+        case 3:
+            _CONFIG_PORT_OUTPUT(C, (LED4), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;      // set present bit as output
             break;
 #else                                                                    // STM3210C_EVAL
@@ -1087,7 +1157,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
         }
         ucBit <<= 1;
     }
-    #elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407
+    #elif defined STM32_P207 || defined STM32F407ZG_SK
     unsigned char ucBit = 0x01;
     while (ucBit != 0) {                                                 // for each possible output
         if (DEMO_USER_PORTS & ucBit) {                                   // if the port bit is to be an output
@@ -1139,6 +1209,59 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
             }
         }
         ucBit <<= 1;
+    }
+    #elif defined STM32_E407
+unsigned char ucBit = 0x01;
+while (ucBit != 0) {                                                 // for each possible output
+    if (DEMO_USER_PORTS & ucBit) {                                   // if the port bit is to be an output
+        switch (ucBit) {
+        case DEMO_LED_1:
+            if (iInitialisation != 0) {
+                POWER_UP(AHB1, RCC_AHB1ENR_GPIOCEN);                 // ensure port is powered up
+            }
+            if (ucPortOutputs & DEMO_LED_1) {
+                _SETBITS(C, LED1);
+            }
+            else {
+                _CLEARBITS(C, LED1);
+            }
+            break;
+        case DEMO_LED_2:
+            if (iInitialisation != 0) {
+                POWER_UP(AHB1, RCC_AHB1ENR_GPIOCEN);                 // ensure port is powered up
+            }
+            if (ucPortOutputs & DEMO_LED_2) {
+                _SETBITS(C, LED2);
+            }
+            else {
+                _CLEARBITS(C, LED2);
+            }
+            break;
+        case DEMO_LED_3:
+            if (iInitialisation != 0) {
+                POWER_UP(AHB1, RCC_AHB1ENR_GPIOCEN);                 // ensure port is powered up
+            }
+            if (ucPortOutputs & DEMO_LED_3) {
+                _SETBITS(C, LED3);
+            }
+            else {
+                _CLEARBITS(C, LED3);
+            }
+            break;
+        case DEMO_LED_4:
+            if (iInitialisation != 0) {
+                POWER_UP(AHB1, RCC_AHB1ENR_GPIOCEN);                 // ensure port is powered up
+            }
+            if (ucPortOutputs & DEMO_LED_4) {
+                _SETBITS(C, LED4);
+            }
+            else {
+                _CLEARBITS(C, LED4);
+            }
+            break;
+            }
+        }
+    ucBit <<= 1;
     }
     #else
     ENABLE_LED_PORT();                                                   // ensure port is clocked and not in reset

@@ -2689,6 +2689,7 @@
     #undef CAN_INTERFACE
     #undef SUPPORT_KEY_SCAN
     #undef ETH_INTERFACE
+    #undef SUPPORT_LCD
     #undef SUPPORT_GLCD
     #undef SUPPORT_OLED
     #undef SUPPORT_GLCD
