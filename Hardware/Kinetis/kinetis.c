@@ -282,14 +282,16 @@ static int iInterruptLevel = 0;                                          // pres
     extern __interrupt void _start(void);                                // reset vector location
 #endif
 
-#define _SPI_FLASH_INTERFACE                                             // insert manufacturer dependent SPI Flash driver code
-    #include "../SPI_Memory/spi_flash_kinetis_atmel.h"
-    #include "../SPI_Memory/spi_flash_kinetis_stmicro.h"
-    #include "../SPI_Memory/spi_flash_kinetis_sst25.h"
-    #include "../SPI_Memory/spi_flash_w25q.h"
-    #include "../SPI_Memory/spi_flash_s25fl1-k.h"
-    #include "../SPI_Memory/spi_flash_MX25L.h"
-#undef _SPI_FLASH_INTERFACE
+#if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
+    #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent SPI Flash driver code
+        #include "../SPI_Memory/spi_flash_kinetis_atmel.h"
+        #include "../SPI_Memory/spi_flash_kinetis_stmicro.h"
+        #include "../SPI_Memory/spi_flash_kinetis_sst25.h"
+        #include "../SPI_Memory/spi_flash_w25q.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
+    #undef _SPI_FLASH_INTERFACE
+#endif
 #if defined SPI_EEPROM_FILE_SYSTEM
     #define _SPI_EEPROM_INTERFACE                                            // {135}
         #include "../SPI_Memory/spi_eeprom_25AA160.h"

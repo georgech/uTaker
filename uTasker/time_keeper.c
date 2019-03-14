@@ -1396,7 +1396,6 @@ extern CHAR *fnUpTime(CHAR *cValue)
 }
 
 #if defined DUSK_AND_DAWN                                                // {2}
-
 static int isSummerTime(unsigned long timeStamp);
 
 // Globaler Struct für Sonnenaufgang/Untergangszeiten

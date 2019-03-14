@@ -663,16 +663,16 @@ static __interrupt void _UART_interrupt(KINETIS_UART_CONTROL *ptrUART, int UART_
                         fnUART1_HANDLER(ucRxData, 1);                    // receive data interrupt - read the byte (masked with character width)
                         break;
                     case 2:
-                        fnUART0_HANDLER(ucRxData, 2);                    // receive data interrupt - read the byte (masked with character width)
+                        fnUART2_HANDLER(ucRxData, 2);                    // receive data interrupt - read the byte (masked with character width)
                         break;
                     case 3:
-                        fnUART1_HANDLER(ucRxData, 3);                    // receive data interrupt - read the byte (masked with character width)
+                        fnUART3_HANDLER(ucRxData, 3);                    // receive data interrupt - read the byte (masked with character width)
                         break;
                     case 4:
-                        fnUART0_HANDLER(ucRxData, 4);                    // receive data interrupt - read the byte (masked with character width)
+                        fnUART4_HANDLER(ucRxData, 4);                    // receive data interrupt - read the byte (masked with character width)
                         break;
                     case 5:
-                        fnUART1_HANDLER(ucRxData, 5);                    // receive data interrupt - read the byte (masked with character width)
+                        fnUART5_HANDLER(ucRxData, 5);                    // receive data interrupt - read the byte (masked with character width)
                         break;
                     }
         #if defined USER_DEFINED_UART_RX_HANDLER

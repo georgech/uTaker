@@ -93,6 +93,10 @@ extern void fnTaskCANopen(TTASKTABLE *ptrTaskTable)
 
     if (NO_ID_ALLOCATED == CANopen_interface_ID0) {                      // first call
         fnDebugMsg("CANopen ");
+
+        // Ref - add custom RPDO and TPDO
+        //
+
         CANopen_interface_ID0 = fnInitCANopenInterface();
         if (uCANopenInit(0, CANopen_interface_ID0, CANOPEN_TX_NODE_ID) != 0) { // initialise the CANopen stack
             fnDebugMsg("failed\r\n");
@@ -414,7 +418,7 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     tCANParameters.ulSpeed = 250000;                                     // 250k speed
     tCANParameters.ulTxID = (121);                                       // default ID of destination (not used by CANopen)
     tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000 | CANOPEN_RX_NODE_ID); // extended node ID that we receive
-    tCANParameters.ulRxIDMask = (CAN_EXTENDED_MASK | 0x00080000 | CANOPEN_RX_NODE_ID); // receive extended address with 0x80000 set and exactly matching the node ID
+    tCANParameters.ulRxIDMask = (0x00080000 | CANOPEN_RX_NODE_ID); // receive extended address with 0x80000 set and exactly matching the node ID
     tCANParameters.usMode = 0;                                           // use normal mode
     tCANParameters.ucTxBuffers = 2;                                      // assign two tx buffers for use
     tCANParameters.ucRxBuffers = 1;                                      // assign one rx buffers for extended ID use

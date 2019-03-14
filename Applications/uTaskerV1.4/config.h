@@ -158,7 +158,7 @@
 
     //#define TWR_K53N512                                                // K processors Cortex M4 with Ethernet, USB, integrated measurement engine and segment LCD - tower board http://www.utasker.com/kinetis/TWR-K53N512.html
 
-    //#define TWR_K60N512                                                // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
+      #define TWR_K60N512                                                // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
     //#define TWR_K60D100M                                               // tower board http://www.utasker.com/kinetis/TWR-K60D100M.html
     //#define TWR_K60F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K60F120M.html
     //#define K60F150M_50M                                               // board with 150MHz K60 and 50MHz clock
@@ -168,7 +168,7 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -263,10 +263,10 @@
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
+      #define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
-      #define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
+    //#define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
   //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
@@ -1766,7 +1766,8 @@
             #define KOMODO_USB_PORT 1                                    // use this USB port (0 or 1) - any additional monitor program sharing the Komodo can use the other port
         #define SUPPORT_CANopen                                          // include CANopen support
             #define CANOPEN_INSTANCES     1
-            #define CAN_INDEX_WIDTH       (0x07ff | 0x0800)              // extended ID support
+            #define CAN_INDEX_WIDTH       (0x07ff | 0xf800)              // extended ID support
+            #define CANOPEN_EXTENDED_ID
     #else
         #define NUMBER_CAN   0                                           // no physical queue needed
     #endif

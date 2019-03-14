@@ -358,7 +358,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     }
 #if defined USE_IP_STATS && !defined ETHERNET_RELEASE_AFTER_EVERY_FRAME
     else {
-        fnIncrementEthernetStats(TOTAL_OTHER_EVENTS);                    // count other unexpected events
+        fnIncrementEthernetStats(TOTAL_OTHER_EVENTS, DEFAULT_NETWORK);   // count other unexpected events
     }
 #endif
     return -1;                                                           // channel invalid

@@ -135,6 +135,7 @@
     25.12.2018 Only update processor image when its rectangle has been invalidated {114}
     26.12.2018 Add iMX                                                   {115}
     18.02.2019 Add CAN frame injection                                   {116}
+    14.03.2019 Add Crystal Fontz UART display simulation [CRYSTAL_FONTZ_UART_LCD_SIMULATION]
 
     */
 
@@ -213,7 +214,7 @@ LRESULT CALLBACK    CardWatchdogReset( HWND, UINT, WPARAM, LPARAM );
 #include "WinSim.h"
 #include "Fcntl.h"
 #include "io.h"
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
     #include "lcd/lcd.h"
 #endif
 
@@ -240,6 +241,9 @@ static HBRUSH hGrayBrush;
 
 #if defined SUPPORT_TOUCH_SCREEN                                         // {56}
     extern int fnPenDown(int x, int y, int iPenState);
+#endif
+#if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+    extern void fnRxCrystalFontz(unsigned char *ptrInput, DWORD dwCount);
 #endif
 
 #include <commdlg.h>                                                     // {18}
@@ -268,7 +272,7 @@ static int iPrevPort = -1;
 static int iLastBit;
 static int iPrevBit = -1;
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {104}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {104}
     static HDC clientDeviceContext = 0;
     static HDC lcd_device_context = 0;
     unsigned long *pPixels = 0;
@@ -885,7 +889,7 @@ static int iPrevBit = -1;
     #define BLANK_PROCESSOR_PORTS 0
 #endif
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
     #define DEVICE_X_POS 9
 #else
     #define DEVICE_X_POS 2
@@ -909,7 +913,10 @@ static int iPrevBit = -1;
     #endif
     static DWORD fnCheckRx(HANDLE m_hComm, unsigned char *pData);
     static DWORD fnSendSerialMessage(HANDLE m_hComm, const void* lpBuf, DWORD dwCount);
-    static void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort);
+    extern void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort);
+    #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+    static HANDLE m_hComm_crystalFontz = INVALID_HANDLE_VALUE;
+    #endif
 #endif
 static void fnProcessKeyChange(void);
 static void fnProcessInputChange(void);
@@ -917,7 +924,7 @@ static void fnSimPortInputToggle(int iPort, int iPortBit);
 
 #define UTASKER_WIN_WIDTH  500
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}
     #define UTASKER_WIN_LCD_WIDTH (22 * LCD_CHARACTERS)
 #else
     #define UTASKER_WIN_LCD_WIDTH 0
@@ -2808,7 +2815,7 @@ static void fnDoDraw(HWND hWnd, HDC hdc, PAINTSTRUCT ps, RECT &rect)
 #if (defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS) && defined LCD_ON_KEYPAD
     DisplayKeyPad(hWnd, rt, rect);                                       // draw the keypad if needed
 #endif
-#if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}
+#if (defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}
     #if defined LCD_ON_KEYPAD
     DisplayLCD(hWnd, rect);                                              // re-draw the LCD if needed
     #else
@@ -3068,7 +3075,7 @@ static void fnPortDisplay(unsigned long ulPortValue, unsigned long ulPortDirecti
         ulPortStates[ucPortNumber] = ulPortValue;
         ulPortPeripheral[ucPortNumber] = ulPeripheral;
         ulPortFunction[ucPortNumber] = ulPortDirection;
-#if defined SUPPORT_LCD ||  defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {35}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION ||  defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {35}
         present_ports_rect.right = (UTASKER_WIN_WIDTH - 68);             // don't cause LCD update (when LCD is to the right of the ports)
 #endif
         InvalidateRect(ghWnd, &present_ports_rect, FALSE);
@@ -3080,7 +3087,7 @@ unsigned long fnGetValue(unsigned char *ptr, int iLen)
 {
     unsigned long ulValue = 0;
 
-    while (iLen--) {
+    while (iLen-- != 0) {
         ulValue <<= 8;
         ulValue |= *ptr++;
     }
@@ -3341,7 +3348,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
     STRCAT(szTitle, " / SW-Version ");
     STRCAT(szTitle, SOFTWARE_VERSION);
 #endif
-#if defined SUPPORT_LCD
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     LCDinit(LCD_LINES, LCD_CHARACTERS);
 #elif defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE // {35}{65}
     #if (defined FT800_GLCD_MODE && defined FT800_EMULATOR)
@@ -3697,6 +3704,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm0);                          // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm0 = fnConfigureSerialInterface(SERIAL_PORT_0, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+    #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 0)
+                        m_hComm_crystalFontz = sm_hComm0;
+    #endif
                         if (sm_hComm0 >= 0) {
                             fnUART_string(0, SERIAL_PORT_0, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3713,6 +3723,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm1);                          // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm1 = fnConfigureSerialInterface(SERIAL_PORT_1, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+    #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 1)
+                        m_hComm_crystalFontz = sm_hComm1;
+    #endif
                         if (sm_hComm1 >= 0) {
                             fnUART_string(1, SERIAL_PORT_1, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3730,6 +3743,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm2);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm2 = fnConfigureSerialInterface(SERIAL_PORT_2, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 2)
+                        m_hComm_crystalFontz = sm_hComm2;
+        #endif
                         if (sm_hComm2 >= 0) {
                             fnUART_string(2, SERIAL_PORT_2, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3755,6 +3771,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         CloseHandle(sm_hComm3);
     }*/
                         sm_hComm3 = fnConfigureSerialInterface(SERIAL_PORT_3, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 3)
+                        m_hComm_crystalFontz = sm_hComm3;
+        #endif
                         if (sm_hComm3 >= 0) {
                             fnUART_string(3, SERIAL_PORT_3, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3773,6 +3792,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm4);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm4 = fnConfigureSerialInterface(SERIAL_PORT_4, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 4)
+                        m_hComm_crystalFontz = sm_hComm4;
+        #endif
                         if (sm_hComm4 >= 0) {
                             fnUART_string(4, SERIAL_PORT_4, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3791,6 +3813,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm5);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm5 = fnConfigureSerialInterface(SERIAL_PORT_5, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 5)
+                        m_hComm_crystalFontz = sm_hComm5;
+        #endif
                         if (sm_hComm5 >= 0) {
                             fnUART_string(5, SERIAL_PORT_5, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3809,6 +3834,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm6);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm6 = fnConfigureSerialInterface(SERIAL_PORT_6, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 6)
+                        m_hComm_crystalFontz = sm_hComm6;
+        #endif
                         if (sm_hComm6 >= 0) {
                             fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
                         }
@@ -3827,6 +3855,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm7);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm7 = fnConfigureSerialInterface(SERIAL_PORT_7, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+        #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 7)
+                        m_hComm_crystalFontz = sm_hComm7;
+        #endif
                         if (sm_hComm7 >= 0) {
                             fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
                         }
@@ -4077,7 +4108,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
     return msg.wParam;
 }
 
-static void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort)
+extern void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort)
 {
     char *ptr[2];
 
@@ -4386,13 +4417,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     HWND hWnd;
     RECT rt = {0, 0, 0, 0};
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE || defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS  // {35}{65}{83}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE || defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS  // {35}{65}{83}
     int iLCD_Bottom = 0;
 #endif
     rt.right = UTASKER_WIN_WIDTH;                                        // basic windows size without LCD or keypad/panel
     rt.bottom = UTASKER_WIN_HEIGHT;
 
-#if (defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}{65}
+#if (defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_GLCD_MODE && defined FT800_EMULATOR) // {35}{65}
     #if defined _M5225X
     iLCD_Bottom = fnInitLCD(rt, UTASKER_WIN_HEIGHT, (UTASKER_WIN_WIDTH + 70));
     #else
@@ -4441,7 +4472,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {104}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD  || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {104}
 // Redraw LCD bitmap ontent
 //
 extern void LCD_draw_bmp(int iX, int iY, int iXsize, int iYsize)
@@ -5096,8 +5127,12 @@ static DWORD fnSendSerialMessage(HANDLE m_hComm, const void *lpBuf, DWORD dwCoun
 {
     DWORD dwBytesWritten = 0;
     static _OVERLAPPED ol = {0};                                         // {3}
-
-    WriteFileEx(m_hComm, lpBuf, dwCount, &ol, 0);
+    #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+    if (m_hComm == m_hComm_crystalFontz) {
+        fnRxCrystalFontz((unsigned char *)lpBuf, dwCount);
+    }
+    #endif
+    WriteFileEx(m_hComm, lpBuf, dwCount, &ol, 0);                        // send the serial byte(s) over the com port
 
     return dwBytesWritten;
 }
@@ -5114,7 +5149,7 @@ static int _main(int argc, char *argv[])                                 // {23}
     return iRtn;
 }
 
-#if defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {35}
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR // {35}
 extern void fnRedrawDisplay(void)
 {
     InvalidateRect(ghWnd, NULL, FALSE);                                  // {44}

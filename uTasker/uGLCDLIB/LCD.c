@@ -853,7 +853,7 @@ static void fnPreparePixels(unsigned char ucValue)
 {
     int iChar = BYTES_PER_HCMS_CHARACTER;
     unsigned char *ptrFontPixel = (unsigned char *)ucFont[ucValue];
-    if (iPixelLocation > ((LCD_CHARACTERS - 1) * BYTES_PER_HCMS_CHARACTER)) { // don't alow writing beyond end of display (no wrap around)
+    if (iPixelLocation > ((LCD_CHARACTERS - 1) * BYTES_PER_HCMS_CHARACTER)) { // don't allow writing beyond end of display (no wrap around)
         return;
     }
     while (iChar-- != 0) {
@@ -917,12 +917,13 @@ static void fnHCMS_command(int iCommand)
 {
     unsigned char ucBackup[BYTES_PER_HCMS_CHARACTER];
     switch (iCommand) {
-    case HCMS_SET_HOME:
-        iPixelLocation = 0;
-        break;
     case HCMS_CLEAR_DISPLAY:
         uMemset(ucPixels, 0, sizeof(ucPixels));
         fnHCMS_Data(ucPixels);                                           // clear pixel shift register by writing to the display
+        // Fall-through intentionally
+        //
+    case HCMS_SET_HOME:
+        iPixelLocation = 0;
         break;
     case HCMS_SHIFT_RIGHT:
         uMemcpy(ucBackup, &ucPixels[sizeof(ucPixels) - BYTES_PER_HCMS_CHARACTER], BYTES_PER_HCMS_CHARACTER);
@@ -946,10 +947,9 @@ static void _fnWriteDisplay(LCD_CONTROL_PORT_SIZE rs, unsigned char ucData)
 {
 #if defined AVAGO_HCMS_CHAR_LCD                                          // {11}
     if (rs == 0) {                                                       // control
-        switch (ucData) {                                                // we partly behave as a standard charcater LCD when commands are received
+        switch (ucData) {                                                // we partly behave as a standard character LCD when commands are received
         case (INIT_FUNCTION_SET_MODE | N_BIT | F_BIT):                   // when we recognise this initialisation we take the display out of reset and configure its with blank display
             O_SET_CONTROL_HIGH(HCMS_DISPLAY_RESET);
-            fnHCMS_command(HCMS_SET_HOME);
             fnHCMS_command(HCMS_CLEAR_DISPLAY);
             fnHCMS_Control(AVAGO_HCMS_CONTROL_WORD_0_BRIGHTNESS_80_PERCENT | AVAGO_HCMS_CONTROL_WORD_0_NORMAL_OPERATION); // set brightness and enable display (we use exclusively serial mode)
             break;
@@ -958,10 +958,6 @@ static void _fnWriteDisplay(LCD_CONTROL_PORT_SIZE rs, unsigned char ucData)
             break;
         case 0x02:                                                       // set home
             fnHCMS_command(HCMS_SET_HOME);
-            break;
-        case 0x03:                                                       // set home and clear LCD
-            fnHCMS_command(HCMS_SET_HOME);
-            fnHCMS_command(HCMS_CLEAR_DISPLAY);
             break;
         case 0x1c:                                                       // shift to the right
             fnHCMS_command(HCMS_SHIFT_RIGHT);

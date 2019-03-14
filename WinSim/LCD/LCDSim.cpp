@@ -37,6 +37,7 @@
     19.02.2017 Add FT800 emulation                                       {20}
     28.08.2018 Add segment LED simulation                                {21}
     11.03.2019 Add AVAGO_HCMS_CHAR_LCD simulation mode                   {22}
+    14.03.2019 Add Crystal Fontz UART display simulation [CRYSTAL_FONTZ_UART_LCD_SIMULATION]
 
     */
 
@@ -52,9 +53,13 @@
 
 //#define _GENERATE_C_FONT_TABLE
 
+#if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+static void fnInitialiseCrystalFontz(void);
+#endif
+
 extern HWND ghWnd;
 
-#if (defined SUPPORT_LCD || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_EMULATOR && defined FT800_GLCD_MODE)  // {16}
+#if (defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION || defined SUPPORT_GLCD || defined SUPPORT_OLED || defined SUPPORT_TFT || defined GLCD_COLOR || defined SLCD_FILE) && !(defined FT800_EMULATOR && defined FT800_GLCD_MODE)  // {16}
 
 #if defined SLCD_FILE
     static void fnLoadSLCD(void);
@@ -178,7 +183,7 @@ static RECT rectLines[4];
 
 static ULONG cmd = 0;
 static int nibbel = 1;
-#if defined SUPPORT_LCD
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     static void Initfont(void);    
 #endif
 static void DrawLcdLine(HWND hwnd);
@@ -324,17 +329,20 @@ extern void LCDinit(int iLines, int iChars)
     tDisplayMem.ucCursorInc__Dec = 1;
 
     InitializeCriticalSection(&cs);                                      // start of critical region
-#if defined SUPPORT_LCD
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     Initfont();                                                          // initialise the font table    
     memset(tDisplayMem.ddrRam, ' ', sizeof(tDisplayMem.ddrRam));         // clear contents of character RAM
 #endif
     tDisplayMem.init = 1;
     iLCD_initialise = 1;
+#if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+    fnInitialiseCrystalFontz();
+#endif
 }
 
 static void fnInvalidateLCD(void)
 {
-#if defined SUPPORT_LCD
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     for (int x = 0; x < 4; x++) {                                        // we mark all characters as invalid to ensure that they re-draw
         for (int y = 0; y < 40; y++) {
             usOldValue[x][y] = 0xffff;                                   // mark value invalid and must be re-freshed
@@ -540,7 +548,7 @@ static void fnSizeLCD(int iProcessorHeight, int iProcessorWidth)
 #endif
 }
 
-#if defined SUPPORT_LCD
+#if defined SUPPORT_LCD || defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
 // Character LCD Font initialisation
 //
 static void Initfont(void)
@@ -959,8 +967,8 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
                 tDisplayMem.ucLines = 1;
             }
             tDisplayMem.bmode = ((ulCmd & 0x10) != 0);                   // set 4 or 8 bit mode
-            tDisplayMem.ucDDRAMLineLength = LCD_Info.ucDDRAMLineLength[tDisplayMem.ucLines-1];
-            tDisplayMem.uiDDRamLength = LCD_Info.uiDDRamLength[tDisplayMem.ucLines-1];
+            tDisplayMem.ucDDRAMLineLength = LCD_Info.ucDDRAMLineLength[tDisplayMem.ucLines - 1];
+            tDisplayMem.uiDDRamLength = LCD_Info.uiDDRamLength[tDisplayMem.ucLines - 1];
         }
         else if ((ulCmd & LCD_CURSOR_OR_LCD_SHIFT) != 0) {               // shift left
             if ((ulCmd & LCD_DDRRAM_SHIFT_RIGHT) == 0) {
@@ -1071,7 +1079,7 @@ static unsigned char LCDCommand(BOOL bRS, ULONG ulCmd)
         }        
         else {
                                                                          // save character
-            tDisplayMem.ddrRam[LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY]+tDisplayMem.ucLocX] = (unsigned char)(ulCmd);
+            tDisplayMem.ddrRam[LCD_Info.uiDDRAMStartLine[tDisplayMem.ucLocY] + tDisplayMem.ucLocX] = (unsigned char)(ulCmd);
 
             if (tDisplayMem.ucLCDshiftEnable != 0) {
                 if (tDisplayMem.ucCursorInc__Dec == 0) {
@@ -1576,7 +1584,7 @@ static void DrawLcdLine(HWND hwnd)
             }
         
 dont_display:
-            if (++pCurrent == (LCD_Info.uiDDRAMStartLine[i%2]+tDisplayMem.ucDDRAMLineLength)) {
+            if (++pCurrent == (LCD_Info.uiDDRAMStartLine[i%2] + tDisplayMem.ucDDRAMLineLength)) {
                 pCurrent = LCD_Info.uiDDRAMStartLine[i%2];
             }
     #endif
@@ -2992,6 +3000,251 @@ extern "C" int CollectCommand(bool bRS, unsigned long ulByte)            // {17}
     return iReturn;                                                      // {17} return the read value (in read cases)
 #endif
 }
+
+#if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
+static void fnInitialiseCrystalFontz(void)
+{
+    LCDCommand(0, 0x38);                                                 // display initialisation;
+}
+
+static void fnCrystalFontzText(unsigned char *ptrTxt, unsigned char ucLen)
+{
+    while (ucLen-- != 0) {
+        LCDCommand(1, *ptrTxt++);
+    }
+    DrawLcdLine(ghWnd);
+}
+
+static unsigned char keypadstate = 0;
+
+unsigned int get_crc(unsigned char *bufptr, unsigned int len)
+{
+    static const unsigned int crcLookupTable[256] = {
+        0x00000,0x01189,0x02312,0x0329B,0x04624,0x057AD,0x06536,0x074BF,
+        0x08C48,0x09DC1,0x0AF5A,0x0BED3,0x0CA6C,0x0DBE5,0x0E97E,0x0F8F7,
+        0x01081,0x00108,0x03393,0x0221A,0x056A5,0x0472C,0x075B7,0x0643E,
+        0x09CC9,0x08D40,0x0BFDB,0x0AE52,0x0DAED,0x0CB64,0x0F9FF,0x0E876,
+        0x02102,0x0308B,0x00210,0x01399,0x06726,0x076AF,0x04434,0x055BD,
+        0x0AD4A,0x0BCC3,0x08E58,0x09FD1,0x0EB6E,0x0FAE7,0x0C87C,0x0D9F5,
+        0x03183,0x0200A,0x01291,0x00318,0x077A7,0x0662E,0x054B5,0x0453C,
+        0x0BDCB,0x0AC42,0x09ED9,0x08F50,0x0FBEF,0x0EA66,0x0D8FD,0x0C974,
+        0x04204,0x0538D,0x06116,0x0709F,0x00420,0x015A9,0x02732,0x036BB,
+        0x0CE4C,0x0DFC5,0x0ED5E,0x0FCD7,0x08868,0x099E1,0x0AB7A,0x0BAF3,
+        0x05285,0x0430C,0x07197,0x0601E,0x014A1,0x00528,0x037B3,0x0263A,
+        0x0DECD,0x0CF44,0x0FDDF,0x0EC56,0x098E9,0x08960,0x0BBFB,0x0AA72,
+        0x06306,0x0728F,0x04014,0x0519D,0x02522,0x034AB,0x00630,0x017B9,
+        0x0EF4E,0x0FEC7,0x0CC5C,0x0DDD5,0x0A96A,0x0B8E3,0x08A78,0x09BF1,
+        0x07387,0x0620E,0x05095,0x0411C,0x035A3,0x0242A,0x016B1,0x00738,
+        0x0FFCF,0x0EE46,0x0DCDD,0x0CD54,0x0B9EB,0x0A862,0x09AF9,0x08B70,
+        0x08408,0x09581,0x0A71A,0x0B693,0x0C22C,0x0D3A5,0x0E13E,0x0F0B7,
+        0x00840,0x019C9,0x02B52,0x03ADB,0x04E64,0x05FED,0x06D76,0x07CFF,
+        0x09489,0x08500,0x0B79B,0x0A612,0x0D2AD,0x0C324,0x0F1BF,0x0E036,
+        0x018C1,0x00948,0x03BD3,0x02A5A,0x05EE5,0x04F6C,0x07DF7,0x06C7E,
+        0x0A50A,0x0B483,0x08618,0x09791,0x0E32E,0x0F2A7,0x0C03C,0x0D1B5,
+        0x02942,0x038CB,0x00A50,0x01BD9,0x06F66,0x07EEF,0x04C74,0x05DFD,
+        0x0B58B,0x0A402,0x09699,0x08710,0x0F3AF,0x0E226,0x0D0BD,0x0C134,
+        0x039C3,0x0284A,0x01AD1,0x00B58,0x07FE7,0x06E6E,0x05CF5,0x04D7C,
+        0x0C60C,0x0D785,0x0E51E,0x0F497,0x08028,0x091A1,0x0A33A,0x0B2B3,
+        0x04A44,0x05BCD,0x06956,0x078DF,0x00C60,0x01DE9,0x02F72,0x03EFB,
+        0x0D68D,0x0C704,0x0F59F,0x0E416,0x090A9,0x08120,0x0B3BB,0x0A232,
+        0x05AC5,0x04B4C,0x079D7,0x0685E,0x01CE1,0x00D68,0x03FF3,0x02E7A,
+        0x0E70E,0x0F687,0x0C41C,0x0D595,0x0A12A,0x0B0A3,0x08238,0x093B1,
+        0x06B46,0x07ACF,0x04854,0x059DD,0x02D62,0x03CEB,0x00E70,0x01FF9,
+        0x0F78F,0x0E606,0x0D49D,0x0C514,0x0B1AB,0x0A022,0x092B9,0x08330,
+        0x07BC7,0x06A4E,0x058D5,0x0495C,0x03DE3,0x02C6A,0x01EF1,0x00F78
+    };
+    unsigned int newCrc = 0xffff;
+    while (len-- != 0) {
+        newCrc = (newCrc >> 8) ^ crcLookupTable[(newCrc ^ *bufptr++) & 0xff];
+    }
+    return (~newCrc);
+}
+
+#if _VC80_UPGRADE >= 0x0600
+    #define STRCPY(a, b) strcpy_s(a, 32, b)
+#else
+    #define STRCPY strcpy
+#endif
+
+extern void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort);
+static void fnParseCrystalFontzMessage(unsigned char * databuffer)
+{
+  	int reply = 1;
+    int replycnt;
+    char txbuffer[64];
+
+    switch(databuffer[0]) {
+    case 0: // Ping - Return same as sent
+    case 2: // WriteFlash - Return Null
+    case 4: // Store Current State as boot - Return Null
+    case 5: // Reboot - Return Null
+    case 6: // Clear LCD - Return Null
+    case 9: // Set LCD CGRAM - Return Null
+    case 11: // Set LCD Cursor Pos - Return Null
+    case 12: // Set LCD Cursor Style - Return Null
+    case 13: // Set LCD Contrast - Return Null
+    case 14: // Set LCD Backlight - Return Null
+    case 15: // Not Used - Return Null
+    case 16: // Setup Fan - Return Null
+    case 17: // Set Fan Power - Return Null
+    case 19: // Setup Temp Report - Return Null
+    case 21: // Setup Fan Display - Return Null
+    case 22: // Direct LCD Command - Return Null
+    case 23: // Config Key Reporting - Return Null
+    case 25: // Set Fan Power Safe - Return Null
+    case 26: // Set Fan Glitch Filter - Return Null
+    case 28: // Set ATX mode - Return Null
+    case 29: // Set Watchdog - Return Null
+    case 32: // Reserved - Return Null
+    case 33: // Set Baud Rate - Return Null
+    case 34: // Set GPIO pin - Return Null
+        replycnt = 0;
+		break;
+
+    case 3: // ReadFlash - 16 Bytes Returned
+    case 20: // DOW Transaction - Return upto 16 bytes
+        replycnt = 16;
+        // String             1234567890123456
+        STRCPY(&txbuffer[2],"1234567890123456"); // Store return string
+        break;
+
+    case 10: // Read 8 Bytes - Return 9 bytes
+    case 18: // Read DOW - Return 9 bytes
+    case 27: // Query Fan Data - Return 5 Bytes
+    case 30: // Read Status - Return 15 bytes
+    case 35: // Read GPIO pin - Return 4 bytes
+        replycnt = 0;
+        // String             1234567890123456
+//        uStrcpy(&txbuffer[2],"uTasker LCD v1.0"); // Store return string
+        break;
+
+
+    case 1: // Get version number
+		replycnt = 16;
+        // String             1234567890123456
+        STRCPY(&txbuffer[2],"uTasker LCD v1.0"); // Store return string
+		break;
+
+    case 7: // Set LCD Line1 - Return Null
+      //fnDoLCD_com_text(E_LCD_TEXT_LINE1, (unsigned char *)&databuffer[2], 16);
+        LCDCommand(0, 0x80);
+        fnCrystalFontzText((unsigned char *)&databuffer[2], 16);
+        replycnt = 0;
+		break;
+
+    case 8: // Set LCD Line2 - Return Null
+      //fnDoLCD_com_text(E_LCD_TEXT_LINE2, (unsigned char *)&databuffer[2], 16);
+        LCDCommand(0, 0xc0);
+        fnCrystalFontzText((unsigned char *)&databuffer[2], 16);
+        replycnt = 0;
+		break;
+
+    case 24: // Read Keypad - Return 3 Bytes
+        txbuffer[2] = keypadstate;
+        txbuffer[3] = 0;
+        txbuffer[4] = 0;
+        replycnt = 3;
+		break;
+        
+    case 31: // Send data to LCD - Return Null
+        if (databuffer[3] != 0) {   // not line 0
+          //fnDoLCD_com_text(E_LCD_TEXT_LINE2, (unsigned char *)&databuffer[4], databuffer[2]);
+            LCDCommand(0, 0xc0);
+        }
+        else {
+          //fnDoLCD_com_text(E_LCD_TEXT_LINE1, (unsigned char *)&databuffer[4], databuffer[2]);
+            LCDCommand(0, 0x80);
+        }
+        fnCrystalFontzText((unsigned char *)&databuffer[4], 2);
+        replycnt = 0;
+		break;
+
+    default:
+        reply = 0;
+	}
+    
+    if (reply != 0) {
+		unsigned int calccrc;
+        txbuffer[0] = (databuffer[0] | 0x40);                            // reply messages are sent with bit 7 set
+		txbuffer[1] = replycnt;                                          // store number of bytes in reply
+        calccrc = get_crc((unsigned char *)txbuffer, (replycnt + 2));    // Calc CRC
+		txbuffer[replycnt + 2] = calccrc & 0xff;
+		txbuffer[replycnt + 3] = calccrc >> 8;
+        fnProcessRx((unsigned char *)txbuffer, (replycnt + 4), CRYSTAL_FONZ_UART); // send reply packet
+    }
+}
+
+extern void fnRxCrystalFontz(unsigned char *ptrInput, DWORD dwCount)
+{
+    static int iProtState = 0;
+    static UTASK_TICK lasttick = 0;
+    static int iRxCnt = 0;
+    static unsigned char ucInputMessage[32];
+    static unsigned int datasize;
+    static unsigned short datacrc;
+    unsigned char rxdata;
+    unsigned short calccrc;
+    while (dwCount-- != 0) {                                             // each new input
+     /*   if ((lasttick + 2) < uTaskerSystemTick) {
+            iProtState = 0;                                              // if not recieved anything for a while reset iProtState
+            iRxCnt = 0;
+        }
+        lasttick = uTaskerSystemTick;*/
+        if (iProtState == 0) {
+            iRxCnt = 0;
+        }
+        rxdata = *ptrInput++;
+        ucInputMessage[iRxCnt % 32] = rxdata;                            // store data
+
+        switch (iProtState) {
+        case 0:
+            iRxCnt = 0;
+            if (rxdata < 35) {                                           // valid command codes
+                iProtState++;
+                iRxCnt++;
+            }
+            break;
+        case 1:
+            datasize = rxdata;
+            iProtState++;
+            iRxCnt++;                                                    // keep the received byte
+            if (datasize == 0) {                                         // if data size = 0 next state is CRC
+                iProtState++;
+            }
+            break;
+        case 2:
+            iRxCnt++;                                                    // keep the received byte
+            if (datasize > 1) {
+                datasize--;
+            }
+            else iProtState++;
+            break;
+        case 3:
+            iRxCnt++;                                                    // keep the received byte
+            datacrc = rxdata;
+            iProtState++;
+            break;
+        case 4:
+            iRxCnt++;                                                    // keep the received byte
+            datacrc = datacrc | (rxdata << 8);
+            calccrc = get_crc(ucInputMessage, (iRxCnt - 2));
+            if (datacrc == calccrc) {                                    // check CRC
+                fnParseCrystalFontzMessage(ucInputMessage);			     // process data
+            }
+            iProtState = 0;
+            break;
+        default:
+            iProtState = 0;
+            break;
+        }
+        if (iProtState == 5) {
+            iProtState = 0;
+            datasize = rxdata;
+            iRxCnt = 0; 						                         // keep the received byte
+        }
+    }
+}
+#endif
 
 #if defined SUPPORT_GLCD || defined GLCD_COLOR
 static unsigned long fnGetLCDMemory(unsigned char ucType)

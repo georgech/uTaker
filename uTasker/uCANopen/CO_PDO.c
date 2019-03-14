@@ -121,7 +121,11 @@ static void CO_RPDOconfigCom(CO_RPDO_t* RPDO, uint32_t COB_IDUsedByRPDO)
     CO_ReturnError_t r;
     ID = (uint16_t)COB_IDUsedByRPDO;
     /* is RPDO used? */
-    if (((COB_IDUsedByRPDO & 0xBFFFF800L) == 0) && (RPDO->dataLength != 0) && (ID != 0)) {
+    if (
+#if !defined CANOPEN_EXTENDED_ID                                         // if extended IDs are used all non-zero IDs are accepted
+        ((COB_IDUsedByRPDO & 0xBFFFF800L) == 0) &&
+#endif
+        (RPDO->dataLength != 0) && (ID != 0)) {
         /* is used default COB-ID? */
         if (ID == RPDO->defaultCOB_ID) {
             ID += RPDO->nodeId;
@@ -168,7 +172,11 @@ static void CO_TPDOconfigCom(CO_TPDO_t* TPDO, uint32_t COB_IDUsedByTPDO, uint8_t
     uint16_t ID = (uint16_t)COB_IDUsedByTPDO;
 
     /* is TPDO used? */
-    if (((COB_IDUsedByTPDO & 0xBFFFF800L) == 0) && (TPDO->dataLength != 0) && (ID != 0)) {
+    if (
+#if !defined CANOPEN_EXTENDED_ID                                         // if extended IDs are used all non-zero IDs are accepted
+        ((COB_IDUsedByTPDO & 0xBFFFF800L) == 0) &&
+#endif
+        (TPDO->dataLength != 0) && (ID != 0)) {
         /* is used default COB-ID? */
         if (ID == TPDO->defaultCOB_ID) {
             ID += TPDO->nodeId;
