@@ -181,11 +181,15 @@ only for ports that are using the MPU. */
 		#define PRIVILEGED_FUNCTION
 
 	#else /* MPU_WRAPPERS_INCLUDED_FROM_API_FILE */
-
-		/* Ensure API functions go in the privileged execution section. */
-		#define PRIVILEGED_FUNCTION __attribute__((section("privileged_functions")))
-		#define PRIVILEGED_DATA __attribute__((section("privileged_data")))
-
+        #if defined _WINDOWS
+		    /* Ensure API functions go in the privileged execution section. */
+		    #define PRIVILEGED_FUNCTION
+		    #define PRIVILEGED_DATA
+        #else
+		    /* Ensure API functions go in the privileged execution section. */
+		    #define PRIVILEGED_FUNCTION __attribute__((section("privileged_functions")))
+		    #define PRIVILEGED_DATA __attribute__((section("privileged_data")))
+        #endif
 	#endif /* MPU_WRAPPERS_INCLUDED_FROM_API_FILE */
 
 #else /* portUSING_MPU_WRAPPERS */

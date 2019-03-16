@@ -22,6 +22,7 @@
     01.11.2018 Use an include file for the clock configuration           {7}
     28.11.2018 Add automatic flash option configuration option           {8}
     09.02.2019 Add STORAGE_AREA_ENTRY list when both internal and external flash drivers are used {9}
+    16.03.2019 Enable access to FPU before calling Keil initialisation   {10}
 
 
 */
@@ -48,7 +49,7 @@
     #include "config.h"
     #if defined _COMPILE_KEIL
         extern void __main(void);                                        // Keil library initialisation routine
-        #define START_CODE __main
+        #define START_CODE _init                                         // {10}
     #elif defined COMPILE_IAR
         extern void __iar_program_start(void);                           // IAR library initialisation routine
         #define START_CODE __iar_program_start
@@ -79,9 +80,12 @@
             #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
         #endif
         #define _SPI_DEFINES
-            #include "spi_flash_STM32_atmel.h"
-            #include "spi_flash_STM32_stmicro.h"
-            #include "spi_flash_STM32_sst25.h"
+            #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+            #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+            #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+            #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+            #include "../SPI_Memory/spi_flash_MX25L.h"
+            #include "../SPI_Memory/spi_flash_s25fl1-k.h"
         #undef _SPI_DEFINES
     #endif
 
@@ -109,9 +113,12 @@
         #define _EXTENDED_CS
     #endif
     #define _SPI_FLASH_INTERFACE                                         // insert manufacturer dependent SPI Flash driver code
-        #include "spi_flash_STM32_atmel.h"
-        #include "spi_flash_STM32_stmicro.h"
-        #include "spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+        #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+        #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _SPI_FLASH_INTERFACE
 #endif
 
@@ -148,6 +155,16 @@ extern void start_application(unsigned long app_link_location)
     asm(" ldr pc, [r0,#4]");                                             // load the program counter value from the program's reset vector to cause operation to continue from there
         #endif
     #endif
+}
+#else
+// Keil demands the use of a __main() call to correctly initialise variables - it then calls main()
+//
+extern void _init(void)                                                  // {10}
+{
+    #if defined KINETIS_K_FPU                                            // if the processor has a floating point using
+    CPACR |= (0xf << 20);                                                // enable access to FPU because the Keil initialisation will write to the FPU
+    #endif
+    __main();                                                            // Keil initialises variables and then calls main()
 }
 #endif
 
@@ -221,9 +238,12 @@ extern int fnConfigSPIFileSystem(void)
     POWER_UP_SPI_FLASH_INTERFACE();
     CONFIGURE_SPI_FLASH_INTERFACE();
     #define _CHECK_SPI_CHIPS                                             // insert manufacturer dependent code to detect the SPI Flash devices
-        #include "spi_flash_STM32_atmel.h"
-        #include "spi_flash_STM32_stmicro.h"
-        #include "spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_atmel.h"
+        #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
+        #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
+        #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _CHECK_SPI_CHIPS
     return (ucSPI_FLASH_Type[0] == NO_SPI_FLASH_AVAILABLE);
 }

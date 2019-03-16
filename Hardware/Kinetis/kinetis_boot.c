@@ -25,6 +25,7 @@
     26.07.2017 Add Cortex-m0+ assembler code                             {10}
     20.12.2017 Change uMemset() to match memset() parameters             {11}
     27.02.2018 Add mx25l (macronix) SPI Flash support                    {12}
+    16.03.2019 Enable access to FPU before calling Keil initialisation   {13}
 
 */
 
@@ -46,7 +47,7 @@
         #define asm(x) __asm__(x)
     #endif
     #if defined _COMPILE_KEIL
-        #define START_CODE main
+        #define START_CODE _init                                         // {13}
     #elif defined _COMPILE_IAR
         #define START_CODE disable_watchdog
     #elif defined _COMPILE_GHS                                           // {4}
@@ -95,6 +96,7 @@ static void disable_watchdog(void)
     #endif
 }
 #endif
+
 
 // The boot loader doesn't use interrupts so these routines are dummy
 //
@@ -288,6 +290,16 @@ static unsigned char *_keil_ram_size(int iInit)
     } while (ptrEntries != &Region$$Table$$Limit);
     return ptrRam;
 }
+
+// Keil demands the use of a __main() call to correctly initialise variables - it then calls main()
+//
+extern void _init(void)                                                  // {13}
+{
+    #if defined KINETIS_K_FPU                                            // if the processor has a floating point using
+    CPACR |= (0xf << 20);                                                // enable access to FPU because the Keil initialisation will write to the FPU
+    #endif
+    __main();                                                            // Keil initialises variables and then calls main()
+}
 #endif
 
 #if defined (_GNU) || defined _CODE_WARRIOR
@@ -334,9 +346,9 @@ extern int
 extern void
 #endif
 #if defined _WINDOWS
-            _LowLevelInit(void)
+    _LowLevelInit(void)
 #else
-            main(void)
+    main(void)
 #endif
 {
 #if (defined KINETIS_K64 || (defined KINETIS_K24 && (SIZE_OF_FLASH == (1024 * 1024)))) && (defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC_FLL || defined RUN_FROM_HIRC) // {5} older K64 devices require the IRC48M to be switched on by the USB module

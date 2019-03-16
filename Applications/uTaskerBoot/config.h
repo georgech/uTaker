@@ -46,7 +46,7 @@
     18.06.2018 Merge STM32 project
     30.08.2018 Merge Luminary project
 
-    See this video for details of buiding and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
+    See this video for details of building and checking the "Bare-Minimum" boot loader: https://youtu.be/lm3M-ZlaFLQ
 
     */
 
@@ -87,12 +87,12 @@
       //#define KINETIS_K12                                              // development board with K12
           //#define DEV2                                                 // temporary development version
       //#define FRDM_KL25Z
-      //#define FRDM_KL27Z
+        #define FRDM_KL27Z
       //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
           //#define DEV4                                                 // temporary development version
       //#define FRDM_KL82Z
       //#define KINETIS_K40
-        #define KINETIS_K60
+      //#define KINETIS_K60
           //#define DEV3                                                 // temporary development version
       //#define FRDM_K64F                                                // {24} next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area
       //#define KINETIS_K70

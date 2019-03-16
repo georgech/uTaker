@@ -93,13 +93,17 @@
     #if defined _WINDOWS
         extern void fnSetReg(int iRef, unsigned long ulValue);
         extern unsigned long *fnGetRegisterAddress(unsigned long ulAddress);
+        #define portFORCE_NO_INLINE
         #define portFORCE_INLINE
         #define _NAKED_FUNCTION
         #define _WEAK_FUNCTION
+        #define _OPTIMISED_FUNCTION_3
     #elif defined _GNU
+        #define portFORCE_NO_INLINE __attribute__(( noinline ))
         #define portFORCE_INLINE __attribute__((always_inline))
         #define _NAKED_FUNCTION  __attribute__((naked))
         #define _WEAK_FUNCTION   __attribute__((weak))
+        #define _OPTIMISED_FUNCTION_3 __attribute__ ((optimize("3")))
     #endif
     #if defined _WINDOWS && (defined __FPU_PRESENT && defined __FPU_PRESENT == 1)
         #define __VFP_FP__                                               // processor has floating point support

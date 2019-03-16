@@ -4764,9 +4764,9 @@ typedef struct st_STM32_FMI
       #define USART_CR3_HDSEL            0x00000008
       #define USART_CR3_NACK             0x00000010
       #define USART_CR3_SCEN             0x00000020
-      #define USART_CR3_DMAR             0x00000040
-      #define USART_CR3_DMAT             0x00000080
-      #define USART_CR3_RTSE             0x00000100
+      #define USART_CR3_DMAR             0x00000040                      // DMA enable receiver
+      #define USART_CR3_DMAT             0x00000080                      // DMA enable transmitter
+      #define USART_CR3_RTSE             0x00000100                      // RTS enable
       #define USART_CR3_CTSE             0x00000200
       #define USART_CR3_CTSIE            0x00000400
     #define USART1_GTPR                  *(volatile unsigned long *)(USART1_BLOCK + 0x18)  // USART1 guard time and prescaler register
@@ -7425,59 +7425,59 @@ typedef struct stVECTOR_TABLE
     //
     #define _CONFIG_PORT_OUTPUT(ref, pins, characteristics) __POWER_UP_GPIO(ref); \
     GPIO##ref##_MODER = ((GPIO##ref##_MODER & \
-     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
-     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
-     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
-     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
-     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
-     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
-     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
-     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
-     (((0x0001 & pins)) | ((0x0002 & pins) << 1) | ((0x0004 & pins) << 2) | ((0x0008 & pins) << 3) | ((0x0010 & pins) << 4) | ((0x0020 & pins) << 5) | \
-      ((0x0040 & pins) << 6) | ((0x0080 & pins) << 7) | ((0x0100 & pins) << 8) | ((0x0200 & pins) << 9) | ((0x0400 & pins) << 10)| ((0x0800 & pins) << 11)| \
-      ((0x1000 & pins) << 12)| ((0x2000 & pins) << 13)| ((0x4000 & pins) << 14)| ((0x8000 & pins) << 15))); \
+    ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+    (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+    (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+    (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+    (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+    (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+    (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+    (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | (unsigned long)((unsigned long long)(0x8000 & pins) << 16)))) | \
+    (((0x0001 & pins)) | ((0x0002 & pins) << 1) | ((0x0004 & pins) << 2) | ((0x0008 & pins) << 3) | ((0x0010 & pins) << 4) | ((0x0020 & pins) << 5) | \
+    ((0x0040 & pins) << 6) | ((0x0080 & pins) << 7) | ((0x0100 & pins) << 8) | ((0x0200 & pins) << 9) | ((0x0400 & pins) << 10)| ((0x0800 & pins) << 11)| \
+    ((0x1000 & pins) << 12)| ((0x2000 & pins) << 13)| ((0x4000 & pins) << 14)| ((0x8000 & pins) << 15))); \
     GPIO##ref##_OSPEEDR = ((GPIO##ref##_OSPEEDR & \
-     ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
-     (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
-     (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
-     (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
-     (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
-     (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
-     (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
-     (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
-     ((characteristics) & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
-     ((characteristics << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
-     ((characteristics << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
-     ((characteristics << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
-     ((characteristics << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
-     ((characteristics << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
-     ((characteristics << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
-     ((characteristics << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
-     ((characteristics << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
-     ((characteristics << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
-     ((characteristics << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
-     ((characteristics << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
-     ((characteristics << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
-     ((characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
-     ((characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+    ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0002 & pins) << 1)  | ((0x0002 & pins) << 2)    | \
+    (((0x0004 & pins) << 2)  | ((0x0004 & pins) << 3)  | ((0x0008 & pins) << 3)  | ((0x0008 & pins) << 4))   | \
+    (((0x0010 & pins) << 4)  | ((0x0010 & pins) << 5)  | ((0x0020 & pins) << 5)  | ((0x0020 & pins) << 6))   | \
+    (((0x0040 & pins) << 6)  | ((0x0040 & pins) << 7)  | ((0x0080 & pins) << 7)  | ((0x0080 & pins) << 8))   | \
+    (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
+    (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
+    (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
+    (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | (unsigned long)((unsigned long long)(0x8000 & pins) << 16))))| \
+    (((characteristics) & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
+    (((characteristics) << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+    (((characteristics) << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+    (((characteristics) << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+    (((characteristics) << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+    (((characteristics) << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+    (((characteristics) << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+    (((characteristics) << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+    (((characteristics) << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+    (((characteristics) << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+    (((characteristics) << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+    (((characteristics) << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+    ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+    ((unsigned long)((unsigned long long)(characteristics) << 26) & (((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))) | \
+    ((unsigned long)((unsigned long long)(characteristics) << 28) & (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15))) | \
+    ((unsigned long)((unsigned long long)(characteristics) << 30) & (((0x8000 & pins) << 15) | (unsigned long)((unsigned long long)(0x8000 & pins) << 16)))));\
     GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
-    (((characteristics >> 2)  & (0x0001 & pins)) | \
-     ((characteristics >> 1)  & (0x0002 & pins)) | \
-     ((characteristics)       & (0x0004 & pins)) | \
-     ((characteristics << 1)  & (0x0008 & pins)) | \
-     ((characteristics << 2)  & (0x0010 & pins)) | \
-     ((characteristics << 3)  & (0x0020 & pins)) | \
-     ((characteristics << 4)  & (0x0040 & pins)) | \
-     ((characteristics << 5)  & (0x0080 & pins)) | \
-     ((characteristics << 6)  & (0x0100 & pins)) | \
-     ((characteristics << 7)  & (0x0200 & pins)) | \
-     ((characteristics << 8)  & (0x0400 & pins)) | \
-     ((characteristics << 9)  & (0x0800 & pins)) | \
-     ((characteristics << 10) & (0x1000 & pins)) | \
-     ((characteristics << 11) & (0x2000 & pins)) | \
-     ((characteristics << 12) & (0x4000 & pins)) | \
-     ((characteristics << 13) & (0x8000 & pins))));   _SIM_PORT_CHANGE
+    ((((characteristics) >> 2)  & (0x0001 & pins)) | \
+    (((characteristics) >> 1)  & (0x0002 & pins)) | \
+    (((characteristics))       & (0x0004 & pins)) | \
+    (((characteristics) << 1)  & (0x0008 & pins)) | \
+    (((characteristics) << 2)  & (0x0010 & pins)) | \
+    (((characteristics) << 3)  & (0x0020 & pins)) | \
+    (((characteristics) << 4)  & (0x0040 & pins)) | \
+    (((characteristics) << 5)  & (0x0080 & pins)) | \
+    (((characteristics) << 6)  & (0x0100 & pins)) | \
+    (((characteristics) << 7)  & (0x0200 & pins)) | \
+    (((characteristics) << 8)  & (0x0400 & pins)) | \
+    (((characteristics) << 9)  & (0x0800 & pins)) | \
+    (((characteristics) << 10) & (0x1000 & pins)) | \
+    (((characteristics) << 11) & (0x2000 & pins)) | \
+    (((characteristics) << 12) & (0x4000 & pins)) | \
+    (((characteristics) << 13) & (0x8000 & pins))));   _SIM_PORT_CHANGE
 
   #define OUTPUT_SLOW                 (GPIO_OSPEEDR_2MHz)                // 2 MHz
   #define OUTPUT_MEDIUM               (GPIO_OSPEEDR_25MHz)               // 25 MHz
@@ -7507,8 +7507,8 @@ typedef struct stVECTOR_TABLE
      ((((0x0008 & pins) << 9) | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12)) & ((characteristics) << 12)) | \
      ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((characteristics) << 16)) | \
      ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((characteristics) << 20)) | \
-     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((characteristics) << 24)) | \
-     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((characteristics) << 28))); \
+     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((characteristics) << 24))) | \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((characteristics) << 28)))); \
      GPIO##ref##_CRH = ((GPIO##ref##_CRH & \
      ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
      (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
@@ -7583,7 +7583,7 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 18) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16))));             _SIM_PORT_CHANGE // {17}
+     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); _SIM_PORT_CHANGE // {17}
 #elif defined _STM32F103X
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  __POWER_UP_GPIO(ref); GPIO##ref##_ODR |= ((characteristics >> 16) & pins); GPIO##ref##_ODR &= ~((~characteristics >> 16) & pins); \
          GPIO##ref##_CRL = ((GPIO##ref##_CRL & \
@@ -7687,23 +7687,23 @@ typedef struct stVECTOR_TABLE
      (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
      (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))| \
      ((characteristics) & ((0x0001 & pins) | ((0x0001 & pins) << 1))) | \
-     ((characteristics << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
-     ((characteristics << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
-     ((characteristics << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
-     ((characteristics << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
-     ((characteristics << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
-     ((characteristics << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
-     ((characteristics << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
-     ((characteristics << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
-     ((characteristics << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
-     ((characteristics << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
-     ((characteristics << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
-     ((characteristics << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
-     ((unsigned long)((unsigned long long)characteristics << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
-     ((unsigned long)((unsigned long long)characteristics << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((unsigned long)((unsigned long long)characteristics << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
-    GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
-    (((characteristics >> 2)  & (0x0001 & pins)) | \
+     (((characteristics) << 2)  & (((0x0002 & pins) << 1) | ((0x0002 & pins) << 2))) | \
+     (((characteristics) << 4)  & (((0x0004 & pins) << 2) | ((0x0004 & pins) << 3))) | \
+     (((characteristics) << 6)  & (((0x0008 & pins) << 3) | ((0x0008 & pins) << 4))) | \
+     (((characteristics) << 8)  & (((0x0010 & pins) << 4) | ((0x0010 & pins) << 5))) | \
+     (((characteristics) << 10) & (((0x0020 & pins) << 5) | ((0x0020 & pins) << 6))) | \
+     (((characteristics) << 12) & (((0x0040 & pins) << 6) | ((0x0040 & pins) << 7))) | \
+     (((characteristics) << 14) & (((0x0080 & pins) << 7) | ((0x0080 & pins) << 8))) | \
+     (((characteristics) << 16) & (((0x0100 & pins) << 8) | ((0x0100 & pins) << 9))) | \
+     (((characteristics) << 18) & (((0x0200 & pins) << 9) | ((0x0200 & pins) << 10)))| \
+     (((characteristics) << 20) & (((0x0400 & pins) << 10)| ((0x0400 & pins) << 11)))| \
+     (((characteristics) << 22) & (((0x0800 & pins) << 11)| ((0x0800 & pins) << 12)))| \
+     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
+     ((unsigned long)((unsigned long long)(characteristics) << 26) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14))) | \
+     ((unsigned long)((unsigned long long)(characteristics) << 28) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15))) | \
+     ((unsigned long)((unsigned long long)(characteristics) << 30) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     GPIO##ref##_OTYPER = ((GPIO##ref##_OTYPER & ~(pins)) | \
+     (((characteristics >> 2)  & (0x0001 & pins)) | \
      ((characteristics >> 1)  & (0x0002 & pins)) | \
      ((characteristics)       & (0x0004 & pins)) | \
      ((characteristics << 1)  & (0x0008 & pins)) | \
@@ -7743,7 +7743,7 @@ typedef struct stVECTOR_TABLE
      ((unsigned long)((unsigned long long)characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
      GPIO##ref##_AFRL = ((GPIO##ref##_AFRL & \
      ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3)    | \
      (((0x0002 & pins) << 3)  | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))   | \
@@ -7752,7 +7752,7 @@ typedef struct stVECTOR_TABLE
      (((0x0010 & pins) << 12) | ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15))  | \
      (((0x0020 & pins) << 15) | ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18))  | \
      (((0x0040 & pins) << 18) | ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21))  | \
-     (((0x0080 & pins) << 21) | ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24))))| \
+     (((0x0080 & pins) << 21) | ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((unsigned long)(0x0080 & pins) << 24))))| \
       (((0x0001 & pins)       | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3))  & (per_func)) | \
      ((((0x0002 & pins) << 3) | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))  & ((per_func) << 4)) | \
      ((((0x0004 & pins) << 6) | ((0x0004 & pins) << 7)  | ((0x0004 & pins) << 8)  | ((0x0004 & pins) << 9))  & ((per_func) << 8)) | \
@@ -7760,7 +7760,7 @@ typedef struct stVECTOR_TABLE
      ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((per_func) << 16)) | \
      ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((per_func) << 20)) | \
      ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((per_func) << 24)) | \
-     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((per_func) << 28))); \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((unsigned long)(0x0080 & pins) << 24)) & (unsigned long)((unsigned long long)(per_func) << 28))); \
      GPIO##ref##_AFRH = ((GPIO##ref##_AFRH & \
      ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
      (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
@@ -7777,7 +7777,7 @@ typedef struct stVECTOR_TABLE
      ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
      ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
      ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
-     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((per_func) << 28))); _SIM_PORT_CHANGE
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE
 
     // Enable power to port, clear the pins' to inputs and set alternative function and output characteristics, then set the specific function type
     //
@@ -7818,7 +7818,7 @@ typedef struct stVECTOR_TABLE
      ((unsigned long)((unsigned long long)characteristics << 28) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((characteristics << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
+     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); \
      GPIO##ref##_AFRL = ((GPIO##ref##_AFRL & \
      ~((0x0001 & pins)        | ((0x0001 & pins) << 1)  | ((0x0001 & pins) << 2)  | ((0x0001 & pins) << 3)    | \
      (((0x0002 & pins) << 3)  | ((0x0002 & pins) << 4)  | ((0x0002 & pins) << 5)  | ((0x0002 & pins) << 6))   | \
@@ -7835,7 +7835,7 @@ typedef struct stVECTOR_TABLE
      ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((per_func) << 16)) | \
      ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((per_func) << 20)) | \
      ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((per_func) << 24)) | \
-     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((per_func) << 28))); \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & (unsigned long)((unsigned long long)(per_func) << 28))); \
      GPIO##ref##_AFRH = ((GPIO##ref##_AFRH & \
      ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
      (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \
@@ -7852,7 +7852,7 @@ typedef struct stVECTOR_TABLE
      ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
      ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
      ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
-     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((per_func) << 28))); _SIM_PORT_CHANGE
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE
 
     // Enable power to port, set the pins' to analog inputs
     //

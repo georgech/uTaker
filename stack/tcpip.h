@@ -11,7 +11,7 @@
     File:      tcpip.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     16.02.2007 Add SMTP LOGIN defines
     17.02.2007 Add TFTP support defines

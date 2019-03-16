@@ -2491,7 +2491,7 @@ static void STM32_LowLevelInit(void)
 {
 #if !defined INTERRUPT_VECTORS_IN_FLASH
     #if !defined _MINIMUM_IRQ_INITIALISATION
-    void(**processor_ints)(void);
+    void (**processor_ints)(void);
     #endif
     VECTOR_TABLE *ptrVect;
 #endif

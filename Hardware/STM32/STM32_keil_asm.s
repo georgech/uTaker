@@ -11,10 +11,10 @@
 ;// File:      STM32_keil_asm.s
 ;// Project:   Single Chip Embedded Internet
 ;// ---------------------------------------------------------------------
-;// Copyright (C) M.J.Butcher Consulting 2004..2018
+;// Copyright (C) M.J.Butcher Consulting 2004..2019
 ;// *********************************************************************
 ;//
-;// This file contains assembler code needed by Keil since it doesn't support in-line assmebler Thumb mode
+;// This file contains assembler code needed by Keil since it doesn't support in-line assembler Thumb mode
 ;//
 ;
 ;  Normally there is no assembler startup code required when using the

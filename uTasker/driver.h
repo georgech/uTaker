@@ -11,7 +11,7 @@
     File:      driver.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     01.03.2007 Added uCompareFile()
     19.05.2007 Add FLASH protection functions fnProtectFile(), fnUnprotectFile()
