@@ -25,6 +25,7 @@
     02.02.2017 Adapt for us tick resolution
     06.09.2017 Add ADC simulation                                        {10}
     26.09.2018 Correct fnMapPortBit()                                    {11}
+    19.03.2019 Add general DMA simulation for peripheral use (in development)
 
 */  
 
@@ -750,13 +751,205 @@ extern unsigned long fnSimInts(char *argv[])
     return ulNewActions;
 }
 
+static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
+{
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    int iReturn = 0;
+    int iInterruptFired = 0;
+    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+    STM32_DMA *ptrDMA_controller;
+    STM32_DMA_STREAM *ptrDMAstream;
+    int iInterruptID;
+    int iStream = (ulDmaTriggerSource & 0x7);
+    if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) != 0) {              // set a pointer to the DMA controller to be used
+        ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
+        if (iStream >= 5) {
+            iInterruptID = (irq_DMA2_Stream5_ID + (iStream - 5));
+        }
+        else {
+            iInterruptID = (irq_DMA2_Stream0_ID + iStream);
+        }
+    }
+    else {
+        ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
+        if (iStream == 7) {
+            iInterruptID = irq_DMA1_Stream7_ID;
+        }
+        else {
+            iInterruptID = (irq_DMA1_Stream0_ID + iStream);
+        }
+    }
+    ptrDMAstream = &ptrDMA_controller->DMA_stream[iStream];              // select the stream registers to be used
+
+    if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_EN) != 0) {                   // if enabled
+        unsigned short usLength = (unsigned short)ptrDMAstream->DMA_SxNDTR; // the transfer length
+        unsigned char *ptrDestination = 0;
+        unsigned char *ptrSource = 0;
+        switch (ptrDMAstream->DMA_SxCR & (DMA_SxCR_DIR_M2P | DMA_SxCR_DIR_M2M | DMA_SxCR_DIR_P2M)) {
+        case DMA_SxCR_DIR_P2M:
+            ptrDestination = (unsigned char *)ptrDMAstream->DMA_SxM0AR;
+            ptrSource = (unsigned char *)ptrDMAstream->DMA_SxPAR;
+            break;
+        case DMA_SxCR_DIR_M2P:
+            ptrSource = (unsigned char *)ptrDMAstream->DMA_SxM0AR;
+            ptrDestination = (unsigned char *)ptrDMAstream->DMA_SxPAR;
+            break;
+        case DMA_SxCR_DIR_M2M:
+            if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) == 0) {
+                _EXCEPTION("Onyl DMA controller 2 can do memory to memory transfers!!");
+            }
+            ptrDestination = (unsigned char *)ptrDMAstream->DMA_SxM0AR;
+            ptrSource = (unsigned char *)ptrDMAstream->DMA_SxPAR;
+            break;
+        }
+        switch (ptrDMAstream->DMA_SxCR & (DMA_SxCR_PSIZE_32 | DMA_SxCR_PSIZE_16)) {
+        case DMA_SxCR_PSIZE_8:
+            if ((ptrDMAstream->DMA_SxCR & (DMA_SxCR_MSIZE_32 | DMA_SxCR_MSIZE_16)) != DMA_SxCR_MSIZE_8) {
+                _EXCEPTION("Source and destination sizes are not equal!!");
+            }
+            if (ptrDMAstream->DMA_SxNDTR != 0) {
+                *ptrDestination = *ptrSource;
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_MINC) != 0) {
+                    ptrDMAstream->DMA_SxM0AR = (ptrDMAstream->DMA_SxM0AR + 1);
+                }
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_PINC) != 0) {
+                    ptrDMAstream->DMA_SxPAR = (ptrDMAstream->DMA_SxPAR + 1);
+                }
+                ptrDMAstream->DMA_SxNDTR--;
+                if (ptrDMAstream->DMA_SxNDTR == 0) {                     // counted down to zero
+                    switch (iStream) {
+                    case 0:
+                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF0);
+                        break;
+                    case 1:
+                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF1);
+                        break;
+                    case 2:
+                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF2);
+                        break;
+                    case 3:
+                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF3);
+                        break;
+                    case 4:
+                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF4);
+                        break;
+                    case 5:
+                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF5);
+                        break;
+                    case 6:
+                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF6);
+                        break;
+                    case 7:
+                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF7);
+                        break;
+                    }
+                    ptrDMAstream->DMA_SxCR &= ~(DMA_SxCR_EN);            // disable operation
+                    if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_TCIE) != 0) { // if transfer interrupt is enabled
+                        iInterruptFired = 1;
+                    }
+                }
+                else {
+                    iReturn = 1;                                         // not completed
+                }
+            }
+            break;
+        case DMA_SxCR_PSIZE_16:
+            if ((ptrDMAstream->DMA_SxCR & (DMA_SxCR_MSIZE_32 | DMA_SxCR_MSIZE_16)) != DMA_SxCR_MSIZE_16) {
+                _EXCEPTION("Source and destination sizes are not equal!!");
+            }
+            while (usLength-- != 0) {
+                *(unsigned short *)ptrDestination = *(unsigned short *)ptrSource;
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_MINC) != 0) {
+                    ptrDestination += sizeof(unsigned short);
+                }
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_PINC) != 0) {
+                    ptrSource += sizeof(unsigned short);
+                }
+            }
+            break;
+        case DMA_SxCR_PSIZE_32:
+            if ((ptrDMAstream->DMA_SxCR & (DMA_SxCR_MSIZE_32 | DMA_SxCR_MSIZE_16)) != DMA_SxCR_MSIZE_32) {
+                _EXCEPTION("Source and destination sizes are not equal!!");
+            }
+            while (usLength-- != 0) {
+                *(unsigned long *)ptrDestination = *(unsigned long *)ptrSource;
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_MINC) != 0) {
+                    ptrDestination += sizeof(unsigned long);
+                }
+                if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_PINC) != 0) {
+                    ptrSource += sizeof(unsigned long);
+                }
+            }
+            break;
+        }
+        if ((iInterruptFired != 0) && (fnGenInt(iInterruptID) != 0)) {   // if the DMA channel interrupt is enabled
+            switch (iInterruptID) {
+            case irq_DMA1_Stream0_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream0();        // call the interrupt handler for DMA controller 1 channel 0
+                break;
+            case irq_DMA1_Stream1_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream1();        // call the interrupt handler for DMA controller 1 channel 1
+                break;
+            case irq_DMA1_Stream2_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream2();        // call the interrupt handler for DMA controller 1 channel 2
+                break;
+            case irq_DMA1_Stream3_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream3();        // call the interrupt handler for DMA controller 1 channel 3
+                break;
+            case irq_DMA1_Stream4_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream4();        // call the interrupt handler for DMA controller 1 channel 4
+                break;
+            case irq_DMA1_Stream5_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream5();        // call the interrupt handler for DMA controller 1 channel 5
+                break;
+            case irq_DMA1_Stream6_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream6();        // call the interrupt handler for DMA controller 1 channel 6
+                break;
+            case irq_DMA1_Stream7_ID:
+                ptrVect->processor_interrupts.irq_DMA1_Stream7();        // call the interrupt handler for DMA controller 1 channel 7
+                break;
+            case irq_DMA2_Stream0_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream0();        // call the interrupt handler for DMA controller 2 channel 0
+                break;
+            case irq_DMA2_Stream1_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream1();        // call the interrupt handler for DMA controller 2 channel 1
+                break;
+            case irq_DMA2_Stream2_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream2();        // call the interrupt handler for DMA controller 2 channel 2
+                break;
+            case irq_DMA2_Stream3_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream3();        // call the interrupt handler for DMA controller 2 channel 3
+                break;
+            case irq_DMA2_Stream4_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream4();        // call the interrupt handler for DMA controller 2 channel 4
+                break;
+            case irq_DMA2_Stream5_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream5();        // call the interrupt handler for DMA controller 2 channel 5
+                break;
+            case irq_DMA2_Stream6_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream6();        // call the interrupt handler for DMA controller 2 channel 6
+                break;
+            case irq_DMA2_Stream7_ID:
+                ptrVect->processor_interrupts.irq_DMA2_Stream7();        // call the interrupt handler for DMA controller 2 channel 7
+                break;
+            }
+        }
+    }
+    return iReturn;
+#else
+    return 0;
+#endif
+}
+
+
 // Process simulated DMA
 //
 extern unsigned long fnSimDMA(char *argv[])
 {
 #if defined DMA_MEMCPY_SET
     if (argv == 0) {                                                     // memory to memory transfer
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX) // {7} memory to memory transfers are only suppoirted on DMA2
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX) // {7} memory to memory transfers are only supported on DMA2
+      //while (fnSimulateDMA(DMA_CONTROLLER_REF_2) > 0) {}
         if ((DMA2_S1CR & DMA_SxCR_EN) != 0) {                            // if enabled
             unsigned short usLength = (unsigned short)DMA2_S1NDTR;       // the transfer length
             unsigned char *ptrDestination = (unsigned char *)DMA2_S1M0AR;
@@ -813,7 +1006,7 @@ extern unsigned long fnSimDMA(char *argv[])
             DMA2_S1CR &= ~(DMA_SxCR_EN);
         }
     #else        
-        if (DMA_CCR_MEMCPY & DMA1_CCR1_EN) {                             // if enabled
+        if ((DMA_CCR_MEMCPY & DMA1_CCR1_EN) != 0) {                      // if enabled
             unsigned short usLength = (unsigned short)DMA_CNDTR_MEMCPY;  // the transfer length
             unsigned char *ptrSource = (unsigned char *)DMA_CMAR_MEMCPY;
             unsigned char *ptrDestination = (unsigned char *)DMA_CPAR_MEMCPY;
@@ -823,7 +1016,7 @@ extern unsigned long fnSimDMA(char *argv[])
 
             while (usLength-- != 0) {
                 *ptrDestination = *ptrSource;
-                if (DMA_CCR_MEMCPY & DMA1_CCR1_PINC) {
+                if ((DMA_CCR_MEMCPY & DMA1_CCR1_PINC) != 0) {
                     ptrDestination++;
                 }
                 if (DMA_CCR_MEMCPY & DMA1_CCR1_MINC) {
@@ -841,7 +1034,51 @@ extern unsigned long fnSimDMA(char *argv[])
         return 0;
     }
 #endif
-    return 0;
+    {
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+        int *ptrCnt;
+#endif
+        int _iDMA = iDMA;
+        unsigned long ulNewActions = 0;
+        unsigned long ulChannel = 0x00000001;
+        unsigned long iChannel = 0;
+        while (_iDMA != 0) {                                             // while DMA operations to be performed
+            if ((_iDMA & ulChannel) != 0) {                              // DMA request on this channel     
+                _iDMA &= ~(ulChannel);
+                switch (ulChannel) {
+                case 0x00000001:                                         // DMA controller 1 - channel 0
+                case 0x00000002:                                         // DMA controller 1 - channel 1
+                case 0x00000004:                                         // DMA controller 1 - channel 2
+                    break;
+                case 0x00000008:                                         // DMA controller 1 - channel 3
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((USART3_CR3 & USART_CR3_DMAT) != 0) {            // if USART3 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART2];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_CHANNEL_4_USART3_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                       // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(2);                        // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx2((unsigned char)USART3_DR);
+                                ulNewActions |= SEND_COM_2;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                }
+            }
+            ulChannel <<= 1;
+        }
+        return ulNewActions;
+    }
 }
 
 // Periodic tick - dummy since the timer is now handled by timer simulator
@@ -2681,7 +2918,7 @@ extern unsigned short fnGetEndpointInfo(int iEndpoint)
 }
 #endif
 
-#if !defined DEVICE_WITHOUT_DMA
+#if 0
 static int fnSimulateDMA(unsigned char ucChannel, int iDMA)
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -2872,7 +3109,7 @@ static void fnSimADC(int iChannel)
             ptrADC->ADC_DR = usADCvalue;                                 // put the result into the regular data register
             if ((ptrADC->ADC_CR2 & ADC_CR2_DMA) != 0) {                  // if in DMA mode
     #if !defined DEVICE_WITHOUT_DMA
-                fnHandleDMA_triggers(0, 2);                              // process the trigger
+                fnSimulateDMA(DMA2_CHANNEL_2_ADC3);                      // process the trigger
     #endif
             }
             else if ((ptrADC->ADC_CR2 & ADC_CR2_EOCS_CONVERSION) != 0) { // if the EOC is set after each individual conversion

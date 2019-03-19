@@ -1648,7 +1648,7 @@ static int iUART_File2 = 0;
 extern void fnLogTx2(unsigned char ucTxByte)
 {
 #if defined LOG_UART2
-	if (!iUART_File2) {
+	if (iUART_File2 == 0) {
     #if _VC80_UPGRADE<0x0600
 	    iUART_File2 = _open("UART2.txt", (_O_TRUNC  | _O_CREAT | _O_WRONLY), _S_IWRITE);
     #else

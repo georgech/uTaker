@@ -158,7 +158,7 @@
 
     //#define TWR_K53N512                                                // K processors Cortex M4 with Ethernet, USB, integrated measurement engine and segment LCD - tower board http://www.utasker.com/kinetis/TWR-K53N512.html
 
-      #define TWR_K60N512                                                // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
+    //#define TWR_K60N512                                                // K processors Cortex M4 with Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K60N512.html
     //#define TWR_K60D100M                                               // tower board http://www.utasker.com/kinetis/TWR-K60D100M.html
     //#define TWR_K60F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K60F120M.html
     //#define K60F150M_50M                                               // board with 150MHz K60 and 50MHz clock
@@ -175,7 +175,7 @@
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -267,6 +267,7 @@
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
     //#define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
+    //#define ST_IDP004                                                  // IO-link master multi-port evaluation board based on L6360
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
   //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
@@ -977,6 +978,7 @@
     #define KINETIS_K66                                                  // extra sub-family type precision
     #if !defined K66FX1M0
         #define USB_HS_INTERFACE                                         // use HS interface rather than FS interface
+      //#define TEST_PIT_SINE_TO_USB                                     // temporary development control
     #endif
   //#define LAN8740_PHY                                                  // configuration with LAN8740 PHY in MII mode (for a test board)
 #elif defined TEENSY_3_6
@@ -1281,6 +1283,13 @@
     #define _STM32F4XX
     #define _STM32F407
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((32 * 1024) * MEM_FACTOR)
+#elif defined ST_IDP004
+    #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
+    #define TARGET_HW            "STM32F205RBTx"                         // Cortex-M3
+    #define _STM32F2XX
+    #define _STM32F205
+    #define OUR_HEAP_SIZE (HEAP_REQUIREMENTS)((24 * 1024) * MEM_FACTOR)  // we have the LAN buffers in HEAP and big RX/TX
+    #define DEVICE_WITHOUT_ETHERNET
 #elif defined ST_MB997A_DISCOVERY
     #define EMBEST_BASE_BOARD                                            // activate when available to use Ethernet and SD card
     #define _ERRATE_REV_A_Z                                              // activate (SDIO) workarounds for revisions A and Z
@@ -1681,7 +1690,7 @@
                         #define SUPPORT_FIFO_QUEUES
                     #endif
                 #else
-                    #define USB_CDC_COUNT             1                  // number of USB-CDC device interfaces
+                    #define USB_CDC_COUNT             2                  // number of USB-CDC device interfaces
                 #endif
                 #if defined USE_MAINTENANCE && (USB_CDC_COUNT > 1)
                     #define MODBUS_USB_INTERFACE_BASE 1                  // MODBUS USB interface follows maintenance

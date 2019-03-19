@@ -54,6 +54,7 @@ PERIPH_DEP = ../../../Hardware/STM32/stm32_UART.h \
 			 ../../../Hardware/STM32/stm32_USB_OTG.h \
 			 ../../../Hardware/STM32/stm32_USB_device.h \
              ../../../Hardware/STM32/stm32_CLOCK.h \
+			 ../../../Hardware/STM32/stm32_DMA.h \
 			 ../../../Hardware/SPI_Memory/spi_flash_interface.h
 
 # SPI FLASH dependencies

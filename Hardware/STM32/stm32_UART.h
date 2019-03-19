@@ -11,13 +11,127 @@
     File:      stm32_UART.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.03.2012 Correct UART fraction calculation                         {1}
     28.02.2017 Add UARTs 7 and 8                                         {2}
     27.09.2018 Respect fraction when calculating the UART baud rate to display in simulator {3}
+    19.03.2019 Add test of manual control of RTS output (RS485 mode) on UART5 (in development)
+    19.03.2019 Add test of TX DMA mode on USART 3 (in development)
 
 */
+
+/* =================================================================== */
+/*                      local variable definitions                     */
+/* =================================================================== */
+
+#if defined SUPPORT_HW_FLOW
+    static unsigned char ucRS485Mode = 0;
+#endif
+
+/* =================================================================== */
+/*                             constants                               */
+/* =================================================================== */
+
+#if defined SERIAL_SUPPORT_DMA                                           // DMA support on transmission
+
+#define DMA_FIRST_SERIAL_TX_CHANNEL          0
+#define DMA_SECOND_SERIAL_TX_CHANNEL         1
+#define DMA_THIRD_SERIAL_TX_CHANNEL          2
+#define DMA_FOURTH_SERIAL_TX_CHANNEL         3
+#define DMA_FIFTH_SERIAL_TX_CHANNEL          4
+#define DMA_SIXTH_SERIAL_TX_CHANNEL          5
+
+#define DMA_FIRST_SERIAL_TX_INT_PRIORITY     0
+#define DMA_SECOND_SERIAL_TX_INT_PRIORITY    1
+#define DMA_THIRD_SERIAL_TX_INT_PRIORITY     2
+#define DMA_FOURTH_SERIAL_TX_INT_PRIORITY    3
+#define DMA_FIFTH_SERIAL_TX_INT_PRIORITY     4
+#define DMA_SIXTH_SERIAL_TX_INT_PRIORITY     5
+
+
+// DMA channel assignments for each UART/LPUART transmitter
+//
+static const unsigned char UART_DMA_TX_CHANNEL[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
+    DMA_FIRST_SERIAL_TX_CHANNEL, 
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    DMA_SECOND_SERIAL_TX_CHANNEL,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    DMA_THIRD_SERIAL_TX_CHANNEL,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    DMA_FOURTH_SERIAL_TX_CHANNEL,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    DMA_FIFTH_SERIAL_TX_CHANNEL,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    DMA_SIXTH_SERIAL_TX_CHANNEL,
+    #endif
+};
+
+// DMA channel interrupt priority assignments for each UART/LPUART transmitter
+//
+static const unsigned char UART_DMA_TX_INT_PRIORITY[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
+    DMA_FIRST_SERIAL_TX_INT_PRIORITY, 
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    DMA_SECOND_SERIAL_TX_INT_PRIORITY,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    DMA_THIRD_SERIAL_TX_INT_PRIORITY,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    DMA_FOURTH_SERIAL_TX_INT_PRIORITY,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    DMA_FIFTH_SERIAL_TX_INT_PRIORITY,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    DMA_SIXTH_SERIAL_TX_INT_PRIORITY,
+    #endif
+};
+
+static __interrupt void _usart_tx_dma_Interrupt(USART_REG *ptrUART, int iUART_reference)
+{
+    fnSciTxByte((QUEUE_HANDLE)iUART_reference);                          // tty block transferred, send next, if available
+}
+
+// Transmission USART/UART/LPUART DMA completion interrupt handlers
+//
+static __interrupt void _usart1_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)USART1_BLOCK, 0);               // handle USART method
+}
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+static __interrupt void _usart2_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)USART2_BLOCK, 1);               // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+static __interrupt void _usart3_tx_dma_Interrupt(void)
+{
+    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF4); // clear the DMA interrupt
+
+    _usart_tx_dma_Interrupt((USART_REG *)USART3_BLOCK, 2);               // handle USART method
+}
+    #endif
+
+static void (*_usart_tx_dma_Interrupts[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE])(void) = {
+    _usart1_tx_dma_Interrupt,
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
+    _usart2_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
+    _usart3_tx_dma_Interrupt,
+    #endif
+};
+#endif
+
+
 
 
 
@@ -136,6 +250,13 @@ static __interrupt void SCI5_Interrupt(void)
     while (((UART5_CR1 & USART_CR1_TXEIE) != 0) && ((UART5_ISR & USART_ISR_TXE) != 0)) { // if an enabled transmission interrupt
         fnSciTxByte(4);                                                  // transmit data empty interrupt
     }
+    #if defined SUPPORT_HW_FLOW && defined UART5_MANUAL_RTS_CONTROL
+    if (((UART5_CR1 & USART_CR1_TCIE) != 0) && ((UART5_ISR & USART_SR_TC) != 0)) { // transmit complete interrupt enabled and fired
+        UART5_CR1 &= ~USART_CR1_TCIE;                                    // disable further interrupts
+        UART5_ISR &= ~(USART_SR_TC);                                     // clear the interrupt flag
+        _SET_RTS_5_LOW();                                                // negate the RTS line in manual mode when a transmission has completed
+    }
+    #endif
 }
 #endif
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
@@ -683,6 +804,15 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         USART_regs->UART_CR1 &= ~(USART_CR1_PCE | USART_CR1_PS);         // disable parity generation so that the 9th bit can be inserted in the parity location
     }
 #endif
+#if defined SERIAL_SUPPORT_DMA
+    if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // DMA transmission mode
+        USART_regs->UART_CR3 |= (USART_CR3_DMAT);                        // enable DMA transmission
+        fnConfigDMA_buffer((DMA1_CHANNEL_4_USART3_TX), 0, 0, (void *)&(USART_regs->UART_DR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _usart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+    }
+    else {
+        USART_regs->UART_CR3 &= ~(USART_CR3_DMAT);                       // disable DMA transmission (use interrupts instead)
+    }
+#endif
 #if defined _WINDOWS
     if ((Channel == 0) || (Channel == 5)) {
     #if defined _STM32L432
@@ -989,6 +1119,14 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
 #if UARTS_AVAILABLE > 1
     case 4:
         UART5_CR1 &= ~(USART_CR1_TXEIE);                                 // disable transmit interrupts
+    #if defined SUPPORT_HW_FLOW && defined UART5_MANUAL_RTS_CONTROL
+        if ((ucRS485Mode & (1 << 4)) != 0) {
+            UART5_CR1 |= USART_CR1_TCIE;                                 // interrupt on completion of the final byte so that the RTS line can be negated
+        #if defined _WINDOWS
+            UART5_ISR |= USART_SR_TC;
+        #endif
+        }
+    #endif
         break;
 #endif
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
@@ -1102,6 +1240,13 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
         if ((UART5_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait
         }
+    #if defined SUPPORT_HW_FLOW && defined UART5_MANUAL_RTS_CONTROL
+        if ((ucRS485Mode & (1 << 4)) != 0) {
+            UART5_CR1 &= ~USART_CR1_TCIE;                                // ensure transmit complete interrupt is disabled
+            UART5_ISR &= ~(USART_SR_TC);                                 // clear the transmit complete interrupt flag
+            _SET_RTS_5_HIGH();                                           // assert the RTS line in manual mode when a new transmission is started
+        }
+    #endif
         UART5_CR1 |= (USART_CR1_TXEIE);                                  // ensure Tx interrupt is enabled
     #if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX        // {18a}
         UART5_TDR = ((ucExtendedWithTx[channel] << 8) | ucTxByte);       // send the byte with extended bits
@@ -1185,9 +1330,23 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     return 0;                                                            // OK - byte sent
 }
 
-#if defined SUPPORT_HW_FLOW
-static unsigned char ucRS485Mode = 0;
+#if !defined DEVICE_WITHOUT_DMA && defined SERIAL_SUPPORT_DMA
+// Start transfer of a block via DMA
+//
+extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart, QUEUE_TRANSFER tx_length)
+{
+    DMA1_S3M0AR = (unsigned long)ptrStart;                               // source is tty output buffer
+    DMA1_S3NDTR = tx_length;                                             // the number of service requests (the number of bytes to be transferred)
+    DMA1_S3CR |= DMA_SxCR_EN;                                            // start operation
+    #if defined _WINDOWS
+    iDMA |= (DMA_CONTROLLER_0 << 3);                                     // activate first DMA request
+    #endif
+    return tx_length;
+}
+#endif
 
+
+#if defined SUPPORT_HW_FLOW
 // This routine presently only supports the control of RS485 (RTS) via port line (not RTS as peripheral)
 //
 static void fnSetRTS(QUEUE_HANDLE channel, int iState)
@@ -1388,7 +1547,13 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
     #endif
                 break;
             case 3:                                                      // UART 4 - no support in UART for peripheral function
+                break;
             case 4:                                                      // UART 5 - no support in UART for peripheral function
+    #if defined UART5_MANUAL_RTS_CONTROL
+                if ((usModifications & SET_RS485_MODE) != 0) {
+                    _CONFIGURE_RTS_5_LOW();                              // configure RTS output and set to '0'
+                }
+    #endif
                 break;
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
             case 5:                                                      // USART 6

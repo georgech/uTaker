@@ -96,7 +96,7 @@ extern int fnPortState(CHAR cPortBit)
     case '4':
         return (_READ_PORT_MASK(F, LED4) != 0);
     }
-    #elif defined STM32_E407
+    #elif defined STM32_E407 || defined ST_IDP004
     switch (cPortBit) {
     case '1':
         return (_READ_PORT_MASK(C, LED1) != 0);
@@ -316,7 +316,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
     default:
         break;
     }
-#elif defined STM32_E407
+#elif defined STM32_E407 || defined ST_IDP004
     switch (cPortBit) {
     case '1':
         if ((GPIOC_MODER & 0x0c000000) == 0x04000000) {                  // PORTC_BIT13 [(1 << (13 * 2)) | (1 << ((13 * 2) + 1))]
@@ -501,7 +501,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(F, LED4, (INPUT_PULL_UP));                // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
             break;
-#elif defined STM32_E407
+#elif defined STM32_E407 || defined ST_IDP004
         case 0:
             _CONFIG_PORT_INPUT(C, LED1, (INPUT_PULL_UP));                // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
@@ -668,7 +668,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(F, (DEMO_LED_4 << PORT_SHIFT), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;      // set present bit as output
             break;
-#elif defined STM32_E407
+#elif defined STM32_E407 || defined ST_IDP004
         case 0:
             _CONFIG_PORT_OUTPUT(C, (LED1), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
@@ -722,7 +722,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 //
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407 && !defined ST_IDP004
         #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO
     POWER_UP_USER_PORTS();                                               // ensure that the used ports are powered up before used
         #endif
@@ -838,7 +838,7 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
 //
 extern int fnUserPortState(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407 && !defined ST_IDP004
     switch (cPortBit) {
     case 'a':
         return ((USER_PORT_1 & USER_PORT_1_BIT) != 0);
@@ -883,7 +883,7 @@ extern int fnUserPortState(CHAR cPortBit)
 //
 static int fnConfigOutputPort(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407 && !defined ST_IDP004
     switch (cPortBit) {
     case 'a':
         CONFIG_USER_PORT_1();
@@ -945,7 +945,7 @@ static int fnConfigOutputPort(CHAR cPortBit)
 //
 extern int fnTogglePortOut(CHAR cPortBit)
 {
-    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407
+    #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407 && !defined ST_IDP004
     switch (cPortBit) {
     case 'a':
         USER_PORT_1 ^= USER_PORT_1_BIT;
@@ -1210,7 +1210,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
         }
         ucBit <<= 1;
     }
-    #elif defined STM32_E407
+    #elif defined STM32_E407 || defined ST_IDP004
 unsigned char ucBit = 0x01;
 while (ucBit != 0) {                                                 // for each possible output
     if (DEMO_USER_PORTS & ucBit) {                                   // if the port bit is to be an output

@@ -119,7 +119,7 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 #elif defined _STM32F7XX                                                 // cortex-M7
     #define ARM_MATH_CM7
     #define STM32_FPU
-#elif defined _STM32F103X
+#elif defined _STM32F103X || defined _STM32F2XX
     #define ARM_MATH_CM3                                                 // cortex-M3 to be used
     #define STM32_FPU
 #else
@@ -3513,10 +3513,10 @@ typedef struct stSTM32_BD
     #define DMA1_S0M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x1c)  // DMA 1 Stream 0 Memory 0 Address Register
     #define DMA1_S0M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x20)  // DMA 1 Stream 0 Memory 1 Address Register
     #define DMA1_S0FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x24)  // DMA 1 Stream 0 FIFO Control Register
-      #define DMA_SxFCR_FTH_1_4          0x00000000                             // FIFI threshold selection - 1/4 full FIFO
-      #define DMA_SxFCR_FTH_1_2          0x00000001                             // FIFI threshold selection - 1/2 full FIFO
-      #define DMA_SxFCR_FTH_3_4          0x00000002                             // FIFI threshold selection - 3/4 full FIFO
-      #define DMA_SxFCR_FTH_FULL         0x00000003                             // FIFI threshold selection - full FIFO
+      #define DMA_SxFCR_FTH_1_4          0x00000000                             // FIFO threshold selection - 1/4 full FIFO
+      #define DMA_SxFCR_FTH_1_2          0x00000001                             // FIFO threshold selection - 1/2 full FIFO
+      #define DMA_SxFCR_FTH_3_4          0x00000002                             // FIFO threshold selection - 3/4 full FIFO
+      #define DMA_SxFCR_FTH_FULL         0x00000003                             // FIFO threshold selection - full FIFO
       #define DMA_SxFCR_DMDIS            0x00000004                             // direct mode disable (set by hardware when M2M mode is used)
       #define DMA_SxFCR_FS_0             0x00000000                             // FIFO status (read-only) between 0 and 1/4 full
       #define DMA_SxFCR_FS_1_4           0x00000008                             // FIFO status (read-only) between 1/4 and 1/2 full
@@ -3731,8 +3731,127 @@ typedef struct stSTM32_BD
     #define DMA2_CMAR7                   *(unsigned long *)(DMA2_BLOCK + 0x84)  // DMA Channel 7 Memory Address Register
 #endif
 
+typedef struct stSTM32_DMA_STREAM
+{
+    volatile unsigned long DMA_SxCR;
+    volatile unsigned long DMA_SxNDTR;
+    unsigned long DMA_SxPAR;
+    unsigned long DMA_SxM0AR;
+    unsigned long DMA_SxM1AR;
+    volatile unsigned long DMA_SxFCR;
+} STM32_DMA_STREAM;
+
+typedef struct stSTM32_DMA
+{
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    volatile unsigned long DMA_LISR;
+    volatile unsigned long DMA_HISR;
+    volatile unsigned long DMA_LIFCR;
+    volatile unsigned long DMA_HIFCR;
+    STM32_DMA_STREAM DMA_stream[8];
+#else
+    volatile unsigned long DMA_ISR;
+    volatile unsigned long DMA_IFCR;
+    unsigned long DMA_CCR1;
+    volatile unsigned long DMA_CNDTR1;
+    unsigned long DMA_CPAR1;
+    unsigned long DMA_CMAR1;
+    unsigned long ulRes0;
+    unsigned long DMA_CCR2;
+    volatile unsigned long DMA_CNDTR2;
+    unsigned long DMA_CPAR2;
+    unsigned long DMA_CMAR2;
+    unsigned long ulRes1;
+    unsigned long DMA_CCR3;
+    volatile unsigned long DMA_CNDTR3;
+    unsigned long DMA_CPAR3;
+    unsigned long DMA_CMAR3;
+    unsigned long ulRes2;
+    unsigned long DMA_CCR4;
+    volatile unsigned long DMA_CNDTR4;
+    unsigned long DMA_CPAR4;
+    unsigned long DMA_CMAR4;
+    unsigned long ulRes3;
+    unsigned long DMA_CCR5;
+    volatile unsigned long DMA_CNDTR5;
+    unsigned long DMA_CPAR5;
+    unsigned long DMA_CMAR5;
+    unsigned long ulRes4;
+    unsigned long DMA_CCR6;
+    volatile unsigned long DMA_CNDTR6;
+    unsigned long DMA_CPAR6;
+    unsigned long DMA_CMAR6;
+    unsigned long ulRes5;
+    unsigned long DMA_CCR7;
+    volatile unsigned long DMA_CNDTR7;
+    unsigned long DMA_CPAR7;
+    unsigned long DMA_CMAR7;
+#endif
+} STM32_DMA;
+
+#define DMA_CONTROLLER_REF_1             0x00
+#define DMA_CONTROLLER_REF_2             0x10
+
+#define DMA_STREAM_0                     0x00
+#define DMA_STREAM_1                     0x01
+#define DMA_STREAM_2                     0x02
+#define DMA_STREAM_3                     0x03
+#define DMA_STREAM_4                     0x04
+#define DMA_STREAM_5                     0x05
+#define DMA_STREAM_6                     0x06
+#define DMA_STREAM_7                     0x07
+
+
 // DMA sources
 //
+#define DMA1_CHANNEL_0_SPI3_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_0)
+#define DMA1_CHANNEL_0_SPI3_RX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_2)
+#define DMA1_CHANNEL_0_SPI2_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_3)
+#define DMA1_CHANNEL_0_SPI2_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_4)
+#define DMA1_CHANNEL_0_SPI3_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_5)
+#define DMA1_CHANNEL_0_SPI3_TX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_7)
+
+#define DMA1_CHANNEL_1_I2C1_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_0)
+#define DMA1_CHANNEL_1_TIM7_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_2)
+#define DMA1_CHANNEL_1_TIM_7UP_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_4)
+#define DMA1_CHANNEL_1_I2C1_RX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_5)
+#define DMA1_CHANNEL_1_I2C1_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_6)
+#define DMA1_CHANNEL_1_I2C1_TX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_7)
+
+#define DMA1_CHANNEL_2_TIM4_CH1          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
+#define DMA1_CHANNEL_2_I2S3_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_2)
+#define DMA1_CHANNEL_2_TIM4_CH2          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_3)
+#define DMA1_CHANNEL_2_I2S2_EXT_TX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_4)
+#define DMA1_CHANNEL_2_I2S3_EXT_TX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_5)
+#define DMA1_CHANNEL_2_TIM4_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_6)
+#define DMA1_CHANNEL_2_TIM4_CH3          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_7)
+
+#define DMA1_CHANNEL_3_I2S3_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_0)
+#define DMA1_CHANNEL_3_TIM_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_1)
+#define DMA1_CHANNEL_3_TIM_CH3           (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM_UP)
+#define DMA1_CHANNEL_3_I2C3_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_2)
+#define DMA1_CHANNEL_3_I2S2_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_3)
+#define DMA1_CHANNEL_3_I2S3_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_4)
+#define DMA1_CHANNEL_3_TIM2_CH1          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_5)
+#define DMA1_CHANNEL_3_TIM2_CH2          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_6)
+#define DMA1_CHANNEL_3_TIM2_CH4          (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM2_CH2)
+#define DMA1_CHANNEL_3_TIM2_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_7)
+#define DMA1_CHANNEL_3_TIM2_CH4_A        (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM2_UP)
+
+#define DMA1_CHANNEL_4_UART5_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_0)
+#define DMA1_CHANNEL_4_USART3_RX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_1)
+#define DMA1_CHANNEL_4_UART4_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_2)
+#define DMA1_CHANNEL_4_USART3_TX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_3)
+#define DMA1_CHANNEL_4_UART4_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_4)
+#define DMA1_CHANNEL_4_USART2_RX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_5)
+#define DMA1_CHANNEL_4_USART2_TX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_6)
+#define DMA1_CHANNEL_4_UART5_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_7)
+
+
+#define DMA2_CHANNEL_2_ADC3              (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
+#define DMA2_CHANNEL_2_ADC3_A            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_1)
+
+
 #define DMA1_CHANNEL_1_ADC1
 #define DMA1_CHANNEL_1_TIM2_CH3
 #define DMA1_CHANNEL_1_TIM4_CH1
@@ -3793,6 +3912,27 @@ typedef struct stSTM32_BD
 #define DMA2_CHANNEL_5_UART4_TX
 #define DMA2_CHANNEL_5_TIM5_CH1
 #define DMA2_CHANNEL_5_TIM8_CH2
+
+
+#define DMA_BYTES                    0x00000001
+#define DMA_HALF_WORDS               0x00000002
+#define DMA_LONG_WORDS               0x00000004
+#define DMA_AUTOREPEAT               0x00000008
+#define DMA_HALF_BUFFER_INTERRUPT    0x00000010
+#define DMA_DIRECTION_INPUT          0x00000000                          // fixed source address to buffer
+#define DMA_DIRECTION_OUTPUT         0x00000020                          // buffer to fixed destination address
+#define DMA_FIXED_ADDRESSES          0x00000040                          // neither source nor distination address is changed during the transfer
+#define DMA_NO_MODULO                0x00000080
+#define DMA_SINGLE_CYCLE             0x00000100
+#define DMA_SW_TRIGGER               0x00000200
+#define DMA_INITIATE_TRANSFER        0x00000400
+#define DMA_WAIT_TERMINATION         0x00000800
+#define DMA_BUFFER_BURST_MODE        0x00001000                          // complete buffer is transfered at each trigger
+#define DMA_DIRECTION_BUFFER_BUFFER  0x00002000                          // buffer to buffer
+#define DMA_SW_TRIGGER_WAIT_TERMINATION (DMA_SW_TRIGGER | DMA_INITIATE_TRANSFER | DMA_WAIT_TERMINATION)
+
+extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
+    #define DMA_ERROR_OCCURRED       -1
 
 // ADC                                                                   {22}
 //

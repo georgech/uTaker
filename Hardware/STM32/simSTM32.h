@@ -206,7 +206,7 @@ typedef struct stSTM32_RCC
 #endif
 } STM32_RCC;
 
-typedef struct stSTM32_DMA
+typedef struct _stSTM32_DMA
 {
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX       // {5}
     unsigned long DMA_LISR;
@@ -299,7 +299,7 @@ typedef struct stSTM32_DMA
     unsigned long DMA_CPAR7;
     unsigned long DMA_CMAR7;
 #endif
-} STM32_DMA;
+} _STM32_DMA;
 
 
 typedef struct stSTM32_ADC                                               // {6}
@@ -1401,7 +1401,7 @@ typedef struct stSTR32M_PERIPH
 {
     STM32_ETH            ETH;
     STM32_RCC            RCC;
-    STM32_DMA            DMAC[2];
+    _STM32_DMA           DMAC[2];
     STM32_ADC            ADC;                                            // {6}
     STM32_SDIO           SDIO;
     STM32_FMI            FMI;

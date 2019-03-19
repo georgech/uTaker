@@ -26,6 +26,7 @@
     09.03.2012 Add support for magic reset Ethernet reception frame      {9}
     01.08.2015 Add WISDOM_STM32F407
     09.08.2015 Add NUCLEO_F401RE
+    19.03.2019 Add ST_IDP004
 
 */
 
@@ -326,6 +327,21 @@
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
     #define SIZE_OF_FLASH       (1024 * 1024)                            // 1M FLASH
+    #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                          // power supply is in the range 2.7V..3.6V
+    #define PCLK1_DIVIDE        4                                        // maximum 30MHz
+    #define PCLK2_DIVIDE        2                                        // maximum 60MHz
+    #define HCLK_DIVIDE         1
+#elif defined ST_IDP004
+    #define CRYSTAL_FREQ        16000000
+  //#define DISABLE_PLL                                                  // run from clock source directly
+  //#define USE_HSI_CLOCK                                                // use internal HSI clock source
+    #define PLL_INPUT_DIV       13                                       // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+    #define PLL_VCO_MUL         195                                      // 192 ..432 where VCO must be 192..432MHz
+    #define PLL_POST_DIVIDE     2                                        // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
+    #define PIN_COUNT           PIN_COUNT_64_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (128 * 1024)                             // 128k SRAM
+    #define SIZE_OF_FLASH       (128 * 1024)                             // 128k FLASH
     #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                          // power supply is in the range 2.7V..3.6V
     #define PCLK1_DIVIDE        4                                        // maximum 30MHz
     #define PCLK2_DIVIDE        2                                        // maximum 60MHz
@@ -714,6 +730,12 @@
 
                 #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)         // each file a multiple of 2k
                 #define FILE_SYSTEM_SIZE (30 * FILE_GRANULARITY)         // 60k reserved for file system
+            #elif defined _STM32F2XX
+                #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + FLASH_GRANULARITY_BOOT) // FLASH location at 16k start
+                #define uFILE_START   (PARAMETER_BLOCK_START)            // uFileSystem not practical in STM32F2XX with 128k but set to overlap with the parameter system in case enabled
+
+                #define FILE_GRANULARITY (FLASH_GRANULARITY_BOOT)        // each file a multiple of 16k
+                #define FILE_SYSTEM_SIZE (2 * FILE_GRANULARITY)          // 32k reserved for file system
             #else
                 #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + 0x10000)// FLASH location at 64k start
                 #define uFILE_START (FLASH_START_ADDRESS + 0x10800)      // FLASH location at 66k start
@@ -788,7 +810,6 @@
     #define SERIAL_PORT_6  16                                            // if we open UART channel 6 we simulate using this com port on the PC
     #define SERIAL_PORT_7  18                                            // if we open UART channel 7 we simulate using this com port on the PC
 
-  //#define SERIAL_SUPPORT_DMA                                           // enable UART DMA support
   //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
 
     #if defined ST_MB913C_DISCOVERY || defined NUCLEO_F429ZI || defined ARDUINO_BLUE_PILL
@@ -803,6 +824,8 @@
       //#define DEMO_UART    3                                           // use UART channel 3 (USART 4 since ST USARTs count from 1)
     #elif (defined ST_MB997A_DISCOVERY && defined EMBEST_BASE_BOARD) || defined STM32_E407 // {6}
         #define DEMO_UART    5                                           // use UART channel 5 (USART 6 since ST USARTs count from 1)
+    #elif defined ST_IDP004
+        #define DEMO_UART    4                                           // use UART channel 4 (USART 5 since ST USARTs count from 1)
     #else
         #define DEMO_UART    1                                           // use UART channel 1 (USART 2 since ST USARTs count from 1)
     #endif
@@ -849,6 +872,12 @@
 
   //#define UART_RX_INPUT_TYPE  INPUT_PULL_UP                            // {8} enable pull-ups on UART Rx inputs
   //#define UART_CTS_INPUT_TYPE INPUT_PULL_UP                            // {8} enable pull-ups on UART CTS inputs
+
+    #if !defined DEVICE_WITHOUT_DMA
+      //#define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
+        //#define SERIAL_SUPPORT_DMA_RX                                  // enable also DMA on receiver (used less that transmit DMA)
+        //#define SERIAL_SUPPORT_DMA_RX_FREERUN                          // support free-running reception mode
+    #endif
 #else
     #define TX_BUFFER_SIZE   (256)
     #define RX_BUFFER_SIZE   (256)
@@ -1575,6 +1604,37 @@
     #define GPIO_DEFAULT_INPUT_A       0xfffe                            // initial state of WKUP_BUTTON input (not presed)
 
     #define KEYPAD "KeyPads/STM32-E407.bmp"
+#elif defined ST_IDP004                                                  // F2
+    #define LED1                       PORTC_BIT0
+    #define LED2                       PORTC_BIT1
+    #define LED3                       PORTC_BIT2
+    #define LED4                       PORTC_BIT3
+
+    #define PORT_SHIFT                 0
+    #define DEMO_LED_1                 (LED1 >> PORT_SHIFT)
+    #define DEMO_LED_2                 (LED2 >> PORT_SHIFT)
+    #define DEMO_LED_3                 (LED3 >> PORT_SHIFT)
+    #define DEMO_LED_4                 (LED4 >> PORT_SHIFT)
+    #define DEMO_USER_PORTS            (DEMO_LED_1 | DEMO_LED_2 | DEMO_LED_3 | DEMO_LED_4)
+
+    #define BLINK_LED                  PORTB_BIT0                        // green LED
+
+    #define ENABLE_LED_PORT()
+
+    #define CONFIG_TEST_OUTPUT()
+
+    #define INIT_WATCHDOG_LED()        _CONFIG_PORT_OUTPUT(B, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
+    #define TOGGLE_WATCHDOG_LED()      _TOGGLE_PORT(B, BLINK_LED)        // blink the LED, if set as output
+
+    #define INIT_WATCHDOG_DISABLE()
+    #define WATCHDOG_DISABLE()  1
+
+    #define UART5_MANUAL_RTS_CONTROL
+        #define _CONFIGURE_RTS_5_LOW() _CONFIG_PORT_OUTPUT(B, PORTB_BIT9, (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // control as port instead of using automatic RTS line
+        #define _SET_RTS_5_HIGH()      _SETBITS(B, PORTB_BIT9)
+        #define _SET_RTS_5_LOW()       _CLEARBITS(B, PORTB_BIT9)
+
+    #define KEYPAD "KeyPads/STEVAL-IDP004V1.bmp"
 #elif defined STM32_P207 || defined STM32F407ZG_SK || defined STM32_E407 // F2/F4
     #if defined STM32F407ZG_SK
         #define USERS_BUTTON           PORTG_BIT6

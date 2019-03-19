@@ -4619,6 +4619,7 @@ Build_Luminary.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis - SSL plus GNU build|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_CLOCK.h" />
+    <ClInclude Include="..\..\..\Hardware\STM32\stm32_DMA.h" />
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_ENET.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker Kinetis|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='uTasker i.MX|Win32'">true</ExcludedFromBuild>
