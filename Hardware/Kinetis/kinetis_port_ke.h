@@ -13,7 +13,7 @@
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2018
     *********************************************************************
-    Supports KEA08, KEA64, KEA128, KE02, KE04, KE06 and KE15
+    Supports KEA08, KEA64, KEA128, KE02, KE04, KE06, KE15 and KE18F (port A complete)
 
 */
 
@@ -1182,6 +1182,27 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
         // ALT0            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7
+    #if defined KINETIS_KE18
+        {  "ADC0_SE0/ACMP0_IN0","PTA0",    "FTM2_CH1",       "LPI2C0_SCLS","FXIO_D2",     "FTM2_QD_PHA",  "LPUART0_CTS",       "TRGMUX_OUT3" }, // PTA0
+        {  "ADC0_SE1/ACMP0_IN1","PTA1",    "FTM1_CH1",       "LPI2C0_SDAS","FXIO_D3",     "FTM1_QD_PHA",  "LPUART0_RTS",       "TRGMUX_OUT0" }, // PTA1
+        {  "ADC1_SE0",     "PTA2",         "FTM3_CH0",       "LPI2C0_SDA", "EWM_OUT_b",   "-",            "LPUART0_RX",        "-"           }, // PTA2
+        {  "ADC1_SE1",     "PTA3",         "FTM3_CH1",       "LPI2C0_SCL", "EWM_IN",      "-",            "LPUART0_TX",        "-"           }, // PTA2
+        {  "-",            "PTA4",         "-",              "-",          "ACMP0_OUT",   "EWM_OUT_b",    "-",                 "JTAG_TMS/SWD_DIO" }, // PTA4 (SWD_DIO default)
+        {  "-",            "PTA5",         "-",              "TCLK1",      "-",           "-",            "JTAG_TRST_b",       "RESET_b"     }, // PTA5 (RESET default)
+        {  "ADC0_SE2/ACMP1_IN0","PTA6",    "FTM0_FLT1",      "LPSPI1_PCS1","-" ,          "-",            "LPUART1_CTS",       "-"           }, // PTA6
+        {  "ADC0_SE3/ACMP1_IN1","PTA7",    "FTM0_FLT2",      "-",          "RTC_CLKIN",   "-",            "LPUART1_RTS",       "-"           }, // PTA7
+        {  "-",            "PTA8",         "-",              "-",          "FXIO_D6",     "FTM3_FLT3",    "-",                 "-"           }, // PTA8
+        {  "-",            "PTA9",         "-",              "-",          "FXIO_D7",     "FTM3_FLT2",    "FTM1_FLT3",         "-"           }, // PTA9
+        {  "-",            "PTA10",        "FTM1_CH4",       "LPUART0_TX", "FXIO_D0",     "-",            "-",                 "JTAG_TDO/noetm_Trace_SWO" }, // PTA10
+        {  "-",            "PTA11",        "FTM1_CH5",       "LPUART0_RX", "FXIO_D1",     "-",            "-",                 "-"           }, // PTA11
+        {  "ADC2_SE5",     "PTA12",        "FTM1_CH6",       "CAN1_RX",    "LPI2C1_SDAS","-",             "-",                 "-"           }, // PTA12
+        {  "ADC2_SE4",     "PTA13",        "FTM1_CH7",       "CAN1_TX",    "LPI2C1_SCLS", "-",            "-",                 "-"           }, // PTA13
+        {  "-",            "PTA14",        "FTM0_FLT0",      "FTM1_FLT0",  "EMW_IN",      "-",            "FTM1_FLT0",         "BUSOUT"      }, // PTA14
+        {  "ADC1_SE12",    "PTA15",        "FTM1_CH2",       "LPSPI0_PCS3","-",           "-",            "-",                 "-"           }, // PTA15
+        {  "ADC1_SE13",    "PTA16",        "FTM1_CH3",       "LPSPI0_PCS2","-",           "-",            "-",                 "-"           }, // PTA16
+        {  "-",            "PTA17",        "FTM0_CH6",       "FTM3_FLT0",  "EWM_OUT_b",   "-",            "-",                 "-"           }, // PTA17
+
+    #else
         {  "ADC0_SE0/ACMP0_IN0/TSI0_CH17","PTA0","FTM2_CH1", "LPI2C0_SCLS","FXIO_D2",     "FTM2_QD_PHA",  "LPUART0_CTS",       "TRGMUX_OUT3" }, // PTA0
         {  "ADC0_SE1/ACMP0_IN1/TSI0_CH18","PTA1","FTM1_CH1", "LPI2C0_SDAS","FXIO_D3",     "FTM1_QD_PHA",  "LPUART0_RTS",       "TRGMUX_OUT0" }, // PTA1
         {  "ADC1_SE0",     "PTA2",         "-",              "LPI2C0_SDA", "EWM_OUT_b",   "-",            "LPUART0_RX",        "-"           }, // PTA2
@@ -1200,6 +1221,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "PTA15",        "FTM1_CH2",       "LPSPI0_PCS3","-",           "-",            "-",                 "-"           }, // PTA15
         {  "-",            "PTA16",        "FTM1_CH3",       "LPSPI0_PCS2","-",           "-",            "-",                 "-"           }, // PTA16
         {  "-",            "PTA17",        "FTM0_CH6",       "-",          "EWM_OUT_b",   "-",            "-",                 "-"           }, // PTA17
+    #endif
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTA20
@@ -1250,10 +1272,18 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB31
     },
     {
+    #if defined KINETIS_KE18
+        {  "ADC0_SE8/ACMP1_IN4","PTC0",    "FTM0_CH0",       "-",          "-",           "-",            "FTM1_CH6",          "-"           }, // PTC0
+        {  "ADC0_SE9/ACMP1_IN3","PTC1",    "FTM0_CH1",       "-",          "-",           "-",            "FTM1_CH7",          "-"           }, // PTC1
+        {  "ADC0_SE10/ACMP0_IN5/XTAL32",   "PTC2","FTM0_CH2","CAN0_RX",    "-",           "-",            "-",                 "-"           }, // PTC2
+        {  "ADC0_SE11/ACMP0_IN4/EXTAL32",  "PTC3","FTM0_CH3","CAN0_TX",    "-",           "-",            "-",                 "-"           }, // PTC3
+
+    #else
         {  "ADC0_SE8/ACMP1_IN4/TSI0_CH22","PTC0","FTM0_CH0", "-",          "-",           "-",            "-",                 "-"           }, // PTC0
         {  "ADC0_SE9/ACMP1_IN3/TSI0_CH23","PTC1","FTM0_CH1", "-",          "-",           "-",            "-",                 "-"           }, // PTC1
         {  "ADC0_SE10/ACMP0_IN5/XTAL32","PTC2","FTM0_CH2",   "-",          "-",           "-",            "-",                 "-"           }, // PTC2
         {  "ADC0_SE11/ACMP0_IN4/EXTAL32","PTC3","FTM0_CH3",  "-",          "-",           "-",            "-",                 "-"           }, // PTC3
+    #endif
         {  "ACMP0_IN2",    "PTC4",         "FTM1_CH0",       "RTC_CLKOUT", "-",           "EWM_IN",       "FTM1_QD_PHB",       "SWD_CLK"     }, // PTC4 (SWD_CLK default)
         {  "TSI0_CH12",    "PTC5",         "FTM2_CH0",       "RTC_CLKOUT", "LPI2C1_HREQ", "-",            "FTM2_QD_PHB",       "-"           }, // PTC5
         {  "ADC1_SE4/TSI0_CH15","PTC6",    "LPUART1_RX",     "-",          "-",           "-",            "-",                 "-"           }, // PTC6
@@ -1351,7 +1381,6 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE30
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTE31
     },
-
 };
 #endif
 

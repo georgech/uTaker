@@ -1687,7 +1687,7 @@ typedef struct stRESET_VECTOR
     #define NUMBER_OF_CAN_INTERFACES 1
 #elif defined KINETIS_K24
     #define NUMBER_OF_CAN_INTERFACES 0
-#elif (KINETIS_MAX_SPEED >= 100000000) && (defined KINETIS_K10 || defined KINETIS_K20 || defined KINETIS_K26 || defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K60 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K70)
+#elif (KINETIS_MAX_SPEED >= 100000000) && (defined KINETIS_K10 || defined KINETIS_K20 || defined KINETIS_K26 || defined KINETIS_K30 || defined KINETIS_K40 || defined KINETIS_K60 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K70 || defined KINETIS_KE18)
     #define NUMBER_OF_CAN_INTERFACES 2
 #else
     #define NUMBER_OF_CAN_INTERFACES 0
@@ -3105,16 +3105,16 @@ typedef struct stVECTOR_TABLE
     #define irq_ADC1_ID                   73                             // 73
     #define irq_ADC2_ID                   74                             // 74
     #define irq_PDB2_ID                   77                             // 77
-    #define irq_CAN0_BUS_OFF_ID           78                             // 78 (or transmit or receive warning s)
+    #define irq_CAN0_BUS_OFF_ID           78                             // 78 (or transmit or receive warnings)
     #define irq_CAN0_ERROR_ID             79                             // 79
     #define irq_CAN0_WAKE_UP_ID           80                             // 80
-    #define irq_CAN0_MESSAGE_ID           81                             // 81
+    #define irq_CAN0_MESSAGE_ID           81                             // 81 (OR'ed message buffer)
     #define irq_CAN0_RESERVED_ID          82                             // 82
     #define irq_CAN0_EXTENSION_32_47_ID   83                             // 83
     #define irq_CAN0_EXTENSION_48_63_ID   84                             // 84
-    #define irq_CAN1_BUS_OFF_ID           85                             // 85 (or transmit or receive warning s)
+    #define irq_CAN1_BUS_OFF_ID           85                             // 85 (or transmit or receive warnings)
     #define irq_CAN1_ERROR_ID             86                             // 86
-    #define irq_CAN1_WAKE_UP_ID           87                             // 87
+    #define irq_CAN1_WAKE_UP_ID           87                             // 87 (OR'ed message buffer)
     #define irq_CAN1_MESSAGE_ID           88                             // 88
     #define irq_CAN1_RESERVED_ID          89                             // 89
     #define irq_CAN1_EXTENSION_32_47_ID   90                             // 90
@@ -4097,7 +4097,7 @@ typedef struct stVECTOR_TABLE
         #define DSPI0_BLOCK                    ((unsigned char *)(&kinetis.DSPI[0])) // DSPI0
         #define DSPI1_BLOCK                    ((unsigned char *)(&kinetis.DSPI[1])) // DSPI1
     #endif
-    #if defined KINETIS_KL || defined KINETIS_KE
+    #if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE18)
         #if KBIS_AVAILABLE > 0
             #define KBI0_BLOCK                 ((unsigned char *)(&kinetis.KBI[0])) // Keyboard interrupt 0
         #endif
@@ -4448,7 +4448,7 @@ typedef struct stVECTOR_TABLE
     #endif
     #if !defined KINETIS_KL
         #if defined MSCAN_CAN_INTERFACE
-            #define MSCAN_BASE_ADD             0x40024000                // MSCAN modul
+            #define MSCAN_BASE_ADD             0x40024000                // MSCAN module
         #else
             #define CAN0_BASE_ADD              0x40024000                // FLEXCAN module 0
         #endif
@@ -4775,7 +4775,7 @@ typedef struct stVECTOR_TABLE
         #endif
     #endif
     #if NUMBER_OF_CAN_INTERFACES > 1
-        #if defined KINETIS_KV50
+        #if defined KINETIS_KV50 || defined KINETIS_KE18
             #define CAN1_BASE_ADD              0x40025000                // FLEXCAN module 1
         #else
             #define CAN1_BASE_ADD              0x400a4000                // FLEXCAN module 1
@@ -13664,6 +13664,15 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PH_2_CAN0_RX                 PORT_MUX_ALT5
     #define PC_7_CAN0_TX                 PORT_MUX_ALT5
     #define PC_6_CAN0_RX                 PORT_MUX_ALT5
+#elif defined KINETIS_KE18
+    #define PE_5_CAN0_TX                 PORT_MUX_ALT5
+    #define PE_6_CAN0_RX                 PORT_MUX_ALT5
+    #define PC_3_CAN0_TX                 PORT_MUX_ALT3
+    #define PC_2_CAN0_RX                 PORT_MUX_ALT3
+    #define PA_13_CAN1_TX                PORT_MUX_ALT3
+    #define PA_12_CAN1_RX                PORT_MUX_ALT3
+    #define PC_7_CAN1_TX                 PORT_MUX_ALT3
+    #define PC_6_CAN1_RX                 PORT_MUX_ALT3
 #else
     #define PA_12_CAN0_TX                PORT_MUX_ALT2                   // FlexCAN
     #define PA_13_CAN0_RX                PORT_MUX_ALT2
@@ -14592,7 +14601,9 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PCC_CMP1                 *(volatile unsigned long *)(PCC_BLOCK + 0x1d0)
     #elif defined KINETIS_KE18
         #define PCC_CAN0                 *(volatile unsigned long *)(PCC_BLOCK + 0x090)
+        #define PCC_FLEXCAN0             PCC_CAN0
         #define PCC_CAN1                 *(volatile unsigned long *)(PCC_BLOCK + 0x094)
+        #define PCC_FLEXCAN1             PCC_CAN1
         #define PCC_FLEXTMR3             *(volatile unsigned long *)(PCC_BLOCK + 0x098)
         #define PCC_ADC1                 *(volatile unsigned long *)(PCC_BLOCK + 0x09c)
         #define PCC_LPSPI0               *(volatile unsigned long *)(PCC_BLOCK + 0x0b0)
@@ -15056,6 +15067,34 @@ typedef struct stKINETIS_LPTMR_CTL
         #define SCG_SPPLCCSR             *(volatile unsigned long *)(SCG_BLOCK + 0x600) // system PPL control status register
         #define SCG_SPPLCDIV             *(unsigned long *)(SCG_BLOCK + 0x604) // system PLL divide register
         #define SCG_SPPLCFG              *(unsigned long *)(SCG_BLOCK + 0x608) // system PLL configuration register
+    #endif
+    #if !defined SOSCDIV2_DIVIDE
+        #define SOSCDIV2_FREQUENCY       0                               // disabled SOSCDIV2
+    #else
+        #if SOSCDIV2_DIVIDE == 1
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_1
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK)
+        #elif SOSCDIV2_DIVIDE == 2
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_2
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/2)
+        #elif SOSCDIV2_DIVIDE == 4
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_4
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/4)
+        #elif SOSCDIV2_DIVIDE == 8
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_8
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/8)
+        #elif SOSCDIV2_DIVIDE == 16
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_16
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/16)
+        #elif SOSCDIV2_DIVIDE == 32
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_32
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/32)
+        #elif SOSCDIV2_DIVIDE == 64
+            #define SOSCDIV2_VALUE       SCG_SOSCDIV_SOSCDIV2_64
+            #define SOSCDIV2_FREQUENCY   (_EXTERNAL_CLOCK/64)
+        #else
+            #error "Invalid SOCCDIV2 frequency - it must be equal to SOS divided by 1,2,4,8,16,32 or 64"
+        #endif
     #endif
 #else
     // Multi-purpose Clock Generator
@@ -15755,17 +15794,17 @@ typedef struct stKINETIS_LPI2C_CONTROL
   #define PHASE_BUF_SEG2_LEN6 (5 << 16)
   #define PHASE_BUF_SEG2_LEN7 (6 << 16)
   #define PHASE_BUF_SEG2_LEN8 (7 << 16)
-  #define BOFFMSK            0x00008000                                  // Bus off interrupt mask
-  #define ERRMSK             0x00004000                                  // Error interrupt mask
-  #define CLK_SRC_PERIPH_CLK 0x00002000                                  // Clock source is the peripheral clock
-  #define LPB                0x00001000                                  // Loop Back Mode
-  #define TWRNMSK            0x00000800                                  // Tx warning Interrupt mask
-  #define RWRNMSK            0x00000400                                  // Rx warning Interrupt mask
-  #define SMP                0x00000080                                  // Sampling Mode - three samples decide rx value
-  #define BOFFREC            0x00000040                                  // Bus off recovery mode disable
-  #define TSYN               0x00000020                                  // Timer synchronisation
-  #define LBUF               0x00000010                                  // Lowest number buffer transmitted first
-  #define LOM                0x00000008                                  // Listen-only mode
+  #define BOFFMSK            0x00008000                                  // bus off interrupt mask
+  #define ERRMSK             0x00004000                                  // error interrupt mask
+  #define CLK_SRC_PERIPH_CLK 0x00002000                                  // clock source is the peripheral clock
+  #define LPB                0x00001000                                  // loop Back Mode
+  #define TWRNMSK            0x00000800                                  // tx warning Interrupt mask
+  #define RWRNMSK            0x00000400                                  // rx warning Interrupt mask
+  #define SMP                0x00000080                                  // sampling Mode - three samples decide rx value
+  #define BOFFREC            0x00000040                                  // bus off recovery mode disable
+  #define TSYN               0x00000020                                  // timer synchronisation
+  #define LBUF               0x00000010                                  // lowest number buffer transmitted first
+  #define LOM                0x00000008                                  // listen-only mode
   #define PROPSEG_BIT_TIME1  (0)
   #define PROPSEG_BIT_TIME2  (1)
   #define PROPSEG_BIT_TIME3  (2)
@@ -19713,8 +19752,11 @@ extern void fnSimPers(void);
 // Macro to clear flags by writing '1' to the bit
 //
 #if defined _WINDOWS                                                     // clear when simulating
+    extern int fnResetNVICInt(int iIrqID);
     #define WRITE_ONE_TO_CLEAR(reg, flag)    reg &= ~(flag)
+    #define WRITE_ONE_TO_CLEAR_INTERRUPT(reg, flag, iIrqID)    reg = (flag); fnResetNVICInt(iIrqID)
 #else
+    #define WRITE_ONE_TO_CLEAR_INTERRUPT(reg, flag, iIrqID)    reg = (flag)
     #define WRITE_ONE_TO_CLEAR(reg, flag)    reg = (flag)
 #endif
 #if defined _WINDOWS                                                     // clear when simulating

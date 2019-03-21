@@ -156,7 +156,7 @@
         #define FLASH_CLOCK_DIVIDE   5                                   // 120/5 to give 24MHz
     #endif
     #if defined RUN_FROM_HIRC_PLL || defined RUN_FROM_HIRC || defined RUN_FROM_HIRC_FLL
-        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - this shoudl always be used if not external !!
+        #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode) - this should always be used if not external !!
       //#define USB_CLOCK_GENERATED_INTERNALLY                           // use USB clock from internal source rather than external pin - 120MHz is suitable from PLL
     #else
         #define USB_CRYSTAL_LESS                                         // use 48MHz IRC as USB source (according to Freescale AN4905 - only possible in device mode)
@@ -726,11 +726,10 @@
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
     #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
     #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
-        #define FRDIVIDER        256                                     // divide the crsytal input by 256 to obtain 31.25kHz
+        #define FRDIVIDER        256                                     // divide the crystal input by 256 to obtain 31.25kHz
     #endif
     #define FLL_FACTOR           1280                                    // specify the FLL factor to use (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
-
-#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
+#elif defined FRDM_KE15Z
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
   //#define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
@@ -743,6 +742,19 @@
       //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
     #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
     #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
+#elif defined TWR_KE18F || defined HVP_KE18F
+    #define CRYSTAL_FREQUENCY    8000000                                 // 8MHz crystal
+    #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
+    #define RUN_FROM_HIRC                                                // clock from fast internal RC clock
+      //#define RUN_FROM_HIRC_48MHz                                      // fast IRC trimmed to 48MHz
+      //#define RUN_FROM_HIRC_52MHz                                      // fast IRC trimmed to 52MHz
+      //#define RUN_FROM_HIRC_56MHz                                      // fast IRC trimmed to 56MHz
+      //#define RUN_FROM_HIRC_60MHz                                      // fast IRC trimmed to 60MHz
+  //#define RUN_FROM_LIRC                                                // clock from internal 8MHz RC clock
+      //#define RUN_FROM_LIRC_2M                                         // clock from internal 2MHz RC clock
+    #define SYSTEM_CLOCK_DIVIDE  1                                       // system clock divider value (1..16)
+    #define BUS_CLOCK_DIVIDE     2                                       // bus and flash clock divider value (1..16)
+    #define SOSCDIV2_DIVIDE      1                                       // 1, 2, 4, 8, 16, 32 or 64 is possible (0 or not defined is disabled)
 #elif defined FRDM_KE02Z                                                 // {25}
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 31.25kHz IRC is multiplied by FLL factor of 1024 to obtain 32MHz nominal frequency
     #if !defined RUN_FROM_DEFAULT_CLOCK
@@ -1268,13 +1280,19 @@
     #define SIZE_OF_FLASH       (128 * 1024)                             // 128k Flash
   //#define SIZE_OF_RAM         (8 * 1024)
     #define SIZE_OF_RAM         (16 * 1024)                              // 16k SRAM
-#elif defined FRDM_KE15Z || defined TWR_KE18F || defined HVP_KE18F
+#elif defined FRDM_KE15Z
   //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
     #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
   //#define SIZE_OF_FLASH       (128 * 1024)
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k Flash
   //#define SIZE_OF_RAM         (16 * 1024)
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
+#elif defined TWR_KE18F || defined HVP_KE18F
+  //#define PIN_COUNT           PIN_COUNT_64_PIN                         // 64 pin LQFP
+    #define PIN_COUNT           PIN_COUNT_100_PIN                        // 100 pin LQFP
+    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k Flash
+  //#define SIZE_OF_FLASH       (256 * 1024)
+    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
 #elif defined FRDM_KE04Z
   //#define PIN_COUNT           PIN_COUNT_16_PIN                         // 16 pin TSSOP
   //#define PIN_COUNT           PIN_COUNT_20_PIN                         // 20 pin SOIC
@@ -1623,7 +1641,7 @@
 #endif
 
 #define SUPPORT_TIMER                                                    // support hardware timer interrupt configuration (FlexTimer or TPM)
-    #define SUPPORT_CAPTURE                                              // support capture mode of operation
+  //#define SUPPORT_CAPTURE                                              // support capture mode of operation
 
 #if defined KINETIS_KL || defined KINETIS_K65 || defined KINETIS_K66
     #if defined KINETIS_KL82
@@ -3615,6 +3633,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define LPI2C2_PCC_SOURCE      PCC_PCS_SCGFIRCLK
 
     #define FLEXIO_PCC_SOURCE      PCC_PCS_SCGFIRCLK
+
+    #define FLEXCAN0_PCC_SOURCE    PCC_PCS_SCGFIRCLK
+    #define FLEXCAN1_PCC_SOURCE    PCC_PCS_SCGFIRCLK
 #endif
 
 // Ports
@@ -4124,7 +4145,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DEMO_LED_2         (LED_RED)
     #define DEMO_LED_3         (LED_BLUE)
     #if defined FRDM_K66F
-        #define DEMO_LED_4     0                                         // don't distrupb ethernet interface
+        #define DEMO_LED_4     0                                         // don't disturb ethernet interface
     #else
         #define DEMO_LED_4     (PORTA_BIT12)
     #endif

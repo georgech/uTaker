@@ -11,7 +11,7 @@
     File:      i2c_drv.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     21.05.2007 Read modified to return zero when no receive messages are ready, even when there are characters available {1}
     13.08.2007 Removed GNU warning                                       {2}
@@ -195,7 +195,7 @@ static QUEUE_TRANSFER entry_I2C(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
 
     case CALL_DRIVER:                                                    // {6}
         if ((Counter & MODIFY_WAKEUP) != 0) {
-            if ((CAST_POINTER_ARITHMETIC)ptBuffer & MODIFY_TX) {         // tx
+            if (((CAST_POINTER_ARITHMETIC)ptBuffer & MODIFY_TX) != 0) {  // tx
                 ptI2CQue = (struct stI2CQue *)(que_ids[DriverID].output_buffer_control); // set to output control block
             }
             else {                                                       // rx

@@ -3811,7 +3811,7 @@ typedef struct stKINETIS_PERIPH
 #else
     KINETIS_SPI        SPI[SPI_AVAILABLE];
 #endif
-#if defined KINETIS_KL || defined KINETIS_KE
+#if defined KINETIS_KL || (defined KINETIS_KE && !defined KINETIS_KE18)
     #if defined KINETIS_KE
     KINETIS_KBI        KBI[2];                                           // {22}
         #if defined MSCAN_CAN_INTERFACE

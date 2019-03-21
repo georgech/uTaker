@@ -111,17 +111,14 @@
     <Filter Include="WinSim\SIMiMX">
       <UniqueIdentifier>{04f5b6f8-e8aa-4f97-86be-87fe03722bdb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="WinSim\SIMiMX\SIMKinetis">
-      <UniqueIdentifier>{b656e3d0-d378-472e-9a0f-b11a778266a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="WinSim\SIMkinetis">
-      <UniqueIdentifier>{90733953-b20d-4628-9d52-f36384c35403}</UniqueIdentifier>
-    </Filter>
     <Filter Include="uTasker\uCANopen">
       <UniqueIdentifier>{555c5ba6-cb34-40fb-8532-fdc0da65992d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Hardware\SPI_Memory">
       <UniqueIdentifier>{5ca32d1d-912b-4e12-b7f8-71b3812e252e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WinSim\SIMKinetis">
+      <UniqueIdentifier>{b656e3d0-d378-472e-9a0f-b11a778266a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -282,7 +279,7 @@
       <Filter>Hardware\Kinetis</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetis_ports.cpp">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\stack\zero_config.c">
       <Filter>TCP/IP</Filter>
@@ -312,7 +309,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Hardware\Kinetis\kinetisSim.c">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\uTasker\i2c_drv.c">
       <Filter>uTasker</Filter>
@@ -710,43 +707,43 @@
       <Filter>WinSim</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\simkinetis.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\uTasker\utFAT\NAND_driver.h">
       <Filter>uTasker\utFAT</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k10.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k20.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k30.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k40.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k50.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k51.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k52.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k53.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k70.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k61.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\WinSim\Komodo\komodo.h">
       <Filter>WinSim</Filter>
@@ -755,10 +752,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_ke.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_kl.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\WinSim\LCD\lcd.h">
       <Filter>WinSim</Filter>
@@ -785,7 +782,7 @@
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\hardware\kinetis\kinetis_port_kv.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_UART.h">
       <Filter>Hardware\Kinetis</Filter>
@@ -848,7 +845,7 @@
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k00.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_USB_HS_Device.h">
       <Filter>Hardware\Kinetis</Filter>
@@ -869,13 +866,13 @@
       <Filter>Hardware\Kinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_K26_K65_K66.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_k80.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_kw.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\i2c_tests.h">
       <Filter>Header Files</Filter>
@@ -1436,7 +1433,7 @@
       <Filter>Hardware\Coldfire</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_km.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Coldfire\SimM5223X.h">
       <Filter>WinSim\SIMcoldfire</Filter>
@@ -1697,7 +1694,7 @@
       <Filter>WinSim\SIMcoldfire</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\Kinetis\kinetis_port_K27_K28.h">
-      <Filter>WinSim\SIMiMX\SIMKinetis</Filter>
+      <Filter>WinSim\SIMKinetis</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\iMX\iMX_PIT.h">
       <Filter>Hardware\iMX</Filter>

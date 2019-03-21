@@ -979,7 +979,7 @@ static void fnSetDevice(unsigned long *port_inits)
     ADC1_CLM0   = 0x00000020;
     #endif
 #endif
-#if DAC_CONTROLLERS > 0
+#if DAC_CONTROLLERS > 0 && !defined KINETIS_KE18
     DAC0_SR     = DAC_SR_DACBFRPTF;                                      // DAC
     DAC0_C2     = 0x0f;
     #if DAC_CONTROLLERS > 1
@@ -1340,7 +1340,7 @@ static void fnCallINTMUX(int iChannel, int iPeripheralReference, unsigned char *
 }
 #endif
 
-// Check whether a particular interrupt is enabled in the NVIC
+// Check whether a particular interrupt is enabled in the NVIC (and set its pending flag)
 //
 static int fnGenInt(int iIrqID)
 {
@@ -1385,6 +1385,31 @@ static int fnGenInt(int iIrqID)
         if ((IRQ160_191_SER & (1 << (iIrqID - 164))) != 0) {             // if interrupt is not disabled
             return 1;
         }
+    }
+    return 0;
+}
+
+// Check whether a particular interrupt is enabled in the NVIC
+//
+extern int fnResetNVICInt(int iIrqID)
+{
+    if (iIrqID < 32) {
+        IRQ0_31_SPR &= ~(1 << iIrqID);
+    }
+    else if (iIrqID < 64) {
+        IRQ32_63_SPR &= ~(1 << (iIrqID - 32));
+    }
+    else if (iIrqID < 96) {
+        IRQ64_95_SPR &= ~(1 << (iIrqID - 64));
+    }
+    else if (iIrqID < 128) {
+        IRQ96_127_SPR &= ~(1 << (iIrqID - 96));
+    }
+    else if (iIrqID < 160) {
+        IRQ128_159_SPR |= (1 << (iIrqID - 128));
+    }
+    else if (iIrqID < 192) {
+        IRQ160_191_SPR &= ~(1 << (iIrqID - 164));
     }
     return 0;
 }

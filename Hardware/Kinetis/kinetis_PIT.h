@@ -118,7 +118,7 @@ static void _PIT_Handler(int iPIT)
 {
     KINETIS_PIT_CTL *ptrCtl = (KINETIS_PIT_CTL *)PIT_CTL_ADD;
     ptrCtl += iPIT;
-    WRITE_ONE_TO_CLEAR(ptrCtl->PIT_TFLG, PIT_TFLG_TIF);                  // clear pending interrupts
+    WRITE_ONE_TO_CLEAR_INTERRUPT(ptrCtl->PIT_TFLG, PIT_TFLG_TIF, (irq_PIT0_ID + iPIT)); // clear pending interrupts
         #if defined ERRATA_ID_2682                                       // {4}
     (void)(ptrCtl->PIT_TCTRL);                                           // access and PIT register after clearing the interrupt flag to allow subsequent interrupts to operate
         #endif
@@ -231,10 +231,6 @@ static void fnDisablePIT(int iPIT)
             ucPITmodes = ((ucPITmodes & ~((PIT_SINGLE_SHOT | PIT_PERIODIC) << (PIT_settings->ucPIT * 2))) | ((PIT_settings->mode & (PIT_SINGLE_SHOT | PIT_PERIODIC)) << (PIT_settings->ucPIT * 2))); // {5} [the variable protects from power downs from this point]
         uEnable_Interrupt();
         ptrCtl += PIT_settings->ucPIT;                                   // set the PIT (channel) to be configured
-      //POWER_UP_ATOMIC(6, PIT0);                                        // {2} ensure the PIT module is powered up
-  //#if defined ERRATA_ID_7914
-      //(void)PIT_MCR;                                                   // dummy read of PIT_MCR to guaranty a minimum delay of two bus cycles after enabling the clock gate and not losing next write
-  //#endif
     #if defined LPITS_AVAILABLE                                          // {9}
         LPIT0_MCR = (LPIT_MCR_M_CEN | LPIT_CHARACTERISTICS);             // {10} ensure the PIT module is clocked (when enabled for the first time 4 clock cycles are required to allow for clock synchronisation and reset assertion)
     #else

@@ -1255,8 +1255,6 @@
 
     // LEDs                                                              {3}
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {136, 363, 140, 368}, _PORTG, LED1}, \
                                        {RGB(50,50,50),RGB(255,200,0),1, {130, 363, 134, 368}, _PORTG, LED2}, \
@@ -1305,8 +1303,6 @@
 
     // LEDs
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50),  RGB(0, 255, 0), 0, {185, 192, 192, 198}, _PORTA, LED1}
 
@@ -1351,8 +1347,6 @@
 
     // LEDs
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(255,0,0),  RGB(50,50,50),1, {208, 220, 216, 228}, _PORTE, LED1}, \
                                        {RGB(255,0,0),  RGB(50,50,50),1, {229, 218, 237, 225}, _PORTE, LED2}, \
@@ -1428,8 +1422,6 @@
 
     // LEDs                                                              {3}
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(190,190,190),RGB(0,255,0),  1, {123, 365, 127, 370}, _PORTD, LED1}, \
                                        {RGB(190,190,190),RGB(255,200,0),1, {117, 365, 121, 370}, _PORTD, LED2}, \
@@ -1489,8 +1481,6 @@
 
     // LEDs                                                              {3}
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  1, {111, 257, 117, 262}, _PORTD, LED1}, \
                                        {RGB(50,50,50),RGB(255,200,0),1, {125, 241, 134, 247}, _PORTD, LED2}, \
@@ -1543,8 +1533,6 @@
 
     // LEDs
     //
-    #define KEYPAD_LEDS  3
-
                                         // '0'          '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS      {RGB(50,50,50), RGB(0,255,0),  0, {170, 128, 176, 136}, _PORTB, LED1}, \
                                         {RGB(50,50,50), RGB(0,0,255),  0, {155, 128, 162, 136}, _PORTB, LED2}, \
@@ -1593,8 +1581,6 @@
 
     // LEDs
     //
-    #define KEYPAD_LEDS  1
-
                                         // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS      {RGB(0,255,0),RGB(50,50,50),  1, {75, 33, 86, 42}, _PORTC, LED1}
 
@@ -1688,8 +1674,6 @@
     #elif defined STM32F407ZG_SK
         // LEDs
         //
-        #define KEYPAD_LEDS  4
-
                                            // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
         #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {106, 210, 112, 215}, _PORTF, LED1}, \
                                            {RGB(50,50,50),RGB(255,200,0),0, {106, 218, 112, 223}, _PORTF, LED2}, \
@@ -1705,8 +1689,6 @@
     #else
         // LEDs
         //
-        #define KEYPAD_LEDS  4
-
                                            // '0'            '1'   input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
         #define KEYPAD_LED_DEFINITIONS     {RGB(50,50,50),RGB(0,255,0),  0, {294, 206, 0, 3}, _PORTF, LED1}, \
                                            {RGB(50,50,50),RGB(255,200,0),0, {299, 203, 0, 3}, _PORTF, LED2}, \
@@ -1765,7 +1747,6 @@
 
     // LEDs                                                              {3}
     //
-    #define KEYPAD_LEDS  2
     #if defined ARDUINO_BLUE_PILL
                                            // '0'            '1'    input state center (x,   y)   0 = circle, radius, controlling port, controlling pin 
         #define KEYPAD_LED_DEFINITIONS     {RGB(0,255,0),RGB(20,20,20), 1, {650, 215, 666, 244}, _PORTC, LED3},
@@ -1816,8 +1797,6 @@
 
     // LEDs                                                              {3}
     //
-    #define KEYPAD_LEDS  4
-
                                        // '0'            '1'        input state  center (x,   y)  0 = circle, radius, controlling port, controlling pin 
     #define KEYPAD_LED_DEFINITIONS     {RGB(50, 50, 50), RGB(0, 255, 0), 0, {14, 163, 27, 168}, _PORTI, LED1}
 
