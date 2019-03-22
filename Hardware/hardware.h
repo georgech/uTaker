@@ -377,6 +377,7 @@ extern unsigned char fnSPI_FlashExt_available(int iExtension);
     #define MX25L3245                 3
     #define MX25L6445                 4
     #define MX25L12845                5
+    #define MX25L25635                6
 
     #define MX66L51235F               1
 

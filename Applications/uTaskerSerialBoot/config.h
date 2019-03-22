@@ -99,13 +99,13 @@
     //#define TWR_K21D50M                                                // tower board http://www.utasker.com/kinetis/TWR-K21D50M.html
     //#define TWR_K21F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K21F120M.html
     //#define tinyK22                                                    // USB memory stick format board with SD card and 120MHz K22FN512 http://www.utasker.com/kinetis/tinyK22.html
-    //#define FRDM_K22F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
+      #define FRDM_K22F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K22F.html
     //#define TWR_K22F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K22F120M.html
     //#define BLAZE_K22                                                  // K22FN1M0 with 1.6" color display and touch http://www.utasker.com/kinetis/BLAZE_K22.html
     //#define TWR_K24F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K24F120M.html
     //#define K24FN1M0_120
     //#define K26FN2_180                                                 // development board with 180MHz K26F
-      #define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
+    //#define FRDM_K28F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K28F.html
 
     //#define KWIKSTIK                                                   // K processors Cortex M4 with USB and segment LCD http://www.utasker.com/kinetis/KWIKSTIK.html
     //#define TWR_K40X256                                                // tower board http://www.utasker.com/kinetis/TWR-K40X256.html
@@ -535,6 +535,7 @@
       //#define DEV1                                                     // temporary development configuration
         #define TARGET_HW        "FRDM-K22F"
     #endif
+    #define KINETIS_MAX_SPEED    120000000
     #define KINETIS_K_FPU                                                // part with floating point unit
     #define KINETIS_K20
     #define KINETIS_K22
@@ -968,7 +969,7 @@
 
 
 #if !(defined K70F150M_12M && !defined DWGB_SDCARD) && !defined KWIKSTIK && !(defined TEENSY_3_1 && defined SPECIAL_VERSION) && !defined BLAZE_K22 && !(defined FRDM_KL27Z && defined _DEV2)
-    #define SERIAL_INTERFACE                                             // enable serial interface driver
+  //#define SERIAL_INTERFACE                                             // enable serial interface driver
 #endif
 #if defined SERIAL_INTERFACE
     #if defined USE_MODBUS
@@ -1000,9 +1001,9 @@
           //#define DEVELOPERS_LOADER_PROTOCOL_VERSION_9                 // user protocol version 9 rather than obsolete Kinetis 8 (not completed at the moment)
             #define DEVELOPERS_LOADER_READ                               // support reading back program
             #define DEVELOPERS_LOADER_CRC                                // support CRC in communication
-        #define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
+      //#define REMOVE_SREC_LOADING                                      // disable SREC (and Intel Hex) loading but keep debug output and the command line menu
         #if !defined REMOVE_SREC_LOADING
-          //#define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
+            #define SUPPORT_INTEL_HEX_MODE                               // support Intel Hex mode together with SREC (auto-recognition)
           //#define EXCLUSIVE_INTEL_HEX_MODE                             // loading mode is exclusively Intel Hex (use with or without SUPPORT_INTEL_HEX_MODE)
         #endif
       //#define SERIAL_STATS                                             // keep statistics about serial interface use
@@ -1042,10 +1043,10 @@
 #if defined DEVICE_WITHOUT_USB || defined DWGB_SDCARD
     #define NUMBER_USB     0                                             // no physical queue needed
 #else
-  //#define USB_INTERFACE                                                // enable USB driver interface
+    #define USB_INTERFACE                                                // enable USB driver interface
     #if defined USB_INTERFACE
       //#define USE_USB_CDC                                              // allow SREC/iHex loading via virtual COM
-        #define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
+      //#define USB_MSD_DEVICE_LOADER                                    // USB-MSD device mode (the board appears as a hard-drive to the host)
       //#define USB_MSD_HOST_LOADER                                      // USB-MSD host mode (the board operates as host and can read new code from a memory stick)
         #if defined USE_USB_CDC
             #undef SERIAL_INTERFACE                                      // remove the UART interface

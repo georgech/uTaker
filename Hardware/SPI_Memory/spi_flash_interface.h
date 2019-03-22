@@ -88,8 +88,8 @@ static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffe
     }
     fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow programming
     #else
-    unsigned short usPageNumber = (unsigned short)(Destination/SPI_FLASH_PAGE_LENGTH); // the page the address is in
-    unsigned short usPageOffset = (unsigned short)(Destination - (usPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
+    unsigned long ulPageNumber = (unsigned long)(Destination/SPI_FLASH_PAGE_LENGTH); // the page the address is in
+    unsigned short usPageOffset = (unsigned short)(Destination - (ulPageNumber * SPI_FLASH_PAGE_LENGTH)); // offset in the page
     #endif
     while (Length != 0) {
         usDataLength = (unsigned short)Length;
@@ -101,13 +101,13 @@ static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffe
         fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);               // write enable
       //#endif
         #if defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
-        fnSPI_command(PAGE_PROG, ((usPageNumber * SPI_FLASH_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
+        fnSPI_command(PAGE_PROG, ((ulPageNumber * SPI_FLASH_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
         #else
-        fnSPI_command(PAGE_PROG, ((usPageNumber << 8) | usPageOffset), _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
+        fnSPI_command(PAGE_PROG, ((ulPageNumber << 8) | usPageOffset), _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
         #endif
         Length -= usDataLength;
         ptrBuffer += usDataLength;
-        usPageNumber++;
+        ulPageNumber++;
         usPageOffset = 0;
     #elif defined SPI_FLASH_SST25
         #if defined SST25_A_VERSION
@@ -188,6 +188,12 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
             #endif
         BlockLength = (64 * 1024);
     }
+    #if defined SPI_FLASH_HALF_BLOCK_ERASE_LENGTH
+    else if ((ptrAccessDetails->BlockLength >= (SPI_FLASH_HALF_BLOCK_ERASE_LENGTH)) && ((ptrAccessDetails->ulOffset & ((SPI_FLASH_HALF_BLOCK_ERASE_LENGTH) - 1)) == 0)) { // if a complete half block can be deleted
+        BlockLength = (SPI_FLASH_HALF_BLOCK_ERASE_LENGTH);
+        ucCommand = HALF_BLOCK_ERASE;                                    // delete half block
+    }
+    #endif
     else 
         #endif
         #if defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L

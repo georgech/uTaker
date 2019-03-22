@@ -3518,6 +3518,9 @@ static unsigned char  WESR[SPI_FLASH_DEVICE_COUNT] = {0};                // writ
 static unsigned char  ucProgramBuffer[SPI_FLASH_DEVICE_COUNT][256] = {{0}};
 static unsigned char  ucStatus[SPI_FLASH_DEVICE_COUNT][3] = {0};
 static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    static unsigned char  ucConfig[SPI_FLASH_DEVICE_COUNT] = {0};
+#endif
 
 #if defined SPI_FLASH_S25FL1_K
     #define MANUFACTURER_SPANSION 0x01
@@ -3535,9 +3538,12 @@ static unsigned char  ucWord[SPI_FLASH_DEVICE_COUNT][2] = {0};
     #define MANUFACTURER_MACRONIX 0xc2                                   // Macronix's manufacturer ID
     #define SPI_FLASH_DEVICE_TYPE 0x20
 
-    #if defined SPI_FLASH_MX25L12845E
+    #if defined SPI_FLASH_MX25L25635F
         #define MEMORY_TYPE       0x20
-        #define MEMORY_CAPACITY   0x18                                   // MX25L12845
+        #define MEMORY_CAPACITY   0x19                                   // MX25L25635 - 256Mbit
+    #elif defined SPI_FLASH_MX25L12845E
+        #define MEMORY_TYPE       0x20
+        #define MEMORY_CAPACITY   0x18                                   // MX25L12845 - 128Mbit
     #elif defined SPI_FLASH_MX25L1606E
         #define MEMORY_TYPE       0x20
         #define MEMORY_CAPACITY   0x15                                   // MX25L1606 - 2MBytes
@@ -3573,18 +3579,29 @@ static int fnAddressAllowed(int iDev, unsigned long ulAddress)
 
 static void fnActionS25FL1_K(int iSel, unsigned long ulDeviceOffset)
 {
+    int iEraseValid = 3;
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    if ((ucConfig[iSel] & 0x20) != 0) {                                  // 4 byte mode set
+        iEraseValid = 4;
+    }
+#endif
     if (ucChipCommand[iSel] == 0x02) {                                   // page write
         if (WEL[iSel] != 0) {                                            // if write enabled
             uMemcpy(&ucS25FLI_K[ulAccessAddress[iSel] & ~(256 - 1)], ucProgramBuffer[iSel], 256); // write page to flash
             WEL[iSel] = 0;                                               // automatically clear the write enable
         }
     }
-    else if ((WEL[iSel] == 1) && (iState[iSel] == 3)) {                  // if erase enabled
+    else if ((WEL[iSel] == 1) && (iState[iSel] == iEraseValid)) {        // if erase enabled
         if (ucChipCommand[iSel] == 0x20) {                               // delete sector
             memset(&ucS25FLI_K[(ulAccessAddress[iSel] & ~(SPI_FLASH_SECTOR_LENGTH - 1)) + ulDeviceOffset], 0xff, SPI_FLASH_SECTOR_LENGTH); // delete sector
         }
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+        else if (ucChipCommand[iSel] == 0x52) {                          // delete 32k half-block
+            memset(&ucS25FLI_K[(ulAccessAddress[iSel] & ~((32 * 1024) - 1)) + ulDeviceOffset], 0xff, (32 * 1024)); // delete half-block
+        }
+#endif
         else if (ucChipCommand[iSel] == 0xd8) {                          // delete 64k block
-            memset(&ucS25FLI_K[(ulAccessAddress[iSel] & ~((64 * 1024) - 1)) + ulDeviceOffset], 0xff, (64 * 1024)); // delete sector
+            memset(&ucS25FLI_K[(ulAccessAddress[iSel] & ~((64 * 1024) - 1)) + ulDeviceOffset], 0xff, (64 * 1024)); // delete block
         }
         ucStatus[iSel][0] &= ~0x02;                                      // automatically clear the write enable
         WEL[iSel] = 0;
@@ -3662,9 +3679,19 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
     if (iSimType == S25FL1_K_WRITE) {
         if (ucChipCommand[iSel] == 0) {                                  // command byte being received
             ucChipCommand[iSel] = ucTxByte;                              // we interpret a command
-            if (ucTxByte == 0x06) {                                      // write enable
+            switch (ucTxByte) {
+            case 0x06:                                                   // write enable
                 ucStatus[iSel][0] |= 0x02;                               // set the write enable latch flag in the status register 0
                 WEL[iSel] = 1;
+                break;
+        #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+            case 0xb7:
+                ucConfig[iSel] |= 0x20;                                  // 4 byte mode set
+                break;
+            case 0xe9:
+                ucConfig[iSel] &= 0x20;                                  // 4 byte mode cleared (default 3 byte mode)
+                break;
+        #endif
             }
         }
         else {                                                           // in command
@@ -3675,28 +3702,64 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
             case 0x9f:                                                   // read manufacturer's ID
                 break;
             case 0x02:                                                   // page program  
-                if (iState[iSel] >= 3) {
-                    unsigned char *ptrPageContent = &ucProgramBuffer[iSel][(ulAccessAddress[iSel] + (iState[iSel] - 3)) & (256 - 1)];
-                    if (~(*ptrPageContent) & ucTxByte) {                 // is a bit being set from '0' to '1'?
-                        _EXCEPTION("Writing a '1' to a bit that is already programmed to '0'!!!");
+                {
+                    int iValidWrite = 3;
+        #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+                    if ((ucConfig[iSel] & 0x20) != 0) {                  // 4 byte mode set
+                        iValidWrite = 4;
                     }
-                    *ptrPageContent = ucTxByte;                          // collect the bytes to be programmed in the program buffer
-                    iState[iSel]++;
-                    if (iState[iSel] >= (256 + 3)) {                     // if more than a page is written wrap back to the beginning
-                        iState[iSel] = 3;
+        #endif
+                    if (iState[iSel] >= iValidWrite) {
+                        unsigned char *ptrPageContent = &ucProgramBuffer[iSel][(ulAccessAddress[iSel] + (iState[iSel] - iValidWrite)) & (256 - 1)];
+                        if (~(*ptrPageContent) & ucTxByte) {                 // is a bit being set from '0' to '1'?
+                            _EXCEPTION("Writing a '1' to a bit that is already programmed to '0'!!!");
+                        }
+                        *ptrPageContent = ucTxByte;                          // collect the bytes to be programmed in the program buffer
+                        iState[iSel]++;
+                        if (iState[iSel] >= (256 + iValidWrite)) {                     // if more than a page is written wrap back to the beginning
+                            iState[iSel] = iValidWrite;
+                        }
+                        break;
                     }
-                    break;
                 }
+                // Fall-through intentionally
+                //
             case 0x90:                                                   // read ID
             case 0xab:
             case 0x20:                                                   // sub-sector erase
             case 0x52:                                                   // half-sector erase
-        #ifndef SST25_A_VERSION
+        #if !defined SST25_A_VERSION
             case 0xd8:                                                   // sector erase - not available on A device
         #endif
                 // Else fall through
                 //
             case 0x03:                                                   // read array
+        #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+                if ((ucConfig[iSel] & 0x20) != 0) {                      // if in 4 byte mode
+                    if (iState[iSel] == 0) {
+                        ulAccessAddress[iSel] = ucTxByte;                // collect access address
+                        ulAccessAddress[iSel] <<= 8;
+                    }
+                    else if (iState[iSel] == 1) {
+                        ulAccessAddress[iSel] |= ucTxByte;               // collect access address
+                        ulAccessAddress[iSel] <<= 8;
+                    }
+                    else if (iState[iSel] == 2) {
+                        ulAccessAddress[iSel] |= ucTxByte;               // collect access address
+                        ulAccessAddress[iSel] <<= 8;
+                    }
+                    else if (iState[iSel] == 3) {
+                        ulAccessAddress[iSel] |= ucTxByte;               // access address complete
+                        if (ucChipCommand[iSel] == 0x02) {               // page program command
+                            uMemcpy(ucProgramBuffer[iSel], &ucS25FLI_K[ulDeviceOffset + (ulAccessAddress[iSel] & ~(256 - 1))], 256); // load the present page content to the program buffer
+                        }
+                    }
+                    iState[iSel]++;
+                    break;
+                }
+        #endif
+                // 3 byte addressing mode
+                //
                 if (iState[iSel] == 0) {
                     ulAccessAddress[iSel] = ucTxByte;                    // collect access address
                     ulAccessAddress[iSel] <<= 8;
@@ -3712,7 +3775,7 @@ extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
                     }
                 }
                 iState[iSel]++;
-                break;             
+                break;
             }
         }
     }

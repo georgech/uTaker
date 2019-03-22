@@ -2127,7 +2127,7 @@ typedef struct stKINETIS_SIM
         unsigned long SIM_SOPT1;
     #endif
     #if defined KINETIS_K_FPU || defined KINETIS_KL                      // {15}
-        unsigned long SIM_SOPT1CGF;
+        unsigned long SIM_SOPT1CFG;
         unsigned char ucRes0[0x1000 - 4];
     #else
         unsigned char ucRes0[0x1000];

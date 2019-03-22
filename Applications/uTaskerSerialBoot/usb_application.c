@@ -11,7 +11,7 @@
     File:      usb_application.c - MSD
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This application is the same as the USB application in the uTaskerV1.4 project - state 20.7.2015,
     whereby the USB-MSD model is used to allow USB-MSD (on SD card) to be operated whilst in the boot loader
@@ -1341,7 +1341,7 @@ static void fnContinueMedia(void)
             }
             uDisable_Interrupt();                                        // protect the count value during modification
                 USB_queue->chars += 512;                                 // the new amount of data waiting to be sent (the USB driver can start using this if it is already active)
-                if ((ptrUsbMSD_Queue->endpoint_control->ucState & TX_ACTIVE) == 0) { // if transmission is already in progress don't initiate any more activity because the USB interrupt drier will do it
+                if ((ptrUsbMSD_Queue->endpoint_control->ucState & TX_ACTIVE) == 0) { // if transmission is already in progress don't initiate any more activity because the USB interrupt driver will do it
                     fnStartUSB_send(ptrUsbMSD_Queue->endpoint_control->ucEndpointNumber, ptrUsbMSD_Queue, 512); // start sending message content since the USB driver was not active
                 }
             uEnable_Interrupt();                                         // end protected region
@@ -2278,7 +2278,7 @@ static int fnSendMSD_host(unsigned char ucOpcode)
     default:
         return -1;
     }
-     fnFlush(USBPortID_host, FLUSH_TX);                                  // always flush the tx buffer to ensure message alignment in buffer before sending
+    fnFlush(USBPortID_host, FLUSH_TX);                                   // always flush the tx buffer to ensure message alignment in buffer before sending
     if (fnWrite(USBPortID_host, (unsigned char *)&command_transport, command_length) == command_length) { // write data (buffered on this bulk endpoint)
         if ((ucOpcode != UFI_WRITE_10) && (ucOpcode != UFI_READ_10)) {
             uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0 * SEC), T_GET_STATUS_TEST); // collect the status after a short delay (we should do it after the transmission has been acked!!!)

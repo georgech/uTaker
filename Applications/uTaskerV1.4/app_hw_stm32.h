@@ -436,8 +436,13 @@
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
 #elif defined SPI_FLASH_MX25L
   //#define SPI_FLASH_MX25L1606E
-    #define SPI_FLASH_MX25L12845E
-    #if defined SPI_FLASH_MX25L12845E
+  //#define SPI_FLASH_MX25L12845E
+    #define SPI_FLASH_MX25L25635F
+    #if defined SPI_FLASH_MX25L25635F
+        #define SPI_FLASH_SIZE           (32 * 1024 * 1024)              // 256 Mbits/32 MBytes
+        #define SPI_FLASH_HALF_BLOCK_ERASE_LENGTH  (32 * 1024)
+        #define SPI_FLASH_BLOCK_ERASE_LENGTH       (64 * 1024)
+    #elif defined SPI_FLASH_MX25L12845E
         #define SPI_FLASH_SIZE           (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
     #else
         #define SPI_FLASH_SIZE           (2 * 1024 * 1024)               // 16 Mbits/2 MBytes

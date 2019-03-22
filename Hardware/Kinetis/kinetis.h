@@ -11375,7 +11375,7 @@ typedef struct stKINETIS_LPTMR_CTL
         #endif
     #endif
     #if defined KINETIS_K_FPU || (defined KINETIS_KL && !defined KINETIS_KL82) // {42}]
-        #define SIM_SOPT1CGF                 *(volatile unsigned long *)(SIM_BLOCK + 0x0004) // System Options 1 Configuration Register
+        #define SIM_SOPT1CFG                 *(volatile unsigned long *)(SIM_BLOCK + 0x0004) // System Options 1 Configuration Register
             #define SIM_SOPT1CFG_URWE        0x01000000                  // USB voltage regulator enable write enable (self-clearing after a write to SIM_SOPT1_USBREGEN)
             #define SIM_SOPT1CFG_UVSWE       0x02000000                  // USB voltage regulator VLP standby enable write enable (self-clearing after a write to SIM_SOPT1_USBSTBY)
             #define SIM_SOPT1CFG_USSWE       0x04000000                  // USB voltage regulator stop standby enable write enable (self-clearing after a write to SIM_SOPT1_USBVSTBY)
@@ -12358,8 +12358,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #define IS_POWERED_UP(reg, module)     ((SIM_SCGC##reg & (SIM_SCGC##reg##_##module)) != 0) // {102}
     #endif
     #if defined KINETIS_K_FPU
-        #define SIM_SOPT1_SET(opt, enable)     SIM_SOPT1CGF |= (enable); SIM_SOPT1 |= (opt)
-        #define SIM_SOPT1_CLR(opt, enable)     SIM_SOPT1CGF |= (enable); SIM_SOPT1 &= ~(opt)
+        #define SIM_SOPT1_SET(opt, enable)     SIM_SOPT1CFG |= (enable); SIM_SOPT1 |= (opt)
+        #define SIM_SOPT1_CLR(opt, enable)     SIM_SOPT1CFG |= (enable); SIM_SOPT1 &= ~(opt)
     #elif !defined KINETIS_KL02
         #define SIM_SOPT1_SET(opt, enable)     SIM_SOPT1 |= (opt)
         #define SIM_SOPT1_CLR(opt, enable)     SIM_SOPT1 &= ~(opt)

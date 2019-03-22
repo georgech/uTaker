@@ -11,9 +11,10 @@
     File:      spi_flash_MX25L.h - Macronix
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.03.2019 Make generic for any processor
+    22.03.2019 Add 32MByte part (with 4-byte mode)
 
 */
 
@@ -123,6 +124,9 @@
 
 #define PAGE_PROG                0x02
 #define SECTOR_ERASE             0x20
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    #define HALF_BLOCK_ERASE     0x52
+#endif
 #define BLOCK_ERASE              0xd8
 #define CHIP_ERASE               0xc7                                    // also 0x60
 
@@ -151,6 +155,11 @@
 #define ERASE_SECURITY_REGISTERS 0x44
 #define PROG_SECURITY_REGISTERS  0x42
 
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    #define EN4B_MODE            0xb7                                    // enter 4 byte mode in order to be able to address more that 16MBytes
+    #define EX4B_MODE            0xe9
+#endif
+
 
 #define MANUFACTURER_ID_MACRONIX 0xc2                                    // Macronix's manufacturer ID
 #define SPI_FLASH_DEVICE_TYPE    0x20
@@ -160,6 +169,7 @@
 #define DEVICE_ID_DATA_MX25L3245  0x16                                   // 32MBit / 4MegByte
 #define DEVICE_ID_DATA_MX25L6445  0x17                                   // 64MBit / 8MegByte
 #define DEVICE_ID_DATA_MX25L12845 0x18                                   // 128MBit / 16MegByte
+#define DEVICE_ID_DATA_MX25L25635 0x19                                   // 256MBit / 32MegByte
 
 #define DANGER_ERASING           0x80000000
 #define DANGER_PROGRAMMING       0x40000000
@@ -220,7 +230,10 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
 
     switch (ucCommand) {
-    case SECTOR_ERASE:                                                   // 4k sector to be deleted (50ms required)
+    case SECTOR_ERASE:                                                   // 4k sector to be deleted (50ms required
+    #if defined HALF_BLOCK_ERASE
+    case HALF_BLOCK_ERASE:                                               // 32k half-block to be deleted (150ms required)
+    #endif
     case BLOCK_ERASE:                                                    // 64k block to be deleted (500ms required)
         iEraseCommand = 1;
     case PAGE_PROG:                                                      // 1 to 256 bytes to be programmed to a page (700us required for 256 bytes)
@@ -244,6 +257,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
     #endif
         if ((DataLength != 0) || (iEraseCommand != 0)) {
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                             // 4 byte addressing
+            WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 24));   // write parameters
+        #if defined _WINDOWS
+            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+        #endif
+            WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
+            (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
+    #endif
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 16));   // write parameters
     #if defined _WINDOWS
             fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
@@ -251,7 +273,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
-            CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
     #endif
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));    // send page number offset
     #if defined _WINDOWS
@@ -260,7 +282,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
-            CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
             discardCount += 1;
     #else
             discardCount += 4;
@@ -332,6 +354,9 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         WRITE_SPI_CMD0_LAST(0xff);                                       // ensure transmit FIFO has more than one byte in it
         break;
 
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    case EN4B_MODE:                                                      // enable 4 byte mode
+    #endif
     case ERASE_PROGRAM_SUSPEND:
     case CHIP_ERASE:                                                     // command without further data
     case WRITE_DISABLE:
@@ -465,8 +490,14 @@ static unsigned char fnCheckMX25L(void)
         case DEVICE_ID_DATA_MX25L6445:                                   // 64Mbit/8Meg byte
             ucReturnType = MX25L6445;
             break;
-        case DEVICE_ID_DATA_MX25L12845:                                   // 128Mbit/16Meg byte
+        case DEVICE_ID_DATA_MX25L12845:                                  // 128Mbit/16Meg byte
             ucReturnType = MX25L12845;
+            break;
+        case DEVICE_ID_DATA_MX25L25635:
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+            fnSPI_command(EN4B_MODE, 0, __EXTENDED_CS ucID, 0);          // switch to 4 byte mode so that more that 16MByte can be addressed
+#endif
+            ucReturnType = MX25L25635;
             break;
         default:
             return NO_SPI_FLASH_AVAILABLE;                               // no device detected

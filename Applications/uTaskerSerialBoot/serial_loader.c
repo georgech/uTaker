@@ -188,6 +188,11 @@ typedef struct
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
+#if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER) || defined I2C_INTERFACE
+    #define NEEDS_BLANK_CHECK
+    static unsigned char *fnBlankCheck(void);
+#endif
+
 #if defined SERIAL_INTERFACE || defined USE_USB_CDC
     #if defined DEVELOPERS_LOADER                                        // {23}
         static void fnSendDevelopers(QUEUE_HANDLE SerialPortID, unsigned char ucByte);
@@ -197,8 +202,6 @@ typedef struct
             static void fnSendCRC(QUEUE_HANDLE SerialPortID);
         #endif
     #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && !defined REMOVE_SREC_LOADING
-        #define NEEDS_BLANK_CHECK
-        static unsigned char *fnBlankCheck(void);
         #if !defined REMOVE_SREC_LOADING                                 // {17}
             #if defined USE_USB_CDC && !defined SERIAL_INTERFACE || defined FREE_RUNNING_RX_DMA_RECEPTION // {33}
                 #undef INTERMEDIATE_PROG_BUFFER
@@ -209,11 +212,6 @@ typedef struct
                 #endif
             #endif
         #endif
-    #elif defined REMOVE_SREC_LOADING && !defined USE_MODBUS
-        #if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER) || !defined KBOOT_LOADER
-            #define NEEDS_BLANK_CHECK
-            static unsigned char *fnBlankCheck(void);
-        #endif
     #endif
     #if defined NEEDS_BLANK_CHECK && !defined KBOOT_LOADER
         static int fnPerformBlankCheck(void);
@@ -222,8 +220,6 @@ typedef struct
         static void fnPrintScreen(void);
     #endif
 #elif defined I2C_INTERFACE
-    #define NEEDS_BLANK_CHECK
-    static unsigned char *fnBlankCheck(void);
     static int fnPerformBlankCheck(void);
 #endif
 #if ((defined SERIAL_INTERFACE || defined USE_USB_CDC) && defined DEVELOPERS_LOADER) || (defined I2C_INTERFACE && !defined BLAZE_K22)
@@ -270,11 +266,6 @@ typedef struct
 /*                      local variable definitions                     */
 /* =================================================================== */
 
-#else
-    #if defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER
-        #define NEEDS_BLANK_CHECK
-        static unsigned char *fnBlankCheck(void);
-    #endif
 #endif
 #if defined SREC_IHEX_REQUIRED || defined I2C_INTERFACE || (defined DEVELOPERS_LOADER && defined SERIAL_INTERFACE)
     #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
