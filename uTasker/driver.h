@@ -629,11 +629,17 @@ typedef struct stI2CTABLE {
     QUEUE_DIMENSIONS Rx_tx_sizes;                                        // the desired rx and tx queue sizes
     UTASK_TASK     Task_to_wake;                                         // default task to wake when receive message available
     QUEUE_HANDLE   Channel;                                              // physical channel number 1,2,3...
+#if defined I2C_DMA_SUPPORT
+    unsigned char ucDMAConfig;                                           // DMA operation configuration
+#endif
 #if defined I2C_SLAVE_MODE                                               // {65}
     unsigned char  ucSlaveAddress;                                       // address to be used by slave
     int (*fnI2C_SlaveCallback)(int iChannel, unsigned char *ptrDataByte, int iType); // optional callback to prepare a byte to transmit
 #endif
 } I2CTABLE;
+
+#define I2C_TX_DMA                    0x01
+#define I2C_RX_DMA                    0x02
 
 #define I2C_SLAVE_BUFFER              0                                  // the next byte is to be taken from the I2C output buffer
 #define I2C_SLAVE_TX_PREPARED         1                                  // the next byte has been prepared by the application callback
@@ -731,7 +737,17 @@ typedef struct stI2CQue
 {
     QUEQUE         I2C_queue;
     QUEUE_TRANSFER msgs;
-    volatile unsigned char  ucPresentLen;
+#if defined I2C_2_BYTE_LENGTH
+    volatile unsigned short usPresentLen;                                // 0..64k
+    #if defined I2C_DMA_SUPPORT
+    unsigned short dma_length;
+    #endif
+#else
+    volatile unsigned char  ucPresentLen;                                // 0..255
+    #if defined I2C_DMA_SUPPORT
+    unsigned char dma_length;
+    #endif
+#endif
     unsigned char  ucState;
     UTASK_TASK     wake_task;
 } I2CQue;

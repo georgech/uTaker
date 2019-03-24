@@ -263,10 +263,10 @@
     //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
     //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
     //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-      #define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
+    //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
-    //#define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
+      #define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
     //#define ST_IDP004                                                  // IO-link master multi-port evaluation board based on L6360
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
@@ -1751,6 +1751,7 @@
 //#define I2C_INTERFACE
 #if defined I2C_INTERFACE
     #define NUMBER_I2C       (I2C_AVAILABLE + LPI2C_AVAILABLE)           // I2C interfaces available
+  //#define I2C_2_BYTE_LENGTH                                            // driver uses 2 byte length information when reading/writing
   //#define I2C_SLAVE_MODE                                               // support slave mode
         #define I2C_SLAVE_TX_BUFFER                                      // support preparing slave transmissions with fnWrite()
         #define I2C_SLAVE_RX_BUFFER                                      // support slave reception buffer for fnRead()

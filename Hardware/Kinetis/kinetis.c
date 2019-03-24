@@ -146,6 +146,11 @@
 #define UART4_RX_CLK_REQUIRED 0x00000400
 #define UART5_RX_CLK_REQUIRED 0x00000800
 
+#define I2C0_CLK_REQUIRED     0x00001000
+#define I2C1_CLK_REQUIRED     0x00002000
+#define I2C2_CLK_REQUIRED     0x00004000
+#define I2C3_CLK_REQUIRED     0x00008000
+
 
 /* =================================================================== */
 /*                       local structure definitions                   */
@@ -2054,7 +2059,9 @@ extern int fnClkout(int iClockSource)                                    // {120
     #if defined KINETIS_WITH_PCC
     switch (iClockSource) {                                              // set the required clock source to be output on CLKOUT
     case RTC_CLOCK_OUT:
+    #if defined KINETIS_KE15
         _CONFIG_PERIPHERAL(C, 5, (PC_5_RTC_CLKOUT | PORT_SRE_FAST | PORT_DSE_HIGH)); // configure the CLKOUT pin (the RTC must be operating for the signal to be present)
+    #endif
         break;
     default:
         return -1;                                                       // unsupported

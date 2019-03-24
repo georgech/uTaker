@@ -42,9 +42,7 @@
             #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
         #endif
     #elif defined _KINETIS
-        #if defined KINETIS_KL
-            #define SPI_FLASH_FIFO_DEPTH     1
-        #elif !defined SPI_FLASH_FIFO_DEPTH
+        #if !defined SPI_FLASH_FIFO_DEPTH
             #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
         #endif
     #endif

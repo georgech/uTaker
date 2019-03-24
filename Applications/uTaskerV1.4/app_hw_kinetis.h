@@ -3174,6 +3174,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #if defined I2C_INTERFACE
     #if defined KINETIS_K80
         #define OUR_I2C_CHANNEL       3                                  // use I2C3 for reference
+    #elif defined FRDM_KL28Z
+        #define OUR_I2C_CHANNEL       2                                  // use I2C2 for reference
+      //#define I2C_DMA_SUPPORT
     #elif defined TWR_KL46Z48M || defined TWR_KL25Z48M || defined TWR_K22F120M || defined TWR_K64F120M || defined TWR_K53N512 || defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K21D50M || defined TWR_K21F120M || defined FRDM_KL27Z
         #define OUR_I2C_CHANNEL       1                                  // use I2C1 for reference
     #else
@@ -3388,6 +3391,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define INTMUX_LPTMR1               INPUT_TO_INTMUX0_CHANNEL_0   // the LPTMR1 extended interrupt is connected to INTMUX0 channel 0 (inherits INTMUX0 channel 0's priority)
         #define INTMUX_LPUART2              INPUT_TO_INTMUX0_CHANNEL_1   // the LPUART2 extended interrupt is connected to INTMUX0 channel 1 (inherits INTMUX0 channel 1's priority)
         #define INTMUX_I2C1                 INPUT_TO_INTMUX0_CHANNEL_2   // the I2C1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
+        #define INTMUX_LPI2C2               INPUT_TO_INTMUX0_CHANNEL_2   // the LPI2C2 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_SPI1                 INPUT_TO_INTMUX0_CHANNEL_2   // the SPI1 extended interrupt is connected to INTMUX0 channel 2 (inherits INTMUX0 channel 2's priority)
         #define INTMUX_RTC_ALARM            INPUT_TO_INTMUX0_CHANNEL_3   // the RTC alarm extended interrupt is connected to INTMUX0 channel 3 (inherits INTMUX0 channel 3's priority)
         #if defined KINETIS_KL82
@@ -3608,6 +3612,23 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
     #define DMA_MEMCPY_CHANNEL     3                                     // use lowest priority DMA channel
 #endif
+#define DMA_I2C0_TX_CHANNEL        0
+#define DMA_I2C1_TX_CHANNEL        1
+#define DMA_I2C2_TX_CHANNEL        2
+#define DMA_I2C3_TX_CHANNEL        3
+#define DMA_I2C0_RX_CHANNEL        3
+#define DMA_I2C1_RX_CHANNEL        2
+#define DMA_I2C2_RX_CHANNEL        1
+#define DMA_I2C3_RX_CHANNEL        0
+
+#define DMA_I2C0_TX_INT_PRIORITY  (PRIORITY_DMA0)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C1_TX_INT_PRIORITY  (PRIORITY_DMA1)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C2_TX_INT_PRIORITY  (PRIORITY_DMA2)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C3_TX_INT_PRIORITY  (PRIORITY_DMA3)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C0_RX_INT_PRIORITY  (PRIORITY_DMA3)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C1_RX_INT_PRIORITY  (PRIORITY_DMA2)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C2_RX_INT_PRIORITY  (PRIORITY_DMA1)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
+#define DMA_I2C3_RX_INT_PRIORITY  (PRIORITY_DMA0)                        // the interrupts used by the DMA transfer completion need to match with the DMA channel used
 
 
 // PCC clock matrix

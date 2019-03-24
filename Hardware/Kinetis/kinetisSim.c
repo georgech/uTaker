@@ -7388,7 +7388,7 @@ extern unsigned long fnSimInts(char *argv[])
     #elif LPI2C_AVAILABLE > 2
                 if (((LPI2C2_MIER & LPI2C2_MSR) & (LPI2C_MIER_TDIE | LPI2C_MIER_RDIE | LPI2C_MIER_EPIE | LPI2C_MIER_SDIE | LPI2C_MIER_NDIE | LPI2C_MIER_ALIE | LPI2C_MIER_FEIE | LPI2C_MIER_PLTIE | LPI2C_MIER_DMIE)) != 0) { // if an enabled interrupt source is active
         #if !defined irq_LPI2C2_ID
-                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_I2C2) != 0)
+                    if (fnGenInt(irq_INTMUX0_0_ID + INTMUX_LPI2C2) != 0)
         #else
                     if (fnGenInt(irq_LPI2C2_ID) != 0)
         #endif
@@ -8908,6 +8908,128 @@ extern unsigned long fnSimDMA(char *argv[])
     #endif
                 break;
             }
+    #if defined I2C_INTERFACE && defined I2C_DMA_SUPPORT
+        #if LPI2C_AVAILABLE > 0
+            if (iChannel == DMA_I2C0_RX_CHANNEL) {                      // handle I2C DMA reception on I2C0
+                if ((LPI2C0_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C0];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            LPI2C0_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C0_MRDR));
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C0_RX) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (iChannel == DMA_I2C0_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C0
+                if ((LPI2C0_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C0];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C0_TX) > 0) {
+                                fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C0_MTDR));
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+        #if LPI2C_AVAILABLE > 1
+            if (iChannel == DMA_I2C1_RX_CHANNEL) {                      // handle I2C DMA reception on I2C1
+                if ((LPI2C1_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C1];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            LPI2C1_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C1_MRDR));
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C1_RX) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (iChannel == DMA_I2C1_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C1
+                if ((LPI2C1_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C1];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C1_TX) > 0) {
+                                fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C1_MTDR));
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+        #if LPI2C_AVAILABLE > 2
+            if (iChannel == DMA_I2C2_RX_CHANNEL) {                      // handle I2C DMA reception on I2C2
+                if ((LPI2C2_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C2];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            LPI2C2_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C2_MRDR));
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C2_RX) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (iChannel == DMA_I2C2_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C2
+                if ((LPI2C2_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C2];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+                            iDMA &= ~ulChannel;
+                            if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C2_TX) > 0) {
+                                fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C2_MTDR));
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+    #endif
         }
         ulChannel <<= 1;
         iChannel++;

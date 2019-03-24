@@ -11,17 +11,83 @@
     File:      kinetis_LPI2C.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     20.02.2018 Enable ignoring Nacks to allow compatible operation with other I2C controllers {1}
+    24.03.2019 Add DMA mode and I2C_2_BYTE_LENGTH option
 
 */
 
 /* =================================================================== */
+/*                             constants                               */
+/* =================================================================== */
+
+#if defined I2C_DMA_SUPPORT                                              // DMA support on transmission
+// DMA channel assignments for each LPI2C transmitter
+//
+static const unsigned char LPI2C_DMA_TX_CHANNEL[LPI2C_AVAILABLE] = {
+    DMA_I2C0_TX_CHANNEL, 
+    #if (LPI2C_AVAILABLE) > 1
+    DMA_I2C1_TX_CHANNEL,
+    #endif
+    #if (LPI2C_AVAILABLE) > 2
+    DMA_I2C2_TX_CHANNEL, 
+    #endif
+    #if (LPI2C_AVAILABLE) > 3
+    DMA_I2C_TX_CHANNEL,
+    #endif
+};
+
+// DMA channel assignments for each LPI2C receiver
+//
+static const unsigned char LPI2C_DMA_RX_CHANNEL[LPI2C_AVAILABLE] = {
+    DMA_I2C0_RX_CHANNEL,
+#if (LPI2C_AVAILABLE) > 1
+    DMA_I2C1_RX_CHANNEL,
+#endif
+#if (LPI2C_AVAILABLE) > 2
+    DMA_I2C2_RX_CHANNEL,
+#endif
+#if (LPI2C_AVAILABLE) > 3
+    DMA_I2C_RX_CHANNEL,
+#endif
+};
+
+// DMA channel interrupt priority assignments for each LPI2C transmitter
+//
+static const unsigned char LPI2C_DMA_TX_INT_PRIORITY[LPI2C_AVAILABLE] = {
+    DMA_I2C0_TX_INT_PRIORITY, 
+    #if (LPI2C_AVAILABLE) > 1
+    DMA_I2C1_TX_INT_PRIORITY, 
+    #endif
+    #if (LPI2C_AVAILABLE) > 2
+    DMA_I2C2_TX_INT_PRIORITY, 
+    #endif
+    #if (LPI2C_AVAILABLE) > 3
+    DMA_I2C3_TX_INT_PRIORITY,
+    #endif
+};
+
+// DMA channel interrupt priority assignments for each LPI2C receiver
+//
+static const unsigned char LPI2C_DMA_RX_INT_PRIORITY[LPI2C_AVAILABLE] = {
+    DMA_I2C0_RX_INT_PRIORITY,
+#if (LPI2C_AVAILABLE) > 1
+    DMA_I2C1_RX_INT_PRIORITY,
+#endif
+#if (LPI2C_AVAILABLE) > 2
+    DMA_I2C2_RX_INT_PRIORITY,
+#endif
+#if (LPI2C_AVAILABLE) > 3
+    DMA_I2C3_RX_INT_PRIORITY,
+#endif
+};
+#endif
+/* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
 
-static void fnConfigI2C_pins(QUEUE_HANDLE Channel,  int iMaster);
+static void fnConfigLPI2C_pins(QUEUE_HANDLE Channel,  int iMaster);
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -29,9 +95,9 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel,  int iMaster);
 
 static unsigned char ucCheckTxI2C = 0;                                   // {2}
 #if defined I2C_SLAVE_MODE
-    static unsigned char *ptrMessage[NUMBER_I2C] = {0};
-    static unsigned char ucMessageLength[NUMBER_I2C] = {0};
-    static int (*fnI2C_SlaveCallback[NUMBER_I2C])(int iChannel, unsigned char *ptrDataByte, int iType) = {0};
+    static unsigned char *ptrMessage[LPI2C_AVAILABLE] = {0};
+    static unsigned char ucMessageLength[LPI2C_AVAILABLE] = {0};
+    static int (*fnI2C_SlaveCallback[LPI2C_AVAILABLE])(int iChannel, unsigned char *ptrDataByte, int iType) = {0};
 #endif
 
 /* =================================================================== */
@@ -39,8 +105,8 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 /* =================================================================== */
 
 #if defined I2C_INTERFACE
-    extern I2CQue *I2C_rx_control[NUMBER_I2C];
-    extern I2CQue *I2C_tx_control[NUMBER_I2C];
+    extern I2CQue *I2C_rx_control[LPI2C_AVAILABLE];
+    extern I2CQue *I2C_tx_control[LPI2C_AVAILABLE];
 #endif
 
 /* =================================================================== */
@@ -124,20 +190,49 @@ static unsigned char fnGetTxByte(int iChannel, I2CQue *ptrTxControl, int iType)
     #define LPI2C_CHARACTERISTICS_ LPI2C_CHARACTERISTICS
 #endif
 
-static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // general LPI2C interrupt handler
+static void ReceptionComplete(I2CQue *ptrTxControl, KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel)
+{
+    I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+    ptrRxControl->msgs++;                                    // reception message available
+    if (ptrRxControl->wake_task != 0) {                      // wake up the receiver task if desired
+        uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
+    }
+    if (ptrTxControl->I2C_queue.chars != 0) {                // reception has completed but we have further queued data
+        fnLogEvent('P', 0);
+        fnTxI2C(ptrTxControl, iChannel);                     // we have another message to send so we can send a repeated start condition
+    }
+    else {
+        ptrLPI2C->LPI2C_MIER = LPI2C_MIER_SDIE;              // disable reception interrupt and enable stop detect interrupt
+        ptrLPI2C->LPI2C_MTDR = LPI2C_MTDR_CMD_STOP;          // send stop condition
+#if defined _WINDOWS
+        ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_SDF;                // simulate the interrupt directly
+        iInts |= (I2C_INT0 << iChannel);                     // signal that an interrupt is to be generated
+#endif
+    }
+}
+
+static void fnLPI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // general LPI2C interrupt handler
 {
     I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+#if defined _WINDOWS
+    int irq_id = (irq_LPI2C0_ID + iChannel);
+    #if LPI2C_AVAILABLE > 2
+    if (iChannel == 2) {
+        irq_id = (irq_INTMUX0_0_ID + INPUT_TO_INTMUX0_CHANNEL_2);
+    }
+    #endif
+#endif
 
-    if ((ptrLPI2C->LPI2C_MIER & ptrLPI2C->LPI2C_MSR) & LPI2C_MSR_SDF) {  // stop condition has completed
+    if (((ptrLPI2C->LPI2C_MIER & ptrLPI2C->LPI2C_MSR) & LPI2C_MSR_SDF) != 0) { // stop condition has completed
         fnLogEvent('S', ptrLPI2C->LPI2C_MSR);
         ptrLPI2C->LPI2C_MIER = 0;                                        // disable all interrupt sources
-        WRITE_ONE_TO_CLEAR(ptrLPI2C->LPI2C_MSR, LPI2C_MSR_SDF);          // clear interrupt flag
+        WRITE_ONE_TO_CLEAR_INTERRUPT(ptrLPI2C->LPI2C_MSR, LPI2C_MSR_SDF, irq_id); // clear interrupt flag
         if ((ptrTxControl->ucState & RX_ACTIVE) != 0) {
-            I2CQue *ptrRxControl = I2C_rx_control[iChannel];
-            ptrRxControl->msgs++;
-            if (ptrRxControl->wake_task != 0) {                          // wake up the receiver task if desired
-                uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
-            }
+          //I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+          //ptrRxControl->msgs++;
+          //if (ptrRxControl->wake_task != 0) {                          // wake up the receiver task if desired
+          //    uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
+          //}
         }
         else {
             if (ptrTxControl->wake_task != 0) {
@@ -188,7 +283,11 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
             fnLogEvent('A', ptrLPI2C->LPI2C_MRDR);
             (void)(ptrLPI2C->LPI2C_MRDR);                                // dummy read to clear address
             ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_RTF | LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS_); // ensure receive FIFO is reset
+#if defined I2C_2_BYTE_LENGTH
+            ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (unsigned char)(ptrTxControl->usPresentLen - 1)); // command the read sequence
+#else
             ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (ptrTxControl->ucPresentLen - 1)); // command the read sequence
+#endif
             ptrLPI2C->LPI2C_MIER = LPI2C_MIER_RDIE;                      // enable interrupt on reception available and disable transmission interrupt
             ptrTxControl->ucState = (RX_ACTIVE);                         // signal that the address has been sent and we are now receiving
 #if defined _WINDOWS
@@ -198,15 +297,17 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
         }
         else {                                                           // reception character available
 #if defined _WINDOWS
-            if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_DATA_MASK) != 0) {    // this is a write-only register but the simulator uses it to count down the number or reception bytes that was set
-                ptrLPI2C->LPI2C_MTDR--;
-                ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
-                iInts |= (I2C_INT0 << iChannel);
+            if ((LPI2C2_MDER & LPI2C_MDER_RDDE) == 0) {                  // if not receiving with DMA
+                if ((ptrLPI2C->LPI2C_MTDR & LPI2C_MTDR_DATA_MASK) != 0) {// this is a write-only register but the simulator uses it to count down the number of reception bytes that was set
+                    ptrLPI2C->LPI2C_MTDR--;
+                    ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_RDF;
+                    iInts |= (I2C_INT0 << iChannel);
+                }
+                else {
+                    ptrLPI2C->LPI2C_MSR &= ~LPI2C_MSR_RDF;               // final reception was received so remove the reception ready flag
+                }
+                ptrLPI2C->LPI2C_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MRDR));
             }
-            else {
-                ptrLPI2C->LPI2C_MSR &= ~LPI2C_MSR_RDF;                   // final reception was received so remove the reception ready flag
-            }
-            ptrLPI2C->LPI2C_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MRDR));
 #endif
             *ptrRxControl->I2C_queue.put = (unsigned char)(ptrLPI2C->LPI2C_MRDR); // read the byte
             fnLogEvent('r', *ptrRxControl->I2C_queue.put);
@@ -214,24 +315,24 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
             if (++(ptrRxControl->I2C_queue.put) >= ptrRxControl->I2C_queue.buffer_end) { // handle circular input buffer
                 ptrRxControl->I2C_queue.put = ptrRxControl->I2C_queue.QUEbuffer;
             }
-            if (--(ptrTxControl->ucPresentLen) == 0) {
-                if (ptrTxControl->I2C_queue.chars != 0) {                // reception has completed but we have further queued data
-                    fnLogEvent('P', 0);
-                    fnTxI2C(ptrTxControl, iChannel);                     // we have another message to send so we can send a repeated start condition
-                }
-                else {
-                    ptrLPI2C->LPI2C_MIER = LPI2C_MIER_SDIE;              // disable reception interrupt and enable stop detect interrupt
-                    ptrLPI2C->LPI2C_MTDR = LPI2C_MTDR_CMD_STOP;          // send stop condition
-#if defined _WINDOWS
-                    ptrLPI2C->LPI2C_MSR |= LPI2C_MSR_SDF;                // simulate the interrupt directly
-                    iInts |= (I2C_INT0 << iChannel);                     // signal that an interrupt is to be generated
+#if defined I2C_2_BYTE_LENGTH
+            if (--(ptrTxControl->usPresentLen) == 0)
+#else
+            if (--(ptrTxControl->ucPresentLen) == 0)
 #endif
-                }
+            {
+                ReceptionComplete(ptrTxControl, ptrLPI2C, iChannel);
             }
         }
         return;
     }
-    else if (ptrTxControl->ucPresentLen-- != 0) {                        // TX_ACTIVE - send next byte if available
+    else
+#if defined I2C_2_BYTE_LENGTH
+    if (ptrTxControl->usPresentLen-- != 0)                               // TX_ACTIVE - send next byte if available
+#else
+    if (ptrTxControl->ucPresentLen-- != 0)                               // TX_ACTIVE - send next byte if available
+#endif
+    {
         fnLogEvent('U', ptrLPI2C->LPI2C_MSR);
         fnLogEvent('X', *ptrTxControl->I2C_queue.get);
         ptrLPI2C->LPI2C_MTDR = *ptrTxControl->I2C_queue.get++;           // send the next byte (note that the command byte is 0, meaning just send byte)
@@ -261,35 +362,190 @@ static void fnI2C_Handler(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel) // gene
     }
 }
 
-static __interrupt void _I2C_Interrupt_0(void)                           // I2C0 interrupt
+static __interrupt void _I2C_Interrupt_0(void)                           // LPI2C0 interrupt
 {
-    fnI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK, 0);
+    fnLPI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK, 0);
 }
 
-    #if NUMBER_I2C > 1
-static __interrupt void _I2C_Interrupt_1(void)                           // I2C1 interrupt
+    #if LPI2C_AVAILABLE > 1
+static __interrupt void _I2C_Interrupt_1(void)                           // LPI2C1 interrupt
 {
-    fnI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK, 1);
+    fnLPI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK, 1);
 }
     #endif
 
-    #if NUMBER_I2C > 2
-static __interrupt void _I2C_Interrupt_2(void)                           // I2C2 interrupt
+    #if LPI2C_AVAILABLE > 2
+static __interrupt void _I2C_Interrupt_2(void)                           // LPI2C2 interrupt
 {
-    fnI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK, 2);
+    fnLPI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK, 2);
 }
     #endif
 
-    #if NUMBER_I2C > 3
-static __interrupt void _I2C_Interrupt_3(void)                           // I2C3 interrupt
+    #if LPI2C_AVAILABLE > 3
+static __interrupt void _I2C_Interrupt_3(void)                           // LPI2C3 interrupt
 {
-    fnI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK, 3);
+    fnLPI2C_Handler((KINETIS_LPI2C_CONTROL *)LPI2C3_BLOCK, 3);
 }
     #endif
+
+
+#if defined I2C_DMA_SUPPORT                                              // DMA support
+static void fnStartLPI2C_TxDMA(KINETIS_LPI2C_CONTROL *ptrLPI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+{
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    QUEUE_TRANSFER max_linear_data = (ptI2CQue->I2C_queue.buffer_end - ptI2CQue->I2C_queue.get);
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->dma_length = ptI2CQue->usPresentLen;
+    #else
+    ptI2CQue->dma_length = ptI2CQue->ucPresentLen;
+    #endif
+    if (ptI2CQue->dma_length > max_linear_data) {
+        ptI2CQue->dma_length = max_linear_data;
+    }
+    ptrDMA_TCD += LPI2C_DMA_TX_CHANNEL[Channel];
+    ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptI2CQue->dma_length; // the number of service requests (the number of bytes to be transferred)
+    ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)ptI2CQue->I2C_queue.get;  // source is I2C output buffer's present location
+    #if defined SUPPORT_LOW_POWER
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (I2C0_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the I2C activity has completed
+    #endif
+    ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, LPI2C_DMA_TX_CHANNEL[Channel]); // enable request source in order to start DMA activity
+    #if defined _WINDOWS                                                 // simulation
+    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
+    iDMA |= (DMA_CONTROLLER_0 << LPI2C_DMA_TX_CHANNEL[Channel]);         // activate first DMA request
+    #endif
+}
+
+static void fnStartLPI2C_RxDMA(KINETIS_LPI2C_CONTROL *ptrLPI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+{
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    QUEQUE *ptrRxQueue = &I2C_rx_control[Channel]->I2C_queue;
+    QUEUE_TRANSFER max_linear_data = (ptrRxQueue->buffer_end - ptrRxQueue->put);
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->dma_length = ptI2CQue->usPresentLen;
+    #else
+    ptI2CQue->dma_length = ptI2CQue->ucPresentLen;
+    #endif
+    if (ptI2CQue->dma_length > max_linear_data) {
+        ptI2CQue->dma_length = max_linear_data;
+    }
+    ptrDMA_TCD += LPI2C_DMA_RX_CHANNEL[Channel];
+    ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptI2CQue->dma_length; // the number of service requests (the number of bytes to be transferred)
+    ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptrRxQueue->put;          // destination is I2C input buffer's present location
+    #if defined SUPPORT_LOW_POWER
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (I2C0_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the I2C activity has completed
+    #endif
+    ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, LPI2C_DMA_RX_CHANNEL[Channel]); // enable request source in order to start DMA activity
+    #if defined _WINDOWS                                                 // simulation
+    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
+    iDMA |= (DMA_CONTROLLER_0 << LPI2C_DMA_RX_CHANNEL[Channel]);         // activate first DMA request
+    #endif
+}
+
+// Common DMA tx interrupt handler
+//
+static void _lpi2c_tx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel)
+{
+    I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+        #if defined _WINDOWS
+    fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
+        #endif
+    ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    ptrTxControl->I2C_queue.get += ptrTxControl->dma_length;
+    if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) {
+        ptrTxControl->I2C_queue.get -= ptrTxControl->I2C_queue.buf_length;
+    }
+    if (ptrTxControl->usPresentLen == 0) {                               // if all data transmitted
+        fnLPI2C_Handler(ptrLPI2C, iChannel);
+    }
+    else {                                                               // transmit remaining (after circular buffer wrap-around)
+        fnStartLPI2C_TxDMA(ptrLPI2C, ptrTxControl, iChannel);
+        #if defined _WINDOWS
+        fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
+        #endif
+    }    
+}
+static void _lpi2c0_tx_dma_Interrupt(void)
+{
+    _lpi2c_tx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK, 0);
+}
+
+    #if LPI2C_AVAILABLE > 1
+static void _lpi2c1_tx_dma_Interrupt(void)
+{
+    _lpi2c_tx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK, 1);
+}
+    #endif
+    #if LPI2C_AVAILABLE > 2
+static void _lpi2c2_tx_dma_Interrupt(void)
+{
+    _lpi2c_tx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK, 2);
+}
+    #endif
+
+// Common DMA tx interrupt handler
+//
+static void _lpi2c_rx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChannel)
+{
+    I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+    I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+    ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    ptrRxControl->I2C_queue.put += ptrRxControl->dma_length;
+    if (ptrRxControl->I2C_queue.put >= ptrRxControl->I2C_queue.buffer_end) {
+        ptrRxControl->I2C_queue.put -= ptrRxControl->I2C_queue.buf_length;
+    }
+    ptrRxControl->I2C_queue.chars += ptrTxControl->dma_length;
+    if (ptrTxControl->usPresentLen == 0) {                               // if all data received
+        ReceptionComplete(ptrTxControl, ptrLPI2C, iChannel);
+    }
+    else {                                                               // receive remaining (after circular buffer wrap-around)
+        fnStartLPI2C_RxDMA(ptrLPI2C, ptrTxControl, iChannel);
+    }
+}
+
+
+static void _lpi2c0_rx_dma_Interrupt(void)
+{
+    _lpi2c_rx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK, 0);
+}
+
+    #if LPI2C_AVAILABLE > 1
+static void _lpi2c1_rx_dma_Interrupt(void)
+{
+    _lpi2c_rx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C1_BLOCK, 1);
+}
+    #endif
+    #if LPI2C_AVAILABLE > 2
+static void _lpi2c2_rx_dma_Interrupt(void)
+{
+    _lpi2c_rx_dma_Interrupt((KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK, 2);
+}
+    #endif
+
+static void (*_lpi2c_tx_dma_Interrupts[LPI2C_AVAILABLE])(void) = {
+    _lpi2c0_tx_dma_Interrupt,
+    #if LPI2C_AVAILABLE > 1
+    _lpi2c1_tx_dma_Interrupt,
+    #endif
+    #if LPI2C_AVAILABLE > 2
+    _lpi2c2_tx_dma_Interrupt,
+    #endif
+};
+
+static void(*_lpi2c_rx_dma_Interrupts[LPI2C_AVAILABLE])(void) = {
+    _lpi2c0_rx_dma_Interrupt,
+    #if LPI2C_AVAILABLE > 1
+    _lpi2c1_rx_dma_Interrupt,
+    #endif
+    #if LPI2C_AVAILABLE > 2
+    _lpi2c2_rx_dma_Interrupt,
+    #endif
+};
+#endif
 
 /* =================================================================== */
 /*                   I2C Transmission Initiation                       */
 /* =================================================================== */
+
 
 // Send a first byte to I2C bus
 //
@@ -317,8 +573,16 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     #else
     ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C0_BLOCK;
     #endif
-
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->usPresentLen = *ptI2CQue->I2C_queue.get++;                 // get the length of this transaction (MSB)
+    ptI2CQue->usPresentLen <<= 8;
+    if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
+        ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
+    }
+    ptI2CQue->usPresentLen |= *ptI2CQue->I2C_queue.get++;                // length LSB
+    #else
     ptI2CQue->ucPresentLen = *ptI2CQue->I2C_queue.get++;                 // get the length of this transaction
+    #endif
     if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
         ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
     }
@@ -330,7 +594,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         if ((ucCheckTxI2C & (1 << Channel)) == 0) {                      // on first use we check that the bus is not held in a busy state (can happen when a reset took place during an acknowledge period and the slave is holding the bus)
             ucCheckTxI2C |= (1 << Channel);                              // checked only once
             uEnable_Interrupt();
-                fnConfigI2C_pins(Channel, 1);                            // check and configure pins for I2C use
+                fnConfigLPI2C_pins(Channel, 1);                          // check and configure pins for LPI2C use
             uDisable_Interrupt();
         }
         fnLogEvent('B', ptrLPI2C->LPI2C_MSR);
@@ -356,18 +620,44 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     }
     if ((ucAddress & 0x01) != 0) {                                       // reading from the slave
         I2C_tx_control[Channel]->ucState |= (RX_ACTIVE | TX_ACTIVE);
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->I2C_queue.chars -= 4;
+    #else
         ptI2CQue->I2C_queue.chars -= 3;
+    #endif
         fnLogEvent('g', (unsigned char)(ptI2CQue->I2C_queue.chars));
         I2C_rx_control[Channel]->wake_task = *ptI2CQue->I2C_queue.get++; // enter task to be woken when reception has completed
         if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {
             ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;     // handle circular buffer
         }
+    #if defined I2C_DMA_SUPPORT
+        if ((ptrLPI2C->LPI2C_MDER & LPI2C_MDER_RDDE) != 0) {             // if using DMA for reception
+            fnStartLPI2C_RxDMA(ptrLPI2C, ptI2CQue, Channel);
+        #if defined _WINDOWS
+            fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
+        #endif
+            return;
+        }
+    #endif
     }
     else {
         I2C_tx_control[Channel]->ucState &= ~(RX_ACTIVE);
         I2C_tx_control[Channel]->ucState |= (TX_ACTIVE);                 // writing to the slave
-        ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->I2C_queue.chars -= (ptI2CQue->usPresentLen + 1);       // the remaining queue content after this transaction completes
+    #else
+        ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content after this transaction completes
+    #endif
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
+    #if defined I2C_DMA_SUPPORT
+        if ((ptrLPI2C->LPI2C_MDER & LPI2C_MDER_TDDE) != 0) {             // if using DMA for transmission
+            fnStartLPI2C_TxDMA(ptrLPI2C, ptI2CQue, Channel);
+        #if defined _WINDOWS
+            fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
+        #endif
+            return;
+        }
+    #endif
     }
     ptrLPI2C->LPI2C_MIER = (LPI2C_MIER_TDIE);                            // enable interrupt on transmission completion
     fnLogEvent('T', ptrLPI2C->LPI2C_MSR);
@@ -387,7 +677,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 // Initially the I2C pins were configured as inputs to allow an I2C bus lockup state to be detected
 // - this routine checks for this state and generates clocks if needed to recover from it before setting I2C pin functions
 //
-static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
+static void fnConfigLPI2C_pins(QUEUE_HANDLE Channel, int iMaster)        // {2}
 {
     if (Channel == 0)  {                                                 // LPI2C0
     #if defined KINETIS_KE15 && defined I2C0_ON_B
@@ -596,6 +886,9 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
 extern void fnConfigI2C(I2CTABLE *pars)
 {
     KINETIS_LPI2C_CONTROL *ptrLPI2C;
+    #if defined I2C_DMA_SUPPORT
+    unsigned short usTriggerSource = 0;
+    #endif
     if (pars->Channel == 0) {                                            // LPI2C channel 0
     #if defined KINETIS_WITH_PCC
         SELECT_PCC_PERIPHERAL_SOURCE(LPI2C0, LPI2C0_PCC_SOURCE);         // select the PCC clock used by LPI2C0
@@ -627,6 +920,9 @@ extern void fnConfigI2C(I2CTABLE *pars)
     #else
         _CONFIG_PORT_INPUT_FAST_HIGH(E, (PORTE_BIT25 | PORTE_BIT24), (PORT_ODE | PORT_PS_UP_ENABLE));
     #endif
+    #if defined I2C_DMA_SUPPORT
+        usTriggerSource = DMAMUX0_CHCFG_SOURCE_LPI2C0_RX;
+    #endif
     }
     #if LPI2C_AVAILABLE > 1
     else if (pars->Channel == 1) {                                       // LPI2C channel 1
@@ -656,6 +952,9 @@ extern void fnConfigI2C(I2CTABLE *pars)
         #else
         _CONFIG_PORT_INPUT_FAST_HIGH(E, (PORTE_BIT0 | PORTE_BIT1), (PORT_ODE | PORT_PS_UP_ENABLE));
         #endif
+        #if defined I2C_DMA_SUPPORT
+        usTriggerSource = DMAMUX0_CHCFG_SOURCE_LPI2C1_RX;
+        #endif
     }
     #endif
     #if LPI2C_AVAILABLE > 2
@@ -667,7 +966,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
         ptrLPI2C = (KINETIS_LPI2C_CONTROL *)LPI2C2_BLOCK;
         LPI2C2_MCR = (LPI2C_MCR_RST | LPI2C_MCR_RTF | LPI2C_MCR_RRF);    // reset LPI2C controller and ensure FIFOs are reset
         #if !defined irq_I2C2_ID && defined INTMUX0_AVAILABLE
-        fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_I2C2), INTMUX0_PERIPHERAL_I2C2, _I2C_Interrupt_2); // enter I2C2 interrupt handler
+        fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_LPI2C2), INTMUX0_PERIPHERAL_I2C2, _I2C_Interrupt_2); // enter I2C2 interrupt handler
         #else
         fnEnterInterrupt(irq_I2C2_ID, PRIORITY_I2C2, _I2C_Interrupt_2);  // enter I2C2 interrupt handler
         #endif
@@ -676,11 +975,25 @@ extern void fnConfigI2C(I2CTABLE *pars)
         #else
         _CONFIG_PORT_INPUT_FAST_HIGH(A, (PORTA_BIT11 | PORTA_BIT12), (PORT_ODE | PORT_PS_UP_ENABLE));
         #endif
+        #if defined I2C_DMA_SUPPORT
+        usTriggerSource = DMAMUX0_CHCFG_SOURCE_LPI2C2_RX;
+        #endif
     }
     #endif
     else {
         return;
     }
+    ptrLPI2C->LPI2C_MDER = 0;                                            // disable DMA operation
+    #if defined I2C_DMA_SUPPORT
+    if ((pars->ucDMAConfig & I2C_TX_DMA) != 0) {
+        ptrLPI2C->LPI2C_MDER = LPI2C_MDER_TDDE;                          // enable DMA on transmission
+        fnConfigDMA_buffer(LPI2C_DMA_TX_CHANNEL[pars->Channel], (usTriggerSource + 1), 0, 0, (void *)&(ptrLPI2C->LPI2C_MTDR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _lpi2c_tx_dma_Interrupts[pars->Channel], LPI2C_DMA_TX_INT_PRIORITY[pars->Channel]);
+    }
+    if ((pars->ucDMAConfig & I2C_RX_DMA) != 0) {
+        ptrLPI2C->LPI2C_MDER |= LPI2C_MDER_RDDE;                         // enable DMA on reception
+        fnConfigDMA_buffer(LPI2C_DMA_RX_CHANNEL[pars->Channel], (usTriggerSource), 0, (void *)&(ptrLPI2C->LPI2C_MRDR), 0, (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE), _lpi2c_rx_dma_Interrupts[pars->Channel], LPI2C_DMA_RX_INT_PRIORITY[pars->Channel]);
+    }
+    #endif
     ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS_);                      // take the LPI2C controller out of reset
     if (pars->usSpeed != 0) {
         int iPrecaler;
@@ -731,14 +1044,14 @@ extern void fnConfigI2C(I2CTABLE *pars)
         else {
             ptrLPI2C->LPI2C_MCCR0 = (((ucClkHi << LPI2C_MCCR_CLKHI_SHIFT) & LPI2C_MCCR0_CLKHI_MASK) | ((((2 * ucClkHi) << LPI2C_MCCR_CLKLO_SHIFT) & LPI2C_MCCR0_CLKLO_MASK) | ((ucClkHi << LPI2C_MCCR_SETHOLD_SHIFT) & LPI2C_MCCR0_SETHOLD_MASK) | (((ucClkHi/2) << LPI2C_MCCR_DATAVD_SHIFT) & LPI2C_MCCR0_DATAVD_MASK)));
         }
-      //ptrLPI2C->LPI2C_MCCR0 = 0x09131326;                              // reference for 100kHz fr0m 48MHz clock (presacle value of 3)
+      //ptrLPI2C->LPI2C_MCCR0 = 0x09131326;                              // reference for 100kHz from 48MHz clock (prescale value of 3)
         ptrLPI2C->LPI2C_MCR = (LPI2C_MCR_MEN | LPI2C_CHARACTERISTICS_);  // enable master mode of operation
     }
     else {
     #if defined I2C_SLAVE_MODE
         ucSpeed = 0;                                                     // speed is determined by master
         ptrLPI2C->I2C_A1 = pars->ucSlaveAddress;                         // program the slave's address
-        fnConfigI2C_pins(pars->Channel, 0);                              // configure pins for I2C use
+        fnConfigLPI2C_pins(pars->Channel, 0);                            // configure pins for LPI2C use
         I2C_rx_control[pars->Channel]->ucState = I2C_SLAVE_RX_MESSAGE_MODE; // the slave receiver operates in message mode
         I2C_tx_control[pars->Channel]->ucState = I2C_SLAVE_TX_BUFFER_MODE; // the slave transmitter operates in buffer mode
         fnI2C_SlaveCallback[pars->Channel] = pars->fnI2C_SlaveCallback;  // optional callback to use on slave reception

@@ -19,6 +19,7 @@
     05.06.2010 Add check of read/write address when simulating           {4}
     01.10.2015 Add I2C save mode support                                 {5}
     19.01.2015 Add support for modifying wakeup task                     {6}
+    24.03.2019 Add I2C_2_BYTE_LENGTH option
 
 */
 
@@ -101,14 +102,23 @@ static QUEUE_TRANSFER entry_I2C(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
             }
     #endif
     #if defined _WINDOWS                                                 // {4}
-            if ((*(ptBuffer + 1) & 0x01) == 0) {
+        #if defined I2C_2_BYTE_LENGTH
+            if ((*(ptBuffer + 2) & 0x01) == 0)
+        #else
+            if ((*(ptBuffer + 1) & 0x01) == 0)
+        #endif
+            {
                 _EXCEPTION("Incorrect I2C address being used!!");        // cause an exception to warn of bad use
             }                                                            // the caller is trying to read from a write I2C address!!
     #endif
             ptI2CQue = (struct stI2CQue *)(que_ids[DriverID].output_buffer_control); // set to input control block
 
             uEnable_Interrupt();                                         // fnFillBuffer disables and then re-enables interrupts - be sure we are compatible
+    #if defined I2C_2_BYTE_LENGTH
+                rtn_val = fnFillBuf(&ptI2CQue->I2C_queue, ptBuffer, 4);  // add four bytes (number of bytes to be read [16 bit counter], the slave I2C address and the receiving task ID)
+    #else
                 rtn_val = fnFillBuf(&ptI2CQue->I2C_queue, ptBuffer, 3);  // add three bytes (number of bytes to be read, the slave I2C address and the receiving task ID)
+    #endif
             uDisable_Interrupt();
 
             if ((ptI2CQue->ucState & TX_ACTIVE) == 0) {                  // if active, we must queue the read
@@ -156,14 +166,20 @@ static QUEUE_TRANSFER entry_I2C(QUEUE_HANDLE channel, unsigned char *ptBuffer, Q
     #if defined I2C_SLAVE_MODE
             if ((ptI2CQue->ucState & I2C_SLAVE_TX_BUFFER_MODE) == 0) {   // if the channel is in slave buffer mode we don't enter the length in the output buffer
     #endif
-        #if defined _WINDOWS                                             // {4}
+    #if defined _WINDOWS                                                 // {4}
                 if ((*ptBuffer & 0x01) != 0) {
                     _EXCEPTION("Incorrect I2C address being used!!");    // cause an exception to warn of bad use
                 }                                                        // the caller is trying to write to a read I2C address!!
-        #endif
+    #endif
+    #if defined I2C_2_BYTE_LENGTH
+                *ptI2CQue->I2C_queue.put++ = (unsigned char)((Counter - 1) >> 8); // put length at first position in message (MSB)
+                if (ptI2CQue->I2C_queue.put >= ptI2CQue->I2C_queue.buffer_end) {
+                    ptI2CQue->I2C_queue.put = ptI2CQue->I2C_queue.QUEbuffer; // handle circular buffer
+                }
+    #endif
                 *ptI2CQue->I2C_queue.put++ = (unsigned char)(Counter - 1); // put length at first position in message
     #if defined I2C_SLAVE_MODE
-                }
+            }
     #endif
             if (ptI2CQue->I2C_queue.put >= ptI2CQue->I2C_queue.buffer_end) {
                 ptI2CQue->I2C_queue.put = ptI2CQue->I2C_queue.QUEbuffer; // handle circular buffer
