@@ -410,7 +410,6 @@ static void fnStartLPI2C_TxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     #endif
     ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, LPI2C_DMA_TX_CHANNEL[Channel]); // enable request source in order to start DMA activity
     #if defined _WINDOWS                                                 // simulation
-    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
     iDMA |= (DMA_CONTROLLER_0 << LPI2C_DMA_TX_CHANNEL[Channel]);         // activate first DMA request
     #endif
 }
@@ -436,7 +435,6 @@ static void fnStartLPI2C_RxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     #endif
     ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, LPI2C_DMA_RX_CHANNEL[Channel]); // enable request source in order to start DMA activity
     #if defined _WINDOWS                                                 // simulation
-    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
     iDMA |= (DMA_CONTROLLER_0 << LPI2C_DMA_RX_CHANNEL[Channel]);         // activate first DMA request
     #endif
 }

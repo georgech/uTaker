@@ -1442,9 +1442,6 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
             #elif UARTS_AVAILABLE > 0
     uart_reg->UART_S1 &= ~(UART_S1_TDRE | UART_S1_TC);                   // mark transmitter presently not empty
             #endif
-            #if ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA)
-    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
-            #endif
             #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION
     if (iNoDMA_int != 0) {
         return tx_length;

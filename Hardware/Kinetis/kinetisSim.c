@@ -5350,15 +5350,18 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
     if (channel >= DMA_CHANNEL_COUNT) {
         _EXCEPTION("Warning - invalid DMA channel being used!!");
     }
+    if (ucTriggerSource != 0) {
+        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;
+    }
     if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
-        if (ucTriggerSource != 0) {
+      //if (ucTriggerSource != 0) {
             unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
             // Check that the trigger source is correctly connected to the DMA channel
             //
             if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
                 _EXCEPTION("DMUX source is not connected!!!");
             }
-        }
+      //}
     }
     if ((ptrDMA_TCD->DMA_TCD_CSR & (DMA_TCD_CSR_START | DMA_TCD_CSR_ACTIVE)) != 0) { // sw commanded start or active
         int interrupt = 0;
@@ -6321,9 +6324,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             }
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART0_CH_NUMBER])) != 0) { // if source enabled
-                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += ucUART_channel[LPUART0_CH_NUMBER];
-                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(ucUART_channel[LPUART0_CH_NUMBER], ucUART_DMUX_channel[LPUART0_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART0_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
@@ -6391,9 +6391,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             }
                     #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART1_CH_NUMBER])) != 0) { // if source enabled
-                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += ucUART_channel[LPUART1_CH_NUMBER];
-                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(ucUART_channel[LPUART1_CH_NUMBER], ucUART_DMUX_channel[LPUART1_CH_NUMBER]); // trigger DMA transfer on the UART's channel
                                 LPUART1_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
@@ -6466,9 +6463,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             }
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART2_CH_NUMBER])) != 0) { // if source enabled
-                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += ucUART_channel[LPUART2_CH_NUMBER];
-                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(ucUART_channel[LPUART2_CH_NUMBER], ucUART_DMUX_channel[LPUART2_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART2_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
@@ -6521,9 +6515,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             }
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART3_CH_NUMBER])) != 0) { // if source enabled
-                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += ucUART_channel[LPUART3_CH_NUMBER];
-                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(ucUART_channel[LPUART3_CH_NUMBER], ucUART_DMUX_channel[LPUART3_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART3_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
@@ -6563,9 +6554,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             }
                 #else
                             if ((DMA_ERQ & (DMA_ERQ_ERQ0 << ucUART_channel[LPUART4_CH_NUMBER])) != 0) { // if source enabled
-                                KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                                ptrDMA_TCD += ucUART_channel[LPUART4_CH_NUMBER];
-                                ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                                 fnSimulateDMA(ucUART_channel[LPUART4_CH_NUMBER], ucUART_DMUX_channel[LPUART4_CH_NUMBER]); // trigger DMA transfer on the LPUART's channel
                                 LPUART4_STAT &= ~LPUART_STAT_RDRF;       // remove interrupt cause
                             }
@@ -6613,9 +6601,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                     #else
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART0_RX_CHANNEL)) != 0) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART0_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART0_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART0_RX); // trigger DMA transfer on the UART's channel
                             UART0_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -6669,9 +6654,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                 #else
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART1_RX_CHANNEL)) != 0) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART1_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART1_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART1_RX); // trigger DMA transfer on the UART's channel
                             UART1_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -6743,9 +6725,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
                 #else
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART2_RX_CHANNEL)) != 0) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART2_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART2_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART2_RX); // trigger DMA transfer on the UART's channel
                             UART2_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -6793,9 +6772,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                         }
             #else
                         if (DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART3_RX_CHANNEL)) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART3_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART3_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART3_RX); // trigger DMA transfer on the UART's channel
                             UART3_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -6832,9 +6808,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     if ((UART4_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART4_RX_CHANNEL
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART4_RX_CHANNEL)) != 0) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART4_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART4_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART4_RX); // trigger DMA transfer on the UART's channel
                             UART4_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -6863,9 +6836,6 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                     if ((UART5_C5 & UART_C5_RDMAS) != 0) {               // {4} if the UART is operating in DMA reception mode
         #if defined SERIAL_SUPPORT_DMA && defined DMA_UART5_RX_CHANNEL
                         if ((DMA_ERQ & (DMA_ERQ_ERQ0 << DMA_UART5_RX_CHANNEL)) != 0) { // if source enabled
-                            KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-                            ptrDMA_TCD += DMA_UART5_RX_CHANNEL;
-                            ptrDMA_TCD->DMA_TCD_CSR |= (DMA_TCD_CSR_ACTIVE); // trigger
                             fnSimulateDMA(DMA_UART5_RX_CHANNEL, DMAMUX0_CHCFG_SOURCE_UART5_RX); // trigger DMA transfer on the UART's channel
                             UART5_S1 &= ~UART_S1_RDRF;                   // remove interrupt cause
                         }
@@ -9081,6 +9051,162 @@ extern unsigned long fnSimDMA(char *argv[])
                             iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
                                 I2C0_D = fnSimI2C_devices(I2C_TX_DATA, I2C0_D);
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+        #if I2C_AVAILABLE > 1
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C1_RX_CHANNEL)) { // handle I2C DMA reception on I2C1
+                if ((I2C1_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C1];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C1
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            I2C1_D = fnSimI2C_devices(I2C_RX_DATA, I2C1_D);
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C1_TX_CHANNEL)) { // handle I2C DMA transmission on I2C1
+                if ((I2C1_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C1];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C1
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                I2C1_D = fnSimI2C_devices(I2C_TX_DATA, I2C1_D);
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+        #if I2C_AVAILABLE > 2
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C2_RX_CHANNEL)) { // handle I2C DMA reception on I2C2
+                if ((I2C2_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C2];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C2;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            I2C2_D = fnSimI2C_devices(I2C_RX_DATA, I2C2_D);
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C2_TX_CHANNEL)) { // handle I2C DMA transmission on I2C2
+                if ((I2C2_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C2];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C2;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                I2C2_D = fnSimI2C_devices(I2C_TX_DATA, I2C2_D);
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+        #if I2C_AVAILABLE > 3
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C3_RX_CHANNEL)) { // handle I2C DMA reception on I2C3
+                if ((I2C3_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C3];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C3;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            I2C3_D = fnSimI2C_devices(I2C_RX_DATA, I2C3_D);
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C3_TX_CHANNEL)) { // handle I2C DMA transmission on I2C3
+                if ((I2C3_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C3];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C3;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                I2C3_D = fnSimI2C_devices(I2C_TX_DATA, I2C3_D);
                                 iDMA |= ulChannel;                       // further DMA triggers
                             }
                             else {

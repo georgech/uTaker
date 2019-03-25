@@ -11,7 +11,7 @@
     File:      kinetis_I2C.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.10.2012 Extend I2C speed settings                                 {1}
     25.04.2014 Add automatic I2C lockup detection and recovery           {2}
@@ -352,9 +352,6 @@ static void(*_i2c_rx_dma_Interrupts[NUMBER_I2C])(void) = {
 
 static void fnStartI2C_TxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 {
-#if defined _WINDOWS
-    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-#endif
     QUEUE_TRANSFER max_linear_data = (ptI2CQue->I2C_queue.buffer_end - ptI2CQue->I2C_queue.get);
     #if defined I2C_2_BYTE_LENGTH
     ptI2CQue->dma_length = ptI2CQue->usPresentLen;
@@ -375,17 +372,12 @@ static void fnStartI2C_TxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEU
     ptrI2C->I2C_C1 = (I2C_MTX | I2C_MSTA | I2C_IIEN | I2C_IEN | I2C_DMAEN); // enable DMA
     fnDMA_BufferReset(I2C_DMA_TX_CHANNEL[Channel], DMA_BUFFER_START);    // start
     #if defined _WINDOWS                                                 // simulation
-    ptrDMA_TCD += I2C_DMA_TX_CHANNEL[Channel];
-    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
     iDMA |= (DMA_CONTROLLER_0 << I2C_DMA_TX_CHANNEL[Channel]);           // activate first DMA request
     #endif
 }
 
 static void fnStartI2C_RxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 {
-#if defined _WINDOWS
-    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-#endif
     QUEQUE *ptrRxQueue = &I2C_rx_control[Channel]->I2C_queue;
     QUEUE_TRANSFER max_linear_data = (ptrRxQueue->buffer_end - ptrRxQueue->put);
     #if defined I2C_2_BYTE_LENGTH
@@ -407,8 +399,6 @@ static void fnStartI2C_RxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEU
     ptrI2C->I2C_C1 = (I2C_MSTA | I2C_IIEN | I2C_IEN | I2C_DMAEN);        // enable DMA
     fnDMA_BufferReset(I2C_DMA_RX_CHANNEL[Channel], DMA_BUFFER_START);    // start
     #if defined _WINDOWS                                                 // simulation
-    ptrDMA_TCD += I2C_DMA_RX_CHANNEL[Channel];
-    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
     iDMA |= (DMA_CONTROLLER_0 << I2C_DMA_RX_CHANNEL[Channel]);           // activate first DMA request
     #endif
 }

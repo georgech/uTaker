@@ -11,7 +11,7 @@
     File:      i2c_tests.h
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.09.2010 Add TEST_SENSIRION
     09.04.2014 Add MMA8451Q, MMA7660F and FXOS8700 - 3/6-axis accelerometer/orientation/motion detection {1}
@@ -33,7 +33,7 @@
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
     #define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
-      //#define EEPROM_M24256                                            // EEPROM with two byte addressing
+        #define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_FM24CL16B                                               // test 2k FRAM (add #define FM24CL16B_PRESENT to app_hw_xxx.h for simulation support)
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
@@ -49,7 +49,6 @@
     #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 || defined TEST_DS1621
         #define I2C_TEST_CODE_ENABLED                                    // enable general I2C test code
     #endif
-
 
     #if RX_BUFFER_SIZE >= 112                                            // avoid using FXOS870 if the application task's input buffer is not adequately large
       //#define TEST_FXOS8700                                            // test monitoring the 6-axis sensor
@@ -339,6 +338,8 @@
 #if defined _I2C_INIT_CODE && defined I2C_TEST_CODE_ENABLED
 
     #if defined TEST_I2C_SLAVE
+static int fnI2C_SlaveCallback(int iChannel, unsigned char *ptrDataByte, int iType)
+{
     #define I2C_RAM_IDLE              0                                  // RAM pointer states
     #define SET_ADDRESS_POINTER       1
     static unsigned char ucRAM[256] = {0};                               // RAM buffer, initially zeroed
@@ -367,7 +368,7 @@
             ucState = I2C_RAM_IDLE;                                      // return to data reception
         }
         else {
-            usRAM[ucAddress++] = *ptrDataByte;                           // save the data and increment the address pointer
+            ucRAM[ucAddress++] = *ptrDataByte;                           // save the data and increment the address pointer
         }
         return I2C_SLAVE_RX_CONSUMED;                                    // the byte has been consumed and nothing is to be put in the queue buffer
 
@@ -402,12 +403,16 @@ static void fnConfigI2C_Interface(void)
     #else
     tI2CParameters.Rx_tx_sizes.RxQueueSize = 64;                         // receive queue size
     #endif
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+  //tI2CParameters.ucDMAConfig = 0;
+  //tI2CParameters.ucDMAConfig = I2C_TX_DMA;
+    tI2CParameters.ucDMAConfig = (I2C_TX_DMA | I2C_RX_DMA);
+    #endif
     #if defined TEST_I2C_SLAVE
     tI2CParameters.Task_to_wake = OWN_TASK;                              // wake application task when slave transaction has completed
     #else
     tI2CParameters.Task_to_wake = 0;                                     // no wake on transmission
     #endif
-
     if ((I2CPortID = fnOpen(TYPE_I2C, FOR_I_O, &tI2CParameters)) != NO_ID_ALLOCATED) { // open the channel with defined configurations
     #if !defined TEST_I2C_SLAVE                                          // when slave we don't initiate any activity but instead wait to be addressed
         #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B
@@ -419,8 +424,12 @@ static void fnConfigI2C_Interface(void)
         static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0, 0}; // command to set address to read to 0x0000
             #else
         static const unsigned char ucSetEEPROMAddress0[] = {ADD_EEPROM_WRITE, 0}; // command to set address to read to 0
-                #endif
+            #endif
+            #if defined I2C_2_BYTE_LENGTH
+        static const unsigned char ucReadEEPROM[] = { 0, 16, ADD_EEPROM_READ, OWN_TASK }; // command to start a read of 16 bytes with the task scheduled when the read has completed
+            #else
         static const unsigned char ucReadEEPROM[] = {16, ADD_EEPROM_READ, OWN_TASK}; // command to start a read of 16 bytes with the task scheduled when the read has completed
+            #endif
         fnWrite(I2CPortID, (unsigned char *)ucSetEEPROMAddress0, sizeof(ucSetEEPROMAddress0)); // write the EEPROM address to read
         fnRead(I2CPortID, (unsigned char *)ucReadEEPROM, 0);             // start the read process of 16 bytes
             #endif	
