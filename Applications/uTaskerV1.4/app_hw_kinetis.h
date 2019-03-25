@@ -3176,7 +3176,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define OUR_I2C_CHANNEL       3                                  // use I2C3 for reference
     #elif defined FRDM_KL28Z
         #define OUR_I2C_CHANNEL       2                                  // use I2C2 for reference
-      //#define I2C_DMA_SUPPORT
     #elif defined TWR_KL46Z48M || defined TWR_KL25Z48M || defined TWR_K22F120M || defined TWR_K64F120M || defined TWR_K53N512 || defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K21D50M || defined TWR_K21F120M || defined FRDM_KL27Z
         #define OUR_I2C_CHANNEL       1                                  // use I2C1 for reference
     #else
@@ -3219,6 +3218,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define LPI2C_CHARACTERISTICS  (0 | LPI2C_MCR_DBGEN)             // define whether the LPI2C controller operation is enabled in debug mode (debug mode should always be enabled otherwise strange effects may be encountered! - reference https://community.nxp.com/thread/465202)
     #endif
+  //#define I2C_DMA_SUPPORT                                              // support optional DMA transfer for reads and/or writes
 #endif
 
 // LAN interface

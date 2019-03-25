@@ -21,7 +21,7 @@
     24.12.2016 Add I2C_SLAVE_RX_MESSAGE_MODE and generate I2C_SLAVE_WRITE_COMPLETE on slave reception after repeated-start {4}
     21.01.2018 If the slave is already addressed when the stop condition handling is performed, allow the reception handling to continue {5}
     23.01.2018 If the slave is already addressed when the start condition handling is performed, allow the reception handling to continue {6}
-
+    24.03.2019 Add DMA mode and I2C_2_BYTE_LENGTH option
 */
 
 /* =================================================================== */
@@ -30,6 +30,11 @@
 
 static void fnConfigI2C_pins(QUEUE_HANDLE Channel,  int iMaster);
 static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_I2C_CONTROL *ptrI2C);
+static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel);
+#if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+    static void fnStartI2C_TxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel);
+    static void fnStartI2C_RxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel);
+#endif
 
 /* =================================================================== */
 /*                      local variable definitions                     */
@@ -41,6 +46,10 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
     static unsigned char ucMessageLength[NUMBER_I2C] = {0};
     static int (*fnI2C_SlaveCallback[NUMBER_I2C])(int iChannel, unsigned char *ptrDataByte, int iType) = {0};
 #endif
+#if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+    static unsigned short usDMATriggerSourceTx[NUMBER_I2C] = {0};
+    static unsigned short usDMATriggerSourceRx[NUMBER_I2C] = {0};
+#endif
 
 /* =================================================================== */
 /*                     global variable definitions                     */
@@ -48,6 +57,68 @@ static unsigned char ucCheckTxI2C = 0;                                   // {2}
 
 extern I2CQue *I2C_rx_control[NUMBER_I2C];
 extern I2CQue *I2C_tx_control[NUMBER_I2C];
+
+#if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA               // DMA support on transmission
+// DMA channel assignments for each I2C transmitter
+//
+static const unsigned char I2C_DMA_TX_CHANNEL[NUMBER_I2C] = {
+    DMA_I2C0_TX_CHANNEL, 
+    #if (NUMBER_I2C) > 1
+    DMA_I2C1_TX_CHANNEL,
+    #endif
+    #if (NUMBER_I2C) > 2
+    DMA_I2C2_TX_CHANNEL, 
+    #endif
+    #if (NUMBER_I2C) > 3
+    DMA_I2C3_TX_CHANNEL,
+    #endif
+};
+
+// DMA channel assignments for each I2C receiver
+//
+static const unsigned char I2C_DMA_RX_CHANNEL[I2C_AVAILABLE] = {
+    DMA_I2C0_RX_CHANNEL,
+    #if (NUMBER_I2C) > 1
+    DMA_I2C1_RX_CHANNEL,
+    #endif
+    #if (NUMBER_I2C) > 2
+    DMA_I2C2_RX_CHANNEL,
+    #endif
+    #if (NUMBER_I2C) > 3
+    DMA_I2C3_RX_CHANNEL,
+    #endif
+};
+
+// DMA channel interrupt priority assignments for each I2C transmitter
+//
+static const unsigned char I2C_DMA_TX_INT_PRIORITY[NUMBER_I2C] = {
+    DMA_I2C0_TX_INT_PRIORITY, 
+    #if (NUMBER_I2C) > 1
+    DMA_I2C1_TX_INT_PRIORITY, 
+    #endif
+    #if (NUMBER_I2C) > 2
+    DMA_I2C2_TX_INT_PRIORITY, 
+    #endif
+    #if (NUMBER_I2C) > 3
+    DMA_I2C3_TX_INT_PRIORITY,
+    #endif
+};
+
+// DMA channel interrupt priority assignments for each I2C receiver
+//
+static const unsigned char I2C_DMA_RX_INT_PRIORITY[NUMBER_I2C] = {
+    DMA_I2C0_RX_INT_PRIORITY,
+    #if (NUMBER_I2C) > 1
+    DMA_I2C1_RX_INT_PRIORITY,
+    #endif
+    #if (NUMBER_I2C) > 2
+    DMA_I2C2_RX_INT_PRIORITY,
+    #endif
+    #if (NUMBER_I2C) > 3
+    DMA_I2C3_RX_INT_PRIORITY,
+    #endif
+};
+#endif
 
 /* =================================================================== */
 /*                        I2C Interrupt Handlers                       */
@@ -120,9 +191,252 @@ static unsigned char fnGetTxByte(int iChannel, I2CQue *ptrTxControl, int iType)
 }
 #endif
 
-static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // general I2C interrupt handler
+#if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA               // DMA support
+// Common DMA tx interrupt handler
+//
+static void _i2c_tx_dma_Interrupt(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)
 {
     I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+    #if defined _WINDOWS
+    fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrI2C->I2C_D));
+    #endif
+    #if defined I2C_2_BYTE_LENGTH
+    ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    #else
+    ptrTxControl->ucPresentLen -= ptrTxControl->dma_length;
+    #endif
+    ptrTxControl->I2C_queue.get += ptrTxControl->dma_length;
+    if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) {
+        ptrTxControl->I2C_queue.get -= ptrTxControl->I2C_queue.buf_length;
+    }
+    #if defined I2C_2_BYTE_LENGTH
+    if (ptrTxControl->usPresentLen == 0)
+    #else
+    if (ptrTxControl->ucPresentLen == 0)
+    #endif
+    {                                                                    // if all data transmitted
+        fnI2C_Handler(ptrI2C, iChannel);
+    }
+    else {                                                               // transmit remaining (after circular buffer wrap-around)
+        fnStartI2C_TxDMA(ptrI2C, ptrTxControl, iChannel);
+    #if defined _WINDOWS
+        fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrI2C->I2C_D));
+    #endif
+    }
+}
+
+static void _i2c0_tx_dma_Interrupt(void)
+{
+    _i2c_tx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C0_BLOCK, 0);
+}
+
+    #if NUMBER_I2C > 1
+static void _i2c1_tx_dma_Interrupt(void)
+{
+    _i2c_tx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C1_BLOCK, 1);
+}
+    #endif
+    #if NUMBER_I2C > 2
+static void _i2c2_tx_dma_Interrupt(void)
+{
+    _i2c_tx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C2_BLOCK, 2);
+}
+    #endif
+    #if NUMBER_I2C > 3
+static void _i2c3_tx_dma_Interrupt(void)
+{
+    _i2c_tx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C3_BLOCK, 3);
+}
+    #endif
+
+static void(*_i2c_tx_dma_Interrupts[NUMBER_I2C])(void) = {
+    _i2c0_tx_dma_Interrupt,
+    #if NUMBER_I2C > 1
+    _i2c1_tx_dma_Interrupt,
+    #endif
+    #if NUMBER_I2C > 2
+    _i2c2_tx_dma_Interrupt,
+    #endif
+    #if NUMBER_I2C > 3
+    _i2c3_tx_dma_Interrupt,
+    #endif
+};
+
+// Common DMA tx interrupt handler
+//
+static void _i2c_rx_dma_Interrupt(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)
+{
+    I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+    I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+    #if defined I2C_2_BYTE_LENGTH
+    ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    #else
+    ptrTxControl->ucPresentLen -= ptrTxControl->dma_length;
+    #endif
+    ptrRxControl->I2C_queue.put += ptrTxControl->dma_length;
+    if (ptrRxControl->I2C_queue.put >= ptrRxControl->I2C_queue.buffer_end) {
+        ptrRxControl->I2C_queue.put -= ptrRxControl->I2C_queue.buf_length;
+    }
+    ptrRxControl->I2C_queue.chars += ptrTxControl->dma_length;
+    #if defined I2C_2_BYTE_LENGTH
+    if (ptrTxControl->usPresentLen <= 1)
+    #else
+    if (ptrTxControl->ucPresentLen <= 1)
+    #endif
+    {                                                                    // if all data received
+    #if defined I2C_2_BYTE_LENGTH
+        ptrTxControl->usPresentLen = 0;
+    #else
+        ptrTxControl->ucPresentLen = 0;
+    #endif
+        ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_TXAK);     // we don't acknowledge last byte
+        fnLogEvent('J', ptrI2C->I2C_C1);
+    #if defined _WINDOWS
+        ptrI2C->I2C_D = fnSimI2C_devices(I2C_RX_DATA, ptrI2C->I2C_D);    // simulate final read and interrupt
+        ptrI2C->I2C_S |= I2C_IIF;
+        iInts |= (I2C_INT0 << iChannel);
+    #endif
+    }
+    else {                                                               // receive remaining (after circular buffer wrap-around)
+    #if defined I2C_2_BYTE_LENGTH
+        ptrTxControl->usPresentLen++;
+    #else
+        ptrTxControl->ucPresentLen++;
+    #endif
+        fnStartI2C_RxDMA(ptrI2C, ptrTxControl, iChannel);
+    #if defined I2C_2_BYTE_LENGTH
+        ptrTxControl->usPresentLen--;
+    #else
+        ptrTxControl->ucPresentLen--;
+    #endif
+    }
+}
+
+static void _i2c0_rx_dma_Interrupt(void)
+{
+    _i2c_rx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C0_BLOCK, 0);
+}
+
+#if NUMBER_I2C > 1
+static void _i2c1_rx_dma_Interrupt(void)
+{
+    _i2c_rx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C1_BLOCK, 1);
+}
+#endif
+#if NUMBER_I2C > 2
+static void _i2c2_rx_dma_Interrupt(void)
+{
+    _i2c_rx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C2_BLOCK, 2);
+}
+#endif
+#if NUMBER_I2C > 3
+static void _i2c3_rx_dma_Interrupt(void)
+{
+    _i2c_rx_dma_Interrupt((KINETIS_I2C_CONTROL *)I2C3_BLOCK, 3);
+}
+#endif
+
+
+static void(*_i2c_rx_dma_Interrupts[NUMBER_I2C])(void) = {
+    _i2c0_rx_dma_Interrupt,
+#if NUMBER_I2C > 1
+    _i2c1_rx_dma_Interrupt,
+#endif
+#if NUMBER_I2C > 2
+    _i2c2_rx_dma_Interrupt,
+#endif
+#if NUMBER_I2C > 3
+    _i2c3_rx_dma_Interrupt,
+#endif
+};
+
+static void fnStartI2C_TxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+{
+#if defined _WINDOWS
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+#endif
+    QUEUE_TRANSFER max_linear_data = (ptI2CQue->I2C_queue.buffer_end - ptI2CQue->I2C_queue.get);
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->dma_length = ptI2CQue->usPresentLen;
+    #else
+    ptI2CQue->dma_length = ptI2CQue->ucPresentLen;
+    #endif
+    if (ptI2CQue->dma_length > max_linear_data) {
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->dma_length = max_linear_data;
+    #else
+        ptI2CQue->dma_length = (unsigned char)max_linear_data;
+    #endif
+    }
+    #if defined SUPPORT_LOW_POWER
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (I2C0_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the I2C activity has completed
+    #endif
+    fnConfigDMA_buffer(I2C_DMA_TX_CHANNEL[Channel], usDMATriggerSourceTx[Channel], ptI2CQue->dma_length, ptI2CQue->I2C_queue.get, (void *)&(ptrI2C->I2C_D), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _i2c_tx_dma_Interrupts[Channel], I2C_DMA_TX_INT_PRIORITY[Channel]);
+    ptrI2C->I2C_C1 = (I2C_MTX | I2C_MSTA | I2C_IIEN | I2C_IEN | I2C_DMAEN); // enable DMA
+    fnDMA_BufferReset(I2C_DMA_TX_CHANNEL[Channel], DMA_BUFFER_START);    // start
+    #if defined _WINDOWS                                                 // simulation
+    ptrDMA_TCD += I2C_DMA_TX_CHANNEL[Channel];
+    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
+    iDMA |= (DMA_CONTROLLER_0 << I2C_DMA_TX_CHANNEL[Channel]);           // activate first DMA request
+    #endif
+}
+
+static void fnStartI2C_RxDMA(KINETIS_I2C_CONTROL *ptrI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+{
+#if defined _WINDOWS
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+#endif
+    QUEQUE *ptrRxQueue = &I2C_rx_control[Channel]->I2C_queue;
+    QUEUE_TRANSFER max_linear_data = (ptrRxQueue->buffer_end - ptrRxQueue->put);
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->dma_length = (ptI2CQue->usPresentLen - 1);                 // the final read is not performed by DMA since the acknowledge need to be removed
+    #else
+    ptI2CQue->dma_length = (ptI2CQue->ucPresentLen - 1);
+    #endif
+    if (ptI2CQue->dma_length > max_linear_data) {
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->dma_length = max_linear_data;
+    #else
+        ptI2CQue->dma_length = (unsigned char)max_linear_data;
+    #endif
+    }
+    fnConfigDMA_buffer(I2C_DMA_RX_CHANNEL[Channel], usDMATriggerSourceRx[Channel], ptI2CQue->dma_length, (void *)&(ptrI2C->I2C_D), ptrRxQueue->put, (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE), _i2c_rx_dma_Interrupts[Channel], I2C_DMA_RX_INT_PRIORITY[Channel]);
+    #if defined SUPPORT_LOW_POWER
+    PROTECTED_SET_VARIABLE(ulPeripheralNeedsClock, (I2C0_CLK_REQUIRED << Channel)); // mark that stop mode should be avoided until the I2C activity has completed
+    #endif
+    ptrI2C->I2C_C1 = (I2C_MSTA | I2C_IIEN | I2C_IEN | I2C_DMAEN);        // enable DMA
+    fnDMA_BufferReset(I2C_DMA_RX_CHANNEL[Channel], DMA_BUFFER_START);    // start
+    #if defined _WINDOWS                                                 // simulation
+    ptrDMA_TCD += I2C_DMA_RX_CHANNEL[Channel];
+    ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                       // trigger activity
+    iDMA |= (DMA_CONTROLLER_0 << I2C_DMA_RX_CHANNEL[Channel]);           // activate first DMA request
+    #endif
+}
+#endif
+
+// General I2C interrupt handler
+//
+static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)
+{
+    I2CQue *ptrTxControl = I2C_tx_control[iChannel];
+    #if defined _WINDOWS
+    int int_id = irq_I2C0_ID;
+        #if NUMBER_I2C > 1
+    if (iChannel == 1) {
+        int_id = irq_I2C1_ID;
+    }
+        #endif
+        #if NUMBER_I2C > 2
+    else if (iChannel == 2) {
+        int_id = irq_I2C2_ID;
+    }
+        #endif
+        #if NUMBER_I2C > 3
+    if (iChannel == 3) {
+        int_id = irq_I2C3_ID;
+    }
+        #endif
+    #endif
 
     #if defined I2C_SLAVE_MODE                                           // slave mode support
     if ((ptrI2C->I2C_FLT & I2C_FLT_FLT_INT) != 0) {                      // if the slave has enabled start/stop condition interrupt(s)
@@ -194,7 +508,7 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         }
     }
     #endif
-    WRITE_ONE_TO_CLEAR(ptrI2C->I2C_S, I2C_IIF);                          // clear the interrupt flag (write '1' to clear)
+    WRITE_ONE_TO_CLEAR_INTERRUPT(ptrI2C->I2C_S, I2C_IIF, int_id);        // clear the interrupt flag (write '1' to clear)
     #if defined I2C_SLAVE_MODE
     if (ptrI2C->I2C_F == 0) {                                            // if we are slave
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
@@ -289,14 +603,25 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         I2CQue *ptrRxControl = I2C_rx_control[iChannel];
         register int iFirstRead = ((ptrI2C->I2C_C1 & I2C_MTX) != 0);
         fnLogEvent('R', ptrI2C->I2C_C1);
-        if (ptrTxControl->ucPresentLen == 1) {                           // last byte to be read?
+    #if defined I2C_2_BYTE_LENGTH
+        if (ptrTxControl->usPresentLen == 1)
+    #else
+        if (ptrTxControl->ucPresentLen == 1)
+    #endif
+        {                                                                // last byte to be read?
             ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA | I2C_TXAK); // we don't acknowledge last byte
             fnLogEvent('L', ptrI2C->I2C_C1);
         }
-        else if (ptrTxControl->ucPresentLen == 0) {                      // we have completed the read
+        else if
+    #if defined I2C_2_BYTE_LENGTH
+            (ptrTxControl->usPresentLen == 0)
+    #else
+            (ptrTxControl->ucPresentLen == 0)
+    #endif
+        {                                                                // we have completed the read
             ptrI2C->I2C_C1 = (I2C_IEN | I2C_TXAK);                       // send stop condition and disable interrupts
             ptrTxControl->ucState &= ~(TX_WAIT | TX_ACTIVE | RX_ACTIVE);
-            ptrRxControl->msgs++;
+            ptrRxControl->msgs++;                                        // increment complete message counter
             if (ptrRxControl->wake_task != 0) {                          // wake up the receiver task if desired
                 uTaskerStateChange(ptrRxControl->wake_task, UTASKER_ACTIVATE); // wake up owner task
             }
@@ -306,9 +631,22 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
             ptrI2C->I2C_C1 = (I2C_IEN | I2C_IIEN | I2C_MSTA);            // ensure we acknowledge multi-byte reads
             fnLogEvent('a', ptrI2C->I2C_C1);
         }
-
+        
         if (iFirstRead != 0) {                                           // have we just sent the slave address?
             fnLogEvent('d', ptrI2C->I2C_D);
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+        #if defined I2C_2_BYTE_LENGTH
+            if (ptrTxControl->usPresentLen != 0)
+        #else
+            if (ptrTxControl->ucPresentLen != 0)
+        #endif
+            {
+                if (usDMATriggerSourceRx[iChannel] != 0) {               // if more than 1 byte of data is to be read and rx dma mode is enabled
+                    fnStartI2C_RxDMA(ptrI2C, ptrTxControl, iChannel);
+                    return;
+                }
+            }
+    #endif
             (void)ptrI2C->I2C_D;                                         // dummy read
         }
         else {
@@ -319,14 +657,22 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
                 ptrRxControl->I2C_queue.put = ptrRxControl->I2C_queue.QUEbuffer;
             }
         }
-
-        if (ptrTxControl->ucPresentLen != 0) {
+    #if defined I2C_2_BYTE_LENGTH
+        if (ptrTxControl->usPresentLen != 0)
+    #else
+        if (ptrTxControl->ucPresentLen != 0)
+    #endif
+        {
+    #if defined I2C_2_BYTE_LENGTH
+            ptrTxControl->usPresentLen--;
+    #else
             ptrTxControl->ucPresentLen--;
-        #if defined _WINDOWS
+    #endif
+    #if defined _WINDOWS
             ptrI2C->I2C_D = fnSimI2C_devices(I2C_RX_DATA, ptrI2C->I2C_D);// simulate the interrupt directly
             ptrI2C->I2C_S |= I2C_IIF;
             iInts |= (I2C_INT0 << iChannel);
-        #endif
+    #endif
         }
         else {                                                           // read sequence complete so continue with next write if something is waiting
             if (ptrTxControl->I2C_queue.chars != 0) {
@@ -336,14 +682,38 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)     // gene
         }
         return;
     }
-    else if (ptrTxControl->ucPresentLen-- != 0) {                        // TX_ACTIVE - send next byte if available
+    else if 
+    #if defined I2C_2_BYTE_LENGTH
+        (ptrTxControl->usPresentLen != 0)
+    #else
+        (ptrTxControl->ucPresentLen != 0)
+    #endif
+    {                                                                    // TX_ACTIVE - send next byte if available
         fnLogEvent('X', *ptrTxControl->I2C_queue.get);
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+        #if defined I2C_2_BYTE_LENGTH
+        if (ptrTxControl->usPresentLen != 0)
+        #else
+        if (ptrTxControl->ucPresentLen != 0)
+        #endif
+        {
+            if (usDMATriggerSourceTx[iChannel] != 0) {                   // if more than 1 byte of data is to be sent and tx dma mode is enabled
+                fnStartI2C_TxDMA(ptrI2C, ptrTxControl, iChannel);
+                return;
+            }
+        }
+    #endif
+    #if defined I2C_2_BYTE_LENGTH
+        ptrTxControl->usPresentLen--;
+    #else
+        ptrTxControl->ucPresentLen--;
+    #endif
         ptrI2C->I2C_D = *ptrTxControl->I2C_queue.get++;                  // send the next byte
         if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) { // handle the circular transmit buffer
             ptrTxControl->I2C_queue.get = ptrTxControl->I2C_queue.QUEbuffer;
         }
         #if defined _WINDOWS
-        ptrI2C->I2C_S |= I2C_IIF;                                        // simulate the interrupt directly
+        ptrI2C->I2C_S |= I2C_IIF;                                        // simulate the interrupt directly 
         fnSimI2C_devices(I2C_TX_DATA, ptrI2C->I2C_D);
         iInts |= (I2C_INT0 << iChannel);                                 // signal that an interrupt is to be generated
         #endif
@@ -398,6 +768,8 @@ static __interrupt void _I2C_Interrupt_3(void)                           // I2C3
 }
     #endif
 
+
+
 /* =================================================================== */
 /*                   I2C Transmission Initiation                       */
 /* =================================================================== */
@@ -427,8 +799,16 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     #else
     ptrI2C = (KINETIS_I2C_CONTROL *)I2C0_BLOCK;
     #endif
-
+    #if defined I2C_2_BYTE_LENGTH
+    ptI2CQue->usPresentLen = *ptI2CQue->I2C_queue.get++;                 // get the length of this transaction (MSB)
+    ptI2CQue->usPresentLen <<= 8;
+    if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
+        ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
+    }
+    ptI2CQue->usPresentLen |= *ptI2CQue->I2C_queue.get++;
+    #else
     ptI2CQue->ucPresentLen = *ptI2CQue->I2C_queue.get++;                 // get the length of this transaction
+    #endif
     if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {     // handle circular buffer
         ptI2CQue->I2C_queue.get = ptI2CQue->I2C_queue.QUEbuffer;
     }
@@ -481,7 +861,11 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_I
 
     if ((ucAddress & 0x01) != 0) {                                       // reading from the slave
         I2C_tx_control[Channel]->ucState |= (RX_ACTIVE | TX_ACTIVE);
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->I2C_queue.chars -= 4;
+    #else
         ptI2CQue->I2C_queue.chars -= 3;
+    #endif
         fnLogEvent('g', (unsigned char)(ptI2CQue->I2C_queue.chars));
         I2C_rx_control[Channel]->wake_task = *ptI2CQue->I2C_queue.get++; // enter task to be woken when reception has completed
         if (ptI2CQue->I2C_queue.get >= ptI2CQue->I2C_queue.buffer_end) {
@@ -490,7 +874,11 @@ static void fnSendSlaveAddress(I2CQue *ptI2CQue, QUEUE_HANDLE Channel, KINETIS_I
     }
     else {
         I2C_tx_control[Channel]->ucState |= (TX_ACTIVE);                 // writing to the slave
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->I2C_queue.chars -= (ptI2CQue->usPresentLen + 1);       // the remaining queue content
+    #else
         ptI2CQue->I2C_queue.chars -= (ptI2CQue->ucPresentLen + 1);       // the remaining queue content
+    #endif
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
     }
 
@@ -867,6 +1255,9 @@ static void fnConfigI2C_pins(QUEUE_HANDLE Channel, int iMaster)          // {2}
 extern void fnConfigI2C(I2CTABLE *pars)
 {
     KINETIS_I2C_CONTROL *ptrI2C;
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+    unsigned short usDMA_Trigger;
+    #endif
     unsigned char ucSpeed;
     if (pars->Channel == 0) {                                            // I2C channel 0
         POWER_UP_ATOMIC(4, I2C0);                                        // enable clock to module
@@ -907,6 +1298,13 @@ extern void fnConfigI2C(I2CTABLE *pars)
     #else
         _CONFIG_PORT_INPUT_FAST_LOW(B, (PORTB_BIT3 | PORTB_BIT2), (PORT_ODE | PORT_PS_UP_ENABLE));
     #endif
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+        #if defined DMAMUX0_CHCFG_SOURCE_I2C0
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0;
+        #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+        #endif
+    #endif
     }
     #if I2C_AVAILABLE > 1
     else if (pars->Channel == 1) {                                       // I2C channel 1
@@ -936,6 +1334,13 @@ extern void fnConfigI2C(I2CTABLE *pars)
         #else
         _CONFIG_PORT_INPUT_FAST_LOW(C, (PORTC_BIT11 | PORTC_BIT10), (PORT_ODE | PORT_PS_UP_ENABLE));
         #endif
+        #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C1
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+        #endif
     }
     #endif
     #if I2C_AVAILABLE > 2
@@ -960,6 +1365,13 @@ extern void fnConfigI2C(I2CTABLE *pars)
         _CONFIG_PORT_INPUT_FAST_LOW(A, (PORTA_BIT11 | PORTA_BIT12), (PORT_ODE | PORT_PS_UP_ENABLE));
             #endif
         #endif
+        #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C2
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C2;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C1_2
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C1_2;
+            #endif
+        #endif
     }
     #endif
     #if I2C_AVAILABLE > 3
@@ -971,6 +1383,13 @@ extern void fnConfigI2C(I2CTABLE *pars)
         _CONFIG_PORT_INPUT_FAST_LOW(E, (PORTE_BIT10 | PORTE_BIT11), (PORT_ODE | PORT_PS_UP_ENABLE));
         #else
         _CONFIG_PORT_INPUT_FAST_LOW(A, (PORTA_BIT1 | PORTA_BIT2), (PORT_ODE | PORT_PS_UP_ENABLE));
+        #endif
+        #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C3
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C3;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+        usDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+            #endif
         #endif
     }
     #endif
@@ -1048,6 +1467,14 @@ extern void fnConfigI2C(I2CTABLE *pars)
     ptrI2C->I2C_F = ucSpeed;                                             // set the operating speed
     #if !defined KINETIS_KE
     ptrI2C->I2C_C1 = (I2C_IEN);                                          // enable I2C controller
+    #endif
+    #if defined I2C_DMA_SUPPORT && !defined DEVICE_WITHOUT_DMA
+    if ((pars->ucDMAConfig & I2C_TX_DMA) != 0) {
+        usDMATriggerSourceTx[pars->Channel] = usDMA_Trigger;             // mark that this channel is operating in DMA tx mode
+    }
+    if ((pars->ucDMAConfig & I2C_RX_DMA) != 0) {
+        usDMATriggerSourceRx[pars->Channel] = usDMA_Trigger;             // mark that this channel is operating in DMA rx mode
+    }
     #endif
     #if defined I2C_SLAVE_MODE
     if (ucSpeed == 0) {

@@ -8659,13 +8659,14 @@ extern unsigned long fnSimDMA(char *argv[])
     unsigned long ulChannel = 0x00000001;
     unsigned long iChannel = 0;
     int _iDMA = iDMA;
+    int iNonPeripheralDMA = iDMA;
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
     int *ptrCnt;
     #endif
 
     while (_iDMA != 0) {                                                 // while DMA operations to be performed
         if ((_iDMA & ulChannel) != 0) {                                  // DMA request on this channel
-            _iDMA &= ~ulChannel;
+            _iDMA &= ~ulChannel;                                         // this channel will have been handled after this loop
             switch (iChannel) {
     #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA           // {4}
             case DMA_UART0_TX_CHANNEL:                                   // handle UART DMA transmission on LPUART/UART 0
@@ -8682,6 +8683,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
         #if LPUARTS_AVAILABLE > 0 && !defined LPUARTS_PARALLEL
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART0_TX) > 0)
         #else
@@ -8720,6 +8722,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
             #if LPUARTS_AVAILABLE > 1 && !defined LPUARTS_PARALLEL
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART1_TX) > 0)
             #else
@@ -8759,6 +8762,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
             #if LPUARTS_AVAILABLE > 2 && !defined LPUARTS_PARALLEL
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART2_TX) > 0)
             #else
@@ -8798,6 +8802,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
             #if LPUARTS_AVAILABLE > 3 && !defined LPUARTS_PARALLEL
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART3_TX) > 0)
             #elif UARTS_AVAILABLE == 3 && LPUARTS_AVAILABLE == 1 && defined LPUARTS_PARALLEL
@@ -8839,6 +8844,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
             #if LPUARTS_AVAILABLE > 4 && !defined LPUARTS_PARALLEL
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART4_TX) > 0)
             #else
@@ -8876,6 +8882,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
             #if UARTS_AVAILABLE == 5
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPUART0_TX) > 0)
             #else
@@ -8900,18 +8907,12 @@ extern unsigned long fnSimDMA(char *argv[])
         #endif
     #endif
             default:                                                     // not a channel used by LPUART/UART
-                iDMA &= ~ulChannel;
-    #if !defined KINETIS_KL
-                if (fnSimulateDMA(iChannel, 0) > 1) {                   // process the trigger
-                    iDMA |= ulChannel;                                  // further DMA triggers
-                }
-    #endif
                 break;
             }
-    #if defined I2C_INTERFACE && defined I2C_DMA_SUPPORT
+    #if defined I2C_INTERFACE && LPI2C_AVAILABLE > 0 && defined I2C_DMA_SUPPORT
         #if LPI2C_AVAILABLE > 0
-            if (iChannel == DMA_I2C0_RX_CHANNEL) {                      // handle I2C DMA reception on I2C0
-                if ((LPI2C0_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C0_RX_CHANNEL)) { // handle I2C DMA reception on I2C0
+                if ((LPI2C0_MDER & LPI2C_MDER_RDDE) != 0)               // if reception DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C0];
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {
@@ -8919,6 +8920,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             LPI2C0_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C0_MRDR));
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C0_RX) > 0) {
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -8929,7 +8931,7 @@ extern unsigned long fnSimDMA(char *argv[])
                     }
                 }
             }
-            if (iChannel == DMA_I2C0_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C0
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C0_TX_CHANNEL)) { // handle I2C DMA transmission on I2C0
                 if ((LPI2C0_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C0];
                     if (*ptrCnt != 0) {
@@ -8938,6 +8940,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C0_TX) > 0) {
                                 fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C0_MTDR));
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -8950,7 +8953,7 @@ extern unsigned long fnSimDMA(char *argv[])
             }
         #endif
         #if LPI2C_AVAILABLE > 1
-            if (iChannel == DMA_I2C1_RX_CHANNEL) {                      // handle I2C DMA reception on I2C1
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C1_RX_CHANNEL)) { // handle I2C DMA reception on I2C1
                 if ((LPI2C1_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C1];
                     if (*ptrCnt != 0) {
@@ -8959,6 +8962,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             LPI2C1_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C1_MRDR));
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C1_RX) > 0) {
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -8969,7 +8973,7 @@ extern unsigned long fnSimDMA(char *argv[])
                     }
                 }
             }
-            if (iChannel == DMA_I2C1_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C1
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C1_TX_CHANNEL)) { // handle I2C DMA transmission on I2C1
                 if ((LPI2C1_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C1];
                     if (*ptrCnt != 0) {
@@ -8978,6 +8982,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C1_TX) > 0) {
                                 fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C1_MTDR));
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -8990,7 +8995,7 @@ extern unsigned long fnSimDMA(char *argv[])
             }
         #endif
         #if LPI2C_AVAILABLE > 2
-            if (iChannel == DMA_I2C2_RX_CHANNEL) {                      // handle I2C DMA reception on I2C2
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C2_RX_CHANNEL)) { // handle I2C DMA reception on I2C2
                 if ((LPI2C2_MDER & LPI2C_MDER_RDDE) != 0) {             // if reception DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C2];
                     if (*ptrCnt != 0) {
@@ -8999,6 +9004,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             LPI2C2_MRDR = fnSimI2C_devices(I2C_RX_DATA, (unsigned char)(LPI2C2_MRDR));
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C2_RX) > 0) {
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -9009,7 +9015,7 @@ extern unsigned long fnSimDMA(char *argv[])
                     }
                 }
             }
-            if (iChannel == DMA_I2C2_TX_CHANNEL) {                      // handle I2C DMA transmission on I2C2
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C2_TX_CHANNEL)) { // handle I2C DMA transmission on I2C2
                 if ((LPI2C2_MDER & LPI2C_MDER_TDDE) != 0) {             // if transmission DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C2];
                     if (*ptrCnt != 0) {
@@ -9018,6 +9024,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         }
                         else {
                             iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
                             if (fnSimulateDMA(iChannel, DMAMUX0_CHCFG_SOURCE_LPI2C2_TX) > 0) {
                                 fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(LPI2C2_MTDR));
                                 iDMA |= ulChannel;                       // further DMA triggers
@@ -9029,6 +9036,68 @@ extern unsigned long fnSimDMA(char *argv[])
                 }
             }
         #endif
+    #endif
+    #if defined I2C_INTERFACE && LPI2C_AVAILABLE == 0 && defined I2C_DMA_SUPPORT
+        #if I2C_AVAILABLE > 0
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C0_RX_CHANNEL)) { // handle I2C DMA reception on I2C0
+                if ((I2C0_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C0];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C0
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            I2C0_D = fnSimI2C_devices(I2C_RX_DATA, I2C0_D);
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+            if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C0_TX_CHANNEL)) { // handle I2C DMA transmission on I2C0
+                if ((I2C0_C1 & (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) == (I2C_MTX | I2C_IIEN | I2C_IEN | I2C_DMAEN)) { // if DMA is enabled
+                    ptrCnt = (int *)argv[THROUGHPUT_I2C0];
+                    if (*ptrCnt != 0) {
+                        if (--(*ptrCnt) == 0) {
+                            iMasks |= ulChannel;                         // enough serial DMA transfers handled in this tick period
+                        }
+                        else {
+            #if defined DMAMUX0_CHCFG_SOURCE_I2C0
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0;
+            #elif defined DMAMUX0_CHCFG_SOURCE_I2C0_3
+                            unsigned char ucDMA_Trigger = DMAMUX0_CHCFG_SOURCE_I2C0_3;
+            #endif
+                            iDMA &= ~ulChannel;
+                            iNonPeripheralDMA &= ~ulChannel;             // peripheral DMA handled
+                            if (fnSimulateDMA(iChannel, ucDMA_Trigger) > 0) {
+                                I2C0_D = fnSimI2C_devices(I2C_TX_DATA, I2C0_D);
+                                iDMA |= ulChannel;                       // further DMA triggers
+                            }
+                            else {
+                            }
+                        }
+                    }
+                }
+            }
+        #endif
+            if ((iNonPeripheralDMA & ulChannel & ~iMasks) != 0) {       // if not handled by a peripheral
+                iDMA &= ~ulChannel;
+        #if !defined KINETIS_KL || defined DEVICE_WITH_eDMA
+                if (fnSimulateDMA(iChannel, 0) > 1) {                   // process the trigger
+                    iDMA |= ulChannel;                                  // further DMA triggers
+                }
+        #endif
+            }
     #endif
         }
         ulChannel <<= 1;

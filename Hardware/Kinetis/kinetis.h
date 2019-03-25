@@ -6973,10 +6973,10 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_SPI0_RX       14                  // 0x0e SPI0 RX
           #define DMAMUX0_CHCFG_SOURCE_SPI0_TX       15                  // 0x0f SPI0 TX
             #if defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80 || defined KINETIS_K27 || defined KINETIS_K28
-          #define DMAMUX0_CHCFG_SOURCE_SPI1_RX       16                  / 0x10 SPI1 RX
-          #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       17                  / 0x11 SPI2 TX
-          #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                  / 0x12 I2C0 (or I2C3)
-          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  / 0x13 I2C1 (or I2C2)
+          #define DMAMUX0_CHCFG_SOURCE_SPI1_RX       16                  // 0x10 SPI1 RX
+          #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       17                  // 0x11 SPI2 TX
+          #define DMAMUX0_CHCFG_SOURCE_I2C0_3        18                  // 0x12 I2C0 (or I2C3)
+          #define DMAMUX0_CHCFG_SOURCE_I2C1_2        19                  // 0x13 I2C1 (or I2C2)
             #else
           #define DMAMUX0_CHCFG_SOURCE_SPI1_TX       16                  // 0x10 SPI1 TX or RX
           #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       17                  // 0x11 SPI2 TX or RX

@@ -34,7 +34,7 @@ static const unsigned char LPI2C_DMA_TX_CHANNEL[LPI2C_AVAILABLE] = {
     DMA_I2C2_TX_CHANNEL, 
     #endif
     #if (LPI2C_AVAILABLE) > 3
-    DMA_I2C_TX_CHANNEL,
+    DMA_I2C3_TX_CHANNEL,
     #endif
 };
 
@@ -42,15 +42,15 @@ static const unsigned char LPI2C_DMA_TX_CHANNEL[LPI2C_AVAILABLE] = {
 //
 static const unsigned char LPI2C_DMA_RX_CHANNEL[LPI2C_AVAILABLE] = {
     DMA_I2C0_RX_CHANNEL,
-#if (LPI2C_AVAILABLE) > 1
+    #if (LPI2C_AVAILABLE) > 1
     DMA_I2C1_RX_CHANNEL,
-#endif
-#if (LPI2C_AVAILABLE) > 2
+    #endif
+    #if (LPI2C_AVAILABLE) > 2
     DMA_I2C2_RX_CHANNEL,
-#endif
-#if (LPI2C_AVAILABLE) > 3
-    DMA_I2C_RX_CHANNEL,
-#endif
+    #endif
+    #if (LPI2C_AVAILABLE) > 3
+    DMA_I2C3_RX_CHANNEL,
+    #endif
 };
 
 // DMA channel interrupt priority assignments for each LPI2C transmitter
@@ -72,15 +72,15 @@ static const unsigned char LPI2C_DMA_TX_INT_PRIORITY[LPI2C_AVAILABLE] = {
 //
 static const unsigned char LPI2C_DMA_RX_INT_PRIORITY[LPI2C_AVAILABLE] = {
     DMA_I2C0_RX_INT_PRIORITY,
-#if (LPI2C_AVAILABLE) > 1
+    #if (LPI2C_AVAILABLE) > 1
     DMA_I2C1_RX_INT_PRIORITY,
-#endif
-#if (LPI2C_AVAILABLE) > 2
+    #endif
+    #if (LPI2C_AVAILABLE) > 2
     DMA_I2C2_RX_INT_PRIORITY,
-#endif
-#if (LPI2C_AVAILABLE) > 3
+    #endif
+    #if (LPI2C_AVAILABLE) > 3
     DMA_I2C3_RX_INT_PRIORITY,
-#endif
+    #endif
 };
 #endif
 /* =================================================================== */
@@ -390,7 +390,7 @@ static __interrupt void _I2C_Interrupt_3(void)                           // LPI2
 
 
 #if defined I2C_DMA_SUPPORT                                              // DMA support
-static void fnStartLPI2C_TxDMA(KINETIS_LPI2C_CONTROL *ptrLPI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+static void fnStartLPI2C_TxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 {
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     QUEUE_TRANSFER max_linear_data = (ptI2CQue->I2C_queue.buffer_end - ptI2CQue->I2C_queue.get);
@@ -415,7 +415,7 @@ static void fnStartLPI2C_TxDMA(KINETIS_LPI2C_CONTROL *ptrLPI2C, I2CQue *ptI2CQue
     #endif
 }
 
-static void fnStartLPI2C_RxDMA(KINETIS_LPI2C_CONTROL *ptrLPI2C, I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
+static void fnStartLPI2C_RxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
 {
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
     QUEQUE *ptrRxQueue = &I2C_rx_control[Channel]->I2C_queue;
@@ -458,7 +458,7 @@ static void _lpi2c_tx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChanne
         fnLPI2C_Handler(ptrLPI2C, iChannel);
     }
     else {                                                               // transmit remaining (after circular buffer wrap-around)
-        fnStartLPI2C_TxDMA(ptrLPI2C, ptrTxControl, iChannel);
+        fnStartLPI2C_TxDMA(ptrTxControl, iChannel);
         #if defined _WINDOWS
         fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         #endif
@@ -498,7 +498,7 @@ static void _lpi2c_rx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChanne
         ReceptionComplete(ptrTxControl, ptrLPI2C, iChannel);
     }
     else {                                                               // receive remaining (after circular buffer wrap-around)
-        fnStartLPI2C_RxDMA(ptrLPI2C, ptrTxControl, iChannel);
+        fnStartLPI2C_RxDMA(ptrTxControl, iChannel);
     }
 }
 
@@ -632,7 +632,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         }
     #if defined I2C_DMA_SUPPORT
         if ((ptrLPI2C->LPI2C_MDER & LPI2C_MDER_RDDE) != 0) {             // if using DMA for reception
-            fnStartLPI2C_RxDMA(ptrLPI2C, ptI2CQue, Channel);
+            fnStartLPI2C_RxDMA(ptI2CQue, Channel);
         #if defined _WINDOWS
             fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         #endif
@@ -651,7 +651,7 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         fnLogEvent('h', (unsigned char)(ptI2CQue->I2C_queue.chars));
     #if defined I2C_DMA_SUPPORT
         if ((ptrLPI2C->LPI2C_MDER & LPI2C_MDER_TDDE) != 0) {             // if using DMA for transmission
-            fnStartLPI2C_TxDMA(ptrLPI2C, ptI2CQue, Channel);
+            fnStartLPI2C_TxDMA(ptI2CQue, Channel);
         #if defined _WINDOWS
             fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         #endif
