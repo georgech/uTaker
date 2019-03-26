@@ -2513,6 +2513,16 @@ typedef struct stSTM32_BD
   #define ST802RT1_INT_EN                             0x0080             // interrupt events enabled
   #define ST802RT1_INT_OE_N                           0x0100             // power down pin input when '1' or interrupt output (open-drain) when '0'
 
+// LAN8720 registers
+//
+#define LAN8720_INTERRUPT_MASK_REGISTER (0x13 << ETH_MACMIIAR_MR_SHIFT)
+  #define LAN8720_INTERRUPT_AUTO_NEG_PAGE_RECEIVED    0x0002
+  #define LAN8720_INTERRUPT_PARALLEL_DETECTION_FAULT  0x0004
+  #define LAN8720_INTERRUPT_AUTO_NEG_LP_ACK           0x0008
+  #define LAN8720_INTERRUPT_LINK_DOWN                 0x0010
+  #define LAN8720_INTERRUPT_REMOTE_FAULT_DETECTED     0x0020
+  #define LAN8720_INTERRUPT_AUTO_NEG_COMPLETE         0x0040
+  #define LAN8720_INTERRUPT_ENERGYON                  0x0080
 
 
 // Reset and clock control

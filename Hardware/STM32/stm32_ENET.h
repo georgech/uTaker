@@ -11,9 +11,9 @@
     File:      stm32_ENET.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
-
+    26.03.2019 Enable LAN8720 interrupt when interrupt mode is used      {33}
 */
 
 /* =================================================================== */
@@ -120,7 +120,7 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     #define FULL_DUPLEX_FLAG       DUPLEX_STATUS_FULL_DUPLEX
 #elif defined _LAN8720 || defined _LAN8740 || defined _LAN8742           // {12}
     #define READ_INTERRUPT_FLAGS   (0x1d << ETH_MACMIIAR_MR_SHIFT)
-    #define LINK_CHANGE_INTERRUPTS (0x0050)                              // auto-negotiation complete or link-down
+    #define LINK_CHANGE_INTERRUPTS (LAN8720_INTERRUPT_LINK_DOWN | LAN8720_INTERRUPT_AUTO_NEG_COMPLETE) // auto-negotiation complete or link-down
     #define READ_STATE             (0x1f << ETH_MACMIIAR_MR_SHIFT)
     #define SPEED_100M             0x0004                                // bit indicating 10M speed (used inverted for compatibility)
     #define FULL_DUPLEX_FLAG       0x0010                                // flag indicating full duplex link
@@ -220,18 +220,18 @@ extern void fnCheckEthLinkState(void)
     int_phy_message[MSG_SOURCE_TASK] = INTERRUPT_EVENT;
     int_phy_message[MSG_INTERRUPT_EVENT] = UNKNOWN_INTERRUPT;
     #endif
-    if (usInterrupt & LINK_CHANGE_INTERRUPTS) {                          // change of link state detected or auto-negotiation complete
+    if ((usInterrupt & LINK_CHANGE_INTERRUPTS) != 0) {                   // change of link state detected or auto-negotiation complete
         usInterrupt = fnReadMII_PHY(GENERIC_BASIC_STATUS_REGISTER);      // read whether the link is up or not
     }
     else {
         return;                                                          // ignore if no change
     }
-    if (usInterrupt & (PHY_AUTO_NEGOTIATION_COMPLETE | PHY_LINK_IS_UP)) {// since auto-negotiation has just completed ensure that MAC settings are synchronised
+    if ((usInterrupt & (PHY_AUTO_NEGOTIATION_COMPLETE | PHY_LINK_IS_UP)) != 0) {// since auto-negotiation has just completed ensure that MAC settings are synchronised
         usInterrupt = fnReadMII_PHY(READ_STATE);                         // check the  details of link
     #if !defined _KS8721 && !defined _ST802RT1B
         usInterrupt ^= SPEED_100M;                                       // invert the flag for compatibility
     #endif
-        if (usInterrupt & SPEED_100M) {                                  // if at least 100 half duplex it indicates a 100MHz link
+        if ((usInterrupt & SPEED_100M) != 0) {                           // if at least 100 half duplex it indicates a 100MHz link
            ETH_MACCR |= ETH_MACCR_FES;                                   // ensure EMAC is set to 100MHz mode
     #if defined INTERRUPT_TASK_PHY
             int_phy_message[MSG_INTERRUPT_EVENT] = LAN_LINK_UP_100;
@@ -243,7 +243,7 @@ extern void fnCheckEthLinkState(void)
             int_phy_message[MSG_INTERRUPT_EVENT] = LAN_LINK_UP_10;
     #endif
         }
-        if (usInterrupt & FULL_DUPLEX_FLAG) {
+        if ((usInterrupt & FULL_DUPLEX_FLAG) != 0) {
             ETH_MACCR &= ~(ETH_MACCR_IFG_64);
             ETH_MACCR |= (ETH_MACCR_IFG_96 | ETH_MACCR_DM);
     #if defined INTERRUPT_TASK_PHY
@@ -728,6 +728,9 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     interrupt_setup.int_port_bit = PHY_INTERRUPT;                        // the input connected
     interrupt_setup.int_port_sense = (IRQ_FALLING_EDGE);                 // interrupt on this edge
     fnConfigureInterrupt(&interrupt_setup);                              // configure test interrupt
+    #if defined _LAN8720                                                 // {33}
+    fnWriteMII_PHY(LAN8720_INTERRUPT_MASK_REGISTER, (LAN8720_INTERRUPT_AUTO_NEG_COMPLETE | LAN8720_INTERRUPT_LINK_DOWN/* | LAN8720_INTERRUPT_ENERGYON*/)); // enable interrupt on line state changes
+    #endif
 #endif
 
 #if defined _DP83848
