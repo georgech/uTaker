@@ -18,6 +18,7 @@
     27.09.2018 Respect fraction when calculating the UART baud rate to display in simulator {3}
     19.03.2019 Add test of manual control of RTS output (RS485 mode) on UART5 (in development)
     19.03.2019 Add test of TX DMA mode on USART 3 (in development)
+    02.04.2019 TX DMA mode on UART/USARTs operational
 
 */
 
@@ -35,61 +36,63 @@
 
 #if defined SERIAL_SUPPORT_DMA                                           // DMA support on transmission
 
-#define DMA_FIRST_SERIAL_TX_CHANNEL          0
-#define DMA_SECOND_SERIAL_TX_CHANNEL         1
-#define DMA_THIRD_SERIAL_TX_CHANNEL          2
-#define DMA_FOURTH_SERIAL_TX_CHANNEL         3
-#define DMA_FIFTH_SERIAL_TX_CHANNEL          4
-#define DMA_SIXTH_SERIAL_TX_CHANNEL          5
-
-#define DMA_FIRST_SERIAL_TX_INT_PRIORITY     0
-#define DMA_SECOND_SERIAL_TX_INT_PRIORITY    1
-#define DMA_THIRD_SERIAL_TX_INT_PRIORITY     2
-#define DMA_FOURTH_SERIAL_TX_INT_PRIORITY    3
-#define DMA_FIFTH_SERIAL_TX_INT_PRIORITY     4
-#define DMA_SIXTH_SERIAL_TX_INT_PRIORITY     5
-
-
-// DMA channel assignments for each UART/LPUART transmitter
-//
-static const unsigned char UART_DMA_TX_CHANNEL[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
-    DMA_FIRST_SERIAL_TX_CHANNEL, 
+static const unsigned long _usart_tx_dma_stream[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
+    DMA2_STREAM_7_USART1_TX,
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-    DMA_SECOND_SERIAL_TX_CHANNEL,
+    DMA1_STREAM_6_USART2_TX,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-    DMA_THIRD_SERIAL_TX_CHANNEL,
+        #if defined USART3_TX_STREAM_4
+    DMA1_STREAM_4_USART3_TX,
+        #else
+    DMA1_STREAM_3_USART3_TX,
+        #endif
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-    DMA_FOURTH_SERIAL_TX_CHANNEL,
+    DMA1_STREAM_4_UART4_TX,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-    DMA_FIFTH_SERIAL_TX_CHANNEL,
+    DMA1_STREAM_7_UART5_TX,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-    DMA_SIXTH_SERIAL_TX_CHANNEL,
+    DMA2_STREAM_6_USART6_TX,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6
+        #if defined USART6_TX_STREAM_7
+    DMA2_STREAM_7_USART6_TX,
+        #else
+    DMA2_STREAM_6_USART6_TX,
+        #endif
     #endif
 };
+
 
 // DMA channel interrupt priority assignments for each UART/LPUART transmitter
 //
 static const unsigned char UART_DMA_TX_INT_PRIORITY[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
-    DMA_FIRST_SERIAL_TX_INT_PRIORITY, 
+    PRIORITY_USART1_TX_DMA,
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 1
-    DMA_SECOND_SERIAL_TX_INT_PRIORITY,
+    PRIORITY_USART2_TX_DMA,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
-    DMA_THIRD_SERIAL_TX_INT_PRIORITY,
+    PRIORITY_USART3_TX_DMA,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
-    DMA_FOURTH_SERIAL_TX_INT_PRIORITY,
+    PRIORITY_UART4_TX_DMA,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
-    DMA_FIFTH_SERIAL_TX_INT_PRIORITY,
+    PRIORITY_UART5_TX_DMA,
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
-    DMA_SIXTH_SERIAL_TX_INT_PRIORITY,
+    PRIORITY_USART6_TX_DMA,
     #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6
+    PRIORITY_UART7_TX_DMA,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 7
+    PRIORITY_UART8_TX_DMA,
+    #endif
+
 };
 
 static __interrupt void _usart_tx_dma_Interrupt(USART_REG *ptrUART, int iUART_reference)
@@ -114,9 +117,42 @@ static __interrupt void _usart2_tx_dma_Interrupt(void)
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
 static __interrupt void _usart3_tx_dma_Interrupt(void)
 {
-    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF4); // clear the DMA interrupt
-
     _usart_tx_dma_Interrupt((USART_REG *)USART3_BLOCK, 2);               // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+static __interrupt void _usart4_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)UART4_BLOCK, 3);                // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+static __interrupt void _usart5_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)UART5_BLOCK, 4);                // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+static __interrupt void _usart6_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)USART6_BLOCK, 5);               // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6
+static __interrupt void _usart7_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)UART7_BLOCK, 6);                // handle USART method
+}
+    #endif
+
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 7
+static __interrupt void _usart8_tx_dma_Interrupt(void)
+{
+    _usart_tx_dma_Interrupt((USART_REG *)UART8_BLOCK, 7);                // handle USART method
 }
     #endif
 
@@ -127,6 +163,21 @@ static void (*_usart_tx_dma_Interrupts[USARTS_AVAILABLE + UARTS_AVAILABLE + LPUA
     #endif
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
     _usart3_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
+    _usart4_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
+    _usart5_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5
+    _usart6_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6
+    _usart7_tx_dma_Interrupt,
+    #endif
+    #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 7
+    _usart8_tx_dma_Interrupt,
     #endif
 };
 #endif
@@ -807,7 +858,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined SERIAL_SUPPORT_DMA
     if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // DMA transmission mode
         USART_regs->UART_CR3 |= (USART_CR3_DMAT);                        // enable DMA transmission
-        fnConfigDMA_buffer((DMA1_CHANNEL_4_USART3_TX), 0, 0, (void *)&(USART_regs->UART_DR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _usart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+        fnConfigDMA_buffer(_usart_tx_dma_stream[Channel], 0, 0, (void *)&(USART_regs->UART_DR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _usart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
     }
     else {
         USART_regs->UART_CR3 &= ~(USART_CR3_DMAT);                       // disable DMA transmission (use interrupts instead)
@@ -1335,11 +1386,12 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
 //
 extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart, QUEUE_TRANSFER tx_length)
 {
-    DMA1_S3M0AR = (unsigned long)ptrStart;                               // source is tty output buffer
-    DMA1_S3NDTR = tx_length;                                             // the number of service requests (the number of bytes to be transferred)
-    DMA1_S3CR |= DMA_SxCR_EN;                                            // start operation
+    STM32_DMA_STREAM *ptrStream = fnGetDMA_stream(_usart_tx_dma_stream[Channel]);
+    ptrStream->DMA_SxM0AR = (unsigned long)ptrStart;                     // source is tty output buffer
+    ptrStream->DMA_SxNDTR = tx_length;                                   // the number of service requests (the number of bytes to be transferred)
+    ptrStream->DMA_SxCR |= DMA_SxCR_EN;                                  // start operation
     #if defined _WINDOWS
-    iDMA |= (DMA_CONTROLLER_0 << 3);                                     // activate first DMA request
+    iDMA |= (DMA_CONTROLLER_0 << (_usart_tx_dma_stream[Channel] & 0x7)); // activate first DMA request
     #endif
     return tx_length;
 }

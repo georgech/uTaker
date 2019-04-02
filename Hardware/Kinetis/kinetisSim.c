@@ -100,6 +100,7 @@ unsigned long vector_ram[(sizeof(VECTOR_TABLE))/sizeof(unsigned long)];  // long
     extern unsigned long fnGetExtPortFunction(int iExtPortReference);
     extern unsigned long fnGetExtPortState(int iExtPortReference);
 #endif
+extern int fnCrystalFonzKey(unsigned char ucPort, int iChange, unsigned long ulBit);
 
 static unsigned long ulPort_in_A, ulPort_in_B, ulPort_in_C, ulPort_in_D, ulPort_in_E;
 #if PORTS_AVAILABLE > 5
@@ -8882,7 +8883,7 @@ extern unsigned long fnSimDMA(char *argv[])
     #if defined I2C_INTERFACE && LPI2C_AVAILABLE > 0 && defined I2C_DMA_SUPPORT
         #if LPI2C_AVAILABLE > 0
             if (((iDMA & ulChannel) != 0) && (iChannel == DMA_I2C0_RX_CHANNEL)) { // handle I2C DMA reception on I2C0
-                if ((LPI2C0_MDER & LPI2C_MDER_RDDE) != 0)               // if reception DMA is enabled
+                if ((LPI2C0_MDER & LPI2C_MDER_RDDE) != 0) {              // if reception DMA is enabled
                     ptrCnt = (int *)argv[THROUGHPUT_I2C0];
                     if (*ptrCnt != 0) {
                         if (--(*ptrCnt) == 0) {

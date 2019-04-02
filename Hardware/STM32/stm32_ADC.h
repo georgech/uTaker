@@ -11,18 +11,12 @@
     File:      stm32_ADC.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
 
 #if defined _ADC_INTERRUPT_CODE
-
-extern void fnDMA_BufferReset(int iChannel, int iAction);
-    #define DMA_BUFFER_RESET     0                                           // disable DMA and reset the buffer (but don't re-enable yet)
-    #define DMA_BUFFER_START     1                                           // start DMA operation (must have been configured previously)
-    #define DMA_BUFFER_RESTART   2                                           // reset buffer and restart immediately
-
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
@@ -74,7 +68,7 @@ static void fnEndOfConversionDMA1(void)
         DMA2_S0M0AR = (DMA2_S0M0AR - (16 * sizeof(unsigned short)));     // the original memory pointer - it seems like the HW sort of does this automatically(?)
     #endif
         ADC1_CR2 |= (ADC_CR2_DMA);
-        fnDMA_BufferReset(2, DMA_BUFFER_START);                          // enable again
+        fnDMA_BufferReset(DMA2_STREAM_0_ADC1, DMA_BUFFER_START);         // enable again
       //ADC1_CR2 |= ADC_CR2_SWSTART;                                     // start next conversion (not needed in loop mode)
     }
     else {
@@ -247,72 +241,6 @@ static __interrupt void _ADC_Interrupt(void)
 #endif
 }
 
-// Temporarily here for development purposes - to be removed to own file
-//
-extern void fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned char ucDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority)
-{
-    // Only peripheral -> memory implemented
-    //
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
-    // DMA2 is used (channel 0)
-    //
-    DMA2_S0CR &= ~DMA_SxCR_EN;                                           // initially disabled
-    while ((DMA2_S0CR & DMA_SxCR_EN) != 0) {                             // wait until the channel completes disabling
-    }
-    DMA2_S0CR = 0;                                                       // clear register once any previous activity has stopped
-    DMA2_S0PAR = (unsigned long)ptrBufSource;                            // set the peripheral port that will be read from (the controller needs to be disabled for this register to be written to)
-    DMA2_S0M0AR = (unsigned long)ptrBufDest;                             // set the memory address which will be written to
-    DMA2_S0NDTR = ulBufLength;                                           // the number of transfers (decremented after each trigger)
-    DMA2_S0CR |= ((ucDmaTriggerSource << 25) | /*DMA_SxCR_PFCTRL |*/ (DMA_SxCR_PL_VERY_HIGH)); // set the channel and DMA priority (make priority configurable?)(not that periphera flow control is only suppoted by the SDIO)
-    // no FIFO configured (?)
-    DMA2_S0FCR |= DMA_SxFCR_DMDIS;                                       // enable direct mode when source and destination sizes differ
-    DMA2_S0CR |= (DMA_SxCR_DIR_P2M | DMA_SxCR_MINC | DMA_SxCR_PSIZE_32 | DMA_SxCR_MSIZE_16 | DMA_SxCR_PBURST_SINGLE | DMA_SxCR_MBURST_SINGLE); // peripheral to memory transfer with memory incrementing - 32 bits read and 16 saved
-    if (int_handler != 0) {                                              // if there is a buffer interrupt handler
-        _DMA_handler[0] = int_handler;                                   // enter the user's handler
-        fnEnterInterrupt((irq_DMA2_Channel1_ID + 0), int_priority, (void(*)(void))_DMA_Interrupt[0]); // enter DMA interrupt handler on buffer completion
-        DMA2_S0CR |= DMA_SxCR_TCIE;                                      // enable an interrupt on transfer completion
-    }
-    #else
-    _EXCEPTION("Not supported!");
-    #endif
-}
-
-extern void fnDMA_BufferReset(int iChannel, int iAction)
-{
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
-    // DMA2 is used (channel 0)
-    //
-    #if defined _WINDOWS
-    static unsigned short usLastTransferCount = 0;
-    static unsigned long ulLastPeripheral = 0;
-    static unsigned long ulLastMemory = 0;
-    #endif
-    switch (iAction) {
-    case DMA_BUFFER_START:
-        DMA2_S0CR |= DMA_SxCR_EN;                                        // enable the stream
-    #if defined _WINDOWS
-        if (DMA2_S0NDTR == 0) {                                          // if the last transfer completed
-            DMA2_S0NDTR = usLastTransferCount;                           // reload its value to mimic the behavior of the DMA controller when re-starting
-            DMA2_S0PAR = ulLastPeripheral;
-            DMA2_S0M0AR = ulLastMemory;
-        }
-        else {
-            usLastTransferCount = (unsigned short)DMA2_S0NDTR;           // backup the transfer count in case it needs to be re-loaded
-            ulLastPeripheral = DMA2_S0PAR;
-            ulLastMemory = DMA2_S0M0AR;
-        }
-    #endif
-        break;
-    case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
-    case DMA_BUFFER_RESTART:                                             // reset and start again
-        _EXCEPTION("To do!");
-        break;
-    }
-    #else
-    _EXCEPTION("Not supported!");
-    #endif
-}
-#endif
 
 /* =================================================================== */
 /*                         ADC Configuration                           */
@@ -325,6 +253,8 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             register int iADC_controller = ptrADC_settings->int_adc_controller;
             register int iADC_index = (iADC_controller - 1);
             unsigned char ucADC_channel = ptrADC_settings->int_adc_bit;  // the channel to be configured
+            unsigned long ulADC_stream;
+
             if ((ADC_DISABLE_ADC & ptrADC_settings->int_adc_mode) != 0) {// disable the ADC
                 if (iADC_controller == 1) {
                     ADC1_CR2 = 0;                                        // turn off the ADC
@@ -351,15 +281,31 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             }
             if (iADC_controller == 1) {                                  // the ADC controller
                 ptrADC = (STM32_ADC_REGS *)ADC_BLOCK;                    // ADC 1
+    #if defined ADC1_STREAM_4
+                ulADC_stream = DMA2_STREAM_4_ADC1;
+    #else
+                ulADC_stream = DMA2_STREAM_0_ADC1;
+    #endif
             }
     #if ADC_CONTROLLERS > 1
             else if (iADC_controller == 2) {
                 ptrADC = (STM32_ADC_REGS *)(ADC_BLOCK + 0x100);          // ADC 2
+        #if defined ADC2_STREAM_2
+                ulADC_stream = DMA2_STREAM_2_ADC2;
+        #else
+                ulADC_stream = DMA2_STREAM_3_ADC2;
+        #endif
             }
     #endif
     #if ADC_CONTROLLERS > 2
             else if (iADC_controller == 3) {
                 ptrADC = (STM32_ADC_REGS *)(ADC_BLOCK + 0x200);          // ADC 3
+                unsigned long ulADC_stream;
+        #if defined ADC3_STREAM_1
+                ulADC_stream = DMA2_STREAM_1_ADC3;
+        #else
+                ulADC_stream = DMA2_STREAM_0_ADC3;
+        #endif
             }
     #endif
             else {
@@ -586,7 +532,7 @@ break;
                     }
                     if ((ptrADC->ADC_CR2 & ADC_CR2_DMA) != 0) {          // DMA mode being used
                         ptrADC->ADC_CR2 &= ~(ADC_CR2_EOCS_CONVERSION);   // interrupt at end of complete sequence only
-                        fnConfigDMA_buffer(2, 0, (((ptrADC->ADC_SQR1 >> ADC_SQR1_L_SHIFT) & 0x01f) + 1), (void *)(ADC1_DR_ADD + (0x100 * (iADC_index))), adc_result[iADC_index].usADC_value, 0, fnEndOfConversionDMA1, 0);
+                        fnConfigDMA_buffer(DMA2_STREAM_0_ADC1, 0, (((ptrADC->ADC_SQR1 >> ADC_SQR1_L_SHIFT) & 0x01f) + 1), (void *)(ADC1_DR_ADD + (0x100 * (iADC_index))), adc_result[iADC_index].usADC_value, 0, fnEndOfConversionDMA1, 0);
                     }
                 }
                 if ((ADC_START_OPERATION & ptrADC_settings->int_adc_mode) != 0) {
@@ -595,7 +541,7 @@ break;
                     if ((ptrADC->ADC_CR2 & ADC_CR2_DMA) != 0) {          // DMA mode being used
                         ptrADC->ADC_CR2 &= ~(ADC_CR2_DMA);               // toggle the DMA mode control bit so that further DMA operations are executed
                         ptrADC->ADC_CR2 |= (ADC_CR2_DMA);
-                        fnDMA_BufferReset(2, DMA_BUFFER_START);
+                        fnDMA_BufferReset(DMA2_STREAM_0_ADC1, DMA_BUFFER_START);
                     }
                     ptrADC->ADC_CR2 |= ADC_CR2_SWSTART;                  // start conversion
                 }

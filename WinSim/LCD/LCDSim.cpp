@@ -211,7 +211,6 @@ static void fnGenerateFontTable(tLCDFONT *font_tbl)
     char ucBuffer[1024];
     _sopen_s(&iFile, "font.c", (_O_TRUNC | _O_CREAT | _O_WRONLY), _SH_DENYWR, _S_IWRITE);
 
-
     while (i++ < 256) {
         ucChar[0] = (((font_tbl->font_y6 & 0x10) != 0) << 6);
         ucChar[0] |= (((font_tbl->font_y5 & 0x10) != 0) << 5);
@@ -3243,6 +3242,49 @@ extern void fnRxCrystalFontz(unsigned char *ptrInput, DWORD dwCount)
             iRxCnt = 0; 						                         // keep the received byte
         }
     }
+}
+
+extern "C" int iOpSysActiveOverride;
+
+extern "C" int fnCrystalFonzKey(unsigned char ucPort, int iChange, unsigned long ulBit)
+{
+    unsigned char txbuffer[32];
+    unsigned short calccrc;
+    switch (ulBit) {
+    case PORT_BIT0:
+        txbuffer[2] = 1;                                                 // up
+        break;
+    case PORT_BIT1:
+        txbuffer[2] = 3;                                                 // left
+        break;
+    case PORT_BIT2:
+        txbuffer[2] = 5;                                                 // OK
+        break;
+    case PORT_BIT3:
+        txbuffer[2] = 4;                                                 // right
+        break;
+    case PORT_BIT4:
+        txbuffer[2] = 6;                                                 // escape
+        break;
+    case PORT_BIT5:
+        txbuffer[2] = 2;                                                 // down
+        break;
+    default:
+        return 0;
+    }
+    if (TOGGLE_INPUT == iChange) {                                       // release
+        txbuffer[2] += 6;
+    }
+    txbuffer[0] = 0x80;                                                  // reply messages are sent with bit 7 set
+    txbuffer[1] = 1;                                                     // store number of bytes in reply
+    calccrc = get_crc(txbuffer, 5);                                      // Calc CRC
+    txbuffer[3] = (unsigned char)calccrc;
+    txbuffer[4] = (unsigned char)(calccrc >> 8);
+    // This presently causes a problem sine the op system flag is already set and so it can't be accepted....
+    //
+    iOpSysActiveOverride = 1;
+    fnProcessRx((unsigned char *)txbuffer, 5, CRYSTAL_FONZ_UART);        // send reply packet
+    return 0;
 }
 #endif
 

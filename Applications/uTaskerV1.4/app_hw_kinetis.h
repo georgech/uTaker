@@ -3175,7 +3175,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #if defined KINETIS_K80
         #define OUR_I2C_CHANNEL       3                                  // use I2C3 for reference
     #elif defined FRDM_KL28Z
-        #define OUR_I2C_CHANNEL       2                                  // use I2C2 for reference
+        #define OUR_I2C_CHANNEL       0                                  // use I2C0 for reference
     #elif defined TWR_KL46Z48M || defined TWR_KL25Z48M || defined TWR_K22F120M || defined TWR_K64F120M || defined TWR_K53N512 || defined TWR_K40X256 || defined TWR_K40D100M || defined TWR_K21D50M || defined TWR_K21F120M || defined FRDM_KL27Z
         #define OUR_I2C_CHANNEL       1                                  // use I2C1 for reference
     #else
@@ -3186,7 +3186,6 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define I2C0_B_LOW                                               // I2C0_SCL on PB0 and I2C0_SDA on PB1
     #elif defined FRDM_K64F || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL46Z || defined FRDM_KL43Z || defined TWR_K24F120M || defined TWR_K70F120M || defined TWR_K65F180M || defined TWR_K80F150M || defined FreeLON || defined FRDM_KL28Z
         #define I2C0_ON_E
-
     #elif defined FRDM_K22F
       //#define I2C0_B_LOW
       //#define I2C0_ON_D
@@ -3575,9 +3574,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define DMA_MEMCPY_CHANNEL_ALT 14                                    // alternative DMA channel to use if DMA based memory to memory operations are already in progress
     #define DMA_MEMCPY_CHANNEL     15                                    // use this DMA channel when memory to memory operations are performed (this should have lowest priority and can be stalled by higher priority channels)
 #elif DMA_CHANNEL_COUNT == 8
-    #define DMA_UART0_TX_CHANNEL   0                                     // use this DMA channel when using UART 0 for transmission driven by DMA
+    #define DMA_UART0_TX_CHANNEL   2                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_TX_CHANNEL   1                                     // use this DMA channel when using UART 1 for transmission driven by DMA
-    #define DMA_UART2_TX_CHANNEL   2                                     // use this DMA channel when using UART 2 for transmission driven by DMA
+    #define DMA_UART2_TX_CHANNEL   0                                     // use this DMA channel when using UART 2 for transmission driven by DMA
 
     #define DMA_UART0_RX_CHANNEL   3                                     // use this DMA channel when using UART 0 for transmission driven by DMA
     #define DMA_UART1_RX_CHANNEL   4                                     // use this DMA channel when using UART 1 for transmission driven by DMA
@@ -3616,7 +3615,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 #define DMA_I2C1_TX_CHANNEL        1
 #define DMA_I2C2_TX_CHANNEL        2
 #define DMA_I2C3_TX_CHANNEL        3
-#define DMA_I2C0_RX_CHANNEL        3
+#define DMA_I2C0_RX_CHANNEL        1
 #define DMA_I2C1_RX_CHANNEL        2
 #define DMA_I2C2_RX_CHANNEL        1
 #define DMA_I2C3_RX_CHANNEL        0

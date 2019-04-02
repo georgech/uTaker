@@ -276,22 +276,23 @@ static void fnSetDevice(unsigned short *port_inits)
     OTG_FS_DIEPINT0 = OTG_FS_DIEPINT1 = OTG_FS_DIEPINT2 = OTG_FS_DIEPINT3 = OTG_FS_DIEPINT_TXFE;
     OTG_FS_DSTS     = 0x00000010;
     OTG_FS_DOEPCTL0 = OTG_FS_DOEPCTL_USBAEP;
+#endif
 
-    FSMC_BCR1  = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_NOR_FLASH); // FSMC
-    FSMC_BCR2  = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
-    FSMC_BCR3  = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
-    FSMC_BCR4  = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
+#if defined FSMC_BLOCK
+    FSMC_BCR1 = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_NOR_FLASH); // FSMC
+    FSMC_BCR2 = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
+    FSMC_BCR3 = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
+    FSMC_BCR4 = (FSMC_BCR_WAITEN | FSMC_BCR_WREN | FSMC_BCR_FACCEN | FSMC_BCR_MWD_16 | FSMC_BCR_MTYP_SRAM_ROM);
 
-    FSMC_BTR1  = 0x0fffffff;
-    FSMC_BTR2  = 0x0fffffff;
-    FSMC_BTR3  = 0x0fffffff;
-    FSMC_BTR4  = 0x0fffffff;
+    FSMC_BTR1 = 0x0fffffff;
+    FSMC_BTR2 = 0x0fffffff;
+    FSMC_BTR3 = 0x0fffffff;
+    FSMC_BTR4 = 0x0fffffff;
     FSMC_BWTR1 = 0x0fffffff;
     FSMC_BWTR2 = 0x0fffffff;
     FSMC_BWTR3 = 0x0fffffff;
     FSMC_BWTR4 = 0x0fffffff;
 #endif
-
 
     ADC1_HTR = 0x00000fff;                                               // ADC
     ADC2_HTR = 0x00000fff;
@@ -762,6 +763,9 @@ static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
     int iInterruptID;
     int iStream = (ulDmaTriggerSource & 0x7);
     if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) != 0) {              // set a pointer to the DMA controller to be used
+        if (IS_POWERED_UP(AHB1, RCC_AHB1ENR_DMA2EN) == 0) {
+            return 0;                                                    // not enabled
+        }
         ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
         if (iStream >= 5) {
             iInterruptID = (irq_DMA2_Stream5_ID + (iStream - 5));
@@ -771,6 +775,9 @@ static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
         }
     }
     else {
+        if (IS_POWERED_UP(AHB1, RCC_AHB1ENR_DMA1EN) == 0) {
+            return 0;                                                    // not enabled
+        }
         ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
         if (iStream == 7) {
             iInterruptID = irq_DMA1_Stream7_ID;
@@ -1043,14 +1050,58 @@ extern unsigned long fnSimDMA(char *argv[])
         unsigned long ulChannel = 0x00000001;
         unsigned long iChannel = 0;
         while (_iDMA != 0) {                                             // while DMA operations to be performed
-            if ((_iDMA & ulChannel) != 0) {                              // DMA request on this channel     
+            if ((_iDMA & ulChannel) != 0) {                              // DMA request on this stream     
                 _iDMA &= ~(ulChannel);
                 switch (ulChannel) {
-                case 0x00000001:                                         // DMA controller 1 - channel 0
-                case 0x00000002:                                         // DMA controller 1 - channel 1
-                case 0x00000004:                                         // DMA controller 1 - channel 2
+                case 0x00000001:                                         // DMA controller 1 - stream 0
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6)
+                    if ((UART8_CR3 & USART_CR3_DMAT) != 0) {             // if UART8 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART7];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_0_UART8_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                    //fnUART_Tx_int(7);                    // handle possible pending interrupt after DMA completion
+                                }
+                                fnLogTx7((unsigned char)UART8_DR);
+                                ulNewActions |= SEND_COM_7;
+                            }
+                        }
+                    }
+#endif
                     break;
-                case 0x00000008:                                         // DMA controller 1 - channel 3
+                case 0x00000002:                                         // DMA controller 1 - stream 1
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5)
+                    if ((UART7_CR3 & USART_CR3_DMAT) != 0) {             // if UART7 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART6];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_1_UART7_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                    //fnUART_Tx_int(6);                    // handle possible pending interrupt after DMA completion
+                                }
+                                fnLogTx6((unsigned char)UART7_DR);
+                                ulNewActions |= SEND_COM_6;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00000004:                                         // DMA controller 1 - stream 2
+                    break;
+                case 0x00000008:                                         // DMA controller 1 - stream 3
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
                     if ((USART3_CR3 & USART_CR3_DMAT) != 0) {            // if USART3 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART2];          // the number of characters in each tick period
@@ -1060,14 +1111,181 @@ extern unsigned long fnSimDMA(char *argv[])
                             }
                             else {
                                 iDMA &= ~ulChannel;
-                                if (fnSimulateDMA(DMA1_CHANNEL_4_USART3_TX) > 0) { // process the trigger
-                                    iDMA |= ulChannel;                       // further DMA triggers
+                                if (fnSimulateDMA(DMA1_STREAM_3_USART3_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
                                 }
                                 else {
-                                  //fnUART_Tx_int(2);                        // handle possible pending interrupt after DMA completion
+                                  //fnUART_Tx_int(2);                    // handle possible pending interrupt after DMA completion
                                 }
 	                            fnLogTx2((unsigned char)USART3_DR);
                                 ulNewActions |= SEND_COM_2;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00000010:                                         // DMA controller 1 - stream 4
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((USART3_CR3 & USART_CR3_DMAT) != 0) {            // if USART3 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART2];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_4_USART3_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(2);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx2((unsigned char)USART3_DR);
+                                ulNewActions |= SEND_COM_2;
+                            }
+                        }
+                    }
+                    if ((UART4_CR3 & USART_CR3_DMAT) != 0) {             // if UART4 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART3];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_4_UART4_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(3);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx3((unsigned char)UART4_DR);
+                                ulNewActions |= SEND_COM_3;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00000020:                                         // DMA controller 1 - stream 5
+                    break;
+                case 0x00000040:                                         // DMA controller 1 - stream 6
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((USART2_CR3 & USART_CR3_DMAT) != 0) {            // if USART2 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART1];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_6_USART2_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(1);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx1((unsigned char)USART2_DR);
+                                ulNewActions |= SEND_COM_1;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00000080:                                         // DMA controller 1 - stream 7
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((UART5_CR3 & USART_CR3_DMAT) != 0) {             // if UART5 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART4];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_7_UART5_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(4);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx4((unsigned char)UART5_DR);
+                                ulNewActions |= SEND_COM_4;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00000100:                                         // DMA controller 2 - stream 0
+                    break;
+                case 0x00000200:                                         // DMA controller 2 - stream 1
+                    break;
+                case 0x00000400:                                         // DMA controller 2 - stream 2
+                    break;
+                case 0x00000800:                                         // DMA controller 2 - stream 3
+                    break;
+                case 0x00001000:                                         // DMA controller 2 - stream 4
+                    break;
+                case 0x00002000:                                         // DMA controller 2 - stream 5
+                    break;
+                case 0x00004000:                                         // DMA controller 2 - stream 6
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((USART6_CR3 & USART_CR3_DMAT) != 0) {            // if USART6 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART5];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA2_STREAM_6_USART6_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(5);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx5((unsigned char)USART6_DR);
+                                ulNewActions |= SEND_COM_5;
+                            }
+                        }
+                    }
+#endif
+                    break;
+                case 0x00008000:                                         // DMA controller 2 - stream 7
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+                    if ((USART1_CR3 & USART_CR3_DMAT) != 0) {            // if USART1 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART0];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA2_STREAM_7_USART1_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(0);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx0((unsigned char)USART1_DR);
+                                ulNewActions |= SEND_COM_0;
+                            }
+                        }
+                    }
+                    if ((USART6_CR3 & USART_CR3_DMAT) != 0) {            // if USART6 is configured for DMA mode of operation
+                        ptrCnt = (int *)argv[THROUGHPUT_UART5];          // the number of characters in each tick period
+                        if (*ptrCnt != 0) {
+                            if (--(*ptrCnt) == 0) {
+                                iMasks |= ulChannel;                     // enough serial DMA transfers handled in this tick period
+                            }
+                            else {
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA2_STREAM_7_USART6_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                else {
+                                  //fnUART_Tx_int(5);                    // handle possible pending interrupt after DMA completion
+                                }
+	                            fnLogTx5((unsigned char)USART6_DR);
+                                ulNewActions |= SEND_COM_5;
                             }
                         }
                     }

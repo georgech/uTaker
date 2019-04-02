@@ -11,7 +11,7 @@
     File:      kinetis_LPTRM.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     14.09.2017 Extended to support multiple LPTMRs
     18.04.2018 Add interrupt to handle both single-shot and periodic interrupts when fixed vector is to be used {1}

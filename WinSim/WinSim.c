@@ -250,6 +250,7 @@ extern void RealTimeInterrupt(void);
     static int iWinPcapSending = 0;
 #endif
 
+int iOpSysActiveOverride = 0;
 
 extern int main(int argc, char *argv[])
 {
@@ -270,10 +271,11 @@ extern int main(int argc, char *argv[])
         InitializeCriticalSection(ptrcs);                                // start of critical region
     }
     EnterCriticalSection(ptrcs);                                         // protect from task switching
-    if (iOpSysActive != 0) {                                             // {35}
+    if ((iOpSysActive != 0) && (iOpSysActiveOverride == 0)) {            // {35}
         LeaveCriticalSection(ptrcs);
         return WAIT_WHILE_BUSY;                                          // event cannot be handled at the moment so it should wait
     }
+    iOpSysActiveOverride = 0;
     iOpSysActive = 1;                                                    // {36} flag that the simulator is busy
     LeaveCriticalSection(ptrcs);
 

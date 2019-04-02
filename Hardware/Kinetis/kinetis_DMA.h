@@ -30,6 +30,7 @@
     04.01.2019 Monitor DMA channel errors when performing blocking software based transfers and return an error code {10}
     09.01.2019 Shared with iMX project
     22.01.2019 Control the DMA interrupt multiplexer for KE14/KE15 parts {11}
+    27.03.2019 Add ERRATA_ID_8011 workaround to DMA based memory functions {12}
 
 */
 
@@ -361,31 +362,31 @@ static __interrupt void _DMA_Interrupt_15(void)
 }
 #endif
 
-extern void fnDMA_BufferReset(int iChannel, int iAction)
+extern void fnDMA_BufferReset(unsigned long ulChannel, int iAction)
 {
     #if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA
     KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-    ptrDMA += iChannel;
+    ptrDMA += ulChannel;
     if (iAction == DMA_BUFFER_START) {
         ptrDMA->DMA_DCR |= (DMA_DCR_ERQ);                                // just enable
         return;
     }
     ptrDMA->DMA_DCR &= ~(DMA_DCR_ERQ);                                   // disable operation
     ptrDMA->DMA_DSR_BCR = DMA_DSR_BCR_DONE;                              // clear the DONE flag and clear errors etc.
-    if ((ucDirectionOutput[iChannel] & DMA_TRANSFER_HALF_BUFFER) != 0) { // if emulating half-buffer interrupt
-        if ((ucDirectionOutput[iChannel] & DMA_TRANSFER_SECOND_BUFFER) == 0) { // first half of the buffer was in operation
-            ucDirectionOutput[iChannel] &= ~(DMA_TRANSFER_SECOND_BUFFER);// start at first buffer half
+    if ((ucDirectionOutput[ulChannel] & DMA_TRANSFER_HALF_BUFFER) != 0) {// if emulating half-buffer interrupt
+        if ((ucDirectionOutput[ulChannel] & DMA_TRANSFER_SECOND_BUFFER) == 0) { // first half of the buffer was in operation
+            ucDirectionOutput[ulChannel] &= ~(DMA_TRANSFER_SECOND_BUFFER); // start at first buffer half
         }
-        ptrDMA->DMA_DSR_BCR = (ulRepeatLength[iChannel]/2);              // the half-buffer length
+        ptrDMA->DMA_DSR_BCR = (ulRepeatLength[ulChannel]/2);             // the half-buffer length
     }
     else {                                                               // full-buffer operation
-        ptrDMA->DMA_DSR_BCR = ulRepeatLength[iChannel];                  // the buffer length
+        ptrDMA->DMA_DSR_BCR = ulRepeatLength[ulChannel];                 // the buffer length
     }
-    if ((ucDirectionOutput[iChannel] & DMA_TRANSFER_OUTPUT) != 0) {
-        ptrDMA->DMA_SAR = (unsigned long)ptrStart[iChannel];             // set the source pointer back to the start of the buffer
+    if ((ucDirectionOutput[ulChannel] & DMA_TRANSFER_OUTPUT) != 0) {
+        ptrDMA->DMA_SAR = (unsigned long)ptrStart[ulChannel];            // set the source pointer back to the start of the buffer
     }
     else {
-        ptrDMA->DMA_DAR = (unsigned long)ptrStart[iChannel];             // set the destination pointer back to the start of the buffer
+        ptrDMA->DMA_DAR = (unsigned long)ptrStart[ulChannel];            // set the destination pointer back to the start of the buffer
     }
     if (iAction != DMA_BUFFER_RESET) {                                   // if not a buffer reset without continued operation
         ptrDMA->DMA_DCR |= (DMA_DCR_ERQ);                                // restart DMA from the start of the buffer
@@ -397,11 +398,11 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             KINETIS_DMA_TDC *ptrDMA_TCD;
             ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
-            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(iChannel, 0); } // wait until completed
+            while ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DONE) == 0) { fnSimulateDMA(ulChannel, 0); } // wait until completed
         }
         break;
     case DMA_BUFFER_START:
-        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);                // just enable the channel's operation        
+        ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, ulChannel);               // just enable the channel's operation        
         break;
     case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
     case DMA_BUFFER_RESTART:                                             // reset and start again
@@ -410,9 +411,9 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             unsigned long ulBufferLength;
             register unsigned long ulTransferLength;
             KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-            ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, iChannel);          // disable DMA operation on the channel
+            ATOMIC_PERIPHERAL_BIT_REF_CLEAR(DMA_ERQ, ulChannel);         // disable DMA operation on the channel
             ulTransferLength = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
-            ptrDMA_TCD += iChannel;                                      // move to the DMA channel being used
+            ptrDMA_TCD += ulChannel;                                     // move to the DMA channel being used
             if (ptrDMA_TCD->DMA_TCD_DLASTSGA == 0) {                     // input buffer needs to be reset
                 if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_SSIZE_16) != 0) {
                     iSize = 2;
@@ -437,7 +438,7 @@ extern void fnDMA_BufferReset(int iChannel, int iAction)
             }
             ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufferLength/iSize); // set the cycle length
             if (iAction != DMA_BUFFER_RESET) {                           // if not a buffer reset without continued operation
-                ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, iChannel);        // restart DMA from the start of the buffer
+                ATOMIC_PERIPHERAL_BIT_REF_SET(DMA_ERQ, ulChannel);       // restart DMA from the start of the buffer
             }
         }
         break;
@@ -859,9 +860,15 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)      // {9}
                 ulTransfer = (Size & ~0x3);                              // ensure length is suitable for long words
             }
           //ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
-            ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;           // set source for copy
-            ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;              // set destination for copy
-            ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;                  // set number of bytes to be copied
+        #if defined ERRATA_ID_8011
+            do {
+        #endif
+                ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;       // set source for copy
+                ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;          // set destination for copy
+                ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;              // set number of bytes to be copied
+        #if defined ERRATA_ID_8011                                       // {12} if one of these fields is written by the eDMA on an active channel at the same time our writes may have been corrupted
+            } while ((ptrDMA_TCD->DMA_TCD_SADDR != (unsigned long)buffer) || (ptrDMA_TCD->DMA_TCD_DADDR != (unsigned long)ptr) || (ptrDMA_TCD->DMA_TCD_NBYTES_ML != ulTransfer)); // repeat until we are sure our writes have been performed without any corruption
+        #endif
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
 
             ptr += ulTransfer;                                           // move the destination pointer to beyond the transfer
@@ -971,9 +978,15 @@ extern void *uReverseMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
             }
 
           //ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // {4} one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
-            ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;           // set source for copy
-            ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;              // set destination for copy
-            ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;                  // set number of bytes to be copied
+        #if defined ERRATA_ID_8011
+            do {
+        #endif
+                ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)buffer;       // set source for copy
+                ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;          // set destination for copy
+                ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;              // set number of bytes to be copied
+        #if defined ERRATA_ID_8011                                       // {12} if one of these fields is written by the eDMA on an active channel at the same time our writes may have been corrupted
+            } while ((ptrDMA_TCD->DMA_TCD_SADDR != (unsigned long)buffer) || (ptrDMA_TCD->DMA_TCD_DADDR != (unsigned long)ptr) || (ptrDMA_TCD->DMA_TCD_NBYTES_ML != ulTransfer)); // repeat until we are sure our writes have been performed without any corruption
+        #endif
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer (backwards)
 
             Size -= ulTransfer;                                          // bytes remaining
@@ -1065,10 +1078,16 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {7}
             }
             ulTransfer = (Size & ~0x3);
             ptrDMA_TCD->DMA_TCD_CITER_ELINK = 1;                         // one main loop iteration - this protects the DMA channel from interrupt routines that may also want to use the function
-            ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)&ulToCopy;        // set address of long word value to be set
-            ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;              // set destination for copy
-            ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;                  // set number of bytes to be copied
             ptrDMA_TCD->DMA_TCD_SOFF = 0;                                // no source increment
+        #if defined ERRATA_ID_8011
+            do {
+        #endif
+                ptrDMA_TCD->DMA_TCD_SADDR = (unsigned long)&ulToCopy;    // set address of long word value to be set
+                ptrDMA_TCD->DMA_TCD_DADDR = (unsigned long)ptr;          // set destination for copy
+                ptrDMA_TCD->DMA_TCD_NBYTES_ML = ulTransfer;              // set number of bytes to be copied
+        #if defined ERRATA_ID_8011                                       // {12} if one of these fields is written by the eDMA on an active channel at the same time our writes may have been corrupted
+            } while ((ptrDMA_TCD->DMA_TCD_SADDR != (unsigned long)&ulToCopy) || (ptrDMA_TCD->DMA_TCD_DADDR != (unsigned long)ptr) || (ptrDMA_TCD->DMA_TCD_NBYTES_ML != ulTransfer)); // repeat until we are sure our writes have been performed without any corruption
+        #endif
             ptrDMA_TCD->DMA_TCD_CSR = DMA_TCD_CSR_START;                 // start DMA transfer
 
             ptr += ulTransfer;                                           // move the destination pointer to beyond the transfer

@@ -214,6 +214,10 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
     #define HSI_FREQUENCY 8000000                                        // high speed internal RC oscillator speed (+/- 1% at 25°C)
 #endif
 
+// DMA
+//
+#define DMA_CHANNEL_COUNT  16
+
 // Ethernet configuration
 //
 #if defined _STM32F407 || defined _STM32F417 || defined _STM32F427 || defined _STM32F429 || defined _STM32F207 || defined _STM32F107X || defined _STM32F746 // devices with Ethernet
@@ -3812,116 +3816,152 @@ typedef struct stSTM32_DMA
 #define DMA_STREAM_7                     0x07
 
 
-// DMA sources
+// DMA1 sources
 //
-#define DMA1_CHANNEL_0_SPI3_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_0)
-#define DMA1_CHANNEL_0_SPI3_RX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_2)
-#define DMA1_CHANNEL_0_SPI2_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_3)
-#define DMA1_CHANNEL_0_SPI2_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_4)
-#define DMA1_CHANNEL_0_SPI3_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_5)
-#define DMA1_CHANNEL_0_SPI3_TX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_7)
+#define DMA1_STREAM_0_SPI3_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_0)
+#define DMA1_STREAM_0_I2C1_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_0)
+#define DMA1_STREAM_0_TIM4_CH1           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
+#define DMA1_STREAM_0_I2S3_EXT_RX        (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_0)
+#define DMA1_STREAM_0_UART5_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_0)
+#define DMA1_STREAM_0_UART8_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_0)
+#define DMA1_STREAM_0_TIM5_CH3           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_0)
+#define DMA1_STREAM_0_TIM5_UP            (DMA1_STREAM_0_TIM5_CH3)
 
-#define DMA1_CHANNEL_1_I2C1_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_0)
-#define DMA1_CHANNEL_1_TIM7_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_2)
-#define DMA1_CHANNEL_1_TIM_7UP_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_4)
-#define DMA1_CHANNEL_1_I2C1_RX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_5)
-#define DMA1_CHANNEL_1_I2C1_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_6)
-#define DMA1_CHANNEL_1_I2C1_TX_A         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_7)
+#define DMA1_STREAM_1_TIM_UP             (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_1)
+#define DMA1_STREAM_1_TIM_CH3            (DMA1_STREAM_1_TIM_UP)
+#define DMA1_STREAM_1_USART3_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_1)
+#define DMA1_STREAM_1_UART7_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_1)
+#define DMA1_STREAM_1_TIM5_CH4           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_1)
+#define DMA1_STREAM_1_TIM5_TRIG          (DMA1_STREAM_1_TIM5_CH4)
+#define DMA1_STREAM_1_TIM6_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_1)
 
-#define DMA1_CHANNEL_2_TIM4_CH1          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
-#define DMA1_CHANNEL_2_I2S3_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_2)
-#define DMA1_CHANNEL_2_TIM4_CH2          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_3)
-#define DMA1_CHANNEL_2_I2S2_EXT_TX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_4)
-#define DMA1_CHANNEL_2_I2S3_EXT_TX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_5)
-#define DMA1_CHANNEL_2_TIM4_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_6)
-#define DMA1_CHANNEL_2_TIM4_CH3          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_7)
+#define DMA1_STREAM_2_SPI3_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_2)
+#define DMA1_STREAM_2_TIM7_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_2)
+#define DMA1_STREAM_2_I2S3_EXT_RX        (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_2)
+#define DMA1_STREAM_2_I2C3_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_2)
+#define DMA1_STREAM_2_UART4_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_2)
+#define DMA1_STREAM_2_TIM3_CH4           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_2)
+#define DMA1_STREAM_2_TIM3_UP            (DMA1_STREAM_2_TIM3_CH4)
+#define DMA1_STREAM_2_TIM5_CH1           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_2)
+#define DMA1_STREAM_2_I2C2_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_2)
 
-#define DMA1_CHANNEL_3_I2S3_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_0)
-#define DMA1_CHANNEL_3_TIM_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_1)
-#define DMA1_CHANNEL_3_TIM_CH3           (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM_UP)
-#define DMA1_CHANNEL_3_I2C3_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_2)
-#define DMA1_CHANNEL_3_I2S2_EXT_RX       (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_3)
-#define DMA1_CHANNEL_3_I2S3_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_4)
-#define DMA1_CHANNEL_3_TIM2_CH1          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_5)
-#define DMA1_CHANNEL_3_TIM2_CH2          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_6)
-#define DMA1_CHANNEL_3_TIM2_CH4          (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM2_CH2)
-#define DMA1_CHANNEL_3_TIM2_UP           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_7)
-#define DMA1_CHANNEL_3_TIM2_CH4_A        (DMA_CONTROLLER_REF_1 | DMA1_CHANNEL_3_TIM2_UP)
+#define DMA1_STREAM_3_SPI2_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_3)
+#define DMA1_STREAM_3_TIM4_CH2           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_3)
+#define DMA1_STREAM_3_I2S2_EXT_RX        (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_3)
+#define DMA1_STREAM_3_USART3_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_3)
+#define DMA1_STREAM_3_UART7_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_3)
+#define DMA1_STREAM_3_TIM5_CH4           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_3)
+#define DMA1_STREAM_3_TIM5_TRIG          (DMA1_STREAM_3_TIM5_CH4)
+#define DMA1_STREAM_3_I2C2_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_3)
 
-#define DMA1_CHANNEL_4_UART5_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_0)
-#define DMA1_CHANNEL_4_USART3_RX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_1)
-#define DMA1_CHANNEL_4_UART4_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_2)
-#define DMA1_CHANNEL_4_USART3_TX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_3)
-#define DMA1_CHANNEL_4_UART4_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_4)
-#define DMA1_CHANNEL_4_USART2_RX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_5)
-#define DMA1_CHANNEL_4_USART2_TX         (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_6)
-#define DMA1_CHANNEL_4_UART5_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_7)
+#define DMA1_STREAM_4_SPI2_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_4)
+#define DMA1_STREAM_4_TIM7_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_4)
+#define DMA1_STREAM_4_I2S2_EXT_TX        (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_4)
+#define DMA1_STREAM_4_I2S3_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_4)
+#define DMA1_STREAM_4_UART4_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_4)
+#define DMA1_STREAM_4_TIM3_CH1           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_4)
+#define DMA1_STREAM_4_TIM3_TRIG          (DMA1_STREAM_4_TIM3_CH1)
+#define DMA1_STREAM_4_TIM5_CH2           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_4)
+#define DMA1_STREAM_4_USART3_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_4)
+
+#define DMA1_STREAM_5_SPI3_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_5)
+#define DMA1_STREAM_5_I2C1_RX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_5)
+#define DMA1_STREAM_5_I2S3_EXT_TX        (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_5)
+#define DMA1_STREAM_5_TIM2_CH1           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_5)
+#define DMA1_STREAM_5_USART2_RX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_5)
+#define DMA1_STREAM_5_TIM3_CH2           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_5)
+#define DMA1_STREAM_5_DAC1               (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_5)
+
+#define DMA1_STREAM_6_I2C1_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_6)
+#define DMA1_STREAM_6_TIM4_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_6)
+#define DMA1_STREAM_6_TIM2_CH2           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_6)
+#define DMA1_STREAM_6_TIM2_CH4           (DMA1_STREAM_6_TIM2_CH2)
+#define DMA1_STREAM_6_USART2_TX          (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_6)
+#define DMA1_STREAM_6_UART8_RX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_6)
+#define DMA1_STREAM_6_TIM5_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_6 | DMA_STREAM_6)
+#define DMA1_STREAM_6_DAC2               (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_6)
+
+#define DMA1_STREAM_7_SPI3_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_0 | DMA_STREAM_7)
+#define DMA1_STREAM_7_I2C1_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_1 | DMA_STREAM_7)
+#define DMA1_STREAM_7_TIM4_CH3           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_2 | DMA_STREAM_7)
+#define DMA1_STREAM_7_TIM2_UP            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_3 | DMA_STREAM_7)
+#define DMA1_STREAM_7_TIM2_CH4           (DMA1_STREAM_7_TIM2_UP)
+#define DMA1_STREAM_7_UART5_TX           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_4 | DMA_STREAM_7)
+#define DMA1_STREAM_7_TIM3_CH3           (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_5 | DMA_STREAM_7)
+#define DMA1_STREAM_7_I2C2_TX            (DMA_CONTROLLER_REF_1 | DMA_SxCR_CHSEL_7 | DMA_STREAM_7)
 
 
-#define DMA2_CHANNEL_2_ADC3              (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
-#define DMA2_CHANNEL_2_ADC3_A            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_1)
 
+// DMA2 sources
+//
+#define DMA2_STREAM_0_ADC1               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_0)
+#define DMA2_STREAM_0_ADC3               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_0)
+#define DMA2_STREAM_0_SPI1_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_3 | DMA_STREAM_0)
+#define DMA2_STREAM_0_SPI4_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_0)
+#define DMA2_STREAM_0_TIM1_TRIG          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_0)
 
-#define DMA1_CHANNEL_1_ADC1
-#define DMA1_CHANNEL_1_TIM2_CH3
-#define DMA1_CHANNEL_1_TIM4_CH1
-#define DMA1_CHANNEL_2_SPI1_RX
-#define DMA1_CHANNEL_2_USART3_TX
-#define DMA1_CHANNEL_2_TIM1_CH1
-#define DMA1_CHANNEL_2_TIM2_UP
-#define DMA1_CHANNEL_2_TIM3_CH3
-#define DMA1_CHANNEL_3_SPI1_TX
-#define DMA1_CHANNEL_3_USART3_RX
-#define DMA1_CHANNEL_3_TIM1_CH2
-#define DMA1_CHANNEL_3_TIM3_CH4
-#define DMA1_CHANNEL_3_TIM3_UP
-#define DMA1_CHANNEL_4_SPI2_I2S2_RX
-#define DMA1_CHANNEL_4_USART1_TX
-#define DMA1_CHANNEL_4_I2C2_TX
-#define DMA1_CHANNEL_4_TIM1_CH4
-#define DMA1_CHANNEL_4_TIM1_TRIG
-#define DMA1_CHANNEL_4_TIM1_COM
-#define DMA1_CHANNEL_4_TIM4_CH2
-#define DMA1_CHANNEL_5_SPI2_I2S2_TX
-#define DMA1_CHANNEL_5_USART1_RX
-#define DMA1_CHANNEL_5_I2C2_RX
-#define DMA1_CHANNEL_5_TIM1_UP
-#define DMA1_CHANNEL_5_TIM2_CH1
-#define DMA1_CHANNEL_5_TIM4_CH3
-#define DMA1_CHANNEL_6_USART2_RX
-#define DMA1_CHANNEL_6_I2C1_TX
-#define DMA1_CHANNEL_6_TIM1_CH3
-#define DMA1_CHANNEL_6_TIM3_CH1
-#define DMA1_CHANNEL_6_TIM3_TRIG
-#define DMA1_CHANNEL_7_USART2_TX
-#define DMA1_CHANNEL_7_I2C1_RX
-#define DMA1_CHANNEL_7_TIM2_CH2
-#define DMA1_CHANNEL_7_TIM2_CH4
-#define DMA1_CHANNEL_7_TIM4_UP
+#define DMA2_STREAM_1_SAI1_A             (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_1)
+#define DMA2_STREAM_1_DCMI               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_1)
+#define DMA2_STREAM_1_ADC3               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_1)
+#define DMA2_STREAM_1_SPI4_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_1)
+#define DMA2_STREAM_1_USART6_RX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_1)
+#define DMA2_STREAM_1_TIM1_CH1           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_1)
+#define DMA2_STREAM_1_TIM8_UP            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_1)
 
-#define DMA2_CHANNEL_1_SPI_I2S3_RX
-#define DMA2_CHANNEL_1_TIM5_CH4
-#define DMA2_CHANNEL_1_TIM5_TRIG
-#define DMA2_CHANNEL_1_TIM8_CH3
-#define DMA2_CHANNEL_1_TIM8_UP
-#define DMA2_CHANNEL_2_SPI_I2S3_TX
-#define DMA2_CHANNEL_2_TIM5_CH3
-#define DMA2_CHANNEL_2_TIM5_UP
-#define DMA2_CHANNEL_2_TIM8_CH4
-#define DMA2_CHANNEL_2_TIM8_TRIG
-#define DMA2_CHANNEL_2_TIM8_COM
-#define DMA2_CHANNEL_3_UART4_RX
-#define DMA2_CHANNEL_3_TIM6_UP
-#define DMA2_CHANNEL_3_DAC_Channel1
-#define DMA2_CHANNEL_3_TIM8_CH1
-#define DMA2_CHANNEL_4_SDIO
-#define DMA2_CHANNEL_4_TIM5_CH2
-#define DMA2_CHANNEL_4_TIM7_UP
-#define DMA2_CHANNEL_4_DAC_Channel2
-#define DMA2_CHANNEL_5_ADC3
-#define DMA2_CHANNEL_5_UART4_TX
-#define DMA2_CHANNEL_5_TIM5_CH1
-#define DMA2_CHANNEL_5_TIM8_CH2
+#define DMA2_STREAM_2_TIM8_CH1           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_2)
+#define DMA2_STREAM_2_TIM8_CH2           (DMA2_STREAM_2_TIM8_CH1)
+#define DMA2_STREAM_2_TIM8_CH3           (DMA2_STREAM_2_TIM8_CH1)
+#define DMA2_STREAM_2_ADC2               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_2)
+#define DMA2_STREAM_2_SPI1_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_3 | DMA_STREAM_2)
+#define DMA2_STREAM_2_USART1_RX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_2)
+#define DMA2_STREAM_2_USART6_RX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_2)
+#define DMA2_STREAM_2_TIM8_CH1_A         (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_2)
+#define DMA2_STREAM_2_TIM1_CH2           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_2)
+
+#define DMA2_STREAM_3_SAI1_A             (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_3)
+#define DMA2_STREAM_3_ADC2               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_3)
+#define DMA2_STREAM_3_SPI5_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_3)
+#define DMA2_STREAM_3_SPI1_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_3 | DMA_STREAM_3)
+#define DMA2_STREAM_3_SDIO               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_3)
+#define DMA2_STREAM_3_SPI4_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_3)
+#define DMA2_STREAM_3_TIM1_CH1           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_3)
+#define DMA2_STREAM_3_TIM8_CH2           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_3)
+
+#define DMA2_STREAM_4_ADC1               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_4)
+#define DMA2_STREAM_4_SAI1_B             (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_4)
+#define DMA2_STREAM_4_SPI5_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_4)
+#define DMA2_STREAM_4_SPI4_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_4)
+#define DMA2_STREAM_4_TIM1_CH4           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_4)
+#define DMA2_STREAM_4_TIM1_TRIG          (DMA2_STREAM_4_TIM1_CH4)
+#define DMA2_STREAM_4_TIM1_COM           (DMA2_STREAM_4_TIM1_CH4)
+#define DMA2_STREAM_4_TIM8_CH3           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_4)
+
+#define DMA2_STREAM_5_SAI1_B             (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_5)
+#define DMA2_STREAM_5_SPI6_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_5)
+#define DMA2_STREAM_5_CRYP_OUT           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_5)
+#define DMA2_STREAM_5_SPI1_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_3 | DMA_STREAM_5)
+#define DMA2_STREAM_5_USART1_RX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_5)
+#define DMA2_STREAM_5_TIM1_UP            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_5)
+#define DMA2_STREAM_5_SPI5_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_5)
+
+#define DMA2_STREAM_6_TIM1_CH1           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_0 | DMA_STREAM_6)
+#define DMA2_STREAM_6_TIM1_CH2           (DMA2_STREAM_6_TIM1_CH1)
+#define DMA2_STREAM_6_TIM1_CH3           (DMA2_STREAM_6_TIM1_CH1)
+#define DMA2_STREAM_6_SPI6_RX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_6)
+#define DMA2_STREAM_6_CRYP_IN            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_6)
+#define DMA2_STREAM_6_SDIO               (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_6)
+#define DMA2_STREAM_6_USART6_TX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_6)
+#define DMA2_STREAM_6_TIM1_CH6           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_6 | DMA_STREAM_6)
+#define DMA2_STREAM_6_SPI5_TX            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_6)
+
+#define DMA2_STREAM_7_DCMI_A             (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_1 | DMA_STREAM_7)
+#define DMA2_STREAM_7_HASH_IN            (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_2 | DMA_STREAM_7)
+#define DMA2_STREAM_7_USART1_TX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_4 | DMA_STREAM_7)
+#define DMA2_STREAM_7_USART6_TX          (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_5 | DMA_STREAM_7)
+#define DMA2_STREAM_7_TIM8_CH4           (DMA_CONTROLLER_REF_2 | DMA_SxCR_CHSEL_7 | DMA_STREAM_7)
+#define DMA2_STREAM_7_TIM8_TRIG          (DMA2_STREAM_7_TIM8_CH4)
+#define DMA2_STREAM_7_TIM8_COM           (DMA2_STREAM_7_TIM8_CH4)
+
 
 
 #define DMA_BYTES                    0x00000001
@@ -3943,6 +3983,7 @@ typedef struct stSTM32_DMA
 
 extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void(*int_handler)(void), int int_priority);
     #define DMA_ERROR_OCCURRED       -1
+extern STM32_DMA_STREAM *fnGetDMA_stream(unsigned long ulDmaTriggerSource);
 
 // ADC                                                                   {22}
 //
@@ -6374,9 +6415,9 @@ typedef struct stTIM9_10_11_13_12_14_REGS
 // SPI (I2S)
 //
 #define SPI1_CR1                         *(volatile unsigned short *)(SPI1_BLOCK + 0x00)       // SPI Control Register
-  #define  SPICR1_CPHA                   0x0001
-  #define  SPICR1_CPOL                   0x0002
-  #define  SPICR1_MSTR                   0x0004
+  #define  SPICR1_CPHA                   0x0001                                                // clock phase - the eond clock transition is the first data capture edge
+  #define  SPICR1_CPOL                   0x0002                                                // clock polarity - CK '1' when idle
+  #define  SPICR1_MSTR                   0x0004                                                // master configuration
   #define  SPICR1_BR_PCLK2_DIV2          0x0000
   #define  SPICR1_BR_PCLK2_DIV4          0x0008
   #define  SPICR1_BR_PCLK2_DIV8          0x0010
@@ -6386,18 +6427,26 @@ typedef struct stTIM9_10_11_13_12_14_REGS
   #define  SPICR1_BR_PCLK2_DIV128        0x0030
   #define  SPICR1_BR_PCLK2_DIV256        0x0038
 
-  #define  SPICR1_BRMASK                 0x0038
-  #define  SPICR1_SPE                    0x0040
-  #define  SPICR1_LSB_FIRST              0x0080
-  #define  SPICR1_SSI                    0x0100
-  #define  SPICR1_SSM                    0x0200
-  #define  SPICR1_RXONLY                 0x0400
-  #define  SPICR1_DFF                    0x0800
-  #define  SPICR1_CRCNEXT                0x1000
-  #define  SPICR1_CRCEN                  0x2000
-  #define  SPICR1_BIDIOE                 0x4000
-  #define  SPICR1_BIDIMODE               0x8000
+  #define  SPICR1_BRMASK                 0x0038                                                // baud rate control mask
+  #define  SPICR1_SPE                    0x0040                                                // SPI peripheral enabled
+  #define  SPICR1_LSB_FIRST              0x0080                                                // frame format LCD transmitted first
+  #define  SPICR1_SSI                    0x0100                                                // internal slave select
+  #define  SPICR1_SSM                    0x0200                                                // software slave management
+  #define  SPICR1_RXONLY                 0x0400                                                // receive only
+  #define  SPICR1_DFF                    0x0800                                                // data frame forat 16 bit
+  #define  SPICR1_CRCNEXT                0x1000                                                // CRC transfer next
+  #define  SPICR1_CRCEN                  0x2000                                                // hardware CRC calculation enable
+  #define  SPICR1_BIDIOE                 0x4000                                                // output enable in bidirectional mode
+  #define  SPICR1_BIDIMODE               0x8000                                                // bidirectional data mode enable
 #define SPI1_CR2                         *(unsigned short *)(SPI1_BLOCK + 0x04)                // SPI Control Register 2
+    #define SPI_CR2_RXDMAEN              0x0001                                                // receive buffer DMA enable
+    #define SPI_CR2_TXDMAEN              0x0002                                                // transmit buffer DMA enable
+    #define SPI_CR2_SSOEEN               0x0004                                                // SS output enable
+    #define SPI_CR2_FRF_MOTOROLA_MODE    0x0000                                                // frame format Motorola mode
+    #define SPI_CR2_FRF_TI_MODE          0x0010                                                // frame format TI mode
+    #define SPI_CR2_ERRIE                0x0020                                                // error interrupt enable
+    #define SPI_CR2_RXNEIE               0x0040                                                // receive buffer not empty interrupt enable
+    #define SPI_CR2_TXEIE                0x0080                                                // transmit buffer empty interrupt enable
 #define SPI1_SR                          *(volatile unsigned short *)(SPI1_BLOCK + 0x08)       // SPI Status Register
   #define SPISR_RXNE                     0x0001
   #define SPISR_TXE                      0x0002
@@ -6407,6 +6456,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
   #define SPISR_MODF                     0x0020
   #define SPISR_OVR                      0x0040
   #define SPISR_BSY                      0x0080
+#define SPI1_DR_ADD                      (volatile unsigned short *)(SPI1_BLOCK + 0x0c)        // SPI Data Register address
 #define SPI1_DR                          *(volatile unsigned short *)(SPI1_BLOCK + 0x0c)       // SPI Data Register
 #define SPI1_CRCPR                       *(unsigned short *)(SPI1_BLOCK + 0x10)                // SPI CRC Polynomial Register
 #define SPI1_RXCRCR                      *(volatile unsigned short *)(SPI1_BLOCK + 0x14)       // SPI Rx CRC Register
@@ -6417,6 +6467,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
 #define SPI2_CR1                         *(volatile unsigned short *)(SPI2_I2S_BLOCK + 0x00)   // SPI Control Register
 #define SPI2_CR2                         *(unsigned short *)(SPI2_I2S_BLOCK + 0x04)            // SPI Control Register 2
 #define SPI2_SR                          *(volatile unsigned short *)(SPI2_I2S_BLOCK + 0x08)   // SPI Status Register
+#define SPI2_DR_ADD                      (volatile unsigned short *)(SPI2_I2S_BLOCK + 0x0c)    // SPI Data Register address
 #define SPI2_DR                          *(volatile unsigned short *)(SPI2_I2S_BLOCK + 0x0c)   // SPI Data Register
 #define SPI2_CRCPR                       *(unsigned short *)(SPI2_I2S_BLOCK + 0x10)            // SPI CRC Polynomial Register
 #define SPI2_RXCRCR                      *(volatile unsigned short *)(SPI2_I2S_BLOCK + 0x14)   // SPI Rx CRC Register
@@ -6427,6 +6478,7 @@ typedef struct stTIM9_10_11_13_12_14_REGS
 #define SPI3_CR1                         *(volatile unsigned short *)(SPI3_I2S_BLOCK + 0x00)   // SPI Control Register
 #define SPI3_CR2                         *(unsigned short *)(SPI3_I2S_BLOCK + 0x04)            // SPI Control Register 2
 #define SPI3_SR                          *(volatile unsigned short *)(SPI3_I2S_BLOCK + 0x08)   // SPI Status Register
+#define SPI3_DR_ADD                      (volatile unsigned short *)(SPI3_I2S_BLOCK + 0x0c)    // SPI Data Register address
 #define SPI3_DR                          *(volatile unsigned short *)(SPI3_I2S_BLOCK + 0x0c)   // SPI Data Register
 #define SPI3_CRCPR                       *(unsigned short *)(SPI3_I2S_BLOCK + 0x10)            // SPI CRC Polynomial Register
 #define SPI3_RXCRCR                      *(volatile unsigned short *)(SPI3_I2S_BLOCK + 0x14)   // SPI Rx CRC Register
@@ -7657,8 +7709,8 @@ typedef struct stVECTOR_TABLE
      ((((0x0008 & pins) << 9) | ((0x0008 & pins) << 10) | ((0x0008 & pins) << 11) | ((0x0008 & pins) << 12)) & ((characteristics) << 12)) | \
      ((((0x0010 & pins) << 12)| ((0x0010 & pins) << 13) | ((0x0010 & pins) << 14) | ((0x0010 & pins) << 15)) & ((characteristics) << 16)) | \
      ((((0x0020 & pins) << 15)| ((0x0020 & pins) << 16) | ((0x0020 & pins) << 17) | ((0x0020 & pins) << 18)) & ((characteristics) << 20)) | \
-     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((characteristics) << 24))) | \
-     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((characteristics) << 28)))); \
+     ((((0x0040 & pins) << 18)| ((0x0040 & pins) << 19) | ((0x0040 & pins) << 20) | ((0x0040 & pins) << 21)) & ((characteristics) << 24)) | \
+     ((((0x0080 & pins) << 21)| ((0x0080 & pins) << 22) | ((0x0080 & pins) << 23) | ((0x0080 & pins) << 24)) & ((characteristics) << 28))); \
      GPIO##ref##_CRH = ((GPIO##ref##_CRH & \
      ~(((0x0100 & pins) >> 8) | ((0x0100 & pins) >> 7)  | ((0x0100 & pins) >> 6)  | ((0x0100 & pins) >> 5)    | \
      (((0x0200 & pins) >> 5)  | ((0x0200 & pins) >> 4)  | ((0x0200 & pins) >> 3)  | ((0x0200 & pins) >> 2))   | \

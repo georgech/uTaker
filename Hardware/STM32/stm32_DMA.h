@@ -17,6 +17,263 @@
 */
 
 #if defined _DMA_SHARED_CODE
+
+/* =================================================================== */
+/*                 local function prototype declarations               */
+/* =================================================================== */
+
+static __interrupt void _DMA_Interrupt_0(void);
+static __interrupt void _DMA_Interrupt_1(void);
+static __interrupt void _DMA_Interrupt_2(void);
+static __interrupt void _DMA_Interrupt_3(void);
+#if DMA_CHANNEL_COUNT > 4
+    static __interrupt void _DMA_Interrupt_4(void);
+#endif
+#if DMA_CHANNEL_COUNT > 5
+    static __interrupt void _DMA_Interrupt_5(void);
+#endif
+#if DMA_CHANNEL_COUNT > 6
+    static __interrupt void _DMA_Interrupt_6(void);
+#endif
+#if DMA_CHANNEL_COUNT > 7
+    static __interrupt void _DMA_Interrupt_7(void);
+#endif
+#if DMA_CHANNEL_COUNT > 8
+    static __interrupt void _DMA_Interrupt_8(void);
+#endif
+#if DMA_CHANNEL_COUNT > 9
+    static __interrupt void _DMA_Interrupt_9(void);
+#endif
+#if DMA_CHANNEL_COUNT > 10
+    static __interrupt void _DMA_Interrupt_10(void);
+#endif
+#if DMA_CHANNEL_COUNT > 11
+    static __interrupt void _DMA_Interrupt_11(void);
+#endif
+#if DMA_CHANNEL_COUNT > 12
+    static __interrupt void _DMA_Interrupt_12(void);
+#endif
+#if DMA_CHANNEL_COUNT > 13
+    static __interrupt void _DMA_Interrupt_13(void);
+#endif
+#if DMA_CHANNEL_COUNT > 14
+    static __interrupt void _DMA_Interrupt_14(void);
+#endif
+#if DMA_CHANNEL_COUNT > 15
+    static __interrupt void _DMA_Interrupt_15(void);
+#endif
+
+
+/* =================================================================== */
+/*                             constants                               */
+/* =================================================================== */
+
+static const unsigned char *_DMA_Interrupt[DMA_CHANNEL_COUNT] = {
+    (unsigned char *)_DMA_Interrupt_0,
+    (unsigned char *)_DMA_Interrupt_1,
+    (unsigned char *)_DMA_Interrupt_2,
+    (unsigned char *)_DMA_Interrupt_3,
+#if DMA_CHANNEL_COUNT > 4
+    (unsigned char *)_DMA_Interrupt_4,
+#endif
+#if DMA_CHANNEL_COUNT > 5
+    (unsigned char *)_DMA_Interrupt_5,
+#endif
+#if DMA_CHANNEL_COUNT > 6
+    (unsigned char *)_DMA_Interrupt_6,
+#endif
+#if DMA_CHANNEL_COUNT > 7
+    (unsigned char *)_DMA_Interrupt_7,
+#endif
+#if DMA_CHANNEL_COUNT > 8
+    (unsigned char *)_DMA_Interrupt_8,
+#endif
+#if DMA_CHANNEL_COUNT > 9
+    (unsigned char *)_DMA_Interrupt_9,
+#endif
+#if DMA_CHANNEL_COUNT > 10
+    (unsigned char *)_DMA_Interrupt_10,
+#endif
+#if DMA_CHANNEL_COUNT > 11
+    (unsigned char *)_DMA_Interrupt_11,
+#endif
+#if DMA_CHANNEL_COUNT > 12
+    (unsigned char *)_DMA_Interrupt_12,
+#endif
+#if DMA_CHANNEL_COUNT > 13
+    (unsigned char *)_DMA_Interrupt_13,
+#endif
+#if DMA_CHANNEL_COUNT > 14
+    (unsigned char *)_DMA_Interrupt_14,
+#endif
+#if DMA_CHANNEL_COUNT > 15
+    (unsigned char *)_DMA_Interrupt_15,
+#endif
+};
+
+/* =================================================================== */
+/*                      local variable definitions                     */
+/* =================================================================== */
+
+// Interrupt handlers for DMA operation
+// - either a complete or a half buffer has been completed
+//
+static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user DMA interrupt handlers
+
+/* =================================================================== */
+/*                       DMA Interrupt Handlers                        */
+/* =================================================================== */
+
+static void _DMA_Handler(int iChannel)
+{
+    if (_DMA_handler[iChannel] != 0) {                                   // if there is a user handler
+        uDisable_Interrupt();
+            _DMA_handler[iChannel]();                                    // call user handling function
+        uEnable_Interrupt();
+    }
+}
+
+
+static __interrupt void _DMA_Interrupt_0(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF0);                     // clear the DMA interrupt (DMA1 - stream 0)
+    #endif
+    _DMA_Handler(0);
+}
+
+static __interrupt void _DMA_Interrupt_1(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF1);                     // clear the DMA interrupt (DMA1 - stream 1)
+    #endif
+    _DMA_Handler(1);
+}
+
+static __interrupt void _DMA_Interrupt_2(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF2);                     // clear the DMA interrupt (DMA1 - stream 2)
+    #endif
+    _DMA_Handler(2);
+}
+
+static __interrupt void _DMA_Interrupt_3(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF3);                     // clear the DMA interrupt (DMA1 - stream 3)
+    #endif
+    _DMA_Handler(3);
+}
+#if DMA_CHANNEL_COUNT > 4
+static __interrupt void _DMA_Interrupt_4(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF4);                     // clear the DMA interrupt (DMA1 - stream 4)
+    #endif
+    _DMA_Handler(4);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 5
+static __interrupt void _DMA_Interrupt_5(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF5);                     // clear the DMA interrupt (DMA1 - stream 5)
+    #endif
+    _DMA_Handler(5);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 6
+static __interrupt void _DMA_Interrupt_6(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF6);                     // clear the DMA interrupt (DMA1 - stream 6)
+    #endif
+    _DMA_Handler(6);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 7
+static __interrupt void _DMA_Interrupt_7(void)
+{
+    #if defined DMA1_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF7);                     // clear the DMA interrupt (DMA1 - stream 7)
+    #endif
+    _DMA_Handler(7);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 8
+static __interrupt void _DMA_Interrupt_8(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF0);                     // clear the DMA interrupt (DMA2 - stream 0)
+    #endif
+    _DMA_Handler(8);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 9
+static __interrupt void _DMA_Interrupt_9(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF1);                     // clear the DMA interrupt (DMA2 - stream 1)
+    #endif
+    _DMA_Handler(9);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 10
+static __interrupt void _DMA_Interrupt_10(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF2);                     // clear the DMA interrupt (DMA2 - stream 2)
+    #endif
+    _DMA_Handler(10);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 11
+static __interrupt void _DMA_Interrupt_11(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF3);                     // clear the DMA interrupt (DMA2 - stream 3)
+    #endif
+    _DMA_Handler(11);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 12
+static __interrupt void _DMA_Interrupt_12(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF4);                     // clear the DMA interrupt (DMA2 - stream 4)
+    #endif
+    _DMA_Handler(12);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 13
+static __interrupt void _DMA_Interrupt_13(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF5);                     // clear the DMA interrupt (DMA2 - stream 5)
+    #endif
+    _DMA_Handler(13);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 14
+static __interrupt void _DMA_Interrupt_14(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF6);                     // clear the DMA interrupt (DMA2 - stream 6)
+#endif    
+    _DMA_Handler(14);
+}
+#endif
+#if DMA_CHANNEL_COUNT > 15
+static __interrupt void _DMA_Interrupt_15(void)
+{
+    #if defined DMA2_LIFCR
+    WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF7);                     // clear the DMA interrupt (DMA2 - stream 7)
+    #endif
+    _DMA_Handler(15);
+}
+#endif
+
 // Buffer source to fixed destination address or fixed source address to buffer (beware that only DMA controller 2 can perform memory to memory transfers)
 //
 extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
@@ -26,8 +283,10 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
     STM32_DMA *ptrDMA_controller;
     STM32_DMA_STREAM *ptrDMAstream;
     int iStream = (ulDmaTriggerSource & 0x7);
+    int iIntChannel = iStream;
     int iInterruptID;
     if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) != 0) {              // set a pointer to the DMA controller to be used
+        POWER_UP(AHB1, RCC_AHB1ENR_DMA2EN);                              // ensure DMA controller is enabled
         ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
         if (iStream >= 5) {
             iInterruptID = (irq_DMA2_Stream5_ID + (iStream - 5));
@@ -35,8 +294,10 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
         else {
             iInterruptID = (irq_DMA2_Stream0_ID + iStream);
         }
+        iIntChannel += 8;
     }
     else {
+        POWER_UP(AHB1, RCC_AHB1ENR_DMA1EN);                              // ensure DMA controller is enabled
         ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
         if (iStream == 7) {
             iInterruptID = irq_DMA1_Stream7_ID;
@@ -45,10 +306,9 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
             iInterruptID = (irq_DMA1_Stream0_ID + iStream);
         }
     }
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
     ptrDMAstream = &ptrDMA_controller->DMA_stream[iStream];              // select the stream registers to be used
     ptrDMAstream->DMA_SxCR = 0;                                          // disable stream
-    
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
     ulTransferType = (DMA_SxCR_CHSEL_7 & ulDmaTriggerSource);
     if ((ulRules & DMA_DIRECTION_OUTPUT) != 0) {                         // peripheral destination
         ptrDMAstream->DMA_SxM0AR = (unsigned long)ptrBufSource;          // address of memory source
@@ -79,19 +339,58 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
     DMA_CCR_MEMCPY   = (DMA1_CCR1_EN | DMA1_CCR1_PINC | DMA1_CCR1_MINC | DMA1_CCR1_PSIZE_8 | DMA1_CCR1_MSIZE_8 | DMA1_CCR1_PL_MEDIUM | DMA1_CCR1_MEM2MEM | DMA1_CCR1_DIR); // set up DMA operation and start DMA transfer
     #endif
     if (int_handler != 0) {
-        fnEnterInterrupt(iInterruptID, int_priority, int_handler);       // enter interrupt handler for the DMA controller stream
+        _DMA_handler[iIntChannel] = int_handler;                         // enter the user interrupt callback
+        fnEnterInterrupt(iInterruptID, int_priority, (void(*)(void))_DMA_Interrupt[iIntChannel]); // enter interrupt handler for the DMA controller stream
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
         if ((ulRules & DMA_HALF_BUFFER_INTERRUPT) != 0) {
             ulTransferType |= DMA_SxCR_HTIE;                             // enable interrupt on half-transfer completion
         }
         else {
             ulTransferType |= DMA_SxCR_TCIE;                             // enable interrupt on completion
         }
+    #endif
     }
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
     ptrDMAstream->DMA_SxCR = ulTransferType;
+    #endif
 
     // Note that the DMA channel has not been activated yet - to do this fnDMA_BufferReset(channel_number, DMA_BUFFER_START); is performed
     //
     return 0;
+}
+
+extern STM32_DMA_STREAM *fnGetDMA_stream(unsigned long ulDmaTriggerSource)
+{
+    STM32_DMA *ptrDMA_controller;
+    int iStream = (ulDmaTriggerSource & 0x7);
+    if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) != 0) {              // set a pointer to the DMA controller to be used
+        ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
+    }
+    else {
+        ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
+    }
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    return (&ptrDMA_controller->DMA_stream[iStream]);                    // return the stream register pointer
+    #else
+    return 0;
+    #endif
+}
+
+extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
+{
+    STM32_DMA_STREAM *ptrDMAstream = fnGetDMA_stream(ulDmaTriggerSource);// select the stream registers to be used
+    switch (iAction) {
+    case DMA_BUFFER_START_FINISH:                                        // start a prepared transfer with software trigger and return only after the transfer has compeleted
+        break;
+    case DMA_BUFFER_START:
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+        ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                           // just enable the channel's operation
+    #endif
+        break;
+    case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
+    case DMA_BUFFER_RESTART:                                             // reset and start again
+        break;
+    }
 }
 #endif
 
@@ -110,7 +409,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
     if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA2_S0CR == 0)) { // {27} if large enough to be worth while and if not already in use
         unsigned short usTransferSize;
-        while (((unsigned long)ptr1) & 0x3) {                            // move to a long word boundary (the source is not guaranteed to be on a boundary, which can make the lomng word copy less efficient)
+        while ((((unsigned long)ptr1) & 0x3) != 0) {                     // move to a long word boundary (the source is not guaranteed to be on a boundary, which can make the lomng word copy less efficient)
             *ptr1++ = *ptr2++;
             Size--;
         }
@@ -165,7 +464,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     }
     #endif
     else {                                                               // normal memcpy method
-        while (Size--) {
+        while (Size-- != 0) {
             *ptr1++ = *ptr2++;
         }
   }
@@ -196,7 +495,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
         usTransferSize *= sizeof(unsigned long);                         // the number of bytes being transferred by the DMA process
         ptr += usTransferSize;                                           // move the destination pointer to beyond the transfer
         Size -= usTransferSize;                                          // bytes remaining
-        while (Size--) {
+        while (Size-- != 0) {
             *ptr++ = ucValue;
         }
         while ((DMA2_LISR & DMA_LISR_TCIF1) == 0) { SIM_DMA(0) };        // wait until the DMA transfer has terminated
@@ -218,7 +517,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
     }
     #endif
     else {                                                               // normal memset method
-        while (Size--) {
+        while (Size-- != 0) {
             *ptr++ = ucValue;
         }
     }

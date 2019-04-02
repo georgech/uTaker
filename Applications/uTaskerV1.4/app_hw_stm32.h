@@ -1098,6 +1098,15 @@
 #else
     #define SYSTICK_PRIORITY           15
 
+    #define PRIORITY_USART1_TX_DMA     9
+    #define PRIORITY_USART2_TX_DMA     9
+    #define PRIORITY_USART3_TX_DMA     9
+    #define PRIORITY_UART4_TX_DMA      9
+    #define PRIORITY_UART5_TX_DMA      9
+    #define PRIORITY_USART6_TX_DMA     9
+    #define PRIORITY_UART7_TX_DMA      9
+    #define PRIORITY_UART8_TX_DMA      9
+
     #define PRIORITY_EXI10_15          8
     #define PRIORITY_EXI5_9            8
     #define PRIORITY_EXI0              8
@@ -1851,7 +1860,6 @@
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
         #define ETH_TXD_TX_EN_G                                          // TXD0, TXD1 and TX_EN on port G
         #define CONFIG_PHY_STRAPS()                                      // dummy
-      //#define PHY_INTERRUPT                                            // no PHY interrupt is connected
         #define PHY_INTERRUPT          PORTA_BIT3                        // use PHY interrupt
         #define PHY_INT_PORT           PORTA
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(A, PHY_INTERRUPT)

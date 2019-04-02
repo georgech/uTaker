@@ -400,7 +400,11 @@ static void fnStartLPI2C_TxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     ptI2CQue->dma_length = ptI2CQue->ucPresentLen;
     #endif
     if (ptI2CQue->dma_length > max_linear_data) {
-        ptI2CQue->dma_length = max_linear_data;
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->dma_length = (unsigned short)max_linear_data;
+    #else
+        ptI2CQue->dma_length = (unsigned char)max_linear_data;
+    #endif
     }
     ptrDMA_TCD += LPI2C_DMA_TX_CHANNEL[Channel];
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptI2CQue->dma_length; // the number of service requests (the number of bytes to be transferred)
@@ -425,7 +429,11 @@ static void fnStartLPI2C_RxDMA(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
     ptI2CQue->dma_length = ptI2CQue->ucPresentLen;
     #endif
     if (ptI2CQue->dma_length > max_linear_data) {
-        ptI2CQue->dma_length = max_linear_data;
+    #if defined I2C_2_BYTE_LENGTH
+        ptI2CQue->dma_length = (unsigned short)max_linear_data;
+    #else
+        ptI2CQue->dma_length = (unsigned char)max_linear_data;
+    #endif
     }
     ptrDMA_TCD += LPI2C_DMA_RX_CHANNEL[Channel];
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptI2CQue->dma_length; // the number of service requests (the number of bytes to be transferred)
@@ -447,12 +455,21 @@ static void _lpi2c_tx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChanne
         #if defined _WINDOWS
     fnSimI2C_devices(I2C_TX_DATA, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         #endif
+    #if defined I2C_2_BYTE_LENGTH
     ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    #else
+    ptrTxControl->ucPresentLen -= ptrTxControl->dma_length;
+    #endif
     ptrTxControl->I2C_queue.get += ptrTxControl->dma_length;
     if (ptrTxControl->I2C_queue.get >= ptrTxControl->I2C_queue.buffer_end) {
         ptrTxControl->I2C_queue.get -= ptrTxControl->I2C_queue.buf_length;
     }
-    if (ptrTxControl->usPresentLen == 0) {                               // if all data transmitted
+    #if defined I2C_2_BYTE_LENGTH
+    if (ptrTxControl->usPresentLen == 0)
+    #else
+    if (ptrTxControl->ucPresentLen == 0)
+    #endif
+    {                                                                    // if all data transmitted
         fnLPI2C_Handler(ptrLPI2C, iChannel);
     }
     else {                                                               // transmit remaining (after circular buffer wrap-around)
@@ -486,13 +503,22 @@ static void _lpi2c_rx_dma_Interrupt(KINETIS_LPI2C_CONTROL *ptrLPI2C, int iChanne
 {
     I2CQue *ptrTxControl = I2C_tx_control[iChannel];
     I2CQue *ptrRxControl = I2C_rx_control[iChannel];
+    #if defined I2C_2_BYTE_LENGTH
     ptrTxControl->usPresentLen -= ptrTxControl->dma_length;
+    #else
+    ptrTxControl->ucPresentLen -= ptrTxControl->dma_length;
+    #endif
     ptrRxControl->I2C_queue.put += ptrRxControl->dma_length;
     if (ptrRxControl->I2C_queue.put >= ptrRxControl->I2C_queue.buffer_end) {
         ptrRxControl->I2C_queue.put -= ptrRxControl->I2C_queue.buf_length;
     }
     ptrRxControl->I2C_queue.chars += ptrTxControl->dma_length;
-    if (ptrTxControl->usPresentLen == 0) {                               // if all data received
+    #if defined I2C_2_BYTE_LENGTH
+    if (ptrTxControl->usPresentLen == 0)
+    #else
+    if (ptrTxControl->ucPresentLen == 0)
+    #endif
+    {                                                                    // if all data received
         ReceptionComplete(ptrTxControl, ptrLPI2C, iChannel);
     }
     else {                                                               // receive remaining (after circular buffer wrap-around)
@@ -630,10 +656,12 @@ extern void fnTxI2C(I2CQue *ptI2CQue, QUEUE_HANDLE Channel)
         }
     #if defined I2C_DMA_SUPPORT
         if ((ptrLPI2C->LPI2C_MDER & LPI2C_MDER_RDDE) != 0) {             // if using DMA for reception
+            ptrLPI2C->LPI2C_MIER = 0;                                    // disable interrupts
             fnStartLPI2C_RxDMA(ptI2CQue, Channel);
         #if defined _WINDOWS
             fnSimI2C_devices(I2C_ADDRESS, (unsigned char)(ptrLPI2C->LPI2C_MTDR));
         #endif
+            ptrLPI2C->LPI2C_MTDR = (LPI2C_MTDR_CMD_RX_DATA | (ptI2CQue->dma_length - 1)); // command the read sequence
             return;
         }
     #endif
@@ -982,6 +1010,7 @@ extern void fnConfigI2C(I2CTABLE *pars)
         return;
     }
     ptrLPI2C->LPI2C_MDER = 0;                                            // disable DMA operation
+    ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS_);                      // take the LPI2C controller out of reset
     #if defined I2C_DMA_SUPPORT
     if ((pars->ucDMAConfig & I2C_TX_DMA) != 0) {
         ptrLPI2C->LPI2C_MDER = LPI2C_MDER_TDDE;                          // enable DMA on transmission
@@ -992,7 +1021,6 @@ extern void fnConfigI2C(I2CTABLE *pars)
         fnConfigDMA_buffer(LPI2C_DMA_RX_CHANNEL[pars->Channel], (usTriggerSource), 0, (void *)&(ptrLPI2C->LPI2C_MRDR), 0, (DMA_BYTES | DMA_DIRECTION_INPUT | DMA_SINGLE_CYCLE), _lpi2c_rx_dma_Interrupts[pars->Channel], LPI2C_DMA_RX_INT_PRIORITY[pars->Channel]);
     }
     #endif
-    ptrLPI2C->LPI2C_MCR = (LPI2C_CHARACTERISTICS_);                      // take the LPI2C controller out of reset
     if (pars->usSpeed != 0) {
         int iPrecaler;
         int iClkHiCycle;

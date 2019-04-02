@@ -15591,7 +15591,7 @@ typedef struct stKINETIS_I2C_CONTROL
         #define LPI2C_MCFGR2_FILTSDA_MASK 0x0f000000                      // glitch filter SDA
     #define LPI2C0_MCFGR3                *(unsigned long *)(LPI2C0_BLOCK + 0x02c) // LPI2C0 master configuration register 3 (only write when I2C master is disabled)
         #define LPI2C_MCFGR3_PINLOW_MASK 0x000fff00                      // pin low timeout
-    #define LPI2C0_MDMR                  *(unsigned long *)(LPI2C0_BLOCK + 0x040) // LPI2C0 master data match register
+    #define LPI2C0_MDMR                  *(volatile unsigned long *)(LPI2C0_BLOCK + 0x040) // LPI2C0 master data match register
         #define LPI2C_MDMR_MATCH0        0x000000ff                      // match 0 value
         #define LPI2C_MDMR_MATCH1        0x00ff0000                      // match 1 value
     #define LPI2C0_MCCR0                 *(unsigned long *)(LPI2C0_BLOCK + 0x048) // LPI2C0 master clock configuration register 0 (cannot be changed when I2C master is enabled)
@@ -15707,7 +15707,7 @@ typedef struct stKINETIS_LPI2C_CONTROL
     volatile unsigned long  LPI2C_VERID;
     volatile unsigned long  LPI2C_PARAM;
     unsigned long  ulRes0[2];
-    unsigned long  LPI2C_MCR;
+    volatile unsigned long  LPI2C_MCR;
     volatile unsigned long  LPI2C_MSR;
     unsigned long  LPI2C_MIER;
     unsigned long  LPI2C_MDER;
@@ -15716,7 +15716,7 @@ typedef struct stKINETIS_LPI2C_CONTROL
     unsigned long  LPI2C_MCFGR2;
     unsigned long  LPI2C_MCFGR3;
     unsigned long  ulRes1[4];
-    unsigned long  LPI2C_MDMR;
+    unsigned long volatile LPI2C_MDMR;
     unsigned long  ulRes2;
     unsigned long  LPI2C_MCCR0;
     unsigned long  ulRes3;
