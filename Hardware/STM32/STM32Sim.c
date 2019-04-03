@@ -1054,7 +1054,7 @@ extern unsigned long fnSimDMA(char *argv[])
                 _iDMA &= ~(ulChannel);
                 switch (ulChannel) {
                 case 0x00000001:                                         // DMA controller 1 - stream 0
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6)
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 7)
                     if ((UART8_CR3 & USART_CR3_DMAT) != 0) {             // if UART8 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART7];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {
@@ -1077,7 +1077,7 @@ extern unsigned long fnSimDMA(char *argv[])
 #endif
                     break;
                 case 0x00000002:                                         // DMA controller 1 - stream 1
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 5)
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && ((USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 6)
                     if ((UART7_CR3 & USART_CR3_DMAT) != 0) {             // if UART7 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART6];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {
@@ -1102,7 +1102,7 @@ extern unsigned long fnSimDMA(char *argv[])
                 case 0x00000004:                                         // DMA controller 1 - stream 2
                     break;
                 case 0x00000008:                                         // DMA controller 1 - stream 3
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && !defined USART3_NOT_PRESENT
                     if ((USART3_CR3 & USART_CR3_DMAT) != 0) {            // if USART3 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART2];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {
@@ -1126,6 +1126,7 @@ extern unsigned long fnSimDMA(char *argv[])
                     break;
                 case 0x00000010:                                         // DMA controller 1 - stream 4
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+    #if !defined USART3_NOT_PRESENT
                     if ((USART3_CR3 & USART_CR3_DMAT) != 0) {            // if USART3 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART2];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {
@@ -1145,6 +1146,8 @@ extern unsigned long fnSimDMA(char *argv[])
                             }
                         }
                     }
+    #endif
+    #if !defined UART4_NOT_PRESENT
                     if ((UART4_CR3 & USART_CR3_DMAT) != 0) {             // if UART4 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART3];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {
@@ -1164,6 +1167,7 @@ extern unsigned long fnSimDMA(char *argv[])
                             }
                         }
                     }
+    #endif
 #endif
                     break;
                 case 0x00000020:                                         // DMA controller 1 - stream 5
@@ -1192,7 +1196,7 @@ extern unsigned long fnSimDMA(char *argv[])
 #endif
                     break;
                 case 0x00000080:                                         // DMA controller 1 - stream 7
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
+#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA && !defined UART5_NOT_PRESENT
                     if ((UART5_CR3 & USART_CR3_DMAT) != 0) {             // if UART5 is configured for DMA mode of operation
                         ptrCnt = (int *)argv[THROUGHPUT_UART4];          // the number of characters in each tick period
                         if (*ptrCnt != 0) {

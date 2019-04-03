@@ -63,7 +63,7 @@ extern int fnPortState(CHAR cPortBit)
     case '4':
         return (_READ_PORT_MASK(E, LED4) != 0);
     }
-    #elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+    #elif defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
     switch (cPortBit) {
     case '1':
         return (_READ_PORT_MASK(A, LED1) != 0);
@@ -199,7 +199,7 @@ extern int fnPortInputConfig(CHAR cPortBit)
     default:
         break;
     }
-#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
     switch (cPortBit) {
     case '1':
         if ((GPIOA_MODER & 0x00000c00) == 0x00000400) {                  // PORTA_BIT5 [(1 << (5 * 4)) | (1 << ((5 * 4) + 1))]
@@ -428,7 +428,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_INPUT(E, (LED4), (INPUT_PULL_UP));              // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_4;     // set present bit as input
             break;
-#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
         case 0:
             _CONFIG_PORT_INPUT(A, (LED1), (INPUT_PULL_UP));              // configure as input with pull-up
             temp_pars->temp_parameters.ucUserOutputs &= ~DEMO_LED_1;     // set present bit as input
@@ -594,7 +594,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
             _CONFIG_PORT_OUTPUT(E, (LED4), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_4;     // set present bit as output
             break;
-#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
         case 0:
             _CONFIG_PORT_OUTPUT(A, (LED1), (OUTPUT_PUSH_PULL | OUTPUT_MEDIUM)); // configure as medium speed output with push-pull output
             temp_pars->temp_parameters.ucUserOutputs |= DEMO_LED_1;      // set present bit as output
@@ -723,7 +723,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 static void fnSetPortBit(unsigned short usBit, int iSetClr)
 {
     #if !defined STM32_P207 && !defined STM32F407ZG_SK && !defined NUCLEO_F429ZI && !defined NUCLEO_L432KC && !defined NUCLEO_L031K6 && !defined NUCLEO_L011K4 && !defined NUCLEO_F031K6 && !defined NUCLEO_L496RG && !defined STM32_E407 && !defined ST_IDP004
-        #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO
+        #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined DISCOVERY_32F411E
     POWER_UP_USER_PORTS();                                               // ensure that the used ports are powered up before used
         #endif
     if (iSetClr != 0) {
@@ -1009,7 +1009,7 @@ extern int fnTogglePortOut(CHAR cPortBit)
 //
 extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
 {
-    #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO
+    #if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined DISCOVERY_32F411E
     unsigned char ucBit = 0x01;
     while (ucBit != 0) {                                                 // for each possible output
         if (DEMO_USER_PORTS & ucBit) {                                   // if the port bit is to be an output

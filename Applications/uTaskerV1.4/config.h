@@ -109,7 +109,7 @@
     //#define FRDM_KL27Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL27Z.html
     //#define CAPUCCINO_KL27                                             // http://www.utasker.com/kinetis/Capuccino-KL27.html
     //#define TWR_KL28Z72M                                               // tower board http://www.utasker.com/kinetis/FRDM-KL28Z72M
-    //#define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
+      #define FRDM_KL28Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KL28Z.html
     //#define KL33Z64
     //#define FRDM_KL43Z                                                 // L processors Cortex-M0+ (ultra-low power) with USB and segment LCD - freedom board http://www.utasker.com/kinetis/FRDM-KL43Z.html
     //#define TWR_KL43Z48M                                               // tower board http://www.utasker.com/kinetis/TWR-KL43Z48M.html
@@ -175,7 +175,7 @@
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -251,23 +251,24 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
     //#define NUCLEO_F207ZG                                              // evaluation board with STM32F207ZGT6U
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U
+      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
     //#define NUCLEO_F496ZG                                              // evaluation board with STM32F496ZGT6U
     //#define NUCLEO_F746ZG                                              // evaluation board with STM32F746ZGT6U
     //#define NUCLEO_F767ZI                                              // evaluation board with STM32F767ZIT6U
     //#define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U
 
+    //#define DISCOVERY_32F411E                                          // evaluation board with STM32F411VET6 (cortex-m4 with FPU)
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
     //#define ARDUINO_BLUE_PILL                                          // board with STM32F103C8T6 (48 pin LQFP, 64k Flash/20k SRAM performance line processor)
-    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT
-    //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6
-    //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6
-    //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6
-    //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6
-    //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6
-    //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6
-      #define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6
-    //#define ST_IDP004                                                  // IO-link master multi-port evaluation board based on L6360
+    //#define STM3210C_EVAL                                              // evaluation board with STM32F107VCT - cortex-m3
+    //#define STM32_P207                                                 // olimex prototyping board with STM32F207ZET6 - cortex-m3
+    //#define STM32F746G_DISCO                                           // evaluation board with STM32F746NGH6 - cortex-m7
+    //#define WISDOM_STM32F407                                           // evaluation board with STM32F407ZET6 - cortex-m4
+    //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6 - cortex-m4
+    //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6 - cortex-m4
+    //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6 - cortex-m4
+    //#define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6 - cortex-m4
+    //#define ST_IDP004                                                  // IO-link master multi-port evaluation board based on L6360 - cortex-m3
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
   //#define AVR32_EVK1101                                                // evaluation board from ATMEL with AT32UC3B
@@ -1232,6 +1233,12 @@
     #define _STM32F411                                                   // part group
     #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+#elif defined DISCOVERY_32F411E
+    #define TARGET_HW            "32F411EDISCOVERY (STM32F411VET6)"
+    #define _STM32F4XX                                                   // part family
+    #define _STM32F411                                                   // part group
+    #define DEVICE_WITHOUT_ETHERNET                                      // board doesn't have Ethernet without base-board
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined NUCLEO_F401RE
     #define TARGET_HW            "NUCLEO-F401RE (STM32F401RET6)"
     #define _STM32F4XX                                                   // part family
@@ -1690,7 +1697,7 @@
                         #define SUPPORT_FIFO_QUEUES
                     #endif
                 #else
-                    #define USB_CDC_COUNT             2                  // number of USB-CDC device interfaces
+                    #define USB_CDC_COUNT             1                  // number of USB-CDC device interfaces
                 #endif
                 #if defined USE_MAINTENANCE && (USB_CDC_COUNT > 1)
                     #define MODBUS_USB_INTERFACE_BASE 1                  // MODBUS USB interface follows maintenance
@@ -1716,8 +1723,8 @@
             #define USB_HS_INTERFACE                                     // use HS interface rather than FS interface (needs external ULPI transceiver) - use with TWR_SER2 and secondary elevator (not dummy elevator)
         #endif
         #if defined USB_HOST_SUPPORT
-            #define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
-          //#define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
+          //#define USB_MSD_HOST                                         // works together with mass-storage for a USB memory stick as disk E
+            #define USB_CDC_HOST                                         // supports CDC device (can be used together with MSD host) - see https://youtu.be/XhISV1czIo4 for a demonstration of CDC communication betwen a host and a device target
                 #define SUPPORT_USB_SIMPLEX_HOST_ENDPOINTS               // allow operation with devices using bulk IN/OUT on the same endpoint (this should normally always be set)
                 #define USB_CDC_COUNT  1                                 // support up to this many virtual com host interfaces
         #endif

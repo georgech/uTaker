@@ -117,21 +117,27 @@ static __interrupt void _usart2_tx_dma_Interrupt(void)
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 2
 static __interrupt void _usart3_tx_dma_Interrupt(void)
 {
+        #if !defined USART3_NOT_PRESENT
     _usart_tx_dma_Interrupt((USART_REG *)USART3_BLOCK, 2);               // handle USART method
+        #endif
 }
     #endif
 
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 3
 static __interrupt void _usart4_tx_dma_Interrupt(void)
 {
+    #if !defined UART4_NOT_PRESENT
     _usart_tx_dma_Interrupt((USART_REG *)UART4_BLOCK, 3);                // handle USART method
+    #endif
 }
     #endif
 
     #if (USARTS_AVAILABLE + UARTS_AVAILABLE + LPUARTS_AVAILABLE) > 4
 static __interrupt void _usart5_tx_dma_Interrupt(void)
 {
+        #if !defined UART5_NOT_PRESENT
     _usart_tx_dma_Interrupt((USART_REG *)UART5_BLOCK, 4);                // handle USART method
+        #endif
 }
     #endif
 
@@ -199,7 +205,7 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
     case 1:
         return (USART_REG *)(USART2_BLOCK);
 #endif
-#if USARTS_AVAILABLE > 2
+#if USARTS_AVAILABLE > 2 && !defined USART3_NOT_PRESENT
     case 2:
         return (USART_REG *)(USART3_BLOCK);
 #endif

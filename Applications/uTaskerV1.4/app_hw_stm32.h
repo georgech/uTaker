@@ -151,14 +151,18 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k FLASH
     #define PCLK1_DIVIDE        2
     #define PCLK2_DIVIDE        1
-#elif defined NUCLEO_F411RE
+#elif defined NUCLEO_F411RE || defined DISCOVERY_32F411E
     #define CRYSTAL_FREQ        8000000                                  // 4..26MHz possible
   //#define DISABLE_PLL                                                  // run from clock source directly
   //#define USE_HSI_CLOCK                                                // use internal HSI clock source
     #define PLL_INPUT_DIV       4                                        // 2..64 - should set the input to pll in the range 0.95..2.1MHz (with preference near to 2MHz)
     #define PLL_VCO_MUL         100                                      // 64..432 where VCO must be 100..432MHz
     #define PLL_POST_DIVIDE     2                                        // post divide VCO by 2, 4, 6, or 8 to get the system clock speed (range 24.. 100Hz)
-    #define PIN_COUNT           PIN_COUNT_64_PIN
+    #if defined DISCOVERY_32F411E
+        #define PIN_COUNT       PIN_COUNT_100_PIN
+    #else
+        #define PIN_COUNT       PIN_COUNT_64_PIN
+    #endif
     #define PACKAGE_TYPE        PACKAGE_LQFP
     #define SIZE_OF_RAM         (128 * 1024)                             // 64k SRAM
   //#define SIZE_OF_CCM         (32 * 1024)                              // 64k Core Coupled Memory
@@ -527,7 +531,7 @@
     #define SPI_FLASH_SECTOR_LENGTH (64 * 4 * SPI_FLASH_PAGE_LENGTH)     // exception sector 0a is 2k and sector 0b is 62k
 #endif
 
-#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI || defined STM32_E407
+#if defined STM3241G_EVAL || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined NUCLEO_F429ZI || defined STM32_E407 || defined DISCOVERY_32F411E
     // SPI FLASH system setup
     //
     //#define SPI_FLASH_MULTIPLE_CHIPS                                   // activate when multiple physical chips are used
@@ -588,7 +592,7 @@
   //#define SDCARD_DETECT_INPUT_POLL                                     // {4} use card detect switch for detection polling (use together with T_CHECK_CARD_REMOVAL)
   //#define SDCARD_DETECT_INPUT_INTERRUPT                                // {4} use card detect switch for detection by interrupt (T_CHECK_CARD_REMOVAL and SDCARD_DETECT_INPUT_POLL should be disabled)
 
-    #if defined STM3241G_EVAL || defined ST_MB997A_DISCOVERY || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO
+    #if defined STM3241G_EVAL || defined ST_MB997A_DISCOVERY || defined WISDOM_STM32F407 || defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined STM32F746G_DISCO || defined DISCOVERY_32F411E
         #define SD_CONTROLLER_AVAILABLE                                  // use SDIO rather than SPI (necessary on STM3240G-EVAL board)
 
         #if defined SD_CONTROLLER_AVAILABLE
@@ -861,7 +865,7 @@
     #endif
     #if defined NUCLEO_L432KC || defined NUCLEO_L031K6 || defined NUCLEO_L011K4 || defined NUCLEO_F031K6
         #define USART2_PARTIAL_REMAP
-    #elif defined NUCLEO_F411RE
+    #elif defined NUCLEO_F411RE || defined DISCOVERY_32F411E
         // Use default UART connection - no remap
         //
     #else
@@ -879,7 +883,7 @@
   //#define UART_CTS_INPUT_TYPE INPUT_PULL_UP                            // {8} enable pull-ups on UART CTS inputs
 
     #if !defined DEVICE_WITHOUT_DMA
-      //#define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
+        #define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
         //#define SERIAL_SUPPORT_DMA_RX                                  // enable also DMA on receiver (used less that transmit DMA)
         //#define SERIAL_SUPPORT_DMA_RX_FREERUN                          // support free-running reception mode
     #endif
@@ -1283,7 +1287,7 @@
     #define KEYPAD "KeyPads/STM3241G-EVAL.bmp"
 
     #define GPIO_DEFAULT_INPUT_H       0xdfff                            // set to PORTH_BIT15 low to detect SD card on STM3241G_EVAL
-#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE
+#elif defined NUCLEO_F401RE || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
     #define USER_BUTTON_B1             PORTC_BIT13
 
     #define LED1                       PORTA_BIT5                        // LD2
@@ -1323,7 +1327,11 @@
 
     #define BUTTON_KEY_DEFINITIONS     {_PORTC, USER_BUTTON_B1, {105, 125, 124, 145}}
 
-    #define KEYPAD "KeyPads/NUCLEO64.bmp"
+    #if defined DISCOVERY_32F411E
+        #define KEYPAD "KeyPads/32F411EDISCOVERY.bmp"
+    #else
+        #define KEYPAD "KeyPads/NUCLEO64.bmp"
+    #endif
 #elif defined WISDOM_STM32F407
     #define KEY_BUTTON_1               PORTE_BIT15
     #define KEY_BUTTON_2               PORTE_BIT14
@@ -2300,7 +2308,7 @@
     #endif
 
     #define POWER_UP_USER_PORTS()  POWER_UP(AHB1, RCC_AHB1ENR_GPIOBEN)
-#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL || defined NUCLEO_F411RE
+#elif defined ST_MB913C_DISCOVERY || defined ARDUINO_BLUE_PILL || defined NUCLEO_F411RE || defined DISCOVERY_32F411E
     // User port mapping
     //
     #define USER_PORT_1_BIT        PORTB_BIT0                            // use free PB pins on Eval board
