@@ -63,6 +63,7 @@ static void fnUpdatePeripherals(int iPort, unsigned char ucFunctions, LM3XXXXX_P
     extern unsigned long fnGetExtPortFunction(int iExtPortReference);
     extern unsigned long fnGetExtPortState(int iExtPortReference);
 #endif
+extern int fnCrystalFonzKey(unsigned char ucPort, int iChange, unsigned long ulBit);
 
 
 #if defined CHIP_HAS_uDMA && defined SERIAL_SUPPORT_DMA
@@ -1896,6 +1897,7 @@ extern int fnPortChanges(int iForce)                                     // {8}
     static unsigned long ulPortExtValue[_EXTERNAL_PORT_COUNT] = { 0 };
     int iExPort = 0;
 #endif
+    iFlagRefresh = 0;
 #if PART_DC4 & GPIOA_PRESENT4
     if ((GPIODIR_A != ucGPIODIRA) || (GPIODATA_A != ucPort_out_A)) {
         ucPort_out_A = GPIODATA_A;
@@ -3340,7 +3342,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORT_EXT_6:
     case _PORT_EXT_7:
 #if defined HANDLE_EXT_PORT
-        HANDLE_EXT_PORT(ucPort, iChange, ulBit);
+        HANDLE_EXT_PORT(ucPort, iChange, ucBit);
 #endif
         break;
     }

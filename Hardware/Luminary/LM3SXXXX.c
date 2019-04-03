@@ -157,7 +157,7 @@ static void LM3SXXXX_LowLevelInit(void);
 /* =================================================================== */
 
 
-#if defined ETH_INTERFACE
+#if (defined ETH_INTERFACE && !defined NO_INTERNAL_ETHERNET) && !defined ETHERNET_RELEASE_AFTER_EVERY_FRAME
     static const unsigned char EMAC_RX_int_message[ HEADER_LENGTH ] = { 0, 0 , TASK_ETHERNET, INTERRUPT_EVENT, EMAC_RX_INTERRUPT };   // define fixed interrupt event
 #endif
 
@@ -671,9 +671,11 @@ extern signed char fnEthernetEvent(unsigned char *ucEvent, ETHERNET_FRAME *rx_fr
     else if (ETHERNET_RX_OVERRUN == *ucEvent) {
         fnIncrementEthernetStats(TOTAL_LOST_RX_FRAMES, DEFAULT_NETWORK); // we lost a frame due to RX overrun so count the event
     }
+        #if defined USE_IP_STATS && !defined ETHERNET_RELEASE_AFTER_EVERY_FRAME
     else {
         fnIncrementEthernetStats(TOTAL_OTHER_EVENTS, DEFAULT_NETWORK);   // count other unexpected events
     }
+        #endif
     #endif
     return -1;                                                           // invalid channel
 }
@@ -754,8 +756,8 @@ __interrupt void EMAC_Interrupt(void)
                 if (MACRIS_IACK & FOV) {
                     EMAC_err_message[MSG_INTERRUPT_EVENT] = ETHERNET_RX_OVERRUN;
                 }
-                uDisable_Interrupt();                                    // ensure message can not be interrupted
-                fnWrite(INTERNAL_ROUTE, EMAC_err_message, HEADER_LENGTH);// inform the Ethernet task
+                uDisable_Interrupt();                                    // ensure message cannot be interrupted
+                    fnWrite(INTERNAL_ROUTE, EMAC_err_message, HEADER_LENGTH); // inform the Ethernet task
                 uEnable_Interrupt();                                     // release
             }
             else {
@@ -768,8 +770,8 @@ __interrupt void EMAC_Interrupt(void)
                     EMAC_err_message[MSG_SOURCE_TASK] = INTERRUPT_EVENT;
                     EMAC_err_message[MSG_INTERRUPT_EVENT] = ETHERNET_RX_ERROR;
                     MACRCTL |= MAC_RSTFIFO;                              // flush FIFO
-                    uDisable_Interrupt();                                // ensure message can not be interrupted
-                    fnWrite(INTERNAL_ROUTE, EMAC_err_message, HEADER_LENGTH);// inform the Ethernet task
+                    uDisable_Interrupt();                                // ensure message cannot be interrupted
+                        fnWrite(INTERNAL_ROUTE, EMAC_err_message, HEADER_LENGTH); // inform the Ethernet task
                     uEnable_Interrupt();                                 // release
                     MACRCTL &= ~MAC_RSTFIFO;
                 }
@@ -803,13 +805,17 @@ __interrupt void EMAC_Interrupt(void)
                     if (++iRxEthBufferPut >= NUMBER_OF_RX_BUFFERS_IN_ETHERNET_DEVICE) {
                         iRxEthBufferPut = 0;
                     }
+    #if defined ETHERNET_RELEASE_AFTER_EVERY_FRAME
+                    uTaskerStateChange(TASK_ETHERNET, UTASKER_ACTIVATE); // schedule the Ethernet task
+    #else
                     uDisable_Interrupt();                                // ensure message can not be interrupted
-                    fnWrite(INTERNAL_ROUTE, (unsigned char*)EMAC_RX_int_message, HEADER_LENGTH); // inform the Ethernet task that there is a valid input buffer waiting
-    #ifdef LAN_REPORT_ACTIVITY
-                    EMAC_int_message[MSG_INTERRUPT_EVENT] = EMAC_RX_INTERRUPT;
-                    fnWrite(INTERNAL_ROUTE, (unsigned char*)EMAC_int_message, HEADER_LENGTH); // inform the task of event
-    #endif
+                        fnWrite(INTERNAL_ROUTE, (unsigned char*)EMAC_RX_int_message, HEADER_LENGTH); // inform the Ethernet task that there is a valid input buffer waiting
+        #ifdef LAN_REPORT_ACTIVITY
+                        EMAC_int_message[MSG_INTERRUPT_EVENT] = EMAC_RX_INTERRUPT;
+                        fnWrite(INTERNAL_ROUTE, (unsigned char*)EMAC_int_message, HEADER_LENGTH); // inform the task of event
+        #endif
                     uEnable_Interrupt();                                 // release
+    #endif
                 }
             }
             MACRIS_IACK = (RXINT | RXER | FOV);                          // reset rx flags

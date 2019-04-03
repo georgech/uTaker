@@ -153,7 +153,7 @@ static int fnUpdateAreaEnclosed(RECT rt, RECT refresh_rect)
 
 extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 {
-#if defined BUTTON_KEY_DEFINITIONS || defined SUPPORT_KEY_SCAN
+#if (defined BUTTON_KEY_DEFINITIONS && !defined KEYPAD_NO_KEY_STATE_DISPLAY) || defined SUPPORT_KEY_SCAN
     int i;
 #endif
 #if defined KEYPAD_KEY_DEFINITIONS
@@ -231,7 +231,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
     }
     #endif
 #endif
-#if defined BUTTON_KEY_DEFINITIONS                                       // {3}
+#if defined BUTTON_KEY_DEFINITIONS && !defined KEYPAD_NO_KEY_STATE_DISPLAY // {3}
     for (i = 0; i < (sizeof(user_buttons)/sizeof(_USER_BUTTON)); i++) {
         if (iUserButtonStates[i] != 0) {                                 // if presently pressed
             MoveToEx(hdc, (user_buttons[i].button_area.left + kb_rect.left), (user_buttons[i].button_area.top + kb_rect.top), NULL);
