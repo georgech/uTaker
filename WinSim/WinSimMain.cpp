@@ -136,6 +136,7 @@
     26.12.2018 Add iMX                                                   {115}
     18.02.2019 Add CAN frame injection                                   {116}
     14.03.2019 Add Crystal Fontz UART display simulation [CRYSTAL_FONTZ_UART_LCD_SIMULATION]
+    04.04.2019 Add single UART<->UART internal loop back option [USER_INTERNALLY_CONNECTED_UART_A and USER_INTERNALLY_CONNECTED_UART_B]
 
     */
 
@@ -916,6 +917,12 @@ static int iPrevBit = -1;
     extern void fnProcessRx(unsigned char *ptrData, unsigned short usLength, int iPort);
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     static HANDLE m_hComm_crystalFontz = INVALID_HANDLE_VALUE;
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_A
+    static HANDLE m_hComm_user_uart_A = INVALID_HANDLE_VALUE;
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_B
+    static HANDLE m_hComm_user_uart_B = INVALID_HANDLE_VALUE;
     #endif
 #endif
 static void fnProcessKeyChange(void);
@@ -3707,6 +3714,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 0)
                         m_hComm_crystalFontz = sm_hComm0;
     #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 0)
+                        m_hComm_user_uart_A = sm_hComm0;
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 0)
+                        m_hComm_user_uart_B = sm_hComm0;
+    #endif
                         if (sm_hComm0 >= 0) {
                             fnUART_string(0, SERIAL_PORT_0, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3725,6 +3738,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                         sm_hComm1 = fnConfigureSerialInterface(SERIAL_PORT_1, ulSpeed, Mode); // try to open com since the embedded system wants to use it
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 1)
                         m_hComm_crystalFontz = sm_hComm1;
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 1)
+                        m_hComm_user_uart_A = sm_hComm1;
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 1)
+                        m_hComm_user_uart_B = sm_hComm1;
     #endif
                         if (sm_hComm1 >= 0) {
                             fnUART_string(1, SERIAL_PORT_1, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
@@ -3745,6 +3764,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                         sm_hComm2 = fnConfigureSerialInterface(SERIAL_PORT_2, ulSpeed, Mode); // try to open com since the embedded system wants to use it
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 2)
                         m_hComm_crystalFontz = sm_hComm2;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 2)
+                        m_hComm_user_uart_A = sm_hComm2;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 2)
+                        m_hComm_user_uart_B = sm_hComm2;
         #endif
                         if (sm_hComm2 >= 0) {
                             fnUART_string(2, SERIAL_PORT_2, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
@@ -3774,6 +3799,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 3)
                         m_hComm_crystalFontz = sm_hComm3;
         #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 3)
+                        m_hComm_user_uart_A = sm_hComm3;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 3)
+                        m_hComm_user_uart_B = sm_hComm3;
+        #endif
                         if (sm_hComm3 >= 0) {
                             fnUART_string(3, SERIAL_PORT_3, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3794,6 +3825,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                         sm_hComm4 = fnConfigureSerialInterface(SERIAL_PORT_4, ulSpeed, Mode); // try to open com since the embedded system wants to use it
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 4)
                         m_hComm_crystalFontz = sm_hComm4;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 4)
+                        m_hComm_user_uart_A = sm_hComm4;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 4)
+                        m_hComm_user_uart_B = sm_hComm4;
         #endif
                         if (sm_hComm4 >= 0) {
                             fnUART_string(4, SERIAL_PORT_4, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
@@ -3816,6 +3853,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 5)
                         m_hComm_crystalFontz = sm_hComm5;
         #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 5)
+                        m_hComm_user_uart_A = sm_hComm5;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 5)
+                        m_hComm_user_uart_B = sm_hComm5;
+        #endif
                         if (sm_hComm5 >= 0) {
                             fnUART_string(5, SERIAL_PORT_5, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
                         }
@@ -3836,6 +3879,12 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                         sm_hComm6 = fnConfigureSerialInterface(SERIAL_PORT_6, ulSpeed, Mode); // try to open com since the embedded system wants to use it
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 6)
                         m_hComm_crystalFontz = sm_hComm6;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 6)
+                        m_hComm_user_uart_A = sm_hComm6;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 6)
+                        m_hComm_user_uart_B = sm_hComm6;
         #endif
                         if (sm_hComm6 >= 0) {
                             fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
@@ -3858,6 +3907,13 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 7)
                         m_hComm_crystalFontz = sm_hComm7;
         #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_A && (USER_INTERNALLY_CONNECTED_UART_A == 7)
+                        m_hComm_user_uart_A = sm_hComm7;
+        #endif
+        #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 7)
+                        m_hComm_user_uart_B = sm_hComm7;
+        #endif
+
                         if (sm_hComm7 >= 0) {
                             fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
                         }
@@ -5130,6 +5186,16 @@ static DWORD fnSendSerialMessage(HANDLE m_hComm, const void *lpBuf, DWORD dwCoun
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION
     if (m_hComm == m_hComm_crystalFontz) {
         fnRxCrystalFontz((unsigned char *)lpBuf, dwCount);
+    }
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_A
+    if (m_hComm == m_hComm_user_uart_A) {
+        fnProcessRx((unsigned char *)lpBuf, (unsigned short)dwCount, USER_INTERNALLY_CONNECTED_UART_B);
+    }
+    #endif
+    #if defined USER_INTERNALLY_CONNECTED_UART_B
+    if (m_hComm == m_hComm_user_uart_B) {
+        fnProcessRx((unsigned char *)lpBuf, (unsigned short)dwCount, USER_INTERNALLY_CONNECTED_UART_A);
     }
     #endif
     WriteFileEx(m_hComm, lpBuf, dwCount, &ol, 0);                        // send the serial byte(s) over the com port
