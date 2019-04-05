@@ -813,7 +813,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         //
         MCG_C2 |= MCG_C2_EREFS;                                          // pretend that crystal is being used so that the PLL will lock
         #endif
-        USBPHY_PLL_SIC &= ~(USBPHY_PLL_SIC_PLL_BYPASS);                  // cear the bypass
+        USBPHY_PLL_SIC &= ~(USBPHY_PLL_SIC_PLL_BYPASS);                  // clear the bypass
         USBPHY_PLL_SIC |= (USBPHY_PLL_SIC_PLL_EN_USB_CLKS);              // enable USB clock output from PHY PLL
         while ((USBPHY_PLL_SIC & USBPHY_PLL_SIC_PLL_LOCK) == 0) {        // wait for the PLL to lock
         #if defined _WINDOWS

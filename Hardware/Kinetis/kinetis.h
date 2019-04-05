@@ -12052,6 +12052,7 @@ typedef struct stKINETIS_LPTMR_CTL
               #define SIM_SCGC7_SDRAMC       0x00000008
           #endif
       #endif
+      #define SIM_SCGC7_SIM_SCGC7_FLEXBUS    BIT_BANDING_PERIPHERAL_ADDRESS((SIM_BLOCK + 0x1040), 0)
     #define SIM_CLKDIV1                      *(unsigned long *)(SIM_BLOCK + 0x1044) // System Clock Divider Register 1
       #define SIM_CLKDIV1_SYSTEM_1           0x00000000                  // divide value for the core/system clock
       #define SIM_CLKDIV1_SYSTEM_2           0x10000000

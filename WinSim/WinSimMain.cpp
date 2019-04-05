@@ -3711,6 +3711,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm0);                          // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm0 = fnConfigureSerialInterface(SERIAL_PORT_0, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm0 == INVALID_HANDLE_VALUE) {
+                            sm_hComm0 = ((HANDLE)(LONG_PTR)-(2 + 0));
+                        }
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 0)
                         m_hComm_crystalFontz = sm_hComm0;
     #endif
@@ -3720,12 +3723,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
     #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 0)
                         m_hComm_user_uart_B = sm_hComm0;
     #endif
-                        if (sm_hComm0 >= 0) {
-                            fnUART_string(0, SERIAL_PORT_0, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(0, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(0, SERIAL_PORT_0, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
                 case OPEN_PC_COM1:
@@ -3736,6 +3734,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm1);                          // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm1 = fnConfigureSerialInterface(SERIAL_PORT_1, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm1 == INVALID_HANDLE_VALUE) {
+                            sm_hComm1 = ((HANDLE)(LONG_PTR)-(2 + 1));
+                        }
     #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 1)
                         m_hComm_crystalFontz = sm_hComm1;
     #endif
@@ -3745,12 +3746,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
     #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 1)
                         m_hComm_user_uart_B = sm_hComm1;
     #endif
-                        if (sm_hComm1 >= 0) {
-                            fnUART_string(1, SERIAL_PORT_1, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(1, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(1, SERIAL_PORT_1, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
     #if defined SERIAL_PORT_2
@@ -3762,6 +3758,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm2);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm2 = fnConfigureSerialInterface(SERIAL_PORT_2, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm2 == INVALID_HANDLE_VALUE) {
+                            sm_hComm2 = ((HANDLE)(LONG_PTR)-(2 + 2));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 2)
                         m_hComm_crystalFontz = sm_hComm2;
         #endif
@@ -3771,12 +3770,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 2)
                         m_hComm_user_uart_B = sm_hComm2;
         #endif
-                        if (sm_hComm2 >= 0) {
-                            fnUART_string(2, SERIAL_PORT_2, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(2, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(2, SERIAL_PORT_2, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
@@ -3796,6 +3790,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         CloseHandle(sm_hComm3);
     }*/
                         sm_hComm3 = fnConfigureSerialInterface(SERIAL_PORT_3, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm3 == INVALID_HANDLE_VALUE) {
+                            sm_hComm3 = ((HANDLE)(LONG_PTR)-(2 + 3));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 3)
                         m_hComm_crystalFontz = sm_hComm3;
         #endif
@@ -3805,12 +3802,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 3)
                         m_hComm_user_uart_B = sm_hComm3;
         #endif
-                        if (sm_hComm3 >= 0) {
-                            fnUART_string(3, SERIAL_PORT_3, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(3, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(3, SERIAL_PORT_3, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
@@ -3823,6 +3815,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm4);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm4 = fnConfigureSerialInterface(SERIAL_PORT_4, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm4 == INVALID_HANDLE_VALUE) {
+                            sm_hComm4 = ((HANDLE)(LONG_PTR)-(2 + 4));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 4)
                         m_hComm_crystalFontz = sm_hComm4;
         #endif
@@ -3832,12 +3827,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 4)
                         m_hComm_user_uart_B = sm_hComm4;
         #endif
-                        if (sm_hComm4 >= 0) {
-                            fnUART_string(4, SERIAL_PORT_4, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(4, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(4, SERIAL_PORT_4, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
@@ -3850,6 +3840,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm5);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm5 = fnConfigureSerialInterface(SERIAL_PORT_5, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm5 == INVALID_HANDLE_VALUE) {
+                            sm_hComm5 = ((HANDLE)(LONG_PTR)-(2 + 5));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 5)
                         m_hComm_crystalFontz = sm_hComm5;
         #endif
@@ -3859,12 +3852,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 5)
                         m_hComm_user_uart_B = sm_hComm5;
         #endif
-                        if (sm_hComm5 >= 0) {
-                            fnUART_string(5, SERIAL_PORT_5, ulSpeed, Mode); // {101} create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(5, 0, ulSpeed, Mode);          // {101} create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(5, SERIAL_PORT_5, ulSpeed, Mode);  // {101} create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
@@ -3877,6 +3865,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm6);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm6 = fnConfigureSerialInterface(SERIAL_PORT_6, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm6 == INVALID_HANDLE_VALUE) {
+                            sm_hComm6 = ((HANDLE)(LONG_PTR)-(2 + 6));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 6)
                         m_hComm_crystalFontz = sm_hComm6;
         #endif
@@ -3886,12 +3877,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 6)
                         m_hComm_user_uart_B = sm_hComm6;
         #endif
-                        if (sm_hComm6 >= 0) {
-                            fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(6, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(6, SERIAL_PORT_6, ulSpeed, Mode);  //create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
@@ -3904,6 +3890,9 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
                             CloseHandle(sm_hComm7);                      // if we have an open port we want to reconfigure it - so close it
                         }
                         sm_hComm7 = fnConfigureSerialInterface(SERIAL_PORT_7, ulSpeed, Mode); // try to open com since the embedded system wants to use it
+                        if (sm_hComm7 == INVALID_HANDLE_VALUE) {
+                            sm_hComm7 = ((HANDLE)(LONG_PTR)-(2 + 7));
+                        }
         #if defined CRYSTAL_FONTZ_UART_LCD_SIMULATION && (CRYSTAL_FONZ_UART == 7)
                         m_hComm_crystalFontz = sm_hComm7;
         #endif
@@ -3913,13 +3902,7 @@ extern int APIENTRY WinMain(HINSTANCE hInstance,
         #if defined USER_INTERNALLY_CONNECTED_UART_B && (USER_INTERNALLY_CONNECTED_UART_B == 7)
                         m_hComm_user_uart_B = sm_hComm7;
         #endif
-
-                        if (sm_hComm7 >= 0) {
-                            fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
-                        }
-                        else {
-                            fnUART_string(7, 0, ulSpeed, Mode);          // create a UART string that can be displayed on the status bar (not assigned to COM port)
-                        }
+                        fnUART_string(7, SERIAL_PORT_7, ulSpeed, Mode); //create a UART string that can be displayed on the status bar
                     }
                     break;
     #endif
