@@ -251,11 +251,11 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
     //#define NUCLEO_F207ZG                                              // evaluation board with STM32F207ZGT6U
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
+    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
     //#define NUCLEO_F496ZG                                              // evaluation board with STM32F496ZGT6U
     //#define NUCLEO_F746ZG                                              // evaluation board with STM32F746ZGT6U
     //#define NUCLEO_F767ZI                                              // evaluation board with STM32F767ZIT6U
-    //#define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U (480MHz cortex-m7 with FPU)
+      #define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U (400MHz cortex-m7 with FPU)
 
     //#define DISCOVERY_32F411E                                          // evaluation board with STM32F411VET6 (cortex-m4 with FPU)
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB

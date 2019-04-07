@@ -873,7 +873,7 @@ static const DEBUG_COMMAND tIOCommand[] = {
 #if defined SUPPORT_PWM_MODULE && defined _KINETIS
     {"shift",             "-180..180",                             DO_HARDWARE,      DO_PWM_PHASE_SHIFT },
 #endif
-#if defined _STM32 && defined FLASH_OPTCR
+#if defined _STM32 && !defined NO_FLASH_SUPPORT && defined FLASH_OPTCR
     {"F_opt",             "Change Flash Options [val]",            DO_HARDWARE,      DO_FLASH_OPTIONS },
 #endif
 #if defined PWM_MEASUREMENT_DEVELOPMENT
@@ -1558,12 +1558,11 @@ extern void fnDebug(TTASKTABLE *ptrTaskTable)
     while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue
         switch (ucInputMessage[MSG_SOURCE_TASK]) {                       // switch depending on message source
 #if defined USE_MAINTENANCE && defined USB_INTERFACE && defined USE_USB_CDC && defined USB_CDC_VCOM_COUNT && (USB_CDC_VCOM_COUNT > 0)
-        case TIMER_EVENT:
             if (E_TIMER_START_USB_TX == ucInputMessage[MSG_TIMER_EVENT]) {
                 fnUSB_CDC_TX(1);                                         // start transmission of data to USB-CDC interface(s)
             }
-            break;
 #endif
+            break;
         case INTERRUPT_EVENT:
             if (TX_FREE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (iMenuLocation != 0) {
@@ -4058,7 +4057,7 @@ static void fnDoHardware(unsigned char ucType, CHAR *ptrInput)
             fnDebugMsg(cUpTime);
         }
         return;
-#if defined _STM32 && defined FLASH_OPTCR
+#if defined _STM32 && !defined NO_FLASH_SUPPORT && defined FLASH_OPTCR
     case DO_FLASH_OPTIONS:
         fnSetFlashOption(fnHexStrHex(ptrInput), DEFAULT_FLASH_OPTION_SETTING_1, 0);
         break;
@@ -8598,7 +8597,7 @@ extern void fnDisplayMemoryUsage(void)
     fnDebugMsg(" from ");
     fnDebugHex(fnHeapAvailable(), (sizeof(HEAP_REQUIREMENTS) | WITH_LEADIN));
     fnDebugMsg("\n\rUnused stack = ");
-    fnDebugHex(fnStackFree(&stackUsed), (sizeof(unsigned long) | WITH_LEADIN)); // {79}
+    fnDebugHex(fnStackFree(&stackUsed), (sizeof(STACK_REQUIREMENTS) | WITH_LEADIN)); // {79}
     fnDebugMsg(" (");
     fnDebugHex(stackUsed, (sizeof(unsigned long) | WITH_LEADIN));        // {79}
     fnDebugMsg(")\n\r");

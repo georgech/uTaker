@@ -49,7 +49,7 @@ typedef unsigned long     UTASK_TICK;                                    // tick
 typedef unsigned char     CONFIG_LIMIT;                                  // up to 255 configurations possible
 typedef unsigned char     NETWORK_LIMIT;                                 // up to 255 nodes possible
 typedef unsigned char     TASK_LIMIT;                                    // the system supports up to 255 tasks
-typedef unsigned short    STACK_REQUIREMENTS;                            // the system supports up to 64k stack
+typedef unsigned long     STACK_REQUIREMENTS;                            // the system supports > 64k stack
 typedef unsigned short    HEAP_REQUIREMENTS;                             // the system supports up to 64k heap
 typedef unsigned char     TIMER_LIMIT;                                   // the system supports up to 255 timers
 typedef   signed char     UTASK_TASK;                                    // task reference

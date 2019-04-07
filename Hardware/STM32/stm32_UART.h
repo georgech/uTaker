@@ -848,7 +848,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 
     if ((pars->Config & CHAR_7) == 0) {                                  // 7 bits is only possible when parity is enabled
         if ((pars->Config & (RS232_ODD_PARITY | RS232_EVEN_PARITY)) != 0) { // if parity is enable in 8 bit mode set 9 bit mode so that it is inserted at the 9th bit position
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6 || defined _STM32H7XX
             USART_regs->UART_CR1 |= USART_CR1_9BIT;
 #else
             USART_regs->UART_CR1 |= USART_CR1_M;

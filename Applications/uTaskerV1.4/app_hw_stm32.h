@@ -893,7 +893,7 @@
     #else
         #define USART2_REMAP                                             // use USART2 on remapped pins (note that this is channel 1)
     #endif
-    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI
+    #if defined STM32_P207 || defined STM32F407ZG_SK || defined NUCLEO_F429ZI || defined NUCLEO_H743ZI
         #define USART3_FULL_REMAP                                        // use USART3 on second set of remapped pins (note that this is channel 2)
     #elif !defined STM3241G_EVAL && !defined ARDUINO_BLUE_PILL
         #define USART3_PARTIAL_REMAP                                     // use USART3 on first set of remapped pins (note that this is channel 2)

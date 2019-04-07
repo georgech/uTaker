@@ -1398,8 +1398,6 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
         #define USART6_BLOCK                0x40011400
         #define ADC_BLOCK                   0x40012000
         #define SDIO_BLOCK                  0x40012c00
-        #define SPI1_BLOCK                  0x40013000
-        #define SPI1_I2S_BLOCK              SPI1_BLOCK                   // for compatibility
         #define TIM9_BLOCK                  0x40014000
         #define TIM10_BLOCK                 0x40014400
         #define TIM11_BLOCK                 0x40014800
@@ -5377,7 +5375,7 @@ typedef struct st_STM32_FMI
 
 // USARTs
 //
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6 || defined _STM32H7XX
     #define USART1_CR1                   *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 control register 1
       #define USART_CR1_UE               0x00000001                      // USART enable
       #define USART_CR1_RE               0x00000004                      // receiver enable
@@ -5474,6 +5472,9 @@ typedef struct st_STM32_FMI
     #define USART1_ICR                   *(volatile unsigned long *)(USART1_BLOCK + 0x20)  // USART1 interrupt flag clear register (write '1' to clear)
     #define USART1_RDR                   *(volatile unsigned long *)(USART1_BLOCK + 0x24)  // USART1 receive data register
     #define USART1_TDR                   *(volatile unsigned long *)(USART1_BLOCK + 0x28)  // USART1 transmit data register
+    #if defined _STM32H7XX
+      #define USART1_PRESC               *(volatile unsigned long *)(USART1_BLOCK + 0x2c)  // USART1 prescaler register
+    #endif
 
     #define USART2_CR1                   *(volatile unsigned long *)(USART2_BLOCK + 0x00)  // USART2 control register 1
     #define USART2_CR2                   *(volatile unsigned long *)(USART2_BLOCK + 0x04)  // USART2 control register 2
@@ -5486,6 +5487,9 @@ typedef struct st_STM32_FMI
     #define USART2_ICR                   *(volatile unsigned long *)(USART2_BLOCK + 0x20)  // USART2 interrupt flag clear register (write '1' to clear)
     #define USART2_RDR                   *(volatile unsigned long *)(USART2_BLOCK + 0x24)  // USART2 receive data register
     #define USART2_TDR                   *(volatile unsigned long *)(USART2_BLOCK + 0x28)  // USART2 transmit data register
+    #if defined _STM32H7XX
+      #define USART2_PRESC               *(volatile unsigned long *)(USART2_BLOCK + 0x2c)  // USART2 prescaler register
+    #endif
 
     #define USART3_CR1                   *(volatile unsigned long *)(USART3_BLOCK + 0x00)  // USART3 control register 1
     #define USART3_CR2                   *(volatile unsigned long *)(USART3_BLOCK + 0x04)  // USART3 control register 2
@@ -5498,6 +5502,9 @@ typedef struct st_STM32_FMI
     #define USART3_ICR                   *(volatile unsigned long *)(USART3_BLOCK + 0x20)  // USART3 interrupt flag clear register (write '1' to clear)
     #define USART3_RDR                   *(volatile unsigned long *)(USART3_BLOCK + 0x24)  // USART3 receive data register
     #define USART3_TDR                   *(volatile unsigned long *)(USART3_BLOCK + 0x28)  // USART3 transmit data register
+    #if defined _STM32H7XX
+      #define USART3_PRESC               *(volatile unsigned long *)(USART3_BLOCK + 0x2c)  // USART3 prescaler register
+    #endif
 
     #define UART4_CR1                    *(volatile unsigned long *)(UART4_BLOCK + 0x00)  // UART4 control register 1
     #define UART4_CR2                    *(volatile unsigned long *)(UART4_BLOCK + 0x04)  // UART4 control register 2
@@ -5534,6 +5541,9 @@ typedef struct st_STM32_FMI
         #define USART6_ICR               *(volatile unsigned long *)(USART6_BLOCK + 0x20)  // USART6 interrupt flag clear register (write '1' to clear)
         #define USART6_RDR               *(volatile unsigned long *)(USART6_BLOCK + 0x24)  // USART6 receive data register
         #define USART6_TDR               *(volatile unsigned long *)(USART6_BLOCK + 0x28)  // USART6 transmit data register
+        #if defined _STM32H7XX
+          #define USART6_PRESC           *(volatile unsigned long *)(USART6_BLOCK + 0x2c)  // USART6 prescaler register
+        #endif
     #endif
     #if defined UART7_BLOCK
         #define UART7_CR1                *(volatile unsigned long *)(UART7_BLOCK + 0x00)  // UART7 control register 1
@@ -5570,6 +5580,9 @@ typedef struct st_STM32_FMI
     #define LPUART1_ICR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x20) // LPUART1 interrupt flag clear register (write '1' to clear)
     #define LPUART1_RDR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x24) // LPUART1 receive data register
     #define LPUART1_TDR                  *(volatile unsigned long *)(LPUART1_BLOCK + 0x28) // LPUART1 transmit data register
+    #if defined _STM32H7XX
+      #define LPUART1_PRESC              *(volatile unsigned long *)(LPUART1_BLOCK + 0x2c) // LPUART1 prescaler register
+    #endif
 #else
     #define USART1_SR                    *(volatile unsigned long *)(USART1_BLOCK + 0x00)  // USART1 status register
     #define USART1_ISR                   USART1_SR                       // for compatibility
@@ -5723,7 +5736,7 @@ typedef struct st_STM32_FMI
 
 typedef struct stUSART_REG
 {
-#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6 || defined _STM32H7XX
     unsigned long UART_CR1;
     unsigned long UART_CR2;
     unsigned long UART_CR3;
@@ -5735,6 +5748,9 @@ typedef struct stUSART_REG
     unsigned long UART_ICR;
     unsigned long UART_RDR;
     unsigned long UART_TDR;
+    #if defined _STM32H7XX
+        unsigned long UART_PRESC;
+    #endif
 #else
     unsigned long UART_SR;
     unsigned long UART_DR;
