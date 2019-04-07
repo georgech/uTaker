@@ -306,7 +306,7 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
             iInterruptID = (irq_DMA1_Stream0_ID + iStream);
         }
     }
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     ptrDMAstream = &ptrDMA_controller->DMA_stream[iStream];              // select the stream registers to be used
     ptrDMAstream->DMA_SxCR = 0;                                          // disable stream
     ulTransferType = (DMA_SxCR_CHSEL_7 & ulDmaTriggerSource);
@@ -341,7 +341,7 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
     if (int_handler != 0) {
         _DMA_handler[iIntChannel] = int_handler;                         // enter the user interrupt callback
         fnEnterInterrupt(iInterruptID, int_priority, (void(*)(void))_DMA_Interrupt[iIntChannel]); // enter interrupt handler for the DMA controller stream
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
         if ((ulRules & DMA_HALF_BUFFER_INTERRUPT) != 0) {
             ulTransferType |= DMA_SxCR_HTIE;                             // enable interrupt on half-transfer completion
         }
@@ -369,7 +369,7 @@ extern STM32_DMA_STREAM *fnGetDMA_stream(unsigned long ulDmaTriggerSource)
     else {
         ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
     }
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     return (&ptrDMA_controller->DMA_stream[iStream]);                    // return the stream register pointer
     #else
     return 0;
@@ -383,7 +383,7 @@ extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
     case DMA_BUFFER_START_FINISH:                                        // start a prepared transfer with software trigger and return only after the transfer has compeleted
         break;
     case DMA_BUFFER_START:
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
         ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                           // just enable the channel's operation
     #endif
         break;
@@ -406,7 +406,7 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
     void *buffer = ptrTo;
     unsigned char *ptr1 = (unsigned char *)ptrTo;
     unsigned char *ptr2 = (unsigned char *)ptrFrom;
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA2_S0CR == 0)) { // {27} if large enough to be worth while and if not already in use
         unsigned short usTransferSize;
         while ((((unsigned long)ptr1) & 0x3) != 0) {                     // move to a long word boundary (the source is not guaranteed to be on a boundary, which can make the lomng word copy less efficient)
@@ -478,7 +478,7 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
     void *buffer = ptrTo;
     unsigned char ucValue = (unsigned char)iValue;                       // {37}
     unsigned char *ptr = (unsigned char *)ptrTo;
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     if ((Size >= SMALLEST_DMA_COPY) && (Size <= (0xffff * sizeof(unsigned long))) && (DMA2_S0CR == 0)) { // {27} if large enough to be worth while and if not already in use
         volatile unsigned long ulToCopy = (ucValue | (ucValue << 8) | (ucValue << 16) | (ucValue << 24));
         unsigned short usTransferSize;

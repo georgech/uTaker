@@ -11,7 +11,7 @@
     File:      MODBUS.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     28.07.2009 Completed AVR32 configuration and reset RTU state to idle after inter-character space error {V1.01}
     06.08.2009 MODBUS USB slave support added, plus additional dependency for event counter use {V1.02}
@@ -1212,7 +1212,7 @@ static unsigned short fnCRCRTUFrame(unsigned char *ptrFrame, QUEUE_TRANSFER rxFr
     { */ 
         /*CRC0->GPOLY_ACCESS16BIT.GPOLYL*/ CRC_GPOLY = 0x00008005;       // reversed polynomial
         /*CRC0->CTRL = CRC_CTRL_WAS_MASK | CRC_CTRL_TOT(1) | CRC_CTRL_TOTR(1);*/ CRC_CTRL = (CRC_CTRL_TOTR_BITS | CRC_CTRL_TOT_BITS | CRC_CTRL_WAS);
-        /*CRC0->ACCESS16BIT.DATAL = 0xFFFF;  */ CRC_CRC_LL_SHORT_WORD_ACCESS = 0xffff; // set seed vaue
+        /*CRC0->ACCESS16BIT.DATAL = 0xffff;  */ CRC_CRC_LL_SHORT_WORD_ACCESS = 0xffff; // set seed vaue
         /*CRC0->CTRL &= ~CRC_CTRL_WAS_MASK;  */CRC_CTRL = (CRC_CTRL_TOTR_BITS | CRC_CTRL_TOT_BITS);
         while (rxFrameLength-- != 0) { 
            /* CRC0->ACCESS8BIT.DATALL = buffer[i];  */ CRC_CRC_LL = *ptrFrame++;

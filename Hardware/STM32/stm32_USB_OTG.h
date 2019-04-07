@@ -659,7 +659,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     #else
     unsigned long size_field = OTG_FS_DIEPCTL_MPSIZ_64_BYTES;
     #endif
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // {13}
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // {13}
     _CONFIG_PERIPHERAL_INPUT(A, (PERIPHERAL_USB), (PORTA_BIT11 | PORTA_BIT12), (OUTPUT_PUSH_PULL | OUTPUT_ULTRA_FAST)); // configure the pins for use as USB
     // Note that the necessary 48MHz clock is supplied by the ring-clock, which is a second output from the main PLL
     // - this was configured during initialisation when the USB operation is enabled in the project
@@ -679,8 +679,10 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #endif
     POWER_UP(AHB1, RCC_AHB1ENR_OTGFSEN);                                 // power up USB controller (only perform after setting the RCC_CFGR_OTGFSPRE accordingly)
     #endif
+    #if defined RCC_APB1RSTR
     RCC_APB1RSTR |= RCC_APB1RSTR_PWRRST;                                 // reset power (this is taken from an ST example but there are no details as to what for)
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // {13}
+    #endif
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // {13}
     OTG_FS_GCCFG = (OTG_FS_GCCFG_PWRDWN | OTG_FS_GCCFG_NOVBUSSENS);      // enable USB transceiver with Vbus sensing option disabled
     #else
     OTG_FS_GCCFG = (OTG_FS_GCCFG_PWRDWN | OTG_FS_GCCFG_VBUSASEN | OTG_FS_GCCFG_VBUSBSEN); // enable USB transceiver with Vbus sensing enabled (without sensing the device will not set its pull-ups)

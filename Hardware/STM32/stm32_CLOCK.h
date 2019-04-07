@@ -15,10 +15,13 @@
     *********************************************************************
     17.10.2017 Add timers 9 and 12                                       {1}
     17.10.2017 Correct prescaler adjustment for PCLK2                    {2}
+    07.04.2017 Add STM32H7xx
 
 */
 
-#if defined _STM32L0x1
+#if defined _STM32H7XX
+    RCC_CR = (RCC_CR_HSION);                                             // set reset state - default is HSI at around 64MHz
+#elif defined _STM32L0x1
     RCC_CR = (RCC_CR_MSIRDY | RCC_CR_MSION);                             // set reset state - default is MSI at around 2.097MHz
     RCC_ICSCR = (RCC_ICSCR_MSIRANGE_2_097M);
 #elif defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
@@ -27,7 +30,7 @@
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // set reset state - default is high-speed internal clock
 #endif
     RCC_CFGR = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     RCC_PLLCFGR = RCC_PLLCFGR_RESET_VALUE;                               // set the PLL configuration register to default
 #endif
 #if !defined USE_HSI_CLOCK && !defined _STM32L432 && !defined _STM32L0x1 && !defined _STM32L4X5 && !defined _STM32L4X6
@@ -37,7 +40,14 @@
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION | RCC_CR_HSEON); // enable the high-speed external clock
     #endif
 #endif
-#if defined _STM32F7XX
+#if defined _STM32H7XX
+    do {
+        FLASH_ACR = (FLASH_WAIT_STATES);                                 // set flash wait states appropriately
+    } while (FLASH_ACR != (FLASH_WAIT_STATES));                          // wait until the new value is valid
+    RCC_D1CFGR = (_RCC_D1CFGR_D1CPRE_SYSCLK | _RCC_D1CFGR_HPRE_HCLK | _RCC_D1CFGR_D1PPRE_APB3); // set CPU clock, AXI/AHB and APB3 clocks
+    RCC_D2CFGR = (_RCC_D2CFGR_D2PPRE1_APB1 | _RCC_D2CFGR_D2PPRE2_APB2);  // set APB1 and APB2 clocks
+    RCC_D3CFGR = (_RCC_D3CFGR_D3PPRE_APB3);                              // set APB3 clock
+#elif defined _STM32F7XX
     FLASH_ACR = (FLASH_ACR_ARTRS);                                       // reset ART accelerator
     FLASH_ACR = (FLASH_ACR_PRFTEN | FLASH_ACR_ARTEN | FLASH_WAIT_STATES); // set flash wait states appropriately and enable pre-fetch buffer and ACT
     RCC_CFGR = (_RCC_CFGR_HPRE_SYSCLK | _RCC_CFGR_PPRE1_HCLK | _RCC_CFGR_PPRE2_HCLK); // set HCLK (AHB), PCLK1 and PCLK2 speeds
@@ -82,7 +92,8 @@
     RCC_CFGR |= (RCC_CFGR_HSI16_SELECT);                                 // switch from 4MHz MSI to HSE16
     #endif
 #else
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32H7XX
+    #elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
         #if SYSCLK > 144000000
     POWER_UP(APB1, (RCC_APB1ENR_PWREN));
             #if defined _STM32F7XX

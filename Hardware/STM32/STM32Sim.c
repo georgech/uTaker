@@ -114,7 +114,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOE_IDR = ulGPIOIN[4] = *port_inits++;
     GPIOF_IDR = ulGPIOIN[5] = *port_inits++;
     GPIOG_IDR = ulGPIOIN[6] = *port_inits++;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L432 || defined _STM32L4X5 || defined _STM32L4X6
     GPIOH_IDR = ulGPIOIN[7] = *port_inits++;
     GPIOI_IDR = ulGPIOIN[8] = *port_inits++;
     #if defined _STM32F7XX
@@ -122,7 +122,9 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOK_IDR = ulGPIOIN[10] = *port_inits++;
     #endif
 
-    #if defined _STM32F7XX
+    #if defined _STM32H7XX
+    PWR_CR1 = PWR_CR_SVOS_SCALE_3;
+    #elif defined _STM32F7XX
     PWR_CR = PWR_CR_VOS_1;
     #else
     PWR_CR = PWR_CR_VOS;
@@ -146,7 +148,9 @@ static void fnSetDevice(unsigned short *port_inits)
 #else
     RCC_AHB1ENR = (RCC_AHB1ENR_FLITFEN | RCC_AHB1ENR_SRAMEN);
 #endif
-#if defined _STM32L0x1
+#if defined _STM32H7XX
+    FLASH_ACR = (FLASH_ACR_LATENCY_SEVEN_WAITS | FLASH_ACR_WRHIGHFREQ_3);
+#elif defined _STM32L0x1
     FLASH_PECR = 0x0000007;
     FLASH_SR = 0x0000000c;
     FLASH_OPTR = 0x807000aa;
@@ -170,7 +174,7 @@ static void fnSetDevice(unsigned short *port_inits)
     GPIOD_MODER = 0xffffffff;
     GPIOE_MODER = 0xffffffff;
     GPIOH_MODER = 0xffffffff;
-#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L432 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     GPIOA_MODER = 0xa8000000;
     GPIOB_MODER = 0x00000280;
     GPIOB_OSPEEDR = 0x000000c0;
@@ -229,7 +233,7 @@ static void fnSetDevice(unsigned short *port_inits)
     #if UARTS_AVAILABLE > 1
     UART5_SR  = 0x00c0;
     #endif
-    #if defined _STM32F2XX || defined _STM32F4XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32H7XX
     USART6_SR = 0x00c0;
     #endif
     #if CHIP_HAS_UARTS > 6
@@ -258,7 +262,7 @@ static void fnSetDevice(unsigned short *port_inits)
     ETH_MACCR   = 0x00008000;
 
     IWDG_RLR = 0xfff;                                                    // independent watchdog
-#if defined _STM32L432 || defined _STM32L0x1
+#if defined _STM32L432 || defined _STM32L0x1 || defined _STM32H7XX
     IWDG_WINR = 0xfff;
 #endif
 #if defined USB_DEVICE_AVAILABLE                                         // USB FS device
@@ -575,7 +579,7 @@ extern unsigned long fnSimInts(char *argv[])
         }
 	}
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L4X5 || defined _STM32L4X6
 	if ((iInts & CHANNEL_5_SERIAL_INT) && (argv)) {
         ptrCnt = (int *)argv[THROUGHPUT_UART5];
         if (*ptrCnt) {
@@ -754,7 +758,7 @@ extern unsigned long fnSimInts(char *argv[])
 
 static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
 {
-#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     int iReturn = 0;
     int iInterruptFired = 0;
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
@@ -955,7 +959,7 @@ extern unsigned long fnSimDMA(char *argv[])
 {
 #if defined DMA_MEMCPY_SET
     if (argv == 0) {                                                     // memory to memory transfer
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX) // {7} memory to memory transfers are only supported on DMA2
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // {7} memory to memory transfers are only supported on DMA2
       //while (fnSimulateDMA(DMA_CONTROLLER_REF_2) > 0) {}
         if ((DMA2_S1CR & DMA_SxCR_EN) != 0) {                            // if enabled
             unsigned short usLength = (unsigned short)DMA2_S1NDTR;       // the transfer length
@@ -1411,7 +1415,7 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
 	    }
         break;
     #endif
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:                                                              // USART 6
 	    while (usLen-- != 0) {
         #if defined _STM32F7XX
@@ -1497,7 +1501,7 @@ extern void fnSimulateModemChange(int iPort, unsigned long ulNewState, unsigned 
         break;
     case 4:
         break;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
         break;
     #endif
@@ -1650,7 +1654,7 @@ static void fnHandleExti(unsigned short usOriginal, unsigned short usNew, unsign
 {
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     int iInputCount = 0;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long *ptrMux = SYSCFG_EXTICR1_ADDR;
     #else
     unsigned long *ptrMux = AFIO_EXTICR1_ADD;
@@ -1764,7 +1768,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     case _PORTG:
         GPIOG_IDR = ((ulGPIODDR[ucPort] & GPIOG_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case _PORTH:
         GPIOH_IDR = ((ulGPIODDR[ucPort] & GPIOH_ODR) | (~ulGPIODDR[ucPort] & ulGPIOIN[ucPort]));
         break;
@@ -1835,7 +1839,7 @@ extern int fnSimulateEthernetIn(unsigned char *ucData, unsigned short usLen, int
 static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 {
     int i = 0;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     int iHigh = 0;
     int iFunctionShift = 0;
     unsigned long ulMaskMode = 0x00000003;
@@ -2263,7 +2267,7 @@ extern void fnSimPorts(void)
                 iFlagRefresh = PORT_CHANGE;                              // ensure that ports are updated when an output state changes
             }
             break;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         case _PORTH:
             if ((GPIOH_ODR & ulGPIODDR[iPort]) != ulGPIODRIVE_VALUE[iPort]) {
                 ulGPIODRIVE_VALUE[iPort] = GPIOH_ODR & ulGPIODDR[iPort]; // new output driven state
@@ -2310,7 +2314,7 @@ extern unsigned long fnGetPresentPortState(int portNr)
         return ((ulGPIODDR[portNr] & GPIOF_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
     case _PORTG:
         return ((ulGPIODDR[portNr] & GPIOG_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case _PORTH:
         return ((ulGPIODDR[portNr] & GPIOH_ODR) | (~ulGPIODDR[portNr] & ulGPIOIN[portNr]));
     case _PORTI:
@@ -2326,7 +2330,7 @@ static unsigned short fnGetPortType(int portNr, int iRequest, int i)
 {
     unsigned short usPeripherals = 0;
     unsigned short usBit = 0x0001;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L432 || defined _STM32L0x1 || defined _STM32F031 || defined _STM32L4X5 || defined _STM32L4X6
     unsigned long ulMask = 0x00000003;
     STM32_GPIO *ptrPort = &STM32.Ports[portNr];
     if (GET_OUTPUTS == iRequest) {
@@ -3483,7 +3487,7 @@ extern int fnSimTimers(void)
         }
     }
 #if defined SUPPORT_RTC                                                  // {1}
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     if (RCC_BDCR & RCC_BDCR_RTCEN) {                                     // if RTC is enabled
         if (!(RTC_ISR & (RTC_ISR_INIT))) {                               // if not in initialisation mode
             static unsigned long _RTC_SSR = 0;
@@ -3784,7 +3788,7 @@ static const unsigned char monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};
 //
 extern void fnInitInternalRTC(char *argv[])
 {
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     unsigned long ulRegister;
 #endif
     unsigned short *ptrShort = (unsigned short *)*argv;
@@ -3828,7 +3832,7 @@ extern void fnInitInternalRTC(char *argv[])
     ulStartTime *= 60;                                                   // convert minutes to seconds
     ulStartTime += RTC_SEC;                                              // add seconds in present minute
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX       // {1}
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // {1}
     ulRegister  = (RTC_SEC%10);
     ulRegister |= ((RTC_SEC/10) << 4);
     ulRegister |= ((RTC_MIN%10) << 8);
@@ -4303,7 +4307,9 @@ extern void fnUpdateOperatingDetails(void)
     #if !defined NO_STATUS_BAR
     extern void fnPostOperatingDetails(char *ptrDetails);
     unsigned long ulHCLK;
+    #if !defined _STM32H7XX
     unsigned long ulAPB1;
+    #endif
     #if defined RCC_CFGR_PPRE2_HCLK_DIV2
     unsigned long ulAPB2;
     #endif
@@ -4313,7 +4319,9 @@ extern void fnUpdateOperatingDetails(void)
     ptrBuffer = fnBufferDec((SIZE_OF_FLASH/1024), 0, ptrBuffer);
     ptrBuffer = uStrcpy(ptrBuffer, "k, SRAM = ");
     ptrBuffer = fnBufferDec((SIZE_OF_RAM/1024), 0, ptrBuffer);
-    ptrBuffer = uStrcpy(ptrBuffer, "k, HCLK = ");
+    #if defined _STM32H7XX
+    ulHCLK = (PLL_OUTPUT_FREQ >> (RCC_D1CFGR & RCC_D1CFGR_HPRE_MASK));   // HCLK according to register setting
+    #else
     ulHCLK = (PLL_OUTPUT_FREQ >> ((RCC_CFGR & RCC_CFGR_HPRE_SYSCLK_DIV512) >> 4)); // HCLK according to register setting
     if ((RCC_CFGR & RCC_CFGR_PPRE1_HCLK_DIV2) != 0) {                    // if divide enabled
         #if defined _STM32L432 || defined _STM32L0x1
@@ -4325,6 +4333,7 @@ extern void fnUpdateOperatingDetails(void)
     else {
         ulAPB1 = ulHCLK;
     }
+    #endif
     #if defined RCC_CFGR_PPRE2_HCLK_DIV2
     if ((RCC_CFGR & RCC_CFGR_PPRE2_HCLK_DIV2) != 0) {                    // if divide enabled
         #if defined _STM32L432 || defined _STM32L0x1
@@ -4337,8 +4346,18 @@ extern void fnUpdateOperatingDetails(void)
         ulAPB2 = ulHCLK;
     }
     #endif
+    ptrBuffer = uStrcpy(ptrBuffer, "k, HCLK = ");
     ptrBuffer = fnBufferDec(ulHCLK, 0, ptrBuffer);
-    #if defined RCC_CFGR_PPRE2_HCLK_DIV2
+    #if defined _STM32H7XX
+    ptrBuffer = uStrcpy(ptrBuffer, ", APB1 = ");
+    ptrBuffer = fnBufferDec((ulHCLK>>((RCC_D2CFGR & RCC_D2CFGR_D2PPRE1_MASK) >> 4)), 0, ptrBuffer);
+    ptrBuffer = uStrcpy(ptrBuffer, ", APB2 = ");
+    ptrBuffer = fnBufferDec((ulHCLK >> ((RCC_D2CFGR & RCC_D2CFGR_D2PPRE2_MASK) >> 8)), 0, ptrBuffer);
+    ptrBuffer = uStrcpy(ptrBuffer, ", APB3 = ");
+    ptrBuffer = fnBufferDec((ulHCLK >> ((RCC_D1CFGR & RCC_D1CFGR_D1PPRE_MASK) >> 4)), 0, ptrBuffer);
+    ptrBuffer = uStrcpy(ptrBuffer, ", APB4 = ");
+    ptrBuffer = fnBufferDec((ulHCLK >> ((RCC_D3CFGR & RCC_D3CFGR_D3PPRE_MASK) >> 4)), 0, ptrBuffer);
+    #elif defined RCC_CFGR_PPRE2_HCLK_DIV2
     ptrBuffer = uStrcpy(ptrBuffer, ", APB1 = ");
     ptrBuffer = fnBufferDec(ulAPB1, 0, ptrBuffer);
     ptrBuffer = uStrcpy(ptrBuffer, ", APB2 = ");

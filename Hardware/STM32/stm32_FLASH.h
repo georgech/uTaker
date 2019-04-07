@@ -333,7 +333,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
     int iError = 0;
     MAX_FILE_LENGTH Length = ptrAccessDetails->BlockLength;
     unsigned char *ucDestination = (unsigned char *)ptrAccessDetails->ulOffset;
-#if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+#if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     unsigned char *ptrSector = ucDestination;
     unsigned long _ulSectorSize;                                         // F2/F4/F7 have variable flash granularity
     unsigned long ulSectorNumber;
@@ -360,7 +360,7 @@ static int fnWriteInternalFlash(ACCESS_DETAILS *ptrAccessDetails, unsigned char 
         }
     } while ((ucDestination + Length) >= ptrSector);                     // repeat for all sectors that will be written to
     #endif
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // depending on the power supply range it is possible to write bytes, short- and long words (with external Vpp 64 bits but this is not supported in this implementation)
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // depending on the power supply range it is possible to write bytes, short- and long words (with external Vpp 64 bits but this is not supported in this implementation)
     FLASH_SR = (FLASH_STATUS_FLAGS);                                     // reset status flags
         #if defined _WINDOWS
     FLASH_SR = 0;
@@ -652,7 +652,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
                 ulFlashLockState = 0;
             #endif
             }
-            #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+            #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
             FLASH_CR = (FLASH_CR_SER | MAXIMUM_PARALLELISM | (ulSectorNumber << FLASH_CR_SNB_SHIFT)); // prepare the section to be deleted
             FLASH_CR |= (FLASH_CR_STRT);                                 // start the erase operation
             #else
@@ -744,12 +744,12 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
             ulFlashLockState = 0;
         #endif
         }
-        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
         if (iProtectedSector != 0) {
             fnProtectFlash(ptrSector, UNPROTECT_SECTOR);                 // unprotect the write-protected sector so that we can erase it
         }
         #endif
-        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         FLASH_CR = (FLASH_CR_SER | MAXIMUM_PARALLELISM | (ulSectorNumber << FLASH_CR_SNB_SHIFT)); // prepare the section to be deleted
         FLASH_CR |= (FLASH_CR_STRT);                                     // start the erase operation
         #else
@@ -779,7 +779,7 @@ extern int fnEraseFlashSector(unsigned char *ptrSector, MAX_FILE_LENGTH Length)
         #endif
         while ((FLASH_SR & FLASH_SR_BSY) != 0) {}                        // wait until delete operation completes
         _ENABLE_INTERRUPTS();
-        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+        #if defined FLASH_USES_WRITE_PROTECTION && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
         if (iProtectedSector != 0) {
             fnProtectFlash(ptrSector, PROTECT_SECTOR);                   // set protection again
         }
@@ -931,7 +931,7 @@ extern void fnGetParsFile(unsigned char *ParLocation, unsigned char *ptrValue, M
 //
 extern unsigned char fnGetValidPars(unsigned char ucValid)
 {
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     unsigned char ucValidUse[2];
     unsigned char ucCompare;
 
@@ -1007,7 +1007,7 @@ extern int fnGetParameters(unsigned char ucValidBlock, unsigned short usParamete
     ptrPar += 2;                                                         // first parameter starts after validation information
     fnGetParsFile((unsigned char *)ptrPar, ucValue, usLength);
     #else
-        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX // byte storage used 
+        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // byte storage used 
     ptrPar += usParameterReference;
     ptrPar += 2;                                                         // first parameter starts after validation information
 
@@ -1030,7 +1030,7 @@ extern int fnGetParameters(unsigned char ucValidBlock, unsigned short usParamete
 
 extern int fnSetParameters(unsigned char ucValidBlock, unsigned short usParameterReference, unsigned char *ucValue, unsigned short usLength)
 {
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     unsigned char *ptrPar = PARAMETER_BLOCK_1, *ptrStart;
     unsigned char ucValid = 0x55;
     int iBlockUse = 0;

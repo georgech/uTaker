@@ -219,6 +219,28 @@
     #define PCLK1_DIVIDE        4
     #define PCLK2_DIVIDE        2
     #define HCLK_DIVIDE         1
+#elif defined NUCLEO_H743ZI
+    #define CRYSTAL_FREQ        8000000                                  // 8MHz crystal
+    #define DISABLE_PLL                                                  // run from clock source directly
+    #define USE_HSI_CLOCK                                                // use internal HSI clock source
+    #define PLL_INPUT_DIV       8                                        // 2..64 - should set the input to pll in the range 1..2MHz (with preference near to 2MHz)
+    #define PLL_VCO_MUL         336                                      // 192 ..432 where VCO must be 192..432MHz
+    #define PLL_POST_DIVIDE     2                                        // post divide VCO by 2, 4, 6, or 8 to get the system clock speed
+    #define PIN_COUNT           PIN_COUNT_144_PIN
+    #define PACKAGE_TYPE        PACKAGE_LQFP
+    #define SIZE_OF_RAM         (512 * 1024)                             // 512k AXI
+    #define SIZE_OF_FLASH       (2 * 1024 * 1024)                        // 2M FLASH
+    #define CORE_VOLTAGE        CORE_1_15__1_26
+    #define SUPPLY_VOLTAGE      SUPPLY_2_7__3_6                          // power supply is in the range 2.7V..3.6V
+    #define SYSCLK_DIVIDE       1                                        // system clock is divided by 1 (1, 2, 4, 8, 16, 64, 128 or 512 are possible) - max. 400MHz
+    #define HCLK_DIVIDE         1                                        // HCLK is system clock divided by 1 (1, 2, 4, 8, 16, 64, 128 or 512 are possible) - max. 200MHz
+    #define PCLK1_DIVIDE        4                                        // PCLK1 is HCLK divided by 4 (1, 2, 4, 8, or 16 are possible) - max. 42MHz
+    #define PCLK2_DIVIDE        2                                        // PCLK2 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+    #define PCLK3_DIVIDE        1                                        // PCLK3 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+    #define PCLK4_DIVIDE        1                                        // PCLK4 is HCLK divided by 2 (1, 2, 4, 8, or 16 are possible) - max. 84MHz
+
+  //#define FLASH_OPTION_SETTING    (FLASH_OPTCR_nWRP0 | FLASH_OPTCR_nWRP1 | FLASH_OPTCR_nWRP2 | FLASH_OPTCR_nWRP3 | FLASH_OPTCR_nWRP4 | FLASH_OPTCR_nWRP5 | FLASH_OPTCR_nWRP6 | FLASH_OPTCR_nWRP7 | FLASH_OPTCR_nWRP8 | FLASH_OPTCR_nWRP9 | FLASH_OPTCR_nWRP10 | FLASH_OPTCR_nWRP11 | FLASH_OPTCR_BOR_LEV_1 | FLASH_OPTCR_RDP_LEVEL_0 | FLASH_OPTCR_USER_nRST_STDBY | FLASH_OPTCR_USER_nRST_STOP | FLASH_OPTCR_USER_WDG_SW)
+  //#define FLASH_OPTION_SETTING_1  (FLASH_OPTCR1_nWRP0 | FLASH_OPTCR1_nWRP1 | FLASH_OPTCR1_nWRP2 | FLASH_OPTCR1_nWRP3 | FLASH_OPTCR1_nWRP4 | FLASH_OPTCR1_nWRP5 | FLASH_OPTCR1_nWRP6 | FLASH_OPTCR1_nWRP7 | FLASH_OPTCR1_nWRP8 | FLASH_OPTCR1_nWRP9 | FLASH_OPTCR1_nWRP10 | FLASH_OPTCR1_nWRP11)
 #elif defined NUCLEO_F429ZI
     #define CRYSTAL_FREQ        8000000                                  // 8MHz crystal
   //#define DISABLE_PLL                                                  // run from clock source directly
@@ -712,7 +734,7 @@
 #if defined FLASH_FILE_SYSTEM
     #if defined SPI_FILE_SYSTEM
         #define uFILE_START (SPI_FLASH_START)                            // FLASH location end of internal FLASH
-        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
             #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + FLASH_GRANULARITY_BOOT) // FLASH location at 16k start in boot block
         #else                                                            // this is a test setup for external SPI FLASH, with the parameters at the end of internal FLASH
             #define PARAMETER_BLOCK_START (SPI_FLASH_START - PAR_BLOCK_SIZE) // FLASH location at 2 parameter blocks short of end of internal FLASH
@@ -760,7 +782,7 @@
                 #define FILE_GRANULARITY (1 * FLASH_GRANULARITY)         // each file a multiple of 256k
                 #define FILE_SYSTEM_SIZE (1 * FILE_GRANULARITY)          // 256k reserved for file system
                 #define SUB_FILE_SIZE    (FILE_GRANULARITY/64)           // 4k sub file sizes
-            #elif (defined _STM32F4XX || defined _STM32F2XX) && (defined FLASH_FILE_SYSTEM && !defined SPI_FILE_SYSTEM) // devices with 128k Flash granularity
+            #elif (defined _STM32F4XX || defined _STM32F2XX || defined _STM32H7XX) && (defined FLASH_FILE_SYSTEM && !defined SPI_FILE_SYSTEM) // devices with 128k Flash granularity
                 #define PARAMETER_BLOCK_START (FLASH_START_ADDRESS + FLASH_GRANULARITY_BOOT) // FLASH location at 16k start in boot block
                 #define uFILE_START (FLASH_START_ADDRESS + 0x40000)      // FLASH location at 256k start
 
@@ -779,7 +801,7 @@
 #endif
 
 #if defined USE_PARAMETER_BLOCK
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         #define PARAMETER_BLOCK_SIZE    (FLASH_GRANULARITY_BOOT)         // use boot block size
     #else
         #define PARAMETER_BLOCK_SIZE    (FLASH_GRANULARITY)              // use page size
@@ -821,7 +843,7 @@
 
   //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
 
-    #if defined ST_MB913C_DISCOVERY || defined NUCLEO_F429ZI || defined ARDUINO_BLUE_PILL
+    #if defined ST_MB913C_DISCOVERY || defined NUCLEO_F429ZI || defined ARDUINO_BLUE_PILL || defined NUCLEO_H743ZI
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined NUCLEO_L496RG
         #define DEMO_UART    5                                           // use LPUART1 (channel 5) [0 = USART1, 1 = USART2, 2= USART3, 3 = UART4, 4 = UART5, 5 = LPUART1]
@@ -941,7 +963,7 @@
     #else
         #define OUR_I2_I2C_INIT_CODEC_CHANNEL     0                      // use I2C0 for demo (I2C1)
     #endif
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX   // {5} add alternative I2C multiplexing options
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX // {5} add alternative I2C multiplexing options
       //#define I2C1_ALT_PINS                                            // I2C1 on PB7 and PB8 rather than on PB6 and PB9
       //#define I2C2_ALT_PINS_1                                          // I2C2 on PF0 and PF1 rather than on PB10 and PB11
       //#define I2C2_ALT_PINS_2                                          // I2C2 on PH4 and PH5 rather than on PB10 and PB11
@@ -1014,7 +1036,7 @@
     #define SENDERS_EMAIL_ADDRESS             "STM3241G_EVAL@uTasker.com"// fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "STM3241G Test"            // email subject
     #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the STM3241G-EVAL.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your STM3241G!!";
-#elif defined NUCLEO_F429ZI
+#elif defined NUCLEO_F429ZI || defined NUCLEO_H743ZI
     #define SENDERS_EMAIL_ADDRESS             "Nucleo-F429ZI@uTasker.com"// fictional Email address of the board being used
     #define EMAIL_SUBJECT                     "Nucleo-F429ZI"            // email subject
     #define EMAIL_CONTENT                     "Hello!!\r\nThis is an email message from the Nucleo-F429ZI.\r\nI hope that you have received this test and have fun using the uTasker operating system with integrated TCP/IP stack.\r\r\nRegards your Nucleo-F429ZI!!";
@@ -1054,7 +1076,7 @@
 #if !defined _STM32F7XX
     #define DMA_MEMCPY_SET                                               // memcpy and memset functions performed by DMA (if supported by processor - uses one DMA channel)
 #endif
-#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)     // DMA2 must be used since DMA1 doesn't doesn't support memory to memory transfers
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // DMA2 must be used since DMA1 doesn't doesn't support memory to memory transfers
     #define MEMCPY_CHANNEL             8                                 // use channel 1 of DMA controller 2 (avoid using this channel for other DMA purpose)
 #else
     #define MEMCPY_CHANNEL             1                                 // use channel 1 of DMA controller 1 (avoid using this channel for other DMA purpose)
@@ -1513,7 +1535,7 @@
     #define BUTTON_KEY_DEFINITIONS     {_PORTA, USER_KEY_BUTTON, {73, 248, 93, 268}},
 
     #define KEYPAD "KeyPads/STM32F4-DISC.bmp"
-#elif defined NUCLEO_F429ZI
+#elif defined NUCLEO_F429ZI || defined NUCLEO_H743ZI
     #define USERS_BUTTON               PORTC_BIT13
 
     #define LED1                       PORTB_BIT0                        // green LED
@@ -1905,14 +1927,14 @@
         #define SUPPORT_PORT_INTERRUPTS                                  // support code for port interrupts due to the PHY interrupt
         #define PHY_INT_PORT           PORTA                             // interrupt on PA3
         #define PHY_INT_PIN_STATE()    _READ_PORT_MASK(A, PHY_INTERRUPT)
-    #elif defined STM32F746G_DISCO || defined NUCLEO_F429ZI
+    #elif defined STM32F746G_DISCO || defined NUCLEO_F429ZI || defined NUCLEO_H743ZI
         #define _LAN8742
         #define PHY_ADDRESS_           0x00                              // address of PHY on DiscoverMo board (RMII mode)
         #define VNDR_MDL               0x13                              // vendor model number
         #define MDL_REV                0x00                              // model revision number
         #define PHY_IDENTIFIER         (0x0007c000 | (VNDR_MDL << 4) | MDL_REV) // SMSC identifier
         #define ETHERNET_RMII                                            // use RMII Ethernet interface instead of MII
-        #if defined NUCLEO_F429ZI
+        #if defined NUCLEO_F429ZI || defined NUCLEO_H743ZI
             #define ETH_TXD1_B                                           // TXD1 on port B with TXD0 and TX_EN on port G
         #else
             #define ETH_TXD_TX_EN_G                                      // TXD0, TXD1 and TX_EN on port G

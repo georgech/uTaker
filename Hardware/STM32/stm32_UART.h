@@ -217,7 +217,7 @@ static USART_REG *fnSelectChannel(QUEUE_HANDLE Channel)
     case 4:
         return (USART_REG *)(UART5_BLOCK);
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
         return (USART_REG *)(USART6_BLOCK);
 #elif defined _STM32L4X5 || defined _STM32L4X6
@@ -316,7 +316,7 @@ static __interrupt void SCI5_Interrupt(void)
     #endif
 }
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
 static __interrupt void SCI6_Interrupt(void)
 {
     while (((USART6_CR1 & USART_CR1_RXNEIE) != 0) && ((USART6_ISR & USART_ISR_RXNE) != 0)) { // if an enabled reception interrupt
@@ -436,7 +436,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         fnEnterInterrupt(irq_UART5_ID, PRIORITY_UART5, SCI5_Interrupt);  // enter UART interrupt handler
         break;
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
         POWER_UP(APB2, RCC_APB2ENR_USART6EN);                            // enable clocks to USART6
         fnEnterInterrupt(irq_USART6_ID, PRIORITY_USART6, SCI6_Interrupt);// enter UART interrupt handler
@@ -470,7 +470,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 
     USART_regs->UART_CR1 = 0;                                            // start with uart disabled
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     if ((Channel == 0) || (Channel == 5))                                // USART1 and USART6 clocked from PCLK2
 #else
     if (Channel == 0)                                                    // USART1 clocked from PCLK2 (note that _STM32L432 has configurable clock source but PCLK2 is is used for compatibility)
@@ -976,7 +976,7 @@ extern void fnRxOn(QUEUE_HANDLE Channel)
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_RXNEIE);   // enable the receiver with Rx interrupts
         break;
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
     #if defined USART6_REMAP
         _CONFIG_PERIPHERAL_INPUT(G, (PERIPHERAL_USART4_5_6), (PORTG_BIT9), (UART_RX_INPUT_TYPE)); // RX 6 on PG9
@@ -1101,7 +1101,7 @@ extern void fnTxOn(QUEUE_HANDLE Channel)
         UART5_CR1 |= (USART_CR1_UE | USART_CR1_TE);                      // enable the transmitter
         break;
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
     #if defined USART6_REMAP
         _CONFIG_PERIPHERAL_OUTPUT(G, (PERIPHERAL_USART4_5_6), (PORTG_BIT14), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // TX 6 on PG14
@@ -1186,7 +1186,7 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
     #endif
         break;
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
         USART6_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
         break;
@@ -1207,7 +1207,7 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
 }
 
 #if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX            // {18a}
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     static unsigned char ucExtendedWithTx[6];
     #else
     static unsigned char ucExtendedWithTx[5];
@@ -1316,7 +1316,7 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
     #endif
         break;
 #endif
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:                                                              // USART 6
         if ((USART6_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait
@@ -1482,7 +1482,7 @@ static void fnSetRTS(QUEUE_HANDLE channel, int iState)
     case 3:                                                              // UART4 - no support in UART for peripheral function
     case 4:                                                              // UART5 - no support in UART for peripheral function
         break;
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     case 5:
         if (iState != 0) {
             if ((ucChannelMode & ucRS485Mode) != 0) {
@@ -1613,7 +1613,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
                 }
     #endif
                 break;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
             case 5:                                                      // USART 6
         #if defined USART6_REMAP
                 if ((usModifications & SET_RS485_MODE) != 0) {
@@ -1676,7 +1676,7 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             case 3:                                                      // UART 4 - no support in UART for peripheral function
             case 4:                                                      // UART 5 - no support in UART for peripheral function
                 return;
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
             case 5:                                                      // USART 6
         #if defined USART6_REMAP
                 _CONFIG_PERIPHERAL_INPUT(G, (PERIPHERAL_USART4_5_6), (PORTG_BIT15), (UART_CTS_INPUT_TYPE));

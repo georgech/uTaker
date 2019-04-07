@@ -646,7 +646,7 @@ static int iPrevBit = -1;
             #endif
             #define PORT_FIRST_LINE     320
             #define PORT_DISPLAY_LEFT   154
-        #elif defined _STM32F4XX                                         // {76}
+        #elif defined _STM32F4XX || defined _STM32H7XX                   // {76}
             #if defined _EXE
                 #define CHIP_PACKAGE "stm32f407.bmp"
             #else

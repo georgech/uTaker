@@ -492,11 +492,11 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     unsigned short usMIIData;
     STM32_BD *ptrBd, *ptrFirstTxBd;
     unsigned char *ptrBuffer;
-#if defined ETHERNET_RMII && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX) // {6}
+#if defined ETHERNET_RMII && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // {6}
     POWER_UP(APB2, RCC_APB2ENR_SYSCFGEN);                                // power up the system configuration controller
     SYSCFG_PMC = SYSCFG_PMC_MII_RMII_SEL;                                // enable RMII mode (performed while the MAC is in reset and before MAC clocks have been enabled)
 #endif
-#if defined ETHERNET_RMII && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX) // {6}
+#if defined ETHERNET_RMII && (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // {6}
     POWER_UP(AHB1, (RCC_AHB1ENR_ETHMACEN | RCC_AHB1ENR_ETHMACTXEN | RCC_AHB1ENR_ETHMACRXEN)); // {14} enable clocks to Ethernet controller modules
     // RMII mode
     //
@@ -558,20 +558,20 @@ extern int fnConfigEthernet(ETHTABLE *pars)
     POWER_UP(AHB1, (RCC_AHB1ENR_ETHMACEN | RCC_AHB1ENR_ETHMACTXEN | RCC_AHB1ENR_ETHMACRXEN)); // {14} enable clocks to Ethernet controller modules
     // MII mode
     //
-        #if !defined _STM32F2XX && !defined _STM32F4XX && !defined _STM32F7XX
+        #if !defined _STM32F2XX && !defined _STM32F4XX && !defined _STM32F7XX && !defined _STM32H7XX
     _PERIPHERAL_REMOVE_REMAP(MII_RMII_SEL);                              // select MII interface mode rather than RMII
     _PERIPHERAL_REMAP(ETH_REMAP);                                        // remap certain MII pins (PD8:PD9:PD10:PD11:PD12)
         #endif
         #if defined ETHERNET_DRIVE_PHY_25MHZ                             // configure the MCO output to drive 25MHz PHY clock
     RCC_CFGR |= (RCC_CFGR_MCO1_XT1);                                     // select MCO to be equal to the 25MHz external crystal (note that it is recommended to set this after reset, before configuring the clocks to avoid glitches - since the clock is not yet driven to the PHY this is not respected)
-            #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+            #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_SYS), (MCO1_A_8), (OUTPUT_FAST | OUTPUT_PUSH_PULL)); // drive 25MHz clock to the PHY
             #else
     _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_SYS), (MCO_A_8), (OUTPUT_FAST | OUTPUT_PUSH_PULL)); // drive 25MHz clock to the PHY
             #endif
         #endif
     _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_ETH), (ETH_MDIO_A_2), (OUTPUT_FAST | OUTPUT_PUSH_PULL));
-        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+        #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     _CONFIG_PERIPHERAL_OUTPUT(G, (PERIPHERAL_ETH), (ETH_TXEN_G_11 | ETH_TXD0_G_13 | ETH_TXD1_G_14), (OUTPUT_FAST | OUTPUT_PUSH_PULL));
     _CONFIG_PERIPHERAL_OUTPUT(B, (PERIPHERAL_ETH), (ETH_TXD3_B_8), (OUTPUT_FAST | OUTPUT_PUSH_PULL));
     _CONFIG_PERIPHERAL_OUTPUT(C, (PERIPHERAL_ETH), (ETH_MDC_C_1 | ETH_TXD2_C_2), (OUTPUT_FAST | OUTPUT_PUSH_PULL));

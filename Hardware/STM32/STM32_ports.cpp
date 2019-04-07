@@ -45,7 +45,7 @@
     #include "STM32F7XX_port.h"
 #elif defined _STM32F427 || defined _STM32F429
     #include "STM32F427_429_port.h"
-#elif defined _STM32F2XX || defined _STM32F4XX
+#elif defined _STM32F2XX || defined _STM32F4XX || defined _STM32H7XX
     #include "STM32F41X_port.h"
 #elif defined _STM32F107X || defined _STM32F105X
     #include "STM32F105X_107X_port.h"
@@ -55,7 +55,7 @@
     #include "STM32F100X_port.h"
 #endif
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     #define _ALTERNATIVE_FUNCTIONS  (ALTERNATIVE_FUNCTIONS + 1)          // {1}
 #else
     #define _ALTERNATIVE_FUNCTIONS  (ALTERNATIVE_FUNCTIONS)

@@ -1849,7 +1849,7 @@ static CHAR rtc_stopwatch = -1;
 //
 static __interrupt void _rtc_handler(void)
 {
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     register unsigned long ulRegister1 = RTC_TR;
     register unsigned long ulRegister2 = RTC_DR;
     #if defined _WINDOWS
@@ -1915,7 +1915,7 @@ static __interrupt void _rtc_handler(void)
 #endif
 }
 
-#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+#if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
 static void fnSetNextSecAlarm(unsigned long ulRegisterValue)
 {
     ulRegisterValue &= (RTC_TR_SU | RTC_TR_ST);
@@ -1936,14 +1936,14 @@ static void fnSetNextSecAlarm(unsigned long ulRegisterValue)
 //
 extern int fnConfigureRTC(void *ptrSettings)
 {
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
     register unsigned long ulRegisterValue;
     #endif
     int iIRQ = 0;
     RTC_SETUP *ptr_rtc_setup = (RTC_SETUP *)ptrSettings;
     switch (ptr_rtc_setup->command & ~(RTC_DISABLE | RTC_INITIALISATION)) {
     case RTC_TIME_SETTING:                                               // set time to RTC
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         RTC_WPR = RTC_WPR_KEY1; RTC_WPR = RTC_WPR_KEY2;                  // enable RTC register writes
         RTC_ISR = (RTC_ISR_INIT);                                        // temporarily stop counting
         RTC_CR &= ~(RTC_CR_ALRAE | RTC_CR_ALRAIE);                       // temporarily disable alarm
@@ -1967,7 +1967,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         break;
 
     case RTC_GET_TIME:                                                   // get the present time
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         ulRegisterValue = RTC_TR;                                        // higher order shadow register are locked until read
         ptr_rtc_setup->ucSeconds = (unsigned char)((ulRegisterValue & RTC_TR_SU) + (((ulRegisterValue & RTC_TR_ST) >> 4) * 10));
         ptr_rtc_setup->ucMinutes = (unsigned char)(((ulRegisterValue & RTC_TR_MNU) >> 8) + (((ulRegisterValue & RTC_TR_MNT) >> 12) * 10));
@@ -1989,7 +1989,7 @@ extern int fnConfigureRTC(void *ptrSettings)
         iIRQ++;
     case RTC_ALARM_TIME:                                                 // interrupt at specific date and time
         if (iIRQ == 0) {                                                 // RTC_ALARM_TIME
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
             RTC_WPR = RTC_WPR_KEY1; RTC_WPR = RTC_WPR_KEY2;              // enable RTC register writes
             RTC_CR &= ~(RTC_CR_ALRBE | RTC_CR_ALRBIE);                   // ensure that alarm is not enabled
             rtc_interrupts &= ~RTC_ALARM_INT;                            // disable ALARM interrupt
@@ -2009,7 +2009,7 @@ extern int fnConfigureRTC(void *ptrSettings)
             rtc_interrupts &= ~(0x01 << iIRQ);                           // disable interrupt
             return 0;                                                    // disable function rather than enable
         }
-    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX
+    #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         if (ptr_rtc_setup->command & RTC_INITIALISATION) {
             POWER_UP(APB1, (RCC_APB1ENR_PWREN));                         // ensure that the power control module is enabled
             PWR_CR |= PWR_CR_DBP;                                        // disable backup domain write protection
