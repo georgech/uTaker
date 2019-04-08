@@ -183,15 +183,15 @@ typedef struct
     unsigned char data[100];
 } SREC_TYP;
 
+#if (defined USB_INTERFACE && (defined USB_MSD_DEVICE_LOADER || defined USE_USB_CDC)) || defined I2C_INTERFACE || (defined SERIAL_INTERFACE && !defined KBOOT_LOADER)
+    #define NEEDS_BLANK_CHECK
+    static unsigned char *fnBlankCheck(void);
+#endif
+
 #if defined KEEP_SERIAL_TASK
 /* =================================================================== */
 /*                 local function prototype declarations               */
 /* =================================================================== */
-
-#if (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER) || defined I2C_INTERFACE
-    #define NEEDS_BLANK_CHECK
-    static unsigned char *fnBlankCheck(void);
-#endif
 
 #if defined SERIAL_INTERFACE || defined USE_USB_CDC
     #if defined DEVELOPERS_LOADER                                        // {23}
@@ -1529,6 +1529,9 @@ static void fnReturnResponse(QUEUE_HANDLE hInterface, int iInterfaceType, KBOOT_
     #endif
     #if (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER)
         fnWrite(hInterface, (unsigned char *)ptrKBOOT_response, sizeof(KBOOT_PACKET));
+        #if defined KBOOT_COMMAND_LIMIT
+        uTaskerStopTimer(TASK_USB);                                      // stop timer as soon as a valid KBOOT message has been responded to
+        #endif
     #endif
     #if (defined SERIAL_INTERFACE && defined KBOOT_LOADER)
     }
@@ -1809,7 +1812,7 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
     static int fnLoadTerminate(void)
 #endif
 {
-        #if (defined SERIAL_INTERFACE && !defined KBOOT_LOADER) && defined INTERMEDIATE_PROG_BUFFER
+        #if (defined SERIAL_INTERFACE && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER) && defined INTERMEDIATE_PROG_BUFFER
     if (fnFlashIntermediate() != 0) {                                    // flash final intermediate buffer
         return PROGRAMMING_ERROR;
     }
@@ -2121,13 +2124,13 @@ static unsigned char fnConvertByte(unsigned char ucASCII)
                     return LINE_ACCEPTED;                                // content is valid
                 }
         #endif
-        #if defined SERIAL_INTERFACE && !defined KBOOT_LOADER && defined INTERMEDIATE_PROG_BUFFER
+        #if defined SERIAL_INTERFACE && !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER && defined INTERMEDIATE_PROG_BUFFER
             #if defined MEMORY_SWAP
                 return (fnIntermediateWrite((unsigned char *)(srec.addr + UTASKER_APP_START), ptrData, iDataCnt));
             #else
                 return (fnIntermediateWrite((unsigned char *)srec.addr, ptrData, iDataCnt));
             #endif
-        #else
+        #elif !defined KBOOT_LOADER && !defined DEVELOPERS_LOADER
             #if FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0                     // {24}
                 if (ulNextExpectedSREC != 0) {                           // if not first line to be programmed
                     if (ulNextExpectedSREC != srec.addr) {               // if the SREC address has jumped we ensure that any flash buffers are comitted if necessary

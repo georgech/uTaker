@@ -1100,6 +1100,8 @@
       //#define HID_LOADER                                               // Freescale HIDloader.exe or KBOOT compatible
           //#define KBOOT_HID_LOADER                                     // select KBOOT mode of operation (rather than HIDloader.exe)
           //#define KBOOT_SECURE_LOADER                                  // decrypt and accept only encrypted/authenticated firmware
+            #define KBOOT_HID_ENUMERATION_LIMIT  (DELAY_LIMIT)(5 * SEC)  // if there is no USB enumeration we start the application after this delay
+            #define KBOOT_COMMAND_LIMIT          (DELAY_LIMIT)(10 * SEC) // if there is no valid KBOOT command received after this delay the application will be started
         #undef _NO_CHECK_QUEUE_INPUT
         #define WAKE_BLOCKED_USB_TX                                      // allow a blocked USB transmitter to continue after an interrupt event
         #define NUMBER_USB     (5 + 1)                                   // 6 physical queues (control plus 5 endpoints) needed for USB interface

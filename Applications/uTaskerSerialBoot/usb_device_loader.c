@@ -422,8 +422,8 @@ typedef struct _PACK stUSB_CONFIGURATION_DESCRIPTOR_COLLECTION
     USB_ENDPOINT_DESCRIPTOR                    endpoint_4;
     #else
     USB_INTERFACE_DESCRIPTOR                   interface_desc_1;         // first interface descriptor
-    USB_ENDPOINT_DESCRIPTOR                    endpoint_1;               // end points of second interface
-    USB_ENDPOINT_DESCRIPTOR                    endpoint_2;
+    USB_ENDPOINT_DESCRIPTOR                    endpoint_2;               // end points of second interface
+    USB_ENDPOINT_DESCRIPTOR                    endpoint_3;
     #endif
 #elif defined HID_LOADER                                                 // {16}
     USB_CONFIGURATION_DESCRIPTOR               config_desc;              // compulsory configuration descriptor
@@ -1439,12 +1439,15 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #else
         fnConfigureUSB();                                                // configure the USB interface for device mode operation
     #endif
-    #if defined USB_MSD_HOST_LOADER || defined USB_MSD_TIMEOUT           // {29}
+    #if defined USB_MSD_HOST_LOADER && defined USB_MSD_TIMEOUT           // {29}
         #if defined _WINDOWS
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(3 * SEC), TIMEOUT_USB_ENUMERATION); // longer time when simulating to allow enumeration to be commanded in the simulator
         #else
         uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.5 * SEC), TIMEOUT_USB_ENUMERATION); // 500ms in which the device must enumerate otherwise the host mode will be switched to instead
         #endif
+    #endif
+    #if defined HID_LOADER && defined KBOOT_HID_LOADER && defined KBOOT_HID_ENUMERATION_LIMIT
+        uTaskerMonoTimer(OWN_TASK, KBOOT_HID_ENUMERATION_LIMIT, TIMEOUT_USB_ENUMERATION);
     #endif
     }
 
@@ -1525,7 +1528,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
 
         case TIMER_EVENT:
             switch (ucInputMessage[MSG_TIMER_EVENT]) {
-    #if defined USB_MSD_HOST_LOADER || defined USB_MSD_TIMEOUT           // {29}
+    #if defined USB_MSD_HOST_LOADER && defined USB_MSD_TIMEOUT           // {29}
             case TIMEOUT_USB_ENUMERATION:                                // there has been no enumeration after an initial delay
                 // We disable device mode and move to host to see whether we can load from a memory stick instead
                 //
@@ -1536,6 +1539,10 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #else
                 fnJumpToValidApplication(1);
         #endif
+                break;
+    #elif defined HID_LOADER && defined KBOOT_HID_LOADER && defined KBOOT_HID_ENUMERATION_LIMIT
+            case TIMEOUT_USB_ENUMERATION:                                // there has been no enumeration after an initial delay
+                fnJumpToValidApplication(1);
                 break;
     #endif
     #if defined RESET_ON_STOP
@@ -1598,7 +1605,7 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
     #if defined SET_USB_SYMBOL
                 SET_USB_SYMBOL();
     #endif
-    #if defined USB_MSD_HOST_LOADER || defined USB_MSD_TIMEOUT           // {29}
+    #if defined USB_MSD_HOST_LOADER && defined USB_MSD_TIMEOUT           // {29}
                 uTaskerStopTimer(OWN_TASK);                              // stop the enumeration monitor timer so that we stay in USB-MSD device mode
     #endif
     #if defined USB_MSD_DEVICE_LOADER && (defined WINDOWS_8_1_WORKAROUND || defined MAC_OS_X_WORKAROUND) // {15}
@@ -1611,6 +1618,11 @@ extern void fnTaskUSB(TTASKTABLE *ptrTaskTable)
         #else
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(2 * SEC), TIMEOUT_ACCEPT_UPLOAD); // start a period where writes will be ignored - when the timer has expired uploads are accepted
         #endif
+    #endif
+    #if defined HID_LOADER && defined KBOOT_HID_LOADER && defined KBOOT_COMMAND_LIMIT
+                uTaskerMonoTimer(OWN_TASK, KBOOT_COMMAND_LIMIT, TIMEOUT_USB_ENUMERATION);
+    #elif defined HID_LOADER && defined KBOOT_HID_LOADER && defined KBOOT_HID_ENUMERATION_LIMIT
+                uTaskerStopTimer(OWN_TASK);
     #endif
                 break;
             }
