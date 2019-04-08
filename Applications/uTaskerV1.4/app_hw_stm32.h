@@ -905,7 +905,7 @@
   //#define UART_CTS_INPUT_TYPE INPUT_PULL_UP                            // {8} enable pull-ups on UART CTS inputs
 
     #if !defined DEVICE_WITHOUT_DMA
-        #define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
+      //#define SERIAL_SUPPORT_DMA                                       // enable UART DMA support
         //#define SERIAL_SUPPORT_DMA_RX                                  // enable also DMA on receiver (used less that transmit DMA)
         //#define SERIAL_SUPPORT_DMA_RX_FREERUN                          // support free-running reception mode
     #endif
@@ -1073,7 +1073,7 @@
 
 // Special support for this processor type
 //
-#if !defined _STM32F7XX
+#if !defined _STM32F7XX && !defined _STM32H7XX
     #define DMA_MEMCPY_SET                                               // memcpy and memset functions performed by DMA (if supported by processor - uses one DMA channel)
 #endif
 #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // DMA2 must be used since DMA1 doesn't doesn't support memory to memory transfers

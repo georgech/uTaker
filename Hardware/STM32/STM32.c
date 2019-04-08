@@ -2439,9 +2439,9 @@ static void STM32_LowLevelInit(void)
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // if uMemcpy()/uMemset() is to use DMA enable the DMA controller used by it
     #if MEMCPY_CHANNEL > 7
-    POWER_UP(AHB1, RCC_AHB1ENR_DMA2EN);
+    POWER_UP(AHB1, RCC_AHB1ENR_DMA2EN);                                  // power up the second DMA controller
     #else
-    POWER_UP(AHB1, RCC_AHB1ENR_DMA1EN);
+    POWER_UP(AHB1, RCC_AHB1ENR_DMA1EN);                                  // power up the first DMA controller
     #endif
 #endif
 #if defined (_GNU)

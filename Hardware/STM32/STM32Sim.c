@@ -129,7 +129,8 @@ static void fnSetDevice(unsigned short *port_inits)
     #else
     PWR_CR = PWR_CR_VOS;
     #endif
-    #if defined _STM32L4X5 || defined _STM32L4X6
+    #if defined _STM32H7XX
+    #elif defined _STM32L4X5 || defined _STM32L4X6
     RCC_AHB1ENR = RCC_AHB1ENR_FLASHEN;
     RCC_PLLCFGR = 0x00001000;
     #elif !defined _STM32L432
@@ -328,7 +329,7 @@ static unsigned char ucFLASH[SIZE_OF_FLASH];                             // copy
 
 extern void fnInitialiseDevice(void *port_inits)
 {
-    uMemset(ucFLASH, 0xff, sizeof(ucFLASH));                             // we start with deleted FLASH memory contents
+    memset(ucFLASH, 0xff, sizeof(ucFLASH));                              // we start with deleted FLASH memory contents
     fnPrimeFileSystem();                                                 // the project can then set parameters or files as required
     fnSetDevice((unsigned short *)port_inits);                           // set device registers to startup condition (if not zerod)
 }
@@ -756,6 +757,67 @@ extern unsigned long fnSimInts(char *argv[])
     return ulNewActions;
 }
 
+
+static void fnSetDMAFlags(STM32_DMA *ptrDMA_controller, int iStream, unsigned long ulFlagRef)
+{
+    if ((ulFlagRef & DMA_LISR_HTIF0) != 0) {
+        switch (iStream) {
+        case 0:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_HTIF0);
+            break;
+        case 1:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_HTIF1);
+            break;
+        case 2:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_HTIF2);
+            break;
+        case 3:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_HTIF3);
+            break;
+        case 4:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_HTIF4);
+            break;
+        case 5:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_HTIF5);
+            break;
+        case 6:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_HTIF6);
+            break;
+        case 7:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_HTIF7);
+            break;
+        }
+    }
+    if ((ulFlagRef & DMA_LISR_TCIF0) != 0) {
+        switch (iStream) {
+        case 0:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF0);
+            break;
+        case 1:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF1);
+            break;
+        case 2:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF2);
+            break;
+        case 3:
+            ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF3);
+            break;
+        case 4:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF4);
+            break;
+        case 5:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF5);
+            break;
+        case 6:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF6);
+            break;
+        case 7:
+            ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF7);
+            break;
+        }
+    }
+}
+
 static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
 {
 #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
@@ -828,32 +890,7 @@ static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
                 }
                 ptrDMAstream->DMA_SxNDTR--;
                 if (ptrDMAstream->DMA_SxNDTR == 0) {                     // counted down to zero
-                    switch (iStream) {
-                    case 0:
-                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF0);
-                        break;
-                    case 1:
-                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF1);
-                        break;
-                    case 2:
-                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF2);
-                        break;
-                    case 3:
-                        ptrDMA_controller->DMA_LISR |= (DMA_LISR_TCIF3);
-                        break;
-                    case 4:
-                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF4);
-                        break;
-                    case 5:
-                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF5);
-                        break;
-                    case 6:
-                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF6);
-                        break;
-                    case 7:
-                        ptrDMA_controller->DMA_HISR |= (DMA_HISR_TCIF7);
-                        break;
-                    }
+                    fnSetDMAFlags(ptrDMA_controller, iStream, DMA_LISR_TCIF0);
                     ptrDMAstream->DMA_SxCR &= ~(DMA_SxCR_EN);            // disable operation
                     if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_TCIE) != 0) { // if transfer interrupt is enabled
                         iInterruptFired = 1;
@@ -877,6 +914,9 @@ static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
                     ptrSource += sizeof(unsigned short);
                 }
             }
+            ptrDMAstream->DMA_SxNDTR = 0;
+            fnSetDMAFlags(ptrDMA_controller, iStream, (DMA_LISR_TCIF0 | DMA_LISR_HTIF0));
+            ptrDMAstream->DMA_SxCR &= ~(DMA_SxCR_EN);
             break;
         case DMA_SxCR_PSIZE_32:
             if ((ptrDMAstream->DMA_SxCR & (DMA_SxCR_MSIZE_32 | DMA_SxCR_MSIZE_16)) != DMA_SxCR_MSIZE_32) {
@@ -891,6 +931,9 @@ static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
                     ptrSource += sizeof(unsigned long);
                 }
             }
+            ptrDMAstream->DMA_SxNDTR = 0;
+            fnSetDMAFlags(ptrDMA_controller, iStream, (DMA_LISR_TCIF0 | DMA_LISR_HTIF0));
+            ptrDMAstream->DMA_SxCR &= ~(DMA_SxCR_EN);
             break;
         }
         if ((iInterruptFired != 0) && (fnGenInt(iInterruptID) != 0)) {   // if the DMA channel interrupt is enabled
@@ -960,7 +1003,12 @@ extern unsigned long fnSimDMA(char *argv[])
 #if defined DMA_MEMCPY_SET
     if (argv == 0) {                                                     // memory to memory transfer
     #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX) // {7} memory to memory transfers are only supported on DMA2
-      //while (fnSimulateDMA(DMA_CONTROLLER_REF_2) > 0) {}
+        #if MEMCPY_CHANNEL > 7
+        while (fnSimulateDMA(DMA_CONTROLLER_REF_2 | (MEMCPY_CHANNEL - 8)) > 0) {}
+        #else
+        while (fnSimulateDMA(DMA_CONTROLLER_REF_1 | MEMCPY_CHANNEL) > 0) {}
+        #endif
+#if 0
         if ((DMA2_S1CR & DMA_SxCR_EN) != 0) {                            // if enabled
             unsigned short usLength = (unsigned short)DMA2_S1NDTR;       // the transfer length
             unsigned char *ptrDestination = (unsigned char *)DMA2_S1M0AR;
@@ -1016,6 +1064,7 @@ extern unsigned long fnSimDMA(char *argv[])
             DMA2_LISR = (DMA_LISR_TCIF1 | DMA_LISR_HTIF1);
             DMA2_S1CR &= ~(DMA_SxCR_EN);
         }
+#endif
     #else        
         if ((DMA_CCR_MEMCPY & DMA1_CCR1_EN) != 0) {                      // if enabled
             unsigned short usLength = (unsigned short)DMA_CNDTR_MEMCPY;  // the transfer length
@@ -1073,7 +1122,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                     //fnUART_Tx_int(7);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined UART8_TDR
+                                fnLogTx7((unsigned char)UART8_TDR);
+    #else
                                 fnLogTx7((unsigned char)UART8_DR);
+    #endif
                                 ulNewActions |= SEND_COM_7;
                             }
                         }
@@ -1096,7 +1149,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                     //fnUART_Tx_int(6);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined UART7_TDR
+                                fnLogTx6((unsigned char)UART7_TDR);
+    #else
                                 fnLogTx6((unsigned char)UART7_DR);
+    #endif
                                 ulNewActions |= SEND_COM_6;
                             }
                         }
@@ -1121,7 +1178,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(2);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART3_TDR
+                                fnLogTx2((unsigned char)USART3_TDR);
+    #else
 	                            fnLogTx2((unsigned char)USART3_DR);
+    #endif
                                 ulNewActions |= SEND_COM_2;
                             }
                         }
@@ -1145,7 +1206,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(2);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART3_TDR
+                                fnLogTx2((unsigned char)USART3_TDR);
+    #else
 	                            fnLogTx2((unsigned char)USART3_DR);
+    #endif
                                 ulNewActions |= SEND_COM_2;
                             }
                         }
@@ -1166,7 +1231,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(3);                    // handle possible pending interrupt after DMA completion
                                 }
+        #if defined UART4_TDR
+                                fnLogTx3((unsigned char)UART4_TDR);
+        #else
 	                            fnLogTx3((unsigned char)UART4_DR);
+        #endif
                                 ulNewActions |= SEND_COM_3;
                             }
                         }
@@ -1192,7 +1261,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(1);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART2_TDR
+                                fnLogTx1((unsigned char)USART2_TDR);
+    #else
 	                            fnLogTx1((unsigned char)USART2_DR);
+    #endif
                                 ulNewActions |= SEND_COM_1;
                             }
                         }
@@ -1215,7 +1288,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(4);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined UART5_TDR
+                                fnLogTx4((unsigned char)UART5_TDR);
+    #else
 	                            fnLogTx4((unsigned char)UART5_DR);
+    #endif
                                 ulNewActions |= SEND_COM_4;
                             }
                         }
@@ -1250,7 +1327,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(5);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART6_TDR
+                                fnLogTx5((unsigned char)USART6_TDR);
+    #else
 	                            fnLogTx5((unsigned char)USART6_DR);
+    #endif
                                 ulNewActions |= SEND_COM_5;
                             }
                         }
@@ -1273,7 +1354,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(0);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART1_TDR
+                                fnLogTx0((unsigned char)USART1_TDR);
+    #else
 	                            fnLogTx0((unsigned char)USART1_DR);
+    #endif
                                 ulNewActions |= SEND_COM_0;
                             }
                         }
@@ -1292,7 +1377,11 @@ extern unsigned long fnSimDMA(char *argv[])
                                 else {
                                   //fnUART_Tx_int(5);                    // handle possible pending interrupt after DMA completion
                                 }
+    #if defined USART6_TDR
+                                fnLogTx5((unsigned char)USART6_TDR);
+    #else
 	                            fnLogTx5((unsigned char)USART6_DR);
+    #endif
                                 ulNewActions |= SEND_COM_5;
                             }
                         }

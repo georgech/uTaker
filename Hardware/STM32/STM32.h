@@ -1404,19 +1404,22 @@ extern void fnSetFlashOption(unsigned long ulOption, unsigned long ulOption1, un
 
         // AHB1 peripherals
         //
-        #define BKPSRAM_BLOCK               0x40024000
-        #define DMA1_BLOCK                  0x40026000
-        #define DMA2_BLOCK                  0x40026400
+        #define DMA1_BLOCK                  0x40020000
+        #define DMA2_BLOCK                  0x40020400
+        #define DMAMUX1_BLOCK               0x40020800
+        #define ADC1_ADC2_BLOCK             0x40022000
         #define ENET_BLOCK                  0x40028000
-        #define USB_OTG_HS_BLOCK            0x40040000
+        #define USB1_OTG_HS_BLOCK           0x40040000
+        #define USB2_OTG_FS_BLOCK           0x40080000
+        #define DCMI_BLOCK                  0x48020000
+        #define CRYPTO_BLOCK                0x48021000
+        #define HASH_BLOCK                  0x48021400
+        #define RNG_BLOCK                   0x48021800
+        #define SDMMC2_BLOCK                0x48022400
 
         // AHB2 peripherals
         //
-        #define USB_OTG_FS_BLOCK            0x50000000
-        #define DCMI_BLOCK                  0x50050000
-        #define CRYP_BLOCK                  0x50060000
-        #define HASH_BLOCK                  0x50060400
-        #define RNG_BLOCK                   0x50060800
+        #define DELAY_SDMMC2_BLOCK          0x48022800
 
         // AHB3 peripherals
         //
@@ -3009,6 +3012,15 @@ typedef struct stSTM32_BD
     #define RCC_RSR                          *(volatile unsigned long *)(RCC_BLOCK + 0xd0) //
     #define RCC_AHB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xd4) // AHB3 peripheral clock enable register
     #define RCC_AHB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xd8) // AHB1 peripheral clock enable register
+      #define RCC_AHB1ENR_DMA1EN             0x00000001
+      #define RCC_AHB1ENR_DMA2EN             0x00000002
+      #define RCC_AHB1ENR_ADC12EN            0x00000020
+      #define RCC_AHB1ENR_ETHMACEN           0x00008000
+      #define RCC_AHB1ENR_ETHMACTXEN         0x00010000
+      #define RCC_AHB1ENR_ETHMACRXEN         0x00020000
+      #define RCC_AHB1ENR_USB1OTGHSEN        0x02000000
+      #define RCC_AHB1ENR_USB1OTGHSULPIEN    0x04000000
+      #define RCC_AHB1ENR_USB2OTGHSEN        0x08000000
     #define RCC_AHB2ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xdc) // AHB2 peripheral clock enable register
     #define RCC_AHB4ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xe0) // AHB4 peripheral clock enable register
       #define RCC_AHB4ENR_GPIOAEN            0x00000001
@@ -3024,17 +3036,6 @@ typedef struct stSTM32_BD
       #define RCC_AHB4ENR_GPIOKEN            0x00000400
       #define RCC_AHB4ENR_CRCEN              0x00001000
     #define RCC_APB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xe4) // APB3 peripheral clock enable register
-      #define RCC_AHB1ENR_BKPSRAMEN          0x00040000
-      #define RCC_AHB1ENR_CCMDATARAMEN       0x00100000
-      #define RCC_AHB1ENR_DMA1EN             0x00200000
-      #define RCC_AHB1ENR_DMA2EN             0x00400000
-      #define RCC_AHB1ENR_DMA2DEN            0x00800000
-      #define RCC_AHB1ENR_ETHMACEN           0x02000000
-      #define RCC_AHB1ENR_ETHMACTXEN         0x04000000
-      #define RCC_AHB1ENR_ETHMACRXEN         0x08000000
-      #define RCC_AHB1ENR_ETHMACPTPEN        0x10000000
-      #define RCC_AHB1ENR_OTGHSEN            0x20000000
-      #define RCC_AHB1ENR_OTGHSULPIEN        0x40000000
     #define RCC_APB1LENR                     *(volatile unsigned long *)(RCC_BLOCK + 0xe8) // APB1 low peripheral clock enable register
     #define RCC_APB1ENR                      RCC_APB1LENR                // for compatibilty
       #define RCC_APB1ENR_TIM2EN             0x00000001

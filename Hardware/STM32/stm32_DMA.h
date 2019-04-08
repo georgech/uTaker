@@ -350,7 +350,7 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
         }
     #endif
     }
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX)
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     ptrDMAstream->DMA_SxCR = ulTransferType;
     #endif
 
@@ -401,75 +401,6 @@ extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
 #if defined _DMA_MEM_TO_MEM
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA
 #define SMALLEST_DMA_COPY 20                                             // smaller copies have no DMA advantage
-extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
-{
-    void *buffer = ptrTo;
-    unsigned char *ptr1 = (unsigned char *)ptrTo;
-    unsigned char *ptr2 = (unsigned char *)ptrFrom;
-    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
-    if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA2_S0CR == 0)) { // {27} if large enough to be worth while and if not already in use
-        unsigned short usTransferSize;
-        while ((((unsigned long)ptr1) & 0x3) != 0) {                     // move to a long word boundary (the source is not guaranteed to be on a boundary, which can make the lomng word copy less efficient)
-            *ptr1++ = *ptr2++;
-            Size--;
-        }
-        //  DMA2 is used since DMA1 cannot perform memory to memory transfers
-        //
-        DMA2_S1PAR = (unsigned long)ptr2;                                // address of source
-        DMA2_S1M0AR = (unsigned long)ptr1;                               // address of destination
-        if (((unsigned long)ptr2 & 0x3) == 0) {                          // if both source and destination are long word aligned
-            usTransferSize = ((unsigned short)(Size/sizeof(unsigned long))); // the number of long words to transfer by DMA
-            DMA2_S1NDTR = usTransferSize;                                // the number of byte transfers to be made (max. 0xffff)
-            DMA2_S1CR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_32 | DMA_SxCR_MSIZE_32 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
-            usTransferSize *= sizeof(unsigned long);                     // the number of bytes being transferred by the DMA process
-        }
-        else if (((unsigned long)ptr2 & 0x1) == 0) {                     // if both source and destination are short word aligned
-            usTransferSize = ((unsigned short)(Size/sizeof(unsigned short))); // the number of short words to transfer by DMA
-            DMA2_S1NDTR = usTransferSize;                                // the number of byte transfers to be made (max. 0xffff)
-            DMA2_S1CR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_16 | DMA_SxCR_MSIZE_16 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
-            usTransferSize *= sizeof(unsigned short);                    // the number of bytes being transferred by the DMA process
-        }
-        else {
-        #if defined _WINDOWS
-            if (Size > 0xffff) {
-                _EXCEPTION("DMA transfer doesn't support more than 64k!!");
-            }
-        #endif
-            usTransferSize = (unsigned short)Size;
-            DMA2_S1NDTR = usTransferSize;                                // the number of byte transfers to be made (max. 0xffff)
-            DMA2_S1CR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_8 | DMA_SxCR_MSIZE_8 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
-        }
-        DMA2_S1CR |= DMA_SxCR_EN;                                        // start operation
-        ptr1 += usTransferSize;                                          // move the destination pointer to beyond the transfer
-        ptr2 += usTransferSize;                                          // move the source pointer to beyond the transfer
-        Size -= usTransferSize;                                          // bytes remaining
-        while ((DMA2_LISR & DMA_LISR_TCIF1) == 0) { SIM_DMA(0) };        // wait until the transfer has terminated
-        DMA2_LIFCR = (DMA_LISR_TCIF1 | DMA_LISR_HTIF1 | DMA_LISR_DMEIF1 | DMA_LISR_FEIFO1 | DMA_LISR_DMEIF1); // clear flags
-        while (Size-- != 0) {                                            // {29}
-            *ptr1++ = *ptr2++;
-        }
-        #if defined _WINDOWS
-        DMA2_LISR = 0;
-        #endif
-        DMA2_S0CR = 0;                                                   // mark that the DMA stream is free for use again
-    }
-    #else
-    if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA_CNDTR_MEMCPY == 0)) { // if large enough to be worthwhile and if not already in use
-        DMA_CNDTR_MEMCPY = ((unsigned long)(Size));                      // the number of byte transfers to be made (max 0xffff)
-        DMA_CMAR_MEMCPY  = (unsigned long)ptrFrom;                       // address of first byte to be transferred
-        DMA_CPAR_MEMCPY  = (unsigned long)ptrTo;                         // address of first destination byte
-        DMA_CCR_MEMCPY   = (DMA1_CCR1_EN | DMA1_CCR1_PINC | DMA1_CCR1_MINC | DMA1_CCR1_PSIZE_8 | DMA1_CCR1_MSIZE_8 | DMA1_CCR1_PL_MEDIUM | DMA1_CCR1_MEM2MEM | DMA1_CCR1_DIR); // set up DMA operation and start DMA transfer
-        while (DMA_CNDTR_MEMCPY != 0) { SIM_DMA(0) };                    // wait until the transfer has terminated
-        DMA_CCR_MEMCPY = 0;
-    }
-    #endif
-    else {                                                               // normal memcpy method
-        while (Size-- != 0) {
-            *ptr1++ = *ptr2++;
-        }
-  }
-    return buffer; 
-}
 
 // memset implementation
 //
@@ -479,31 +410,70 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
     unsigned char ucValue = (unsigned char)iValue;                       // {37}
     unsigned char *ptr = (unsigned char *)ptrTo;
     #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
-    if ((Size >= SMALLEST_DMA_COPY) && (Size <= (0xffff * sizeof(unsigned long))) && (DMA2_S0CR == 0)) { // {27} if large enough to be worth while and if not already in use
-        volatile unsigned long ulToCopy = (ucValue | (ucValue << 8) | (ucValue << 16) | (ucValue << 24));
-        unsigned short usTransferSize;
-        while (((unsigned long)ptr) & 0x3) {                             // move to a long word bounday
-            *ptr++ = ucValue;
-            Size--;
-        }
-        usTransferSize = ((unsigned short)(Size/sizeof(unsigned long))); // the number of long words to transfer by DMA
-        DMA2_S1NDTR = usTransferSize;                                    // the number of long word transfers to be made (max. 0xffff)
-        DMA2_S1PAR = (unsigned long)&ulToCopy;                           // address of long word to be transfered
-        DMA2_S1M0AR = (unsigned long)ptr;                                // address of first destination long word
-        DMA2_S1CR = (DMA_SxCR_MINC | DMA_SxCR_PSIZE_32 | DMA_SxCR_MSIZE_32 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
-        DMA2_S1CR |= DMA_SxCR_EN;                                        // start operation
-        usTransferSize *= sizeof(unsigned long);                         // the number of bytes being transferred by the DMA process
-        ptr += usTransferSize;                                           // move the destination pointer to beyond the transfer
-        Size -= usTransferSize;                                          // bytes remaining
-        while (Size-- != 0) {
-            *ptr++ = ucValue;
-        }
-        while ((DMA2_LISR & DMA_LISR_TCIF1) == 0) { SIM_DMA(0) };        // wait until the DMA transfer has terminated
-        DMA2_LIFCR = (DMA_LISR_TCIF1 | DMA_LISR_HTIF1 | DMA_LISR_DMEIF1 | DMA_LISR_FEIFO1 | DMA_LISR_DMEIF1); // clear flags
-        #if defined _WINDOWS
-        DMA2_LISR = 0;
+    if ((Size >= SMALLEST_DMA_COPY) && (Size <= (0xffff * sizeof(unsigned long)))) { // {27} if large enough to be worth while
+        #if MEMCPY_CHANNEL > 7
+        STM32_DMA *ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
+        #define MEMCPY_CHANNEL_OFFSET (MEMCPY_CHANNEL - 8)
+        #else
+        STM32_DMA *ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
+        #define MEMCPY_CHANNEL_OFFSET (MEMCPY_CHANNEL)
         #endif
-        DMA2_S0CR = 0;                                                   // mark that the DMA stream is free for use again
+        STM32_DMA_STREAM *ptrDMAstream = &ptrDMA_controller->DMA_stream[MEMCPY_CHANNEL_OFFSET]; // select the stream registers to be used
+        if (ptrDMAstream->DMA_SxCR == 0) {                               // if not already in use
+            volatile unsigned long ulToCopy = (ucValue | (ucValue << 8) | (ucValue << 16) | (ucValue << 24));
+            unsigned short usTransferSize;
+        #if MEMCPY_CHANNEL_OFFSET < 4
+            volatile unsigned long *ptrDLA_flag = &ptrDMA_controller->DMA_LISR;
+            #if MEMCPY_CHANNEL_OFFSET == 0
+                #define DMA_COMPLETE_FLAG    DMA_LISR_TCIF0
+                #define DMA_ALL_FLAGS        (DMA_LIFCR_TCIF0 | DMA_LIFCR_HTIF0 | DMA_LIFCR_DMEIF0 | DMA_LIFCR_FEIFO0 | DMA_LIFCR_DMEIF0)
+            #elif MEMCPY_CHANNEL_OFFSET == 1
+                #define DMA_COMPLETE_FLAG    DMA_LISR_TCIF1
+                #define DMA_ALL_FLAGS        (DMA_LIFCR_TCIF1 | DMA_LIFCR_HTIF1 | DMA_LIFCR_DMEIF1 | DMA_LIFCR_FEIFO1 | DMA_LIFCR_DMEIF1)
+            #elif MEMCPY_CHANNEL_OFFSET == 2
+                #define DMA_COMPLETE_FLAG    DMA_LISR_TCIF2
+                #define DMA_ALL_FLAGS        (DMA_LIFCR_TCIF2 | DMA_LIFCR_HTIF2 | DMA_LIFCR_DMEIF2 | DMA_LIFCR_FEIFO2 | DMA_LIFCR_DMEIF2)
+            #elif MEMCPY_CHANNEL_OFFSET == 3
+                #define DMA_COMPLETE_FLAG    DMA_LISR_TCIF3
+                #define DMA_ALL_FLAGS        (DMA_LIFCR_TCIF3 | DMA_LIFCR_HTIF3 | DMA_LIFCR_DMEIF3 | DMA_LIFCR_FEIFO3 | DMA_LIFCR_DMEIF3)
+            #endif
+        #else
+            volatile unsigned long *ptrDLA_flag = &ptrDMA_controller->DMA_HISR;
+            #if MEMCPY_CHANNEL_OFFSET == 4
+                #define DMA_COMPLETE_FLAG    DMA_HISR_TCIF4
+                #define DMA_ALL_FLAGS        (DMA_HISR_TCIF4 | DMA_HIFCR_HTIF4 | DMA_HIFCR_DMEIF4 | DMA_HIFCR_FEIFO4 | DMA_HIFCR_DMEIF4)
+            #elif MEMCPY_CHANNEL_OFFSET == 5
+                #define DMA_COMPLETE_FLAG    DMA_HISR_TCIF5
+                #define DMA_ALL_FLAGS        (DMA_HIFCR_TCIF5 | DMA_HIFCR_HTIF5 | DMA_HIFCR_DMEIF5 | DMA_HIFCR_FEIFO5 | DMA_HIFCR_DMEIF5)
+            #elif MEMCPY_CHANNEL_OFFSET == 6
+                #define DMA_COMPLETE_FLAG    DMA_HISR_TCIF6
+                #define DMA_ALL_FLAGS        (DMA_HIFCR_TCIF6 | DMA_HIFCR_HTIF6 | DMA_HIFCR_DMEIF6 | DMA_HIFCR_FEIFO6 | DMA_HIFCR_DMEIF6)
+            #elif MEMCPY_CHANNEL_OFFSET == 7
+                #define DMA_COMPLETE_FLAG    DMA_HISR_TCIF7
+                #define DMA_ALL_FLAGS        (DMA_HIFCR_TCIF7 | DMA_HIFCR_HTIF7 | DMA_HIFCR_DMEIF7 | DMA_HIFCR_FEIFO7 | DMA_HIFCR_DMEIF7)
+            #endif
+        #endif
+            while ((((unsigned long)ptr) & 0x3) != 0) {                  // move to a long word bounday
+                *ptr++ = ucValue;
+                Size--;
+            }
+            usTransferSize = ((unsigned short)(Size/sizeof(unsigned long))); // the number of long words to transfer by DMA
+            ptrDMAstream->DMA_SxNDTR = usTransferSize;                   // the number of long word transfers to be made (max. 0xffff)
+            ptrDMAstream->DMA_SxPAR = (unsigned long)&ulToCopy;          // address of long word to be transfered
+            ptrDMAstream->DMA_SxM0AR = (unsigned long)ptr;               // address of first destination long word
+            ptrDMAstream->DMA_SxCR = (DMA_SxCR_MINC | DMA_SxCR_PSIZE_32 | DMA_SxCR_MSIZE_32 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
+            ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                       // start operation
+            usTransferSize *= sizeof(unsigned long);                     // the number of bytes being transferred by the DMA process
+            ptr += usTransferSize;                                       // move the destination pointer to beyond the transfer
+            Size -= usTransferSize;                                      // bytes remaining
+            while (Size-- != 0) {
+                *ptr++ = ucValue;
+            }
+            while ((*ptrDLA_flag & DMA_COMPLETE_FLAG) == 0) { SIM_DMA(0) }; // wait until the DMA transfer has terminated
+            WRITE_ONE_TO_CLEAR(*(ptrDLA_flag + 2), (DMA_ALL_FLAGS));     // clear flags
+            ptrDMAstream->DMA_SxCR = 0;                                  // mark that the DMA stream is free for use again
+            return buffer;
+        }
     }
     #else
     if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA_CNDTR_MEMCPY == 0)) { // if large enought to be worth while and if not already in use
@@ -514,14 +484,95 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
         DMA_CCR_MEMCPY   = (DMA1_CCR1_EN | DMA1_CCR1_PINC | DMA1_CCR1_PSIZE_8 | DMA1_CCR1_MSIZE_8 | DMA1_CCR1_PL_MEDIUM | DMA1_CCR1_MEM2MEM | DMA1_CCR1_DIR); // set up DMA operation and start DMA transfer       
         while (DMA_CNDTR_MEMCPY != 0) { SIM_DMA(0) };                    // wait until the transfer has terminated
         DMA_CCR_MEMCPY = 0;
+        return buffer;
     }
     #endif
-    else {                                                               // normal memset method
-        while (Size-- != 0) {
-            *ptr++ = ucValue;
-        }
+    // Normal memset method
+    //
+    while (Size-- != 0) {
+        *ptr++ = ucValue;
     }
     return buffer;
+}
+
+extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
+{
+    void *buffer = ptrTo;
+    unsigned char *ptr1 = (unsigned char *)ptrTo;
+    unsigned char *ptr2 = (unsigned char *)ptrFrom;
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
+    if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff)) {               // {27} if large enough to be worth while and if not already in use
+        #if MEMCPY_CHANNEL > 7
+        STM32_DMA *ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
+        #else
+        STM32_DMA *ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
+        #endif
+        STM32_DMA_STREAM *ptrDMAstream = &ptrDMA_controller->DMA_stream[MEMCPY_CHANNEL_OFFSET]; // select the stream registers to be used
+        if (ptrDMAstream->DMA_SxCR == 0) {                               // if not already in use
+            unsigned short usTransferSize;
+        #if MEMCPY_CHANNEL_OFFSET < 4
+            volatile unsigned long *ptrDLA_flag = &ptrDMA_controller->DMA_LISR;
+        #else
+            volatile unsigned long *ptrDLA_flag = &ptrDMA_controller->DMA_HISR;
+        #endif
+            while ((((unsigned long)ptr1) & 0x3) != 0) {                 // move to a long word boundary (the source is not guaranteed to be on a boundary, which can make the lomng word copy less efficient)
+                *ptr1++ = *ptr2++;
+                Size--;
+            }
+            ptrDMAstream->DMA_SxPAR = (unsigned long)ptr2;               // address of source
+            ptrDMAstream->DMA_SxM0AR = (unsigned long)ptr1;              // address of destination
+            if (((unsigned long)ptr2 & 0x3) == 0) {                      // if both source and destination are long word aligned
+                usTransferSize = ((unsigned short)(Size/sizeof(unsigned long))); // the number of long words to transfer by DMA
+                ptrDMAstream->DMA_SxNDTR = usTransferSize;               // the number of byte transfers to be made (max. 0xffff)
+                ptrDMAstream->DMA_SxCR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_32 | DMA_SxCR_MSIZE_32 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
+                usTransferSize *= sizeof(unsigned long);                 // the number of bytes being transferred by the DMA process
+            }
+            else if (((unsigned long)ptr2 & 0x1) == 0) {                 // if both source and destination are short word aligned
+                usTransferSize = ((unsigned short)(Size/sizeof(unsigned short))); // the number of short words to transfer by DMA
+                ptrDMAstream->DMA_SxNDTR = usTransferSize;               // the number of byte transfers to be made (max. 0xffff)
+                ptrDMAstream->DMA_SxCR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_16 | DMA_SxCR_MSIZE_16 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
+                usTransferSize *= sizeof(unsigned short);                // the number of bytes being transferred by the DMA process
+            }
+            else {
+            #if defined _WINDOWS
+                if (Size > 0xffff) {
+                    _EXCEPTION("DMA transfer doesn't support more than 64k!!");
+                }
+            #endif
+                usTransferSize = (unsigned short)Size;
+                ptrDMAstream->DMA_SxNDTR = usTransferSize;               // the number of byte transfers to be made (max. 0xffff)
+                ptrDMAstream->DMA_SxCR = (DMA_SxCR_PINC | DMA_SxCR_MINC | DMA_SxCR_PSIZE_8 | DMA_SxCR_MSIZE_8 | DMA_SxCR_PL_MEDIUM | DMA_SxCR_DIR_M2M); // set up DMA operation
+            }
+            ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                       // start operation
+            ptr1 += usTransferSize;                                      // move the destination pointer to beyond the transfer
+            ptr2 += usTransferSize;                                      // move the source pointer to beyond the transfer
+            Size -= usTransferSize;                                      // bytes remaining
+            while ((*ptrDLA_flag & DMA_COMPLETE_FLAG) == 0) { SIM_DMA(0) }; // wait until the transfer has terminated
+            WRITE_ONE_TO_CLEAR(*(ptrDLA_flag + 2), (DMA_ALL_FLAGS));     // clear flags
+            while (Size-- != 0) {                                        // {29}
+                *ptr1++ = *ptr2++;
+            }
+            ptrDMAstream->DMA_SxCR = 0;                                  // mark that the DMA stream is free for use again
+            return buffer;
+        }
+    }
+    #else
+    if ((Size >= SMALLEST_DMA_COPY) && (Size <= 0xffff) && (DMA_CNDTR_MEMCPY == 0)) { // if large enough to be worthwhile and if not already in use
+        DMA_CNDTR_MEMCPY = ((unsigned long)(Size));                      // the number of byte transfers to be made (max 0xffff)
+        DMA_CMAR_MEMCPY  = (unsigned long)ptrFrom;                       // address of first byte to be transferred
+        DMA_CPAR_MEMCPY  = (unsigned long)ptrTo;                         // address of first destination byte
+        DMA_CCR_MEMCPY   = (DMA1_CCR1_EN | DMA1_CCR1_PINC | DMA1_CCR1_MINC | DMA1_CCR1_PSIZE_8 | DMA1_CCR1_MSIZE_8 | DMA1_CCR1_PL_MEDIUM | DMA1_CCR1_MEM2MEM | DMA1_CCR1_DIR); // set up DMA operation and start DMA transfer
+        while (DMA_CNDTR_MEMCPY != 0) { SIM_DMA(0) };                    // wait until the transfer has terminated
+        DMA_CCR_MEMCPY = 0;
+        return buffer;
+    }
+    #endif
+    // Normal memcpy method
+    //
+    while (Size-- != 0) {
+        *ptr1++ = *ptr2++;
+    }
+    return buffer; 
 }
 #endif
 #endif

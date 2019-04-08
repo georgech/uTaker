@@ -864,7 +864,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
 #if defined SERIAL_SUPPORT_DMA
     if ((pars->ucDMAConfig & UART_TX_DMA) != 0) {                        // DMA transmission mode
         USART_regs->UART_CR3 |= (USART_CR3_DMAT);                        // enable DMA transmission
+    #if defined USART1_TDR
+        fnConfigDMA_buffer(_usart_tx_dma_stream[Channel], 0, 0, (void *)&(USART_regs->UART_TDR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _usart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+    #else
         fnConfigDMA_buffer(_usart_tx_dma_stream[Channel], 0, 0, (void *)&(USART_regs->UART_DR), (DMA_BYTES | DMA_DIRECTION_OUTPUT | DMA_SINGLE_CYCLE), _usart_tx_dma_Interrupts[Channel], UART_DMA_TX_INT_PRIORITY[Channel]);
+    #endif
     }
     else {
         USART_regs->UART_CR3 &= ~(USART_CR3_DMAT);                       // disable DMA transmission (use interrupts instead)
