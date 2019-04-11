@@ -15,7 +15,7 @@ SECTIONS
   __SRAM_segment_start__   = 0x1ffff0c0;
   __SRAM_segment_end__     = 0x20002fff;
   __Vector_segment_start__ = 0x00000000;
-  __Vector_segment_end__   = 0x00000008;
+  __Vector_segment_end__   = 0x00000010;
   __Fconfig_segment_start__ = 0x00000400;
   __Fconfig_segment_end__  = 0x00000410;
   __FLASH_segment_start__  = 0x00000410;

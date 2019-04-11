@@ -4105,11 +4105,11 @@ typedef struct stSTM32_BD
       #define DMA_SxCR_CHSEL_5           0x0a000000                             // channel select - channel 5
       #define DMA_SxCR_CHSEL_6           0x0c000000                             // channel select - channel 6
       #define DMA_SxCR_CHSEL_7           0x0e000000                             // channel select - channel 7
-    #define DMA1_S0NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x14)  // DMA 1 Stream 0 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S0PAR                   *(unsigned long *)(DMA1_BLOCK + 0x18)  // DMA 1 Stream 0 Peripheral Address Register (can only be written when the controller is disabled)
-    #define DMA1_S0M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x1c)  // DMA 1 Stream 0 Memory 0 Address Register
-    #define DMA1_S0M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x20)  // DMA 1 Stream 0 Memory 1 Address Register
-    #define DMA1_S0FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x24)  // DMA 1 Stream 0 FIFO Control Register
+    #define DMA1_S0NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x14) // DMA 1 Stream 0 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S0PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x18) // DMA 1 Stream 0 Peripheral Address Register (can only be written when the controller is disabled)
+    #define DMA1_S0M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x1c) // DMA 1 Stream 0 Memory 0 Address Register
+    #define DMA1_S0M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x20) // DMA 1 Stream 0 Memory 1 Address Register
+    #define DMA1_S0FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x24) // DMA 1 Stream 0 FIFO Control Register
       #define DMA_SxFCR_FTH_1_4          0x00000000                             // FIFO threshold selection - 1/4 full FIFO
       #define DMA_SxFCR_FTH_1_2          0x00000001                             // FIFO threshold selection - 1/2 full FIFO
       #define DMA_SxFCR_FTH_3_4          0x00000002                             // FIFO threshold selection - 3/4 full FIFO
@@ -4122,101 +4122,101 @@ typedef struct stSTM32_BD
       #define DMA_SxFCR_FS_EMPTY         0x00000020                             // FIFO status (read-only) empty
       #define DMA_SxFCR_FS_FULL          0x00000028                             // FIFO status (read-only) full
       #define DMA_SxFCR_FEIE             0x00000080                             // FIFO error interrupt enable
-    #define DMA1_S1CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x28)  // DMA 1 Stream 1 Configuration Register
-    #define DMA1_S1NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x2c)  // DMA 1 Stream 1 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S1PAR                   *(unsigned long *)(DMA1_BLOCK + 0x30)  // DMA 1 Stream 1 Peripheral Address Register
-    #define DMA1_S1M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x34)  // DMA 1 Stream 1 Memory 0 Address Register
-    #define DMA1_S1M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x38)  // DMA 1 Stream 1 Memory 1 Address Register
-    #define DMA1_S1FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x3c)  // DMA 1 Stream 1 FIFO Control Register
-    #define DMA1_S2CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x40)  // DMA 1 Stream 2 Configuration Register
-    #define DMA1_S2NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x44)  // DMA 1 Stream 2 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S2PAR                   *(unsigned long *)(DMA1_BLOCK + 0x48)  // DMA 1 Stream 2 Peripheral Address Register
-    #define DMA1_S2M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x4c)  // DMA 1 Stream 2 Memory 0 Address Register
-    #define DMA1_S2M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x50)  // DMA 1 Stream 2 Memory 1 Address Register
-    #define DMA1_S2FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x54)  // DMA 1 Stream 2 FIFO Control Register
-    #define DMA1_S3CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x58)  // DMA 1 Stream 3 Configuration Register
-    #define DMA1_S3NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x5c)  // DMA 1 Stream 3 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S3PAR                   *(unsigned long *)(DMA1_BLOCK + 0x60)  // DMA 1 Stream 3 Peripheral Address Register
-    #define DMA1_S3M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x64)  // DMA 1 Stream 3 Memory 0 Address Register
-    #define DMA1_S3M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x68)  // DMA 1 Stream 3 Memory 1 Address Register
-    #define DMA1_S3FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x6c)  // DMA 1 Stream 3 FIFO Control Register
+    #define DMA1_S1CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x28) // DMA 1 Stream 1 Configuration Register
+    #define DMA1_S1NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x2c) // DMA 1 Stream 1 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S1PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x30) // DMA 1 Stream 1 Peripheral Address Register
+    #define DMA1_S1M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x34) // DMA 1 Stream 1 Memory 0 Address Register
+    #define DMA1_S1M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x38) // DMA 1 Stream 1 Memory 1 Address Register
+    #define DMA1_S1FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x3c) // DMA 1 Stream 1 FIFO Control Register
+    #define DMA1_S2CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x40) // DMA 1 Stream 2 Configuration Register
+    #define DMA1_S2NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x44) // DMA 1 Stream 2 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S2PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x48) // DMA 1 Stream 2 Peripheral Address Register
+    #define DMA1_S2M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x4c) // DMA 1 Stream 2 Memory 0 Address Register
+    #define DMA1_S2M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x50) // DMA 1 Stream 2 Memory 1 Address Register
+    #define DMA1_S2FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x54) // DMA 1 Stream 2 FIFO Control Register
+    #define DMA1_S3CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x58) // DMA 1 Stream 3 Configuration Register
+    #define DMA1_S3NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x5c) // DMA 1 Stream 3 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S3PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x60) // DMA 1 Stream 3 Peripheral Address Register
+    #define DMA1_S3M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x64) // DMA 1 Stream 3 Memory 0 Address Register
+    #define DMA1_S3M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x68) // DMA 1 Stream 3 Memory 1 Address Register
+    #define DMA1_S3FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x6c) // DMA 1 Stream 3 FIFO Control Register
     #define DMA1_S4CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x70) // DMA 1 Stream 4 Configuration Register
-    #define DMA1_S4NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x74)  // DMA 1 Stream 4 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S4PAR                   *(unsigned long *)(DMA1_BLOCK + 0x78)  // DMA 1 Stream 4 Peripheral Address Register
-    #define DMA1_S4M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x7c)  // DMA 1 Stream 4 Memory 0 Address Register
-    #define DMA1_S4M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x80)  // DMA 1 Stream 4 Memory 1 Address Register
-    #define DMA1_S4FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x84)  // DMA 1 Stream 4 FIFO Control Register
-    #define DMA1_S5CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x88)  // DMA 1 Stream 5 Configuration Register
-    #define DMA1_S5NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x8c)  // DMA 1 Stream 5 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S5PAR                   *(unsigned long *)(DMA1_BLOCK + 0x90)  // DMA 1 Stream 5 Peripheral Address Register
-    #define DMA1_S5M0AR                  *(unsigned long *)(DMA1_BLOCK + 0x94)  // DMA 1 Stream 5 Memory 0 Address Register
-    #define DMA1_S5M1AR                  *(unsigned long *)(DMA1_BLOCK + 0x98)  // DMA 1 Stream 5 Memory 1 Address Register
-    #define DMA1_S5FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x9c)  // DMA 1 Stream 5 FIFO Control Register
-    #define DMA1_S6CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0xa0)  // DMA 1 Stream 6 Configuration Register
-    #define DMA1_S6NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xa4)  // DMA 1 Stream 6 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S6PAR                   *(unsigned long *)(DMA1_BLOCK + 0xa8)  // DMA 1 Stream 6 Peripheral Address Register
-    #define DMA1_S6M0AR                  *(unsigned long *)(DMA1_BLOCK + 0xac)  // DMA 1 Stream 6 Memory 0 Address Register
-    #define DMA1_S6M1AR                  *(unsigned long *)(DMA1_BLOCK + 0xb0)  // DMA 1 Stream 6 Memory 1 Address Register
-    #define DMA1_S6FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xb4)  // DMA 1 Stream 6 FIFO Control Register
-    #define DMA1_S7CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0xb8)  // DMA 1 Stream 7 Configuration Register
-    #define DMA1_S7NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xbc)  // DMA 1 Stream 7 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_S7PAR                   *(unsigned long *)(DMA1_BLOCK + 0xc0)  // DMA 1 Stream 7 Peripheral Address Register
-    #define DMA1_S7M0AR                  *(unsigned long *)(DMA1_BLOCK + 0xc4)  // DMA 1 Stream 7 Memory 0 Address Register
-    #define DMA1_S7M1AR                  *(unsigned long *)(DMA1_BLOCK + 0xc8)  // DMA 1 Stream 7 Memory 1 Address Register
-    #define DMA1_S7FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xcc)  // DMA 1 Stream 7 FIFO Control Register
+    #define DMA1_S4NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x74) // DMA 1 Stream 4 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S4PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x78) // DMA 1 Stream 4 Peripheral Address Register
+    #define DMA1_S4M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x7c) // DMA 1 Stream 4 Memory 0 Address Register
+    #define DMA1_S4M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x80) // DMA 1 Stream 4 Memory 1 Address Register
+    #define DMA1_S4FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x84) // DMA 1 Stream 4 FIFO Control Register
+    #define DMA1_S5CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x88) // DMA 1 Stream 5 Configuration Register
+    #define DMA1_S5NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x8c) // DMA 1 Stream 5 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S5PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x90) // DMA 1 Stream 5 Peripheral Address Register
+    #define DMA1_S5M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x94) // DMA 1 Stream 5 Memory 0 Address Register
+    #define DMA1_S5M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0x98) // DMA 1 Stream 5 Memory 1 Address Register
+    #define DMA1_S5FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0x9c) // DMA 1 Stream 5 FIFO Control Register
+    #define DMA1_S6CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0xa0) // DMA 1 Stream 6 Configuration Register
+    #define DMA1_S6NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xa4) // DMA 1 Stream 6 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S6PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xa8) // DMA 1 Stream 6 Peripheral Address Register
+    #define DMA1_S6M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xac) // DMA 1 Stream 6 Memory 0 Address Register
+    #define DMA1_S6M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xb0) // DMA 1 Stream 6 Memory 1 Address Register
+    #define DMA1_S6FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xb4) // DMA 1 Stream 6 FIFO Control Register
+    #define DMA1_S7CR                    *(volatile unsigned long *)(DMA1_BLOCK + 0xb8) // DMA 1 Stream 7 Configuration Register
+    #define DMA1_S7NDTR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xbc) // DMA 1 Stream 7 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_S7PAR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xc0) // DMA 1 Stream 7 Peripheral Address Register
+    #define DMA1_S7M0AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xc4) // DMA 1 Stream 7 Memory 0 Address Register
+    #define DMA1_S7M1AR                  *(volatile unsigned long *)(DMA1_BLOCK + 0xc8) // DMA 1 Stream 7 Memory 1 Address Register
+    #define DMA1_S7FCR                   *(volatile unsigned long *)(DMA1_BLOCK + 0xcc) // DMA 1 Stream 7 FIFO Control Register
 
-    #define DMA2_LISR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x00)  // DMA 2 Low Interrupt Status Register (read-only)
-    #define DMA2_HISR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x04)  // DMA 2 High Interrupt Status Register (read-only)
-    #define DMA2_LIFCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x08)  // DMA 2 Low Interrupt Flag Clear Register (write-'1' to clear)
-    #define DMA2_HIFCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x0c)  // DMA 2 High Interrupt Flag Clear Register (write-'1' to clear)
-    #define DMA2_S0CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x10)  // DMA 2 Stream 0 Configuration Register
-    #define DMA2_S0NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x14)  // DMA 2 Stream 0 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S0PAR                   *(unsigned long *)(DMA2_BLOCK + 0x18)  // DMA 2 Stream 0 Peripheral Address Register
-    #define DMA2_S0M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x1c)  // DMA 2 Stream 0 Memory 0 Address Register
-    #define DMA2_S0M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x20)  // DMA 2 Stream 0 Memory 1 Address Register
-    #define DMA2_S0FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x24)  // DMA 2 Stream 0 FIFO Control Register
-    #define DMA2_S1CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x28)  // DMA 2 Stream 1 Configuration Register
-    #define DMA2_S1NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x2c)  // DMA 2 Stream 1 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S1PAR                   *(unsigned long *)(DMA2_BLOCK + 0x30)  // DMA 2 Stream 1 Peripheral Address Register
-    #define DMA2_S1M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x34)  // DMA 2 Stream 1 Memory 0 Address Register
-    #define DMA2_S1M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x38)  // DMA 2 Stream 1 Memory 1 Address Register
-    #define DMA2_S1FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x3c)  // DMA 2 Stream 1 FIFO Control Register
-    #define DMA2_S2CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x40)  // DMA 2 Stream 2 Configuration Register
-    #define DMA2_S2NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x44)  // DMA 2 Stream 2 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S2PAR                   *(unsigned long *)(DMA2_BLOCK + 0x48)  // DMA 2 Stream 2 Peripheral Address Register
-    #define DMA2_S2M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x4c)  // DMA 2 Stream 2 Memory 0 Address Register
-    #define DMA2_S2M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x50)  // DMA 2 Stream 2 Memory 1 Address Register
-    #define DMA2_S2FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x54)  // DMA 2 Stream 2 FIFO Control Register
-    #define DMA2_S3CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x58)  // DMA 2 Stream 3 Configuration Register
-    #define DMA2_S3NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x5c)  // DMA 2 Stream 3 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S3PAR                   *(unsigned long *)(DMA2_BLOCK + 0x60)  // DMA 2 Stream 3 Peripheral Address Register
-    #define DMA2_S3M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x64)  // DMA 2 Stream 3 Memory 0 Address Register
-    #define DMA2_S3M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x68)  // DMA 2 Stream 3 Memory 1 Address Register
-    #define DMA2_S3FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x6c)  // DMA 2 Stream 3 FIFO Control Register
+    #define DMA2_LISR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x00) // DMA 2 Low Interrupt Status Register (read-only)
+    #define DMA2_HISR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x04) // DMA 2 High Interrupt Status Register (read-only)
+    #define DMA2_LIFCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x08) // DMA 2 Low Interrupt Flag Clear Register (write-'1' to clear)
+    #define DMA2_HIFCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x0c) // DMA 2 High Interrupt Flag Clear Register (write-'1' to clear)
+    #define DMA2_S0CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x10) // DMA 2 Stream 0 Configuration Register
+    #define DMA2_S0NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x14) // DMA 2 Stream 0 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S0PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x18) // DMA 2 Stream 0 Peripheral Address Register
+    #define DMA2_S0M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x1c) // DMA 2 Stream 0 Memory 0 Address Register
+    #define DMA2_S0M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x20) // DMA 2 Stream 0 Memory 1 Address Register
+    #define DMA2_S0FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x24) // DMA 2 Stream 0 FIFO Control Register
+    #define DMA2_S1CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x28) // DMA 2 Stream 1 Configuration Register
+    #define DMA2_S1NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x2c) // DMA 2 Stream 1 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S1PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x30) // DMA 2 Stream 1 Peripheral Address Register
+    #define DMA2_S1M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x34) // DMA 2 Stream 1 Memory 0 Address Register
+    #define DMA2_S1M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x38) // DMA 2 Stream 1 Memory 1 Address Register
+    #define DMA2_S1FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x3c) // DMA 2 Stream 1 FIFO Control Register
+    #define DMA2_S2CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x40) // DMA 2 Stream 2 Configuration Register
+    #define DMA2_S2NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x44) // DMA 2 Stream 2 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S2PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x48) // DMA 2 Stream 2 Peripheral Address Register
+    #define DMA2_S2M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x4c) // DMA 2 Stream 2 Memory 0 Address Register
+    #define DMA2_S2M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x50) // DMA 2 Stream 2 Memory 1 Address Register
+    #define DMA2_S2FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x54) // DMA 2 Stream 2 FIFO Control Register
+    #define DMA2_S3CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x58) // DMA 2 Stream 3 Configuration Register
+    #define DMA2_S3NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x5c) // DMA 2 Stream 3 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S3PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x60) // DMA 2 Stream 3 Peripheral Address Register
+    #define DMA2_S3M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x64) // DMA 2 Stream 3 Memory 0 Address Register
+    #define DMA2_S3M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x68) // DMA 2 Stream 3 Memory 1 Address Register
+    #define DMA2_S3FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x6c) // DMA 2 Stream 3 FIFO Control Register
     #define DMA2_S4CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x70) // DMA 2 Stream 4 Configuration Register
-    #define DMA2_S4NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x74)  // DMA 2 Stream 4 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S4PAR                   *(unsigned long *)(DMA2_BLOCK + 0x78)  // DMA 2 Stream 4 Peripheral Address Register
-    #define DMA2_S4M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x7c)  // DMA 2 Stream 4 Memory 0 Address Register
-    #define DMA2_S4M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x80)  // DMA 2 Stream 4 Memory 1 Address Register
-    #define DMA2_S4FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x84)  // DMA 2 Stream 4 FIFO Control Register
-    #define DMA2_S5CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x88)  // DMA 2 Stream 5 Configuration Register
-    #define DMA2_S5NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x8c)  // DMA 2 Stream 5 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S5PAR                   *(unsigned long *)(DMA2_BLOCK + 0x90)  // DMA 2 Stream 5 Peripheral Address Register
-    #define DMA2_S5M0AR                  *(unsigned long *)(DMA2_BLOCK + 0x94)  // DMA 2 Stream 5 Memory 0 Address Register
-    #define DMA2_S5M1AR                  *(unsigned long *)(DMA2_BLOCK + 0x98)  // DMA 2 Stream 5 Memory 1 Address Register
-    #define DMA2_S5FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x9c)  // DMA 2 Stream 5 FIFO Control Register
-    #define DMA2_S6CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0xa0)  // DMA 2 Stream 6 Configuration Register
-    #define DMA2_S6NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xa4)  // DMA 2 Stream 6 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S6PAR                   *(unsigned long *)(DMA2_BLOCK + 0xa8)  // DMA 2 Stream 6 Peripheral Address Register
-    #define DMA2_S6M0AR                  *(unsigned long *)(DMA2_BLOCK + 0xac)  // DMA 2 Stream 6 Memory 0 Address Register
-    #define DMA2_S6M1AR                  *(unsigned long *)(DMA2_BLOCK + 0xb0)  // DMA 2 Stream 6 Memory 1 Address Register
-    #define DMA2_S6FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xb4)  // DMA 2 Stream 6 FIFO Control Register
-    #define DMA2_S7CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0xb8)  // DMA 2 Stream 7 Configuration Register
-    #define DMA2_S7NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xbc)  // DMA 2 Stream 7 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA2_S7PAR                   *(unsigned long *)(DMA2_BLOCK + 0xc0)  // DMA 2 Stream 7 Peripheral Address Register
-    #define DMA2_S7M0AR                  *(unsigned long *)(DMA2_BLOCK + 0xc4)  // DMA 2 Stream 7 Memory 0 Address Register
-    #define DMA2_S7M1AR                  *(unsigned long *)(DMA2_BLOCK + 0xc8)  // DMA 2 Stream 7 Memory 1 Address Register
-    #define DMA2_S7FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xcc)  // DMA 2 Stream 7 FIFO Control Register
+    #define DMA2_S4NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x74) // DMA 2 Stream 4 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S4PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x78) // DMA 2 Stream 4 Peripheral Address Register
+    #define DMA2_S4M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x7c) // DMA 2 Stream 4 Memory 0 Address Register
+    #define DMA2_S4M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x80) // DMA 2 Stream 4 Memory 1 Address Register
+    #define DMA2_S4FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x84) // DMA 2 Stream 4 FIFO Control Register
+    #define DMA2_S5CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x88) // DMA 2 Stream 5 Configuration Register
+    #define DMA2_S5NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x8c) // DMA 2 Stream 5 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S5PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x90) // DMA 2 Stream 5 Peripheral Address Register
+    #define DMA2_S5M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x94) // DMA 2 Stream 5 Memory 0 Address Register
+    #define DMA2_S5M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0x98) // DMA 2 Stream 5 Memory 1 Address Register
+    #define DMA2_S5FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0x9c) // DMA 2 Stream 5 FIFO Control Register
+    #define DMA2_S6CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0xa0) // DMA 2 Stream 6 Configuration Register
+    #define DMA2_S6NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xa4) // DMA 2 Stream 6 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S6PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xa8) // DMA 2 Stream 6 Peripheral Address Register
+    #define DMA2_S6M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xac) // DMA 2 Stream 6 Memory 0 Address Register
+    #define DMA2_S6M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xb0) // DMA 2 Stream 6 Memory 1 Address Register
+    #define DMA2_S6FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xb4) // DMA 2 Stream 6 FIFO Control Register
+    #define DMA2_S7CR                    *(volatile unsigned long *)(DMA2_BLOCK + 0xb8) // DMA 2 Stream 7 Configuration Register
+    #define DMA2_S7NDTR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xbc) // DMA 2 Stream 7 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA2_S7PAR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xc0) // DMA 2 Stream 7 Peripheral Address Register
+    #define DMA2_S7M0AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xc4) // DMA 2 Stream 7 Memory 0 Address Register
+    #define DMA2_S7M1AR                  *(volatile unsigned long *)(DMA2_BLOCK + 0xc8) // DMA 2 Stream 7 Memory 1 Address Register
+    #define DMA2_S7FCR                   *(volatile unsigned long *)(DMA2_BLOCK + 0xcc) // DMA 2 Stream 7 FIFO Control Register
 #else
     #define DMA1_ISR                     *(volatile unsigned long *)(DMA1_BLOCK + 0x00)  // DMA Interrupt Status Register
       #define DMA1_ISR_GIF1              0x00000001                             // global interrupt channel 1
@@ -4248,7 +4248,7 @@ typedef struct stSTM32_BD
       #define DMA1_ISR_HTIF7             0x04000000                             // half transfer complete channel 7
       #define DMA1_ISR_TEIF7             0x08000000                             // transfer error channel 7
     #define DMA1_IFCR                    *(volatile unsigned long *)(DMA1_BLOCK + 0x04)  // DMA Interrupt Flag Clear Register
-    #define DMA1_CCR1                    *(unsigned long *)(DMA1_BLOCK + 0x08)  // DMA Channel 1 Configuration Register
+    #define DMA1_CCR1                    *(volatile unsigned long *)(DMA1_BLOCK + 0x08)  // DMA Channel 1 Configuration Register
       #define DMA1_CCR1_EN               0x00000001                             // channel enable
       #define DMA1_CCR1_TCIE             0x00000002                             // transfer complete interrupt enable
       #define DMA1_CCR1_HTIE             0x00000004                             // half transfer interrupt enable
@@ -4268,73 +4268,73 @@ typedef struct stSTM32_BD
       #define DMA1_CCR1_PL_HIGH          0x00002000                             // channel high priority
       #define DMA1_CCR1_PL_VERY_HIGH     0x00003000                             // channel very high priority
       #define DMA1_CCR1_MEM2MEM          0x00004000                             // memory to memory mode enabled
-    #define DMA1_CNDTR1                  *(volatile unsigned long *)(DMA1_BLOCK + 0x0c)  // DMA Channel 1 Number of Data Register (1..64k - write only when channel disabled)
-    #define DMA1_CPAR1                   *(unsigned long *)(DMA1_BLOCK + 0x10)  // DMA Channel 1 Peripheral Address Register
-    #define DMA1_CMAR1                   *(unsigned long *)(DMA1_BLOCK + 0x14)  // DMA Channel 1 Memory Address Register
-    #define DMA1_CCR2                    *(unsigned long *)(DMA1_BLOCK + 0x1c)  // DMA Channel 2 Configuration Register
-    #define DMA1_CNDTR2                  *(volatile unsigned long *)(DMA1_BLOCK + 0x20)  // DMA Channel 2 Number of Data Register
-    #define DMA1_CPAR2                   *(unsigned long *)(DMA1_BLOCK + 0x24)  // DMA Channel 2 Peripheral Address Register
-    #define DMA1_CMAR2                   *(unsigned long *)(DMA1_BLOCK + 0x28)  // DMA Channel 2 Memory Address Register
-    #define DMA1_CCR3                    *(unsigned long *)(DMA1_BLOCK + 0x30)  // DMA Channel 3 Configuration Register
-    #define DMA1_CNDTR3                  *(volatile unsigned long *)(DMA1_BLOCK + 0x34)  // DMA Channel 3 Number of Data Register
-    #define DMA1_CPAR3                   *(unsigned long *)(DMA1_BLOCK + 0x38)  // DMA Channel 3 Peripheral Address Register
-    #define DMA1_CMAR3                   *(unsigned long *)(DMA1_BLOCK + 0x3c)  // DMA Channel 3 Memory Address Register
-    #define DMA1_CCR4                    *(unsigned long *)(DMA1_BLOCK + 0x44)  // DMA Channel 4 Configuration Register
-    #define DMA1_CNDTR4                  *(volatile unsigned long *)(DMA1_BLOCK + 0x48)  // DMA Channel 4 Number of Data Register
-    #define DMA1_CPAR4                   *(unsigned long *)(DMA1_BLOCK + 0x4c)  // DMA Channel 4 Peripheral Address Register
-    #define DMA1_CMAR4                   *(unsigned long *)(DMA1_BLOCK + 0x50)  // DMA Channel 4 Memory Address Register
-    #define DMA1_CCR5                    *(unsigned long *)(DMA1_BLOCK + 0x58)  // DMA Channel 5 Configuration Register
-    #define DMA1_CNDTR5                  *(volatile unsigned long *)(DMA1_BLOCK + 0x5c)  // DMA Channel 5 Number of Data Register
-    #define DMA1_CPAR5                   *(unsigned long *)(DMA1_BLOCK + 0x60)  // DMA Channel 5 Peripheral Address Register
-    #define DMA1_CMAR5                   *(unsigned long *)(DMA1_BLOCK + 0x64)  // DMA Channel 5 Memory Address Register
-    #define DMA1_CCR6                    *(unsigned long *)(DMA1_BLOCK + 0x6c)  // DMA Channel 6 Configuration Register
-    #define DMA1_CNDTR6                  *(volatile unsigned long *)(DMA1_BLOCK + 0x70)  // DMA Channel 6 Number of Data Register
-    #define DMA1_CPAR6                   *(unsigned long *)(DMA1_BLOCK + 0x74)  // DMA Channel 6 Peripheral Address Register
-    #define DMA1_CMAR6                   *(unsigned long *)(DMA1_BLOCK + 0x78)  // DMA Channel 6 Memory Address Register
-    #define DMA1_CCR7                    *(unsigned long *)(DMA1_BLOCK + 0x80)  // DMA Channel 7 Configuration Register
-    #define DMA1_CNDTR7                  *(volatile unsigned long *)(DMA1_BLOCK + 0x84)  // DMA Channel 7 Number of Data Register
-    #define DMA1_CPAR7                   *(unsigned long *)(DMA1_BLOCK + 0x88)  // DMA Channel 7 Peripheral Address Register
-    #define DMA1_CMAR7                   *(unsigned long *)(DMA1_BLOCK + 0x8c)  // DMA Channel 7 Memory Address Register
+    #define DMA1_CNDTR1                  *(volatile unsigned long *)(DMA1_BLOCK + 0x0c) // DMA Channel 1 Number of Data Register (1..64k - write only when channel disabled)
+    #define DMA1_CPAR1                   *(volatile unsigned long *)(DMA1_BLOCK + 0x10) // DMA Channel 1 Peripheral Address Register
+    #define DMA1_CMAR1                   *(volatile unsigned long *)(DMA1_BLOCK + 0x14) // DMA Channel 1 Memory Address Register
+    #define DMA1_CCR2                    *(volatile unsigned long *)(DMA1_BLOCK + 0x1c) // DMA Channel 2 Configuration Register
+    #define DMA1_CNDTR2                  *(volatile unsigned long *)(DMA1_BLOCK + 0x20) // DMA Channel 2 Number of Data Register
+    #define DMA1_CPAR2                   *(volatile unsigned long *)(DMA1_BLOCK + 0x24) // DMA Channel 2 Peripheral Address Register
+    #define DMA1_CMAR2                   *(volatile unsigned long *)(DMA1_BLOCK + 0x28) // DMA Channel 2 Memory Address Register
+    #define DMA1_CCR3                    *(volatile unsigned long *)(DMA1_BLOCK + 0x30) // DMA Channel 3 Configuration Register
+    #define DMA1_CNDTR3                  *(volatile unsigned long *)(DMA1_BLOCK + 0x34) // DMA Channel 3 Number of Data Register
+    #define DMA1_CPAR3                   *(volatile unsigned long *)(DMA1_BLOCK + 0x38) // DMA Channel 3 Peripheral Address Register
+    #define DMA1_CMAR3                   *(volatile unsigned long *)(DMA1_BLOCK + 0x3c) // DMA Channel 3 Memory Address Register
+    #define DMA1_CCR4                    *(volatile unsigned long *)(DMA1_BLOCK + 0x44) // DMA Channel 4 Configuration Register
+    #define DMA1_CNDTR4                  *(volatile unsigned long *)(DMA1_BLOCK + 0x48) // DMA Channel 4 Number of Data Register
+    #define DMA1_CPAR4                   *(volatile unsigned long *)(DMA1_BLOCK + 0x4c) // DMA Channel 4 Peripheral Address Register
+    #define DMA1_CMAR4                   *(volatile unsigned long *)(DMA1_BLOCK + 0x50) // DMA Channel 4 Memory Address Register
+    #define DMA1_CCR5                    *(volatile unsigned long *)(DMA1_BLOCK + 0x58) // DMA Channel 5 Configuration Register
+    #define DMA1_CNDTR5                  *(volatile unsigned long *)(DMA1_BLOCK + 0x5c) // DMA Channel 5 Number of Data Register
+    #define DMA1_CPAR5                   *(volatile unsigned long *)(DMA1_BLOCK + 0x60) // DMA Channel 5 Peripheral Address Register
+    #define DMA1_CMAR5                   *(volatile unsigned long *)(DMA1_BLOCK + 0x64) // DMA Channel 5 Memory Address Register
+    #define DMA1_CCR6                    *(volatile unsigned long *)(DMA1_BLOCK + 0x6c) // DMA Channel 6 Configuration Register
+    #define DMA1_CNDTR6                  *(volatile unsigned long *)(DMA1_BLOCK + 0x70) // DMA Channel 6 Number of Data Register
+    #define DMA1_CPAR6                   *(volatile unsigned long *)(DMA1_BLOCK + 0x74) // DMA Channel 6 Peripheral Address Register
+    #define DMA1_CMAR6                   *(volatile unsigned long *)(DMA1_BLOCK + 0x78) // DMA Channel 6 Memory Address Register
+    #define DMA1_CCR7                    *(volatile unsigned long *)(DMA1_BLOCK + 0x80) // DMA Channel 7 Configuration Register
+    #define DMA1_CNDTR7                  *(volatile unsigned long *)(DMA1_BLOCK + 0x84) // DMA Channel 7 Number of Data Register
+    #define DMA1_CPAR7                   *(volatile unsigned long *)(DMA1_BLOCK + 0x88) // DMA Channel 7 Peripheral Address Register
+    #define DMA1_CMAR7                   *(volatile unsigned long *)(DMA1_BLOCK + 0x8c) // DMA Channel 7 Memory Address Register
 
-    #define DMA2_ISR                     *(volatile unsigned long *)(DMA2_BLOCK + 0x00)  // DMA Interrupt Status Register
-    #define DMA2_IFCR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x04)  // DMA Interrupt Flag Clear Register
-    #define DMA2_CCR1                    *(unsigned long *)(DMA2_BLOCK + 0x08)  // DMA Channel 1 Configuration Register
-    #define DMA2_CNDTR1                  *(volatile unsigned long *)(DMA2_BLOCK + 0x0c)  // DMA Channel 1 Number of Data Register
-    #define DMA2_CPAR1                   *(unsigned long *)(DMA2_BLOCK + 0x10)  // DMA Channel 1 Peripheral Address Register
-    #define DMA2_CMAR1                   *(unsigned long *)(DMA2_BLOCK + 0x14)  // DMA Channel 1 Memory Address Register
-    #define DMA2_CCR2                    *(unsigned long *)(DMA2_BLOCK + 0x1c)  // DMA Channel 2 Configuration Register
-    #define DMA2_CNDTR2                  *(volatile unsigned long *)(DMA2_BLOCK + 0x20)  // DMA Channel 2 Number of Data Register
-    #define DMA2_CPAR2                   *(unsigned long *)(DMA2_BLOCK + 0x24)  // DMA Channel 2 Peripheral Address Register
-    #define DMA2_CMAR2                   *(unsigned long *)(DMA2_BLOCK + 0x28)  // DMA Channel 2 Memory Address Register
-    #define DMA2_CCR3                    *(unsigned long *)(DMA2_BLOCK + 0x30)  // DMA Channel 3 Configuration Register
-    #define DMA2_CNDTR3                  *(volatile unsigned long *)(DMA2_BLOCK + 0x34)  // DMA Channel 3 Number of Data Register
-    #define DMA2_CPAR3                   *(unsigned long *)(DMA2_BLOCK + 0x38)  // DMA Channel 3 Peripheral Address Register
-    #define DMA2_CMAR3                   *(unsigned long *)(DMA2_BLOCK + 0x3c)  // DMA Channel 3 Memory Address Register
-    #define DMA2_CCR4                    *(unsigned long *)(DMA2_BLOCK + 0x44)  // DMA Channel 4 Configuration Register
-    #define DMA2_CNDTR4                  *(volatile unsigned long *)(DMA2_BLOCK + 0x48)  // DMA Channel 4 Number of Data Register
-    #define DMA2_CPAR4                   *(unsigned long *)(DMA2_BLOCK + 0x4c)  // DMA Channel 4 Peripheral Address Register
-    #define DMA2_CMAR4                   *(unsigned long *)(DMA2_BLOCK + 0x50)  // DMA Channel 4 Memory Address Register
-    #define DMA2_CCR5                    *(unsigned long *)(DMA2_BLOCK + 0x58)  // DMA Channel 5 Configuration Register
-    #define DMA2_CNDTR5                  *(volatile unsigned long *)(DMA2_BLOCK + 0x5c)  // DMA Channel 5 Number of Data Register
-    #define DMA2_CPAR5                   *(unsigned long *)(DMA2_BLOCK + 0x60)  // DMA Channel 5 Peripheral Address Register
-    #define DMA2_CMAR5                   *(unsigned long *)(DMA2_BLOCK + 0x64)  // DMA Channel 5 Memory Address Register
-    #define DMA2_CCR6                    *(unsigned long *)(DMA2_BLOCK + 0x68)  // DMA Channel 6 Configuration Register
-    #define DMA2_CNDTR6                  *(volatile unsigned long *)(DMA2_BLOCK + 0x6c)  // DMA Channel 6 Number of Data Register
-    #define DMA2_CPAR6                   *(unsigned long *)(DMA2_BLOCK + 0x70)  // DMA Channel 6 Peripheral Address Register
-    #define DMA2_CMAR6                   *(unsigned long *)(DMA2_BLOCK + 0x74)  // DMA Channel 6 Memory Address Register
-    #define DMA2_CCR7                    *(unsigned long *)(DMA2_BLOCK + 0x78)  // DMA Channel 7 Configuration Register
-    #define DMA2_CNDTR7                  *(volatile unsigned long *)(DMA2_BLOCK + 0x7c)  // DMA Channel 7 Number of Data Register
-    #define DMA2_CPAR7                   *(unsigned long *)(DMA2_BLOCK + 0x80)  // DMA Channel 7 Peripheral Address Register
-    #define DMA2_CMAR7                   *(unsigned long *)(DMA2_BLOCK + 0x84)  // DMA Channel 7 Memory Address Register
+    #define DMA2_ISR                     *(volatile unsigned long *)(DMA2_BLOCK + 0x00) // DMA Interrupt Status Register
+    #define DMA2_IFCR                    *(volatile unsigned long *)(DMA2_BLOCK + 0x04) // DMA Interrupt Flag Clear Register
+    #define DMA2_CCR1                    *(volatile unsigned long *)(DMA2_BLOCK + 0x08) // DMA Channel 1 Configuration Register
+    #define DMA2_CNDTR1                  *(volatile unsigned long *)(DMA2_BLOCK + 0x0c) // DMA Channel 1 Number of Data Register
+    #define DMA2_CPAR1                   *(volatile unsigned long *)(DMA2_BLOCK + 0x10) // DMA Channel 1 Peripheral Address Register
+    #define DMA2_CMAR1                   *(volatile unsigned long *)(DMA2_BLOCK + 0x14) // DMA Channel 1 Memory Address Register
+    #define DMA2_CCR2                    *(volatile unsigned long *)(DMA2_BLOCK + 0x1c) // DMA Channel 2 Configuration Register
+    #define DMA2_CNDTR2                  *(volatile unsigned long *)(DMA2_BLOCK + 0x20) // DMA Channel 2 Number of Data Register
+    #define DMA2_CPAR2                   *(volatile unsigned long *)(DMA2_BLOCK + 0x24) // DMA Channel 2 Peripheral Address Register
+    #define DMA2_CMAR2                   *(volatile unsigned long *)(DMA2_BLOCK + 0x28) // DMA Channel 2 Memory Address Register
+    #define DMA2_CCR3                    *(volatile unsigned long *)(DMA2_BLOCK + 0x30) // DMA Channel 3 Configuration Register
+    #define DMA2_CNDTR3                  *(volatile unsigned long *)(DMA2_BLOCK + 0x34) // DMA Channel 3 Number of Data Register
+    #define DMA2_CPAR3                   *(volatile unsigned long *)(DMA2_BLOCK + 0x38) // DMA Channel 3 Peripheral Address Register
+    #define DMA2_CMAR3                   *(volatile unsigned long *)(DMA2_BLOCK + 0x3c) // DMA Channel 3 Memory Address Register
+    #define DMA2_CCR4                    *(volatile unsigned long *)(DMA2_BLOCK + 0x44) // DMA Channel 4 Configuration Register
+    #define DMA2_CNDTR4                  *(volatile unsigned long *)(DMA2_BLOCK + 0x48) // DMA Channel 4 Number of Data Register
+    #define DMA2_CPAR4                   *(volatile unsigned long *)(DMA2_BLOCK + 0x4c) // DMA Channel 4 Peripheral Address Register
+    #define DMA2_CMAR4                   *(volatile unsigned long *)(DMA2_BLOCK + 0x50) // DMA Channel 4 Memory Address Register
+    #define DMA2_CCR5                    *(volatile unsigned long *)(DMA2_BLOCK + 0x58) // DMA Channel 5 Configuration Register
+    #define DMA2_CNDTR5                  *(volatile unsigned long *)(DMA2_BLOCK + 0x5c) // DMA Channel 5 Number of Data Register
+    #define DMA2_CPAR5                   *(volatile unsigned long *)(DMA2_BLOCK + 0x60) // DMA Channel 5 Peripheral Address Register
+    #define DMA2_CMAR5                   *(volatile unsigned long *)(DMA2_BLOCK + 0x64) // DMA Channel 5 Memory Address Register
+    #define DMA2_CCR6                    *(volatile unsigned long *)(DMA2_BLOCK + 0x68) // DMA Channel 6 Configuration Register
+    #define DMA2_CNDTR6                  *(volatile unsigned long *)(DMA2_BLOCK + 0x6c) // DMA Channel 6 Number of Data Register
+    #define DMA2_CPAR6                   *(volatile unsigned long *)(DMA2_BLOCK + 0x70) // DMA Channel 6 Peripheral Address Register
+    #define DMA2_CMAR6                   *(volatile unsigned long *)(DMA2_BLOCK + 0x74) // DMA Channel 6 Memory Address Register
+    #define DMA2_CCR7                    *(volatile unsigned long *)(DMA2_BLOCK + 0x78) // DMA Channel 7 Configuration Register
+    #define DMA2_CNDTR7                  *(volatile unsigned long *)(DMA2_BLOCK + 0x7c) // DMA Channel 7 Number of Data Register
+    #define DMA2_CPAR7                   *(volatile unsigned long *)(DMA2_BLOCK + 0x80) // DMA Channel 7 Peripheral Address Register
+    #define DMA2_CMAR7                   *(volatile unsigned long *)(DMA2_BLOCK + 0x84) // DMA Channel 7 Memory Address Register
 #endif
 
 typedef struct stSTM32_DMA_STREAM
 {
     volatile unsigned long DMA_SxCR;
     volatile unsigned long DMA_SxNDTR;
-    unsigned long DMA_SxPAR;
-    unsigned long DMA_SxM0AR;
-    unsigned long DMA_SxM1AR;
+    volatile unsigned long DMA_SxPAR;
+    volatile unsigned long DMA_SxM0AR;
+    volatile unsigned long DMA_SxM1AR;
     volatile unsigned long DMA_SxFCR;
 } STM32_DMA_STREAM;
 
@@ -4349,40 +4349,40 @@ typedef struct stSTM32_DMA
 #else
     volatile unsigned long DMA_ISR;
     volatile unsigned long DMA_IFCR;
-    unsigned long DMA_CCR1;
+    volatile unsigned long DMA_CCR1;
     volatile unsigned long DMA_CNDTR1;
-    unsigned long DMA_CPAR1;
-    unsigned long DMA_CMAR1;
-    unsigned long ulRes0;
-    unsigned long DMA_CCR2;
+    volatile unsigned long DMA_CPAR1;
+    volatile unsigned long DMA_CMAR1;
+    volatile unsigned long ulRes0;
+    volatile unsigned long DMA_CCR2;
     volatile unsigned long DMA_CNDTR2;
-    unsigned long DMA_CPAR2;
-    unsigned long DMA_CMAR2;
-    unsigned long ulRes1;
-    unsigned long DMA_CCR3;
+    volatile unsigned long DMA_CPAR2;
+    volatile unsigned long DMA_CMAR2;
+    volatile unsigned long ulRes1;
+    volatile unsigned long DMA_CCR3;
     volatile unsigned long DMA_CNDTR3;
-    unsigned long DMA_CPAR3;
-    unsigned long DMA_CMAR3;
-    unsigned long ulRes2;
-    unsigned long DMA_CCR4;
+    volatile unsigned long DMA_CPAR3;
+    volatile unsigned long DMA_CMAR3;
+    volatile unsigned long ulRes2;
+    volatile unsigned long DMA_CCR4;
     volatile unsigned long DMA_CNDTR4;
-    unsigned long DMA_CPAR4;
-    unsigned long DMA_CMAR4;
-    unsigned long ulRes3;
-    unsigned long DMA_CCR5;
+    volatile unsigned long DMA_CPAR4;
+    volatile unsigned long DMA_CMAR4;
+    volatile unsigned long ulRes3;
+    volatile unsigned long DMA_CCR5;
     volatile unsigned long DMA_CNDTR5;
-    unsigned long DMA_CPAR5;
-    unsigned long DMA_CMAR5;
-    unsigned long ulRes4;
-    unsigned long DMA_CCR6;
+    volatile unsigned long DMA_CPAR5;
+    volatile unsigned long DMA_CMAR5;
+    volatile unsigned long ulRes4;
+    volatile unsigned long DMA_CCR6;
     volatile unsigned long DMA_CNDTR6;
-    unsigned long DMA_CPAR6;
-    unsigned long DMA_CMAR6;
-    unsigned long ulRes5;
-    unsigned long DMA_CCR7;
+    volatile unsigned long DMA_CPAR6;
+    volatile unsigned long DMA_CMAR6;
+    volatile unsigned long ulRes5;
+    volatile unsigned long DMA_CCR7;
     volatile unsigned long DMA_CNDTR7;
-    unsigned long DMA_CPAR7;
-    unsigned long DMA_CMAR7;
+    volatile unsigned long DMA_CPAR7;
+    volatile unsigned long DMA_CMAR7;
 #endif
 } STM32_DMA;
 

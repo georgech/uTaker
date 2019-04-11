@@ -1655,7 +1655,7 @@
         #define TPM_CLOCKED_FROM_IRC48M                                  // TPM is clocked by IRC48M
       //#define TPM_CLOCKED_FROM_USB1_PDF                                // TPM is clocked by USB1_PDF
                                                                          // default is to use MCGPLLCLK
-        #define PERIPHERAL_CLOCK_DIVIDE          4                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
+        #define PERIPHERAL_CLOCK_DIVIDE          1                       // optional divider for these options (divide 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7 or 8)
         #define PERIPHERAL_CLOCK_DIVIDE_FRACTION 0                       // 0 or 5 (eg. PERIPHERAL_CLOCK_DIVIDE 2 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 0 gives 2.0 and PERIPHERAL_CLOCK_DIVIDE_FRACTION 5 gives 2.5 divide)
         #define FTM_FLEXIBLE_CLOCKING                                    // this has priority over FTM_CLOCKED_FROM_MCGFFLCLK and allows FlexTimer/TPM modules to be individually clocked from different sources (controlled by the clock setting passed by the API)
       //#define MCGFFLCLK_32kHz_IRC                                      // MCGFFLCLK is 32kHz, derived from 32kHz IRC
@@ -2637,7 +2637,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #elif defined KINETIS_KV40 || defined KINETIS_KV50
             #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_NMI_DISABLED)
         #else
-            #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_8 | FTFL_FOPT_RESET_PIN_ENABLED)
+            #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_8 | FTFL_FOPT_RESET_PIN_DISABLED | FTFL_FOPT_NMI_ENABLED)
         #endif
     #else
         #if defined KINETIS_REVISION_2
@@ -2711,10 +2711,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define RFC2217_UART     0
     #endif
     #if LPUARTS_AVAILABLE > 0
+      //#define LPUART_MCGPLLCLK                                         // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
         #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
-        #if defined SIM_CLKDIV3 && defined SIM_CLKDIV3_PLLFLLDIV_2
-            #define LPUART_MCGPLLCLK                                     // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
-        #endif
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined [32kHz if USE_FAST_INTERNAL_CLOCK is not set]
     #endif

@@ -295,12 +295,16 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #if PERIPHERAL_CLOCK_DIVIDE_FRACTION == 5
         #if (PERIPHERAL_CLOCK_DIVIDE == 0)                               // divide by 0.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((0 << 1) | 0x1)
+            #define PERIPHERAL_CLOCK_DIVISION_TIMES_10 (5) 
         #elif (PERIPHERAL_CLOCK_DIVIDE == 1)                             // divide by 1.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((3 << 1) | 0x1)
+            #define PERIPHERAL_CLOCK_DIVISION_TIMES_10 (15) 
         #elif (PERIPHERAL_CLOCK_DIVIDE == 2)                             // divide by 2.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((5 << 1) | 0x1)
+            #define PERIPHERAL_CLOCK_DIVISION_TIMES_10 (25) 
         #elif (PERIPHERAL_CLOCK_DIVIDE == 3)                             // divide by 3.5
             #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((7 << 1) | 0x1)
+            #define PERIPHERAL_CLOCK_DIVISION_TIMES_10 (35) 
         #else
             #error Invalid peripheral divide value - integer must be 0, 1, 2 or 3 when used with a fraction (0.5)
         #endif
@@ -309,6 +313,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #error Invalid peripheral divide value - must be 1, 2, 3, 4, 5, 6, 7 or 8
         #endif
         #define PERIPHERAL_CLOCK_DIVIDE_VALUE ((PERIPHERAL_CLOCK_DIVIDE - 1) << 1)
+        #define PERIPHERAL_CLOCK_DIVISION_TIMES_10 (PERIPHERAL_CLOCK_DIVIDE * 10) 
     #endif
 #endif
 
@@ -2984,7 +2989,9 @@ typedef struct stPROCESSOR_IRQ
 typedef struct stVECTOR_TABLE
 {
     RESET_VECTOR  reset_vect;
+#if !defined NMI_IN_FLASH
     void  (*ptrNMI)(void);
+#endif
     void  (*ptrHardFault)(void);
     void  (*ptrMemManagement)(void);
     void  (*ptrBusFault)(void);
@@ -6911,7 +6918,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
         #if defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_TSI0          1                   // 0x01 TSI0
         #endif
-        #if defined KINETIS_KL17 || defined KINETIS_KL27 || defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE18 || defined KINETIS_K27 || defined KINETIS_K28
+        #if LPUARTS_AVAILABLE  > 1
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX    2                   // 0x02 LPUART0 RX
           #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX    3                   // 0x03 LPUART0 TX
           #define DMAMUX0_CHCFG_SOURCE_LPUART1_RX    4                   // 0x04 LPUART1 RX
@@ -7212,7 +7219,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #if defined KINETIS_K27 || defined KINETIS_K28
               #define DMAMUX0_CHCFG_SOURCE_SPI2_RX       (58)            // 0x3a SPI2 RX
               #define DMAMUX0_CHCFG_SOURCE_SPI2_TX       (59)            // 0x3b SPI2 TX
-          #elif !defined KINETIS_KL17 && !defined KINETIS_KL27 && !defined KINETIS_KE14 && !defined KINETIS_KE15 && !defined KINETIS_KE18
+          #elif LPUARTS_AVAILABLE == 1
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_RX  58                  // 0x3a LPUART0 RX
             #define DMAMUX0_CHCFG_SOURCE_LPUART0_TX  59                  // 0x3b LPUART0 TX
           #endif
@@ -12265,8 +12272,20 @@ typedef struct stKINETIS_LPTMR_CTL
           #define SIM_SRVCOP_2               0x000000aa
     #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
         #define SIM_CLKDIV3                  *(unsigned long *)(SIM_BLOCK + 0x1064) // System Clock Divider Register 3
+        #if defined KINETIS_K65 || defined KINETIS_K66
+            #define SIM_CLKDIV3_PLLFLLFRAC   0x00000001
+            #define SIM_CLKDIV3_PLLFLLDIV_1  0x00000000
+            #define SIM_CLKDIV3_PLLFLLDIV_2  0x00000002
+            #define SIM_CLKDIV3_PLLFLLDIV_3  0x00000004
+            #define SIM_CLKDIV3_PLLFLLDIV_4  0x00000006
+            #define SIM_CLKDIV3_PLLFLLDIV_5  0x00000008
+            #define SIM_CLKDIV3_PLLFLLDIV_6  0x0000000a
+            #define SIM_CLKDIV3_PLLFLLDIV_7  0x0000000c
+            #define SIM_CLKDIV3_PLLFLLDIV_8  0x0000000e
+        #else
             #define SIM_CLKDIV3_LCDCFRAC     0x0000ff00                  // LCDCFRAC clock divider fraction
             #define SIM_CLKDIV3_LCDCDIV      0x0fff0000                  // LCDC clock divider fraction
+        #endif
         #define SIM_CLKDIV4                  *(unsigned long *)(SIM_BLOCK + 0x1068) // System Clock Divider Register 4
             #define SIM_CLKDIV4_TRACEFRAC    0x00000001                  // Trace Clock divider fraction
             #define SIM_CLKDIV4_TRACEDIV     0x0000000e                  // Trace clock divider divisor
@@ -14141,6 +14160,8 @@ typedef struct stKINETIS_LPTMR_CTL
         #define PA_5_RESET               PORT_MUX_ALT4
         #define PB_4_NMI                 PORT_MUX_ALT3
     #endif
+#else
+    #define PA_4_NMI                     PORT_MUX_ALT7
 #endif
 #if defined KINETIS_KL43
     #define PB_18_I2S0_TX_BCLK           PORT_MUX_ALT4
@@ -19499,6 +19520,7 @@ typedef struct stDAC_REGS                                                // {23}
 
 extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long ulCharacteristics);
 extern void fnSimPers(void);
+extern void fnEnterNMI(void(*_NMI_handler)(void));
 
 // Port macros
 //

@@ -72,6 +72,7 @@
     13.10.2018 Add comparator support                                    {138}
     06.03.2019 Random number pointer set during variable initialisation  {139}
     09.03.2019 Change location of SPI memory includes (to ../SPI_Memory)
+    09.04.2019 Add fnEnterNMI()                                          {140}
 
 */
 
@@ -1354,6 +1355,31 @@ extern int fnIsPending(int iInterruptID)                                 // {126
     return ((*ptrIntActive & (0x01 << (iInterruptID % 32))) != 0);       // return the pending state of this interrupt
 }
 
+// Allow the user to enter an NMI handler, ensuring that the NMI pin is configured as NMI function
+// - not that the NMI must not have been disabled to allow this to work
+//
+extern void fnEnterNMI(void (*_NMI_handler)(void))                       // {140}
+{
+#if !defined INTERRUPT_VECTORS_IN_FLASH 
+    VECTOR_TABLE *ptrVect;
+    #if defined _WINDOWS
+    ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
+    #else
+    ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);
+    #endif
+    #if defined NMI_IN_FLASH
+    ptrVect->reset_vect.ptrNMI = _NMI_handler;                            // enter interrupt handler
+    #else
+    ptrVect->ptrNMI = _NMI_handler;                                       // enter interrupt handler
+    #endif
+    #if defined PB_4_NMI                                                  // set the NMI pin function
+    _CONFIG_PERIPHERAL(B, 4, (PB_4_NMI | PORT_PS_UP_ENABLE));
+    #else
+    _CONFIG_PERIPHERAL(A, 4, (PA_4_NMI | PORT_PS_UP_ENABLE));
+    #endif
+#endif
+}
+
 
 /* =================================================================== */
 /*                                 TICK                                */
@@ -2299,7 +2325,7 @@ static void fnConfigureSDRAM(void)
 }
 #endif
 
-#if !defined _MINIMUM_IRQ_INITIALISATION && !defined NMI_IN_FLASH
+#if !defined _MINIMUM_IRQ_INITIALISATION
 // Serious error interrupts
 //
 static void irq_hard_fault(void)
@@ -2335,6 +2361,9 @@ static void irq_pend_sv(void)
 #if !defined _MINIMUM_IRQ_INITIALISATION || defined NMI_IN_FLASH         // {123}
 static void irq_NMI(void)
 {
+    #if defined NMI_IN_FLASH                                             // this is executed immediately out of reset if the NMI line is enabled and held low
+    _CONFIG_PORT_INPUT_FAST_LOW(A, PORTA_BIT4, PORT_PS_UP_ENABLE);       // set the NMI line to an input to remove teh NMI function and allow the processor to continue
+    #endif
 }
 #endif
 
@@ -2564,7 +2593,11 @@ static void _LowLevelInit(void)
     ptrVect = (VECTOR_TABLE *)(RAM_START_ADDRESS);
     #endif
     #if !defined _MINIMUM_IRQ_INITIALISATION
+        #if defined NMI_IN_FLASH
+    ptrVect->reset_vect.ptrNMI = irq_NMI;
+        #else
     ptrVect->ptrNMI           = irq_NMI;
+        #endif
     ptrVect->ptrHardFault     = irq_hard_fault;
     ptrVect->ptrMemManagement = irq_memory_man;
     ptrVect->ptrBusFault      = irq_bus_fault;
@@ -2760,7 +2793,7 @@ const _RESET_VECTOR __vector_table
     (void *)(RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE)), // stack pointer to top of RAM
     (void (*)(void))START_CODE,                                          // start address
 #if defined NMI_IN_FLASH                                                 // {123}
-    irq_NMI
+    irq_NMI                                                              // if the NMI is not disabled and the input is 0 out of reset this will be immediately taken
 #endif
 #if defined INTERRUPT_VECTORS_IN_FLASH
     },
@@ -2812,7 +2845,11 @@ const _RESET_VECTOR __vector_table
     #endif
 #elif defined INTERRUPT_VECTORS_IN_FLASH                                 // {111} presently used only by the KE04, KEA8 and KL03 (vectors in flash to save space when little SRAM resources available)
     #if defined _MINIMUM_IRQ_INITIALISATION
+        #if defined NMI_IN_FLASH                                         // {123}
+    irq_NMI,                                                             // if the NMI is not disabled and the input is 0 out of reset this will be immediately taken
+        #else
     irq_default,
+        #endif
     irq_default,
     irq_default,
     irq_default,
