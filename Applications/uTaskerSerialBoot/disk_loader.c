@@ -11,7 +11,7 @@
     File:      disk_loader.c
     Project:   uTasker disk loader
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     03.03.2012 Add TWR_K53N512                                           {1}
     19.09.2012 Close Flash buffer when device has flash with row writing {2}
@@ -32,6 +32,8 @@
     04.02.2018 Allow loading to data flash area (flexflash)              {16}
     04.02.2018 Allow limiting internal flash chunk erase sizes to avoid blocking operation when large flash is used {17}
     04.02.2018 Allow limiting flash erasure to the program size to be loaded {18}
+    09.11.2018 Add AES-256 decryption option to disk loaders (SDCARD_SECURE_LOADER)
+    14.04.2019 Correct disk pointer initialisation (after SDCARD_SECURE_LOADER option added) {19}
 
 */
 
@@ -457,8 +459,8 @@ static int fnUpdateSoftware(int iAppState, UTFILE *ptr_utFile, UPLOAD_HEADER *pt
     #endif
         iFlashMismatch = 0;
         usCRC = 0;
+        ptrInternalFlash = (unsigned char *)_UTASKER_APP_START_;         // {19}
     #if defined SDCARD_SECURE_LOADER
-        ptrInternalFlash = (unsigned char *)_UTASKER_APP_START_;
         fnPrepareDecrypt(0);                                             // prepare the decrpt key and prime the initial vector
     #endif
     #if defined ENCRYPTED_CARD_CONTENT                                   // {9}
