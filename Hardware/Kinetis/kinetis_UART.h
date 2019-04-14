@@ -3395,6 +3395,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #if !defined SPECIAL_LPUART_CLOCK
             #define SPECIAL_LPUART_CLOCK     (SPECIAL_UART_CLOCK)
         #endif
+        #if !defined SPECIAL_UART_CLOCK
+            #define SPECIAL_UART_CLOCK    (SYSTEM_CLOCK)
+        #endif
     if (baud_config.iValid == 0) {
         #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined NO_UART_FRACTION_CONTROL) || defined K_STYLE_UART2
         baud_config.ucFraction = ucFraction;
