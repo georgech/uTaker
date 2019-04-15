@@ -185,13 +185,14 @@ static void STM32_LowLevelInit(void);
 #if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
     static void fnConfigSPIFileSystem(void);
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_S25FL1_K
+        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_S25FL1_K
             #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
         #endif
         #define _SPI_DEFINES
             #include "../SPI_Memory/spi_flash_STM32_atmel.h"
             #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
             #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+            #include "../SPI_Memory/spi_flash_w25q.h"
             #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
             #include "../SPI_Memory/spi_flash_MX25L.h"
             #include "../SPI_Memory/spi_flash_s25fl1-k.h"
@@ -249,6 +250,7 @@ static volatile int iInterruptLevel = 0;
         #include "../SPI_Memory/spi_flash_STM32_atmel.h"
         #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
         #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_w25q.h"
         #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
         #include "../SPI_Memory/spi_flash_MX25L.h"
         #include "../SPI_Memory/spi_flash_s25fl1-k.h"
@@ -2228,6 +2230,7 @@ INITHW void fnInitHW(void)                                               // perf
         #include "../SPI_Memory/spi_flash_STM32_atmel.h"
         #include "../SPI_Memory/spi_flash_STM32_stmicro.h"
         #include "../SPI_Memory/spi_flash_STM32_sst25.h"
+        #include "../SPI_Memory/spi_flash_w25q.h"
         #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
         #include "../SPI_Memory/spi_flash_MX25L.h"
         #include "../SPI_Memory/spi_flash_s25fl1-k.h"

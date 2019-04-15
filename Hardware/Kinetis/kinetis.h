@@ -673,6 +673,10 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK
             #define MCGOUTCLK  (FAST_ICR/2)                              // 4MHz IRC divided by 2
         #elif defined RUN_FROM_DEFAULT_CLOCK
+            #if !defined FLL_FACTOR
+                #define FLL_FACTOR     (640)                             // default value
+            #endif
+            #define MCGOUTCLK   (32768 * FLL_FACTOR)
         #elif defined CLOCK_FROM_RTC_OSCILLATOR                          // clock from RTC oscillator
             #if defined FLL_FACTOR                                       // FLL is to be used with input from the external source
                 #define MCGOUTCLK   (32768 * FLL_FACTOR)

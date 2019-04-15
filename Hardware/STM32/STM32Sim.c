@@ -103,6 +103,9 @@ static void fnSetDevice(unsigned short *port_inits)
     RCC_ICSCR = 0x106f0089;
     RCC_PLLCFGR = 0x00001000;
     RCC_PLLSAI1CFGR = 0x00001000;
+#elif defined _STM32H7XX
+    RCC_CR = RCC_CR_HSION;
+    RCC_RSR = (RCC_RSR_PORRSTF | RCC_RSR_PINRSTF | RCC_RSR_BORRSTF | RCC_RSR_D2RSTF | RCC_RSR_D1RSTF | RCC_RSR_CPURSTF);
 #else
     RCC_CR = (0x00000080 | RCC_CR_HSIRDY | RCC_CR_HSION);                // reset and clock control
     RCC_CSR = (RCC_CSR_PINRSTF | RCC_CSR_PORRSTF);
@@ -583,7 +586,7 @@ extern unsigned long fnSimInts(char *argv[])
 #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX || defined _STM32L4X5 || defined _STM32L4X6
 	if ((iInts & CHANNEL_5_SERIAL_INT) && (argv)) {
         ptrCnt = (int *)argv[THROUGHPUT_UART5];
-        if (*ptrCnt) {
+        if (*ptrCnt != 0) {
             if (--(*ptrCnt) == 0) {
                 iMasks |= CHANNEL_5_SERIAL_INT;                          // enough serial interupts handled in this tick period
             }
@@ -604,13 +607,13 @@ extern unsigned long fnSimInts(char *argv[])
                 USART6_SR |= USART_SR_TXE;
         #endif
         #if defined _STM32L4X5 || defined _STM32L4X6
-                if (LPUART1_CR1 & USART_CR1_TXEIE) {                     // if tx interrupts enabled
+                if ((LPUART1_CR1 & USART_CR1_TXEIE) != 0) {              // if tx interrupts enabled
                     if (IRQ64_95_SER & (1 << (irq_LPUART1_ID - 64))) {   // if LPUART1 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_LPUART1();     // call the interrupt handler
                     }
                 }
         #else
-                if (USART6_CR1 & USART_CR1_TXEIE) {                      // if tx interrupts enabled
+                if ((USART6_CR1 & USART_CR1_TXEIE) != 0) {               // if tx interrupts enabled
                     if (IRQ64_95_SER & (1 << (irq_USART6_ID - 64))) {    // if USART 6 interrupt is not disabled
                         ptrVect->processor_interrupts.irq_USART6();      // call the interrupt handler
                     }

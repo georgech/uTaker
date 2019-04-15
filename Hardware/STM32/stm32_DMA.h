@@ -470,7 +470,11 @@ extern void *uMemset(void *ptrTo, int iValue, size_t Size)               // {37}
                 *ptr++ = ucValue;
             }
             while ((*ptrDLA_flag & DMA_COMPLETE_FLAG) == 0) { SIM_DMA(0) }; // wait until the DMA transfer has terminated
-            WRITE_ONE_TO_CLEAR(*(ptrDLA_flag + 2), (DMA_ALL_FLAGS));     // clear flags
+            *(ptrDLA_flag + 2) = (DMA_ALL_FLAGS);                        // clear flags
+        #if defined _WINDOWS
+            *(ptrDLA_flag) &= ~(*(ptrDLA_flag + 2));
+            *(ptrDLA_flag + 2) = 0;
+        #endif
             ptrDMAstream->DMA_SxCR = 0;                                  // mark that the DMA stream is free for use again
             return buffer;
         }
@@ -548,7 +552,11 @@ extern void *uMemcpy(void *ptrTo, const void *ptrFrom, size_t Size)
             ptr2 += usTransferSize;                                      // move the source pointer to beyond the transfer
             Size -= usTransferSize;                                      // bytes remaining
             while ((*ptrDLA_flag & DMA_COMPLETE_FLAG) == 0) { SIM_DMA(0) }; // wait until the transfer has terminated
-            WRITE_ONE_TO_CLEAR(*(ptrDLA_flag + 2), (DMA_ALL_FLAGS));     // clear flags
+            *(ptrDLA_flag + 2) = (DMA_ALL_FLAGS);                        // clear flags
+        #if defined _WINDOWS
+            *(ptrDLA_flag) &= ~(*(ptrDLA_flag + 2));
+            *(ptrDLA_flag + 2) = 0;
+        #endif
             while (Size-- != 0) {                                        // {29}
                 *ptr1++ = *ptr2++;
             }

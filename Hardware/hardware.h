@@ -367,6 +367,7 @@ extern unsigned char fnSPI_FlashExt_available(int iExtension);
     #define W25Q32                    6
     #define W25Q64                    7
     #define W25Q128                   8
+    #define W25Q256                   9
 
     #define S25FL116K                 1                                  // Spansion S25FL1-K
     #define S25FL132K                 2

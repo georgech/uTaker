@@ -2931,17 +2931,14 @@ typedef struct stSTM32_BD
     #define RCC_CSR                          *(volatile unsigned long *)(RCC_BLOCK + 0x74) // control status register
       #define RCC_CSR_LSION                  0x00000001                  // enable 40kHz RC oscillator
       #define RCC_CSR_LSIRDY                 0x00000002                  // read-only
-      #define RCC_CSR_RMVF                   0x01000000                  // remove reset flag (write 1 to clear reset flags)
-      #define RCC_CSR_PINRSTF                0x04000000                  // reset pin reset flag
-      #define RCC_CSR_PORRSTF                0x08000000                  // power on reset flag
-      #define RCC_CSR_SFTRSTF                0x10000000                  // software reset flag
-      #define RCC_CSR_IWDGRSTF               0x20000000                  // independent watchdog reset flag
-      #define RCC_CSR_WWDGRSTF               0x40000000                  // window watchdog reset flag
-      #define RCC_CSR_LPWRRSTF               0x80000000                  // low power reset flag
-      #define RESET_CAUSE_FLAGS              (RCC_CSR_RMVF | RCC_CSR_PINRSTF | RCC_CSR_PORRSTF | RCC_CSR_SFTRSTF | RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF | RCC_CSR_LPWRRSTF)
     #define RCC_AHB3RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x7c) // AHB3 peripheral reset register
-      #define RCC_APB3RSTR_FSMCRST           0x00000001
-      #define RCC_APB3RSTR_QSPIRST           0x00000002
+      #define RCC_APB3RSTR_MDMARST           0x00000001
+      #define RCC_APB3RSTR_DMA1DRST          0x00000010
+      #define RCC_APB3RSTR_JPGDECRST         0x00000020
+      #define RCC_APB3RSTR_FMCRST            0x00001000
+      #define RCC_APB3RSTR_QSPIRST           0x00004000
+      #define RCC_APB3RSTR_SDMMC1RST         0x00010000
+      #define RCC_APB3RSTR_CPURST            0x80000000
     #define RCC_AHB1RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x80) // AHB1 peripheral reset register
       #define RCC_AHB1RSTR_BKPSRAMRST        0x00040000
       #define RCC_AHB1RSTR_CCMDATARAMRST     0x00100000
@@ -3009,7 +3006,18 @@ typedef struct stSTM32_BD
     #define RCC_APB4RSTR                     *(volatile unsigned long *)(RCC_BLOCK + 0x9c) // APB4 peripheral reset register
     #define RCC_GCR                          *(volatile unsigned long *)(RCC_BLOCK + 0xa0) //
     #define RCC_D3AMR                        *(volatile unsigned long *)(RCC_BLOCK + 0xa8) //
-    #define RCC_RSR                          *(volatile unsigned long *)(RCC_BLOCK + 0xd0) //
+    #define RCC_RSR                          *(volatile unsigned long *)(RCC_BLOCK + 0xd0) // reset status register
+      #define RCC_RSR_RMVF                   0x00010000                  // remove reset flag (write '1' to reset flags)
+      #define RCC_RSR_CPURSTF                0x00020000                  // CPU reset flag (read-only)
+      #define RCC_RSR_D1RSTF                 0x00080000                  // D1 domain pwer switch reset flag (read-only)
+      #define RCC_RSR_D2RSTF                 0x00100000                  // D2 domain pwer switch reset flag (read-only)
+      #define RCC_RSR_BORRSTF                0x00200000                  // brown-out reset flag (read-only)
+      #define RCC_RSR_PINRSTF                0x00400000                  // pin (NRST) reset flag (read-only)
+      #define RCC_RSR_PORRSTF                0x00800000                  // POR or PDR reset flag (read-only)
+      #define RCC_RSR_SFTRSTF                0x01000000                  // system reset for CPU reset flag (read-only)
+      #define RCC_RSR_IWDG1RSTF              0x04000000                  // independent watchdog reset flag (read-only)
+      #define RCC_RSR_WWDG1RSTF              0x10000000                  // window watchdog reset flag (read-only)
+      #define RCC_RSR_LPWRRSTF               0x40000000                  // reset due to illegal D1 DStandby or CPU CStop flag
     #define RCC_AHB3ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xd4) // AHB3 peripheral clock enable register
     #define RCC_AHB1ENR                      *(volatile unsigned long *)(RCC_BLOCK + 0xd8) // AHB1 peripheral clock enable register
       #define RCC_AHB1ENR_DMA1EN             0x00000001

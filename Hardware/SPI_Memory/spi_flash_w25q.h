@@ -11,7 +11,7 @@
     File:      spi_flash_w25q.h - Winbond
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -22,6 +22,8 @@
     01.03.2017 Correct write for FIFO based SPI                          {2}
     13.07.2017 Adapt chip select line control dependency                 {3}
     19.08.2017 Correct chip select control of multiple SPI devices       {4}
+    14.04.2019 Extend to STM32                                           {5}
+    14.04.2019 Add 32MByte part                                          {6}
 
     **********************************************************************/
 
@@ -29,6 +31,31 @@
 #if defined SPI_FLASH_W25Q
 
 #if defined _SPI_DEFINES
+    #if defined _STM32                                                   // {5}
+        #define MANUAL_FLASH_CS_CONTROL
+        #define ASSERT_CS_LINE(cs_line)      __ASSERT_CS(cs_line)
+        #define NEGATE_CS_LINE(cs_line)      __NEGATE_CS(cs_line)
+        #define FLUSH_SPI_FIFO_AND_FLAGS()
+        #define WRITE_SPI_CMD0(ucCommand)    SSPDR_X = ucCommand
+        #define WRITE_SPI_CMD0_LAST(ucData)  SSPDR_X = ucData
+        #define READ_SPI_FLASH_DATA()        (unsigned char)SSPDR_X
+        #define CLEAR_RECEPTION_FLAG()
+        #if defined _WINDOWS
+            #define WAIT_TRANSFER_END()      while ((SSPSR_X & SPISR_TXE) == 0) { SSPSR_X |= SPISR_TXE;} \
+                                             while (SSPSR_X & SPISR_BSY) {SSPSR_X &= ~SPISR_BSY;}
+        #else
+            #define WAIT_TRANSFER_END()      while ((SSPSR_X & SPISR_TXE) == 0) {} \
+                                             while (SSPSR_X & SPISR_BSY) {}
+        #endif
+        #define WAIT_SPI_RECEPTION_END()     WAIT_TRANSFER_END()
+        #if !defined SPI_FLASH_FIFO_DEPTH
+            #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
+        #endif
+    #elif defined _KINETIS
+        #if !defined SPI_FLASH_FIFO_DEPTH
+            #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
+        #endif
+    #endif
     #if defined SPI_FLASH_MULTIPLE_CHIPS
         #define __EXTENDED_CS     iChipSelect,                           // {4}
         static unsigned char fnCheckW25Qxx(int iChipSelect);
@@ -127,6 +154,10 @@
 #define FAST_READ_QUAD_I_O       0xeb
 #define WORD_READ_QUAD_I_O       0xe7
 #define OCTAL_WORD_READ_QUAD_I_O 0xe3
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                                 // {6}
+    #define ENTER_4_BYTE_MODE    0xb7
+    #define EXIT_4_BYTE_MODE     0xe9
+#endif
 
 #define MANUFACTURER_ID_WB       0xef                                    // Winbond manufacturer's ID
 
@@ -144,7 +175,7 @@
 #define DEVICE_ID_1_DATA_WB_FLASH_Q64M  0x??                             // 64MBit / 8MegByte - W25Q64
 #define DEVICE_ID_1_DATA_WB_FLASH_Q128M 0x18                             // 128MBit / 16MegByte - W25Q128
 #define DEVICE_TYPE_Q128                0x60
-#define DEVICE_ID_1_DATA_WB_FLASH_Q256M 0x??                             // 256MBit / 32MegByte - W25Q256
+#define DEVICE_ID_1_DATA_WB_FLASH_Q256M 0x19                             // 256MBit / 32MegByte - W25Q256
 
 
 // SPI FLASH hardware interface
@@ -167,7 +198,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     int iRead = 0;
     int iErase = 0;
     unsigned char ucTxCount = 0;
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                             // {6}
+    unsigned char ucCommandBuffer[4];
+    #else
     unsigned char ucCommandBuffer[3];
+    #endif
 
     FLUSH_SPI_FIFO_AND_FLAGS();                                          // ensure that the FIFOs are empty and the status flags are reset before starting
 
@@ -213,14 +248,21 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimW25Qxx(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);             // simulate the SPI FLASH device
     #endif
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                             // {6}
+        ucCommandBuffer[0] = (unsigned char)(ulPageNumberOffset >> 24);  // define the address to be read, written or erased
+        ucCommandBuffer[1] = (unsigned char)(ulPageNumberOffset >> 16);
+        ucCommandBuffer[2] = (unsigned char)(ulPageNumberOffset >> 8);
+        ucCommandBuffer[3] = (unsigned char)(ulPageNumberOffset);
+    #else
         ucCommandBuffer[0] = (unsigned char)(ulPageNumberOffset >> 16);  // define the address to be read, written or erased
         ucCommandBuffer[1] = (unsigned char)(ulPageNumberOffset >> 8);
         ucCommandBuffer[2] = (unsigned char)(ulPageNumberOffset);
+    #endif
         while (ucTxCount < sizeof(ucCommandBuffer)) {                    // complete the command sequence
             WAIT_SPI_RECEPTION_END();                                    // wait until at least one byte is in the receive FIFO
             (void)READ_SPI_FLASH_DATA();                                 // {1} the rx data is not interesting here
             CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
-            if ((ucTxCount == 2) && (iErase != 0)) {                     // erase doesn't have further data after the address
+            if ((ucTxCount == (sizeof(ucCommandBuffer) - 1)) && (iErase != 0)) { // erase doesn't have further data after the address
                 WRITE_SPI_CMD0_LAST(ucCommandBuffer[ucTxCount++]);       // send address with no further data to follow
             }
             else {
@@ -232,6 +274,9 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
         break;
 
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                                 // {6}
+    case ENTER_4_BYTE_MODE:
+#endif
     case WRITE_DISABLE:
     case WRITE_ENABLE:
         WRITE_SPI_CMD0_LAST(ucCommand);                                  // send command
@@ -354,6 +399,12 @@ static unsigned char fnCheckW25Qxx(void)
             break;
         case DEVICE_ID_1_DATA_WB_FLASH_Q128M:
             ucReturnType = W25Q128;
+            break;
+        case DEVICE_ID_1_DATA_WB_FLASH_Q256M:
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                                 // {6}
+            fnSPI_command(ENTER_4_BYTE_MODE, 0, __EXTENDED_CS ucID, 0);  // switch to 4 byte mode so that more that 16MByte can be addressed
+#endif
+            ucReturnType = W25Q256;
             break;
         default:                                                         // possibly a larger part but we don't accept it
             return NO_SPI_FLASH_AVAILABLE;

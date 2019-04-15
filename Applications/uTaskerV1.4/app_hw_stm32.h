@@ -460,6 +460,23 @@
         #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH)    // sector size of code FLASH
     #endif
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+#elif defined SPI_FLASH_W25Q
+    #define SPI_FLASH_W25Q256
+  //#define SPI_FLASH_W25Q128
+  //#define SPI_FLASH_W25Q16
+    #if defined SPI_FLASH_W25Q256
+        #define SPI_FLASH_PAGES          (128 * 1024)
+    #elif defined SPI_FLASH_W25Q128
+        #define SPI_FLASH_PAGES          (64 * 1024)
+    #else
+        #define SPI_FLASH_PAGES          (8 * 1024)
+    #endif
+    #define SPI_FLASH_PAGE_LENGTH        (256)
+    #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                      // sub-sector size of SPI FLASH
+    #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                     // half-sector size of SPI FLASH
+    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // sector size of SPI FLASH (not available on A-versions)
+    #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH    // for compatibility - file system granularity
+    #define SPI_FLASH_SIZE               (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH)
 #elif defined SPI_FLASH_MX25L
   //#define SPI_FLASH_MX25L1606E
   //#define SPI_FLASH_MX25L12845E
@@ -651,11 +668,11 @@
             #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI3_CR1 = (SPICR1_SPE | SPICR1_BR_PCLK2_DIV2 | SPICR1_MSTR | SPICR1_SSI | SPICR1_CPOL | SPICR1_CPHA | SPICR1_SSM)
             #if defined _WINDOWS
                 #define WRITE_SPI_CMD(byte)      SPI3_DR = (unsigned short)byte; SPI3_DR = _fnSimSD_write((unsigned char)byte)
-                #define WAIT_TRANSMISSON_END()   while (!(SPI3_SR & SPISR_TXE)) { SPI3_SR |= SPISR_TXE;} \
+                #define WAIT_TRANSMISSON_END()   while ((SPI3_SR & SPISR_TXE) == 0) { SPI3_SR |= SPISR_TXE;} \
                                                  while (SPI3_SR & SPISR_BSY) {SPI3_SR &= ~SPISR_BSY;}
             #else
                 #define WRITE_SPI_CMD(byte)      SPI3_DR = (unsigned short)byte
-                #define WAIT_TRANSMISSON_END()   while (!(SPI3_SR & SPISR_TXE)) {} \
+                #define WAIT_TRANSMISSON_END()   while ((SPI3_SR & SPISR_TXE) == 0) {} \
                                                  while (SPI3_SR & SPISR_BSY)
             #endif
             #define READ_SPI_DATA()              (unsigned char)SPI3_DR
@@ -707,12 +724,12 @@
         #define SET_SPI_SD_INTERFACE_FULL_SPEED() SPI3_CR1 = (SPICR1_SPE | SPICR1_BR_PCLK2_DIV2 | SPICR1_MSTR | SPICR1_SSI | SPICR1_CPOL | SPICR1_CPHA | SPICR1_SSM)
         #if defined _WINDOWS
             #define WRITE_SPI_CMD(byte)      SPI3_DR = (unsigned short)byte; SPI3_DR = _fnSimSD_write((unsigned char)byte)
-            #define WAIT_TRANSMISSON_END()   while (!(SPI3_SR & SPISR_TXE)) { SPI3_SR |= SPISR_TXE;} \
+            #define WAIT_TRANSMISSON_END()   while ((SPI3_SR & SPISR_TXE) == 0) { SPI3_SR |= SPISR_TXE;} \
                                              while (SPI3_SR & SPISR_BSY) {SPI3_SR &= ~SPISR_BSY;}
         #else
             #define WRITE_SPI_CMD(byte)      SPI3_DR = (unsigned short)byte
-            #define WAIT_TRANSMISSON_END()   while (!(SPI3_SR & SPISR_TXE)) {} \
-                                             while (SPI3_SR & SPISR_BSY)
+            #define WAIT_TRANSMISSON_END()   while ((SPI3_SR & SPISR_TXE) == 0) {} \
+                                             while (SPI3_SR & SPISR_BSY) {}
         #endif
         #define READ_SPI_DATA()              (unsigned char)SPI3_DR
 

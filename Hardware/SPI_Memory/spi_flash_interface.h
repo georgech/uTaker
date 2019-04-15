@@ -101,7 +101,7 @@ static void fnWriteSPI(ACCESS_DETAILS *ptrAccessDetails, unsigned char *ptrBuffe
         fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);               // write enable
       //#endif
         #if defined SPI_FLASH_W25Q || defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
-        fnSPI_command(PAGE_PROG, ((ulPageNumber * SPI_FLASH_PAGE_LENGTH)) | usPageOffset, _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
+        fnSPI_command(PAGE_PROG, ((ulPageNumber * SPI_FLASH_PAGE_LENGTH) | usPageOffset), _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
         #else
         fnSPI_command(PAGE_PROG, ((ulPageNumber << 8) | usPageOffset), _EXTENDED_CS ptrBuffer, usDataLength); // copy new content
         #endif

@@ -2489,6 +2489,15 @@ typedef struct stUART_BAUD_CONFIG
     int iValid;
 } UART_BAUD_CONFIG;
 
+#if defined UART0_ClOCKED_FROM_MCGIRCLK                              // clocked from internal 4MHz RC clock
+#elif defined UART0_ClOCKED_FROM_OSCERCLK
+#elif !defined MCG_WITHOUT_PLL && !defined UART0_ClOCKED_FROM_MCGFFLCLK && defined SIM_SOPT2_UART0SRC_MCG
+    #undef SYSTEM_CLOCK
+    #define SPECIAL_UART_CLOCK          (MCGPLLCLK/2)
+    #define SYSTEM_CLOCK                (SPECIAL_UART_CLOCK)
+#elif defined SIM_SOPT2_UART0SRC_MCG
+#endif
+
 #if (UARTS_AVAILABLE > 2) || (defined KINETIS_KEA8 || defined KINETIS_K02 || defined K_STYLE_UART2) || (defined KINETIS_KV && UARTS_AVAILABLE > 1)
 static const unsigned short bus_clock_divider[SUPPORTED_BAUD_RATES + 1] = {
     #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
@@ -2826,31 +2835,30 @@ static void fnConfigUART_clock(int Channel, UART_BAUD_CONFIG *ptrBaudConfig)
     SIM_SOPT2 |= (SIM_SOPT2_PLLFLLSEL | (SIM_SOPT2_UART0SRC_MCG << (2 * Channel))); // enable UART clock source from MCGPLLCLK/2
     #elif defined SIM_SOPT2_UART0SRC_MCG
     SIM_SOPT2 |= (SIM_SOPT2_UART0SRC_MCG << (2 * Channel));              // enable UART clock source from MCGFFLCLK
-    #else
-        #if defined KINETIS_KM
+    #endif
+    #if defined KINETIS_KM
     if ((Channel & 1) != 0)                                              // UART1 and 3 are clocked from the core/system clock and the other from the bus clock
-        #elif defined KINETIS_KV10
-    if (Channel < 1)                                                     // UART 0 is clocked from the core/system clock and the others from the bus clock
-        #else
+    #elif ((defined KINETIS_KL || defined KINETIS_KV10 || defined KINETIS_KE15 || defined KINETIS_KE18 || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
+    if (Channel == 0)                                                     // UART 0 is clocked from the core/system/special clock and the others from the bus clock
+    #else
     if (Channel < 2)
-        #endif
+    #endif
     {
-        #if !(defined K_STYLE_UART2 && (UARTS_AVAILABLE == 1))
+    #if !(defined K_STYLE_UART2 && (UARTS_AVAILABLE == 1))
         ptrBaudConfig->usDivider = system_clock_divider[ptrBaudConfig->iBaudRateRef]; // set the optimal divider value for the required baud rate
-            #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+        #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         ptrBaudConfig->ucFraction = system_clock_fraction[ptrBaudConfig->iBaudRateRef]; // set the fraction value for the required baud rate
-            #endif
-        ptrBaudConfig->iValid = 1;
         #endif
+        ptrBaudConfig->iValid = 1;
+    #endif
     }
     else {
         ptrBaudConfig->usDivider = bus_clock_divider[ptrBaudConfig->iBaudRateRef]; // set the optimal divider value for the required baud rate
-        #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
+    #if (!defined KINETIS_KL && !defined KINETIS_KE) || defined K_STYLE_UART2
         ptrBaudConfig->ucFraction = bus_clock_fraction[ptrBaudConfig->iBaudRateRef]; // set the fraction value for the required baud rate
-        #endif
+    #endif
         ptrBaudConfig->iValid = 1;
     }
-    #endif
 }
 #endif
 
@@ -3033,7 +3041,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #endif
 
     if (baud_config.iValid == 0) {                                       // the following is being phased out in preference of setting the baud rate settings from a look up table and fnConfigUART_clock()/fnConfigLPUART_clock() integration
-#if 1
+#if 0
         _EXCEPTION("Unsupported UART/LPUART clock source!!");
 #else                                                                    // the following is being phased out - enable in case a configuration is used that triggers the exception and inform mark@utasker.com
     #if (((SYSTEM_CLOCK != BUS_CLOCK) || defined KINETIS_KL || defined KINETIS_KE15 || defined KINETIS_KE18 || (LPUARTS_AVAILABLE > 0 && UARTS_AVAILABLE > 0))) && !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
@@ -3167,6 +3175,12 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case SERIAL_BAUD_115200:
         #if defined KINETIS_KL || defined NO_UART_FRACTION_CONTROL || defined KINETIS_KE15 || defined KINETIS_KE18
             usDivider = (((SPECIAL_UART_CLOCK/8/115200) + 1)/2);         // {201} set 115200
+            {
+                unsigned long ulTest1 = SPECIAL_UART_CLOCK;
+                unsigned long ulTest2 = SYSTEM_CLOCK;
+                unsigned long ultest3 = MCGPLLCLK;
+                ulTest2 = ulTest2;
+            }
         #else
             ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_UART_CLOCK/16/115200)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/115200);                  // set 115200
@@ -3394,9 +3408,6 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
     #if defined _WINDOWS
         #if !defined SPECIAL_LPUART_CLOCK
             #define SPECIAL_LPUART_CLOCK     (SPECIAL_UART_CLOCK)
-        #endif
-        #if !defined SPECIAL_UART_CLOCK
-            #define SPECIAL_UART_CLOCK    (SYSTEM_CLOCK)
         #endif
     if (baud_config.iValid == 0) {
         #if (!defined KINETIS_KL && !defined KINETIS_KE && !defined NO_UART_FRACTION_CONTROL) || defined K_STYLE_UART2

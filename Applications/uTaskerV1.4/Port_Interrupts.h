@@ -304,6 +304,7 @@ static void fnInitIRQ(void)
             #if defined WAKEUP_TEST
     interrupt_setup.int_type       = WAKEUP_INTERRUPT;                   // configure as wake-up interrupt
     interrupt_setup.int_handler    = test_irq_5;
+  //fnEnterNMI(test_irq_5);
             #endif
     interrupt_setup.int_priority   = PRIORITY_PORT_C_INT;                // interrupt priority level
     interrupt_setup.int_port       = PORTC;                              // the port that the interrupt input is on

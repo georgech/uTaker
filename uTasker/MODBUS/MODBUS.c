@@ -505,7 +505,7 @@ extern void fnMODBUS(TTASKTABLE *ptrTaskTable)
                 DiagnosticCounters[ucMODBUSport].usMessageCounter++;     // count the number of messags detected on the bus, irrespective of whether addressed or not
     #endif
     #if defined USE_MODBUS_SLAVE && MODBUS_SHARED_SERIAL_INTERFACES > 0
-                if ((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_SLAVE) && // only slaves can have shared serial interfaces
+                if (((ptrMODBUS_pars->ucModbusSerialPortMode[ucMODBUSport] & MODBUS_SERIAL_SLAVE) != 0) && // only slaves can have shared serial interfaces
                     ((ucSharedSlave = fnCheckSlaveAddresses(ucMODBUSport, ucModbusSerialInputBuffer[ucMODBUSport][0])) != 0)) {
                     goto _check_frame;                                   // a slave sharing the port is being addressed
                 }
