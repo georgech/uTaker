@@ -4166,6 +4166,9 @@ typedef struct stVECTOR_TABLE
             #define RTC_REGISTER_BLOCK         ((unsigned char *)(&kinetis.RTC_REGISTER_FILE)) // RTC register file
             #define SYSTEM_REGISTER_BLOCK      ((unsigned char *)(&kinetis.SYSTEM_REGISTER_FILE)) // system register file
         #endif
+        #if defined KINETIS_KE15
+            #define OSC32_BLOCK                ((unsigned char *)(&kinetis.OSC32)) // OSC32
+        #endif
     #endif
     #if LPTMR_AVAILABLE > 0
         #define LPTMR_BLOCK_0                  ((unsigned char *)(&kinetis.LPTMR[0])) // {51} Low Power Timer
@@ -4526,6 +4529,9 @@ typedef struct stVECTOR_TABLE
             #if defined KINETIS_K80 || defined KINETIS_K27 || defined INETIS_K28
                 #define RTC_REGISTER_BLOCK     0x4003e000                // RTC register file
                 #define SYSTEM_REGISTER_BLOCK  0x40041000                // system register file
+            #endif
+            #if defined KINETIS_KE15
+                #define OSC32_BLOCK            0x40060000                // OSC32
             #endif
         #endif
     #endif
@@ -10679,6 +10685,14 @@ typedef struct stKINETIS_ADMA2_BD
     #endif
 #endif
 
+#if defined KINETIS_KE15
+    #define OSC32_CR            *(volatile unsigned char *)(OSC32_BLOCK + 0x0) // RTC oscillator control register
+      #define OSC32_CR_ROSCEREFS    0x10                                 // RTC 32k oscillator external reference clock selection
+      #define OSC32_CR_ROSCSTB      0x20                                 // RTC 32k oscillator stable flag (read-only)
+      #define OSC32_CR_ROSCSTPEN    0x40                                 // RTC 32k oscillator stop mode enable
+      #define OSC32_CR_ROSCEN       0x80                                 // RTC 32k Oscillator enable (if RTC_CR[OSCE] is set this bit is bypassed and OSC32 works in crystal mode
+#endif
+
 // Low Power Timer [this module continues running through warm resets]   {51}
 //
 #define LPTMR0_CSR                       *(volatile unsigned long *)(LPTMR_BLOCK_0 + 0x0) // Low Power Timer 0 Control Status Register
@@ -14173,6 +14187,41 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PC_2_I2S0_TX_FS              PORT_MUX_ALT6
     #define PC_4_I2S0_MCLK               PORT_MUX_ALT5
     #define PC_5_I2S0_RXD0               PORT_MUX_ALT4
+#elif defined KINETIS_K66
+    #define PE_6_I2S0_MCLK               PORT_MUX_ALT4
+    #define PA_17_I2S0_MCLK              PORT_MUX_ALT6
+    #define PC_6_I2S0_MCLK               PORT_MUX_ALT6
+    #define PC_8_I2S0_MCLK               PORT_MUX_ALT4
+
+    #define PE_12_I2S0_TX_BCLK           PORT_MUX_ALT4
+    #define PA_5_I2S0_TX_BCLK            PORT_MUX_ALT6
+    #define PB_18_I2S0_TX_BCLK           PORT_MUX_ALT4
+    #define PC_3_I2S0_TX_BCLK            PORT_MUX_ALT6
+    #define PE_10_I2S0_TXD0              PORT_MUX_ALT4
+    #define PA_12_I2S0_TXD0              PORT_MUX_ALT6
+    #define PC_1_I2S0_TXD0               PORT_MUX_ALT6
+    #define PE_9_I2S0_TXD1               PORT_MUX_ALT2
+    #define PA_14_I2S0_TXD1              PORT_MUX_ALT7
+    #define PC_0_I2S0_TXD1               PORT_MUX_ALT6
+    #define PE_11_I2S0_TX_FS             PORT_MUX_ALT4
+    #define PA_13_I2S0_TX_FS             PORT_MUX_ALT6
+    #define PB_19_I2S0_TX_FS             PORT_MUX_ALT4
+    #define PC_2_I2S0_TX_FS              PORT_MUX_ALT6
+
+    #define PE_9_I2S0_RX_BCLK            PORT_MUX_ALT4
+    #define PA_14_I2S0_RX_BCLK           PORT_MUX_ALT6
+    #define PC_6_I2S0_RX_BCLK            PORT_MUX_ALT4
+    #define PC_9_I2S0_RX_BCLK            PORT_MUX_ALT4
+    #define PE_7_I2S0_RXD0               PORT_MUX_ALT4
+    #define PA_15_I2S0_RXD0              PORT_MUX_ALT6
+    #define PC_5_I2S0_RXD0               PORT_MUX_ALT4
+    #define PE_8_I2S0_RXD1               PORT_MUX_ALT2
+    #define PA_16_I2S0_RXD1              PORT_MUX_ALT7
+    #define PC_11_I2S0_RXD1              PORT_MUX_ALT4
+    #define PE_8_I2S0_RX_FS              PORT_MUX_ALT4
+    #define PA_16_I2S0_RX_FS             PORT_MUX_ALT6
+    #define PC_7_I2S0_RX_FS              PORT_MUX_ALT4
+    #define PC_10_I2S0_RX_FS             PORT_MUX_ALT4
 #endif
 #if defined KINETIS_KL
     #if defined KINETIS_KL03

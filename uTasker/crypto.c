@@ -14,6 +14,7 @@
     Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.10.2018 Add SHA256 with mmCAU support (for 1 block)
+    23.04.2019 Allow LTC based SHA256 to be used without AES enabled
     
 */        
 
@@ -131,7 +132,9 @@ static void fnInitLTC(const unsigned long *_ptr_ulKey, int iKeyLength,  int iDec
     WRITE_ONE_TO_CLEAR(LTC0_STA, LTC_STA_DI);                            // reset the done interrupt
 }
 #endif
+#endif
 
+#if defined CRYPTOGRAPHY && defined CRYPTO_SHA
 #if defined NATIVE_SHA256_CAU && ((defined LTC_AVAILABLE && defined LTC_HAS_SHA) && !defined SHA_DISABLE_LTC) // LTC hardware accelerator
 static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCipherTextOutput, unsigned long _ulDataLength, unsigned long ulCommand)
 {
@@ -206,6 +209,7 @@ static void fnExecuteLTC(unsigned long *ptrPlainTextInput, unsigned long *ptrCip
 }
 #endif
 
+#if defined CRYPTOGRAPHY && defined CRYPTO_AES
 // AES key or iv initialisation
 //
 extern int fnAES_Init(int iInstanceCommand, const unsigned char *ptrKey, int iKeyLength)
@@ -576,6 +580,7 @@ extern int fnAES_Cipher(int iInstanceCommand, const unsigned char *ptrTextIn, un
     }
     return AES_INVALID_CIPHER_OPERATION;
 }
+#endif
 #endif
 
 #if defined CRYPTOGRAPHY && defined CRYPTO_SHA

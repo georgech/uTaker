@@ -760,7 +760,7 @@ extern unsigned long fnSimInts(char *argv[])
     return ulNewActions;
 }
 
-
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
 static void fnSetDMAFlags(STM32_DMA *ptrDMA_controller, int iStream, unsigned long ulFlagRef)
 {
     if ((ulFlagRef & DMA_LISR_HTIF0) != 0) {
@@ -820,6 +820,7 @@ static void fnSetDMAFlags(STM32_DMA *ptrDMA_controller, int iStream, unsigned lo
         }
     }
 }
+#endif
 
 static int fnSimulateDMA(unsigned long ulDmaTriggerSource)
 {

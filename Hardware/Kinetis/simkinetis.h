@@ -1949,6 +1949,13 @@ typedef struct stKINETIS_RTC
 #endif
 } KINETIS_RTC;
 
+#if defined KINETIS_KE15
+typedef struct stKINETIS_OSC32
+{
+    unsigned char  OSC32_CR;
+} KINETIS_OSC32;
+#endif
+
 #if defined KINETIS_K80
 typedef struct stKINETIS_RTC_REGISTER_FILE                               // RTC register file
 {
@@ -3874,6 +3881,9 @@ typedef struct stKINETIS_PERIPH
     #if defined KINETIS_K80
     KINETIS_RTC_REGISTER_FILE     RTC_REGISTER_FILE;                     // RTC register file
     KINETIS_SYSTEM_REGISTER_FILE  SYSTEM_REGISTER_FILE;                  // system register file
+    #endif
+    #if defined KINETIS_KE15
+    KINETIS_OSC32      OSC32;
     #endif
 #endif
 #if LPTMR_AVAILABLE > 0

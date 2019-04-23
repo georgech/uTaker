@@ -413,7 +413,11 @@ static void fnI2C_Handler(KINETIS_I2C_CONTROL *ptrI2C, int iChannel)
     int int_id = irq_I2C0_ID;
         #if NUMBER_I2C > 1
     if (iChannel == 1) {
+            #if defined irq_I2C1_EXTENDED_ID                             // I2C1 interrupt uses INTMUX
+        int_id = irq_I2C1_EXTENDED_ID;
+            #else
         int_id = irq_I2C1_ID;
+            #endif
     }
         #endif
         #if NUMBER_I2C > 2
