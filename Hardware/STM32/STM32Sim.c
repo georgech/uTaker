@@ -1190,8 +1190,23 @@ extern unsigned long fnSimDMA(char *argv[])
                                 ulNewActions |= SEND_COM_2;
                             }
                         }
+                        break;
                     }
 #endif
+                    // SPI2 Rx DMA
+                    //
+                    if (IS_POWERED_UP(APB1, (RCC_APB1ENR_SPI2EN)) != 0) {// if SPI2 powered
+                        if ((SPI2_CR1 & SPICR1_SPE) != 0) {              // if operation enabled
+                            if ((SPI2_CR2 & SPI_CR2_RXDMAEN) != 0) {     // if in DMA reception mode
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_3_SPI2_RX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    iMasks |= ulChannel;                                 // no enabled DMA triger source so ignore this time round
                     break;
                 case 0x00000010:                                         // DMA controller 1 - stream 4
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
@@ -1218,6 +1233,7 @@ extern unsigned long fnSimDMA(char *argv[])
                                 ulNewActions |= SEND_COM_2;
                             }
                         }
+                        break;
                     }
     #endif
     #if !defined UART4_NOT_PRESENT
@@ -1243,9 +1259,24 @@ extern unsigned long fnSimDMA(char *argv[])
                                 ulNewActions |= SEND_COM_3;
                             }
                         }
+                        break;
                     }
     #endif
 #endif
+                    // SPI2 Tx DMA
+                    //
+                    if (IS_POWERED_UP(APB1, (RCC_APB1ENR_SPI2EN)) != 0) {// if SPI2 powered
+                        if ((SPI2_CR1 & SPICR1_SPE) != 0) {              // if operation enabled
+                            if ((SPI2_CR2 & SPI_CR2_TXDMAEN) != 0) {     // if in DMA transmission mode
+                                iDMA &= ~ulChannel;
+                                if (fnSimulateDMA(DMA1_STREAM_4_SPI2_TX) > 0) { // process the trigger
+                                    iDMA |= ulChannel;                   // further DMA triggers
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    iMasks |= ulChannel;                                 // no enabled DMA triger source so ignore this time round
                     break;
                 case 0x00000020:                                         // DMA controller 1 - stream 5
                     break;

@@ -119,6 +119,7 @@ static const unsigned char *_DMA_Interrupt[DMA_CHANNEL_COUNT] = {
 // - either a complete or a half buffer has been completed
 //
 static void (*_DMA_handler[DMA_CHANNEL_COUNT])(void) = {0};              // user DMA interrupt handlers
+static unsigned short usDMA_Length[DMA_CHANNEL_COUNT] = {0};
 
 /* =================================================================== */
 /*                       DMA Interrupt Handlers                        */
@@ -138,6 +139,9 @@ static __interrupt void _DMA_Interrupt_0(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF0);                     // clear the DMA interrupt (DMA1 - stream 0)
+        #if defined _WINDOWS
+    DMA1_LISR &= ~(DMA_LISR_TCIF0);
+        #endif
     #endif
     _DMA_Handler(0);
 }
@@ -146,6 +150,9 @@ static __interrupt void _DMA_Interrupt_1(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF1);                     // clear the DMA interrupt (DMA1 - stream 1)
+        #if defined _WINDOWS
+    DMA1_LISR &= ~(DMA_LISR_TCIF1);
+        #endif
     #endif
     _DMA_Handler(1);
 }
@@ -154,6 +161,9 @@ static __interrupt void _DMA_Interrupt_2(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF2);                     // clear the DMA interrupt (DMA1 - stream 2)
+        #if defined _WINDOWS
+    DMA1_LISR &= ~(DMA_LISR_TCIF2);
+        #endif
     #endif
     _DMA_Handler(2);
 }
@@ -162,6 +172,9 @@ static __interrupt void _DMA_Interrupt_3(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_LIFCR, DMA_LIFCR_TCIF3);                     // clear the DMA interrupt (DMA1 - stream 3)
+        #if defined _WINDOWS
+    DMA1_LISR &= ~(DMA_LISR_TCIF3);
+        #endif
     #endif
     _DMA_Handler(3);
 }
@@ -170,6 +183,9 @@ static __interrupt void _DMA_Interrupt_4(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF4);                     // clear the DMA interrupt (DMA1 - stream 4)
+        #if defined _WINDOWS
+    DMA1_HISR &= ~(DMA_HISR_TCIF4);
+        #endif
     #endif
     _DMA_Handler(4);
 }
@@ -179,6 +195,9 @@ static __interrupt void _DMA_Interrupt_5(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF5);                     // clear the DMA interrupt (DMA1 - stream 5)
+        #if defined _WINDOWS
+    DMA1_HISR &= ~(DMA_HISR_TCIF5);
+        #endif
     #endif
     _DMA_Handler(5);
 }
@@ -188,6 +207,9 @@ static __interrupt void _DMA_Interrupt_6(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF6);                     // clear the DMA interrupt (DMA1 - stream 6)
+        #if defined _WINDOWS
+    DMA1_HISR &= ~(DMA_HISR_TCIF6);
+        #endif
     #endif
     _DMA_Handler(6);
 }
@@ -197,6 +219,9 @@ static __interrupt void _DMA_Interrupt_7(void)
 {
     #if defined DMA1_LIFCR
     WRITE_ONE_TO_CLEAR(DMA1_HIFCR, DMA_HIFCR_TCIF7);                     // clear the DMA interrupt (DMA1 - stream 7)
+        #if defined _WINDOWS
+    DMA1_HISR &= ~(DMA_HISR_TCIF7);
+        #endif
     #endif
     _DMA_Handler(7);
 }
@@ -206,6 +231,9 @@ static __interrupt void _DMA_Interrupt_8(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF0);                     // clear the DMA interrupt (DMA2 - stream 0)
+        #if defined _WINDOWS
+    DMA2_LISR &= ~(DMA_LISR_TCIF0);
+        #endif
     #endif
     _DMA_Handler(8);
 }
@@ -215,6 +243,9 @@ static __interrupt void _DMA_Interrupt_9(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF1);                     // clear the DMA interrupt (DMA2 - stream 1)
+        #if defined _WINDOWS
+    DMA2_LISR &= ~(DMA_LISR_TCIF1);
+        #endif
     #endif
     _DMA_Handler(9);
 }
@@ -224,6 +255,9 @@ static __interrupt void _DMA_Interrupt_10(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF2);                     // clear the DMA interrupt (DMA2 - stream 2)
+        #if defined _WINDOWS
+    DMA2_LISR &= ~(DMA_LISR_TCIF2);
+        #endif
     #endif
     _DMA_Handler(10);
 }
@@ -233,6 +267,9 @@ static __interrupt void _DMA_Interrupt_11(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_LIFCR, DMA_LIFCR_TCIF3);                     // clear the DMA interrupt (DMA2 - stream 3)
+        #if defined _WINDOWS
+    DMA2_LISR &= ~(DMA_LISR_TCIF3);
+        #endif
     #endif
     _DMA_Handler(11);
 }
@@ -242,6 +279,9 @@ static __interrupt void _DMA_Interrupt_12(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF4);                     // clear the DMA interrupt (DMA2 - stream 4)
+        #if defined _WINDOWS
+    DMA2_HISR &= ~(DMA_HISR_TCIF4);
+        #endif
     #endif
     _DMA_Handler(12);
 }
@@ -251,6 +291,9 @@ static __interrupt void _DMA_Interrupt_13(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF5);                     // clear the DMA interrupt (DMA2 - stream 5)
+        #if defined _WINDOWS
+    DMA2_HISR &= ~(DMA_HISR_TCIF5);
+        #endif
     #endif
     _DMA_Handler(13);
 }
@@ -260,7 +303,10 @@ static __interrupt void _DMA_Interrupt_14(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF6);                     // clear the DMA interrupt (DMA2 - stream 6)
-#endif    
+        #if defined _WINDOWS
+    DMA2_HISR &= ~(DMA_HISR_TCIF6);
+        #endif
+    #endif    
     _DMA_Handler(14);
 }
 #endif
@@ -269,6 +315,9 @@ static __interrupt void _DMA_Interrupt_15(void)
 {
     #if defined DMA2_LIFCR
     WRITE_ONE_TO_CLEAR(DMA2_HIFCR, DMA_HIFCR_TCIF7);                     // clear the DMA interrupt (DMA2 - stream 7)
+        #if defined _WINDOWS
+    DMA2_HISR &= ~(DMA_HISR_TCIF7);
+        #endif
     #endif
     _DMA_Handler(15);
 }
@@ -320,10 +369,10 @@ extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ul
         ptrDMAstream->DMA_SxM0AR = (unsigned long)ptrBufDest;            // address of memory destination
         ulTransferType |= (DMA_SxCR_MINC | DMA_SxCR_DIR_P2M);
     }
-    ptrDMAstream->DMA_SxNDTR = (unsigned short)(ulBufLength/ucSize);     // the number of transfers to be performed
+    ptrDMAstream->DMA_SxNDTR = usDMA_Length[iIntChannel] = (unsigned short)(ulBufLength / ucSize); // the number of transfers to be performed
     switch (ucSize) {
     case 1:
-        ulTransferType |= (ulTransferType | DMA_SxCR_PSIZE_8 | DMA_SxCR_MSIZE_8 | DMA_SxCR_PL_HIGH); // set up DMA operation for byte transfer
+        ulTransferType |= (DMA_SxCR_PSIZE_8 | DMA_SxCR_MSIZE_8 | DMA_SxCR_PL_HIGH); // set up DMA operation for byte transfer
         break;
     case 2:
         ulTransferType |= (DMA_SxCR_PSIZE_16 | DMA_SxCR_MSIZE_16 | DMA_SxCR_PL_HIGH); // set up DMA operation for short word transfer
@@ -376,6 +425,34 @@ extern STM32_DMA_STREAM *fnGetDMA_stream(unsigned long ulDmaTriggerSource)
     #endif
 }
 
+static void fnClearChannelInterruptFlags(unsigned long ulDmaTriggerSource, unsigned char ucFlags)
+{
+    STM32_DMA *ptrDMA_controller;
+    unsigned long _ulDmaTriggerSource = (ulDmaTriggerSource & 0x7);
+    volatile unsigned long *ptrDLA_flag;
+    unsigned long ulFlags;
+    if ((DMA_CONTROLLER_REF_2 & ulDmaTriggerSource) != 0) {
+        ptrDMA_controller = (STM32_DMA *)DMA2_BLOCK;
+    }
+    else {
+        ptrDMA_controller = (STM32_DMA *)DMA1_BLOCK;
+    }
+    if ((ulDmaTriggerSource & 0x7) >= 4) {
+        ptrDLA_flag = &ptrDMA_controller->DMA_HIFCR;
+        _ulDmaTriggerSource -= 4;
+    }
+    else {
+        ptrDLA_flag = &ptrDMA_controller->DMA_LIFCR;
+    }
+    _ulDmaTriggerSource = (_ulDmaTriggerSource + (_ulDmaTriggerSource * 4)); // multiply by 5
+    ulFlags = (ucFlags << _ulDmaTriggerSource);
+    *ptrDLA_flag = ulFlags;                                              // clear the flag
+    #if defined _WINDOWS
+    *ptrDLA_flag = 0;
+    *(ptrDLA_flag - 2) &= ~(ulFlags);
+    #endif
+}
+
 extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
 {
     STM32_DMA_STREAM *ptrDMAstream = fnGetDMA_stream(ulDmaTriggerSource);// select the stream registers to be used
@@ -384,11 +461,57 @@ extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
         break;
     case DMA_BUFFER_START:
     #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
-        ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                           // just enable the channel's operation
+        fnClearChannelInterruptFlags(ulDmaTriggerSource, (DMA_LIFCR_TCIF0 | DMA_LIFCR_HTIF0 | DMA_LIFCR_DMEIF0 | DMA_LIFCR_FEIFO0 | DMA_LIFCR_DMEIF0)); // ensure all flags are clear (the DMA may not start if old flags are not cleared)
+        ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                           // enable the channel's operation
+        #if defined _WINDOWS
+        if ((DMA_CONTROLLER_REF_2 & ulDmaTriggerSource) != 0) {
+            iDMA |= (DMA_CONTROLLER_8 << (ulDmaTriggerSource & 0x7));
+        }
+        else {
+            iDMA |= (DMA_CONTROLLER_0 << (ulDmaTriggerSource & 0x7));
+        }
+        #endif
     #endif
         break;
     case DMA_BUFFER_RESET:                                               // reset the DMA back to the start of the present buffer
     case DMA_BUFFER_RESTART:                                             // reset and start again
+        {
+    #if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
+        #if defined _WINDOWS
+            int iSize = 1;                                               // default is single byte size
+            register unsigned short usTransferRemaining;
+        #endif
+            int iChannelIndex = (ulDmaTriggerSource & 0x7);
+            if ((ulDmaTriggerSource & DMA_CONTROLLER_REF_2) != 0) {
+                iChannelIndex += 8;
+            }
+            ptrDMAstream->DMA_SxCR &= ~DMA_SxCR_EN;                      // disable DMA operation on the channel
+        #if defined _WINDOWS                                             // temporary - the pointer in the DMA controller doesn't change in hardware but the simulator presently does...
+            usTransferRemaining = (unsigned short)ptrDMAstream->DMA_SxNDTR; // the number of transfers that haven't been performed before stopping
+            if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_MSIZE_32) == DMA_SxCR_MSIZE_16) {
+                iSize = 2;                                               // transfer size is half-words
+            }
+            else if ((ptrDMAstream->DMA_SxCR & DMA_SxCR_MSIZE_32) == DMA_SxCR_MSIZE_32) {
+                iSize = 4;                                               // transfer size is long word
+            }
+            ptrDMAstream->DMA_SxM0AR += (usTransferRemaining * iSize);   // project to the end of the transfer that is remaining
+            ptrDMAstream->DMA_SxM0AR -= (usDMA_Length[iChannelIndex] * iSize); // set back to start of the input buffer
+        #endif
+            ptrDMAstream->DMA_SxNDTR = usDMA_Length[iChannelIndex];      // set the cycle length
+            if (iAction != DMA_BUFFER_RESET) {                           // if not a buffer reset without continued operation
+                fnClearChannelInterruptFlags(ulDmaTriggerSource, (DMA_LIFCR_TCIF0 | DMA_LIFCR_HTIF0 | DMA_LIFCR_DMEIF0 | DMA_LIFCR_FEIFO0 | DMA_LIFCR_DMEIF0)); // ensure all flags are clear (the DMA may not start if old flags are not cleared)
+                ptrDMAstream->DMA_SxCR |= DMA_SxCR_EN;                   // restart DMA from the start of the buffer
+        #if defined _WINDOWS
+                if ((DMA_CONTROLLER_REF_2 & ulDmaTriggerSource) != 0) {
+                    iDMA |= (DMA_CONTROLLER_8 << (ulDmaTriggerSource & 0x7));
+                }
+                else {
+                    iDMA |= (DMA_CONTROLLER_0 << (ulDmaTriggerSource & 0x7));
+                }
+        #endif
+            }
+    #endif
+        }
         break;
     }
 }

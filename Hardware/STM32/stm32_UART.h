@@ -1401,7 +1401,12 @@ extern QUEUE_TRANSFER fnTxByteDMA(QUEUE_HANDLE Channel, unsigned char *ptrStart,
     ptrStream->DMA_SxNDTR = tx_length;                                   // the number of service requests (the number of bytes to be transferred)
     ptrStream->DMA_SxCR |= DMA_SxCR_EN;                                  // start operation
     #if defined _WINDOWS
-    iDMA |= (DMA_CONTROLLER_0 << (_usart_tx_dma_stream[Channel] & 0x7)); // activate first DMA request
+    if ((_usart_tx_dma_stream[Channel] & DMA_CONTROLLER_REF_2) != 0) {
+        iDMA |= (DMA_CONTROLLER_8 << (_usart_tx_dma_stream[Channel] & 0x7)); // activate first DMA request
+    }
+    else {
+        iDMA |= (DMA_CONTROLLER_0 << (_usart_tx_dma_stream[Channel] & 0x7)); // activate first DMA request
+    }
     #endif
     return tx_length;
 }
