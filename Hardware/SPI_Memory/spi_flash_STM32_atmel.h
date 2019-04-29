@@ -192,7 +192,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SSPDR_X = ucCommand;                                                 // send command
 
     #if defined _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
     #endif
     WAIT_TRANSFER_END();                                                 // wait until tx byte has been sent and rx byte has been completely received
     (void)SSPDR_X;                                                       // reset receive data flag with dummy read - the rx data is not interesting here
@@ -242,13 +242,13 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SSPDR_X = 0xff;                                              // empty transmission byte
             WAIT_TRANSFER_END();                                         // wait until dummy tx byte has been sent and rx byte has been completely received
     #if defined _WINDOWS
-            SSPDR_X = fnSimAT45DBXXX(AT45DBXXX_READ, 0);                 // simulate the SPI FLASH device
+            SSPDR_X = fnSimSPI_Flash(AT45DBXXX_READ, 0);                 // simulate the SPI FLASH device
     #endif
             *ucData++ = (unsigned char)SSPDR_X;                          // read received byte and clear rx interrupt
         }
         __NEGATE_CS(ulChipSelectLine);                                   // negate chip select when complete
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
     #endif
     #if defined COUNT_SPI_TX
         iSPI_transmissions = 5;                                          // counter used only in special cases to record the number of bytes sent using the command
@@ -263,7 +263,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     while (ucTxCount < sizeof(ucCommandBuffer)) {                        // complete the command sequence
         SSPDR_X = ucCommandBuffer[ucTxCount++];                          // send data
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
     #endif
         WAIT_TRANSFER_END();                                             // wait until tx byte has been sent
     }
@@ -278,7 +278,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be read
             SSPDR_X = 0xff;
     #if defined _WINDOWS
-            SSPDR_X = fnSimAT45DBXXX(AT45DBXXX_READ, 0);                 // simulate the SPI FLASH device
+            SSPDR_X = fnSimSPI_Flash(AT45DBXXX_READ, 0);                 // simulate the SPI FLASH device
     #endif
             WAIT_TRANSFER_END();                                         // wait until tx byte has been sent and rx byte has been completely received
             *ucData++ = (unsigned char)SSPDR_X;
@@ -288,7 +288,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be written
             SSPDR_X = *ucData++;                                         // send data
     #if defined _WINDOWS
-            fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);     // simulate the SPI FLASH device
+            fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSPDR_X);     // simulate the SPI FLASH device
     #endif
             WAIT_TRANSFER_END();                                         // wait until tx byte has been sent
         }
@@ -297,7 +297,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     __NEGATE_CS(ulChipSelectLine);                                       // negate chip select when complete
     #if defined _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
     #endif
     REMOVE_SPI_FLASH_MODE();
 }

@@ -460,6 +460,29 @@
         #define SPI_FLASH_SECTOR_LENGTH (256 * SPI_FLASH_PAGE_LENGTH)    // sector size of code FLASH
     #endif
     #define SPI_FLASH_BLOCK_LENGTH  SPI_FLASH_SECTOR_LENGTH
+#elif defined SPI_FLASH_SECOND_SOURCE_MODE                               // three compatible alternatives
+    #define SPI_FLASH_IS25LP256D                                         // 32MBytes 2.3V..3.6V
+    #define SPI_FLASH_W25Q256                                            // alternative 32MBytes
+    #define SPI_FLASH_MX25L25635F                                        // alternative 32MBytes
+    #define SPI_FLASH_PAGE_LENGTH        (256)
+    #define SPI_FLASH_PAGES              (128 * 1024)                    // 32MBytes
+    #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                      // sub-sector size of SPI FLASH
+    #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                     // half-sector size of SPI FLASH
+    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // block size of SPI FLASH
+    #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH    // for compatibility - file system granularity
+    #define SPI_FLASH_SIZE               (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH)
+#elif defined SPI_FLASH_IS25
+    #define SPI_FLASH_IS25LP256D                                         // 32MBytes 2.3V..3.6V
+  //#define SPI_FLASH_IS25WP256D                                         // 32MBytes 1.65V..1.95V
+    #if defined SPI_FLASH_IS25LP256D || defined SPI_FLASH_IS25WP256D
+        #define SPI_FLASH_PAGES          (128 * 1024)
+    #endif
+    #define SPI_FLASH_PAGE_LENGTH        (256)
+    #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                      // sub-sector size of SPI FLASH
+    #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                     // half-sector size of SPI FLASH
+    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // block size of SPI FLASH
+    #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH    // for compatibility - file system granularity
+    #define SPI_FLASH_SIZE               (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH)
 #elif defined SPI_FLASH_W25Q
     #define SPI_FLASH_W25Q256
   //#define SPI_FLASH_W25Q128
@@ -474,7 +497,7 @@
     #define SPI_FLASH_PAGE_LENGTH        (256)
     #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                      // sub-sector size of SPI FLASH
     #define SPI_FLASH_HALF_SECTOR_LENGTH (32 * 1024)                     // half-sector size of SPI FLASH
-    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // sector size of SPI FLASH (not available on A-versions)
+    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // sector size of SPI FLASH
     #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_HALF_SECTOR_LENGTH    // for compatibility - file system granularity
     #define SPI_FLASH_SIZE               (SPI_FLASH_PAGES * SPI_FLASH_PAGE_LENGTH)
 #elif defined SPI_FLASH_MX25L
@@ -483,16 +506,17 @@
     #define SPI_FLASH_MX25L25635F
     #if defined SPI_FLASH_MX25L25635F
         #define SPI_FLASH_SIZE           (32 * 1024 * 1024)              // 256 Mbits/32 MBytes
-        #define SPI_FLASH_HALF_BLOCK_ERASE_LENGTH  (32 * 1024)
-        #define SPI_FLASH_BLOCK_ERASE_LENGTH       (64 * 1024)
+        #define SPI_FLASH_HALF_SECTOR_LENGTH       (32 * 1024)           // half block size
     #elif defined SPI_FLASH_MX25L12845E
         #define SPI_FLASH_SIZE           (16 * 1024 * 1024)              // 128 Mbits/16 MBytes
+        #define SPI_FLASH_HALF_SECTOR_LENGTH       (32 * 1024)           // half block size
     #else
         #define SPI_FLASH_SIZE           (2 * 1024 * 1024)               // 16 Mbits/2 MBytes
     #endif
     #define SPI_FLASH_PAGE_LENGTH        (256)
     #define SPI_FLASH_PAGES              (SPI_FLASH_SIZE/SPI_FLASH_PAGE_LENGTH)
-    #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
+    #define SPI_FLASH_SUB_SECTOR_LENGTH  (4 * 1024)                      // sector size of SPI FLASH
+    #define SPI_FLASH_SECTOR_LENGTH      (64 * 1024)                     // block size of SPI FLASH
     #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
     #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
   //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)

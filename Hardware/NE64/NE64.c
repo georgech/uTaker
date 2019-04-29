@@ -11,7 +11,7 @@
    File:        NE64.c [FREESCALE MC9S12NE64]
    Project:     Single Chip Embedded Internet
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2011
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
 
    25.02.2007 IIC control structure extended to array for project compatibility {1}
@@ -1549,7 +1549,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SPIDR = ucCommand;                                                   // send command
 
 #ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
     SPISR |= (SPTEF | SPIF);                                             // simulate tx and rx interrupt flags being set
 #endif
     while (!(SPISR & SPTEF)) {}                                          // wait until tx byte has been sent and rx byte has been completely received
@@ -1597,14 +1597,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SPIDR = 0xff;                                                // empty transmission byte
             while (!(SPISR & SPTEF)) {};                                 // wait until dummy tx byte has been sent and rx byte has been completely received
 #ifdef _WINDOWS
-            SPIDR = fnSimAT45DBXXX(AT45DBXXX_READ, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
+            SPIDR = fnSimSPI_Flash(AT45DBXXX_READ, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
             SPISR |= (SPTEF | SPIF);                                     // simulate tx and rx interrupt flags being set
 #endif
             *ucData++ = (unsigned char)SPIDR;                            // read received byte and clear rx interrupt
         }
         SPI_FLASH_PORT |= ucChipSelectLine;                              // deassert SS always on completion
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI EEPROM device
+        fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI EEPROM device
 #endif
         return;
 
@@ -1614,7 +1614,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     while (ucTxCount < sizeof(ucCommandBuffer)) {                        // complete the command sequence
         SPIDR = ucCommandBuffer[ucTxCount++];                            // send data
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
         SPISR |= (SPTEF | SPIF);                                         // simulate tx and rx interrupt flags being set
 #endif
         while (!(SPISR & SPTEF)) {};                                     // wait until tx byte has been sent and rx byte has been completely received
@@ -1632,7 +1632,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be read
             SPIDR = 0xff;
 #ifdef _WINDOWS
-            SPIDR = fnSimAT45DBXXX(AT45DBXXX_READ, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
+            SPIDR = fnSimSPI_Flash(AT45DBXXX_READ, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
             SPISR |= (SPTEF | SPIF);                                     // simulate tx and rx interrupt flags being set
 #endif
             while (!(SPISR & SPTEF)) {};                                 // wait until tx byte has been sent and rx byte has been completely received
@@ -1643,7 +1643,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be written
             SPIDR = *ucData++;                                           // send data
 #ifdef _WINDOWS
-            fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
+            fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPIDR, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI FLASH device
             SPISR |= (SPTEF | SPIF);                                     // simulate tx and rx interrupt flags being set
 #endif
             while (!(SPISR & SPTEF)) {};                                 // wait until tx byte has been sent and rx byte has been completely received
@@ -1652,7 +1652,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SPI_FLASH_PORT |= ucChipSelectLine;                                  // deassert SS always on completion
 #ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI EEPROM device
+    fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0, (SPI_FLASH_PORT & ucChipSelectLineSim)); // simulate the SPI EEPROM device
 #endif
 }
 

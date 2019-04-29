@@ -2324,12 +2324,21 @@ static void fnUpdatePeripheral(int iPort, unsigned long ulPeriph)
 
 // We can update port state displays if we want
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iThisPort)
 {
     unsigned long ulNewPeriph;
     int iPort = 0;
+    int iLastPort = PORTS_AVAILABLE;
+    if (iThisPort >= 0) {                                                // specific port being updated
+        iPort = iThisPort;
+        iLastPort = (iThisPort + 1);
+        if (__GPIO_IS_POWERED(iThisPort) == 0) {
+            _EXCEPTION("Port access without port powered up!!!!");
+            return;
+        }
+    }
 
-    while (iPort < PORTS_AVAILABLE) {
+    while (iPort < iLastPort) {
         ulNewPeriph = fnGetPresentPortPeriph(iPort + 1);
         if (ulGPIOPER[iPort] != ulNewPeriph) {
             ulGPIOPER[iPort] = ulNewPeriph;
@@ -2410,6 +2419,14 @@ extern void fnSimPorts(void)
         }
         iPort++;
     }
+}
+
+extern unsigned long fnCheckPortRead(int iPortRef, unsigned long ulValue)
+{
+    if (__GPIO_IS_POWERED(iPortRef) == 0) {                              // if the port is not powered up
+        _EXCEPTION("Reading from a port that is not powered up!!!!!");
+    }
+    return ulValue;
 }
 
 

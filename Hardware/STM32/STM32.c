@@ -185,7 +185,7 @@ static void STM32_LowLevelInit(void);
 #if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
     static void fnConfigSPIFileSystem(void);
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_S25FL1_K
+        #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_IS25
             #define SPI_FLASH_ATMEL                                      // default if not otherwise defined
         #endif
         #define _SPI_DEFINES
@@ -195,6 +195,7 @@ static void STM32_LowLevelInit(void);
             #include "../SPI_Memory/spi_flash_w25q.h"
             #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
             #include "../SPI_Memory/spi_flash_MX25L.h"
+            #include "../SPI_Memory/spi_flash_IS25LP.h"
             #include "../SPI_Memory/spi_flash_s25fl1-k.h"
         #undef _SPI_DEFINES
     #endif
@@ -253,6 +254,7 @@ static volatile int iInterruptLevel = 0;
         #include "../SPI_Memory/spi_flash_w25q.h"
         #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
         #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_IS25LP.h"
         #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _SPI_FLASH_INTERFACE
 #endif
@@ -2222,7 +2224,7 @@ INITHW void fnInitHW(void)                                               // perf
 #if defined USB_DEVICE_AVAILABLE && defined USB_INTERFACE && defined _STM32F103X
   //_CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, PORTA_BIT12, (OUTPUT_FAST | OUTPUT_PUSH_PULL), 0); // drive the USBDP pin as port with value '0' to avoid emumeration attempt by host
 #endif
-    fnUserHWInit();                                  _SIM_PORT_CHANGE    // allow the user to initialise hardware specific things
+    fnUserHWInit();                                  _SIM_PORT_CHANGE(-1)// allow the user to initialise hardware specific things
 #if (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
     fnConfigSPIFileSystem();                                             // configure SPI interface for maximum possible speed
@@ -2233,6 +2235,7 @@ INITHW void fnInitHW(void)                                               // perf
         #include "../SPI_Memory/spi_flash_w25q.h"
         #include "../SPI_Memory/spi_flash_STM32_MX66L.h"
         #include "../SPI_Memory/spi_flash_MX25L.h"
+        #include "../SPI_Memory/spi_flash_IS25LP.h"
         #include "../SPI_Memory/spi_flash_s25fl1-k.h"
     #undef _CHECK_SPI_CHIPS
     #endif

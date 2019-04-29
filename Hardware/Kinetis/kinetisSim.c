@@ -1598,6 +1598,22 @@ extern unsigned long fnGetPresentPortPeriph(int portNr)
     }
 }
 
+extern unsigned long fnCheckPortRead(int iPortRef, unsigned long ulValue)
+{
+#if defined KINETIS_WITH_PCC
+    volatile unsigned long *ptrPCC = PCC_PORT_ADDR;
+    ptrPCC += iPortRef;
+    if ((*ptrPCC & PCC_CGC) == 0) {                                      // if the port is not powered up
+        _EXCEPTION("Reading from a port that is not powered up!!!!!");
+    }
+#elif defined SIM_SCGC5
+    if ((SIM_SCGC5 & (SIM_SCGC5_PORTA << iPortRef)) == 0) {              // if the port is not powered up
+        _EXCEPTION("Reading from a port that is not powered up!!!!!");
+    }
+#endif
+    return ulValue;
+}
+
 
 // See whether there has been a port change which should be displayed
 //
@@ -3769,14 +3785,313 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
 
 // Update ports based on present register settings
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iPort)
 {
 #if !defined KINETIS_KM
     unsigned long ulNewState;
 #endif
+    switch (iPort) {
+    case PORTA:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTA & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTA) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOA_PDIR = ((unsigned char)(ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state
+    #else
+            ulNewState = (GPIOA_PDOR | GPIOA_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOA_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOA_PTOR;                                    // toggle bits from toggle register
+            GPIOA_PDOR = ulNewState;
+            GPIOA_PDIR = ((ulPort_in_A & ~GPIOA_PDDR) | (GPIOA_PDOR & GPIOA_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTA_GPCLR != 0) || (PORTA_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTA, PORTA_GPCHR, PORTA_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port A access without port A powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOA_PTOR = GPIOA_PSOR = GPIOA_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#if PORTS_AVAILABLE > 1
+    case PORTB:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTB & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTB) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOB_PDIR = ((unsigned char)(ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state
+    #else
+            ulNewState = (GPIOB_PDOR | GPIOB_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOB_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOB_PTOR;                                    // toggle bits from toggle register
+            GPIOB_PDOR = ulNewState;
+            GPIOB_PDIR = ((ulPort_in_B & ~GPIOB_PDDR) | (GPIOB_PDOR & GPIOB_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTB_GPCLR != 0) || (PORTB_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTB, PORTB_GPCHR, PORTB_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port B access without port B powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOB_PTOR = GPIOB_PSOR = GPIOB_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 2
+    case PORTC:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTC & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTC) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOC_PDIR = ((unsigned char)(ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state
+    #else
+            ulNewState = (GPIOC_PDOR | GPIOC_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOC_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOC_PTOR;                                    // toggle bits from toggle register
+            GPIOC_PDOR = ulNewState;
+            GPIOC_PDIR = ((ulPort_in_C & ~GPIOC_PDDR) | (GPIOC_PDOR & GPIOC_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTC_GPCLR != 0) || (PORTC_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTC, PORTC_GPCHR, PORTC_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port C access without port C powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOC_PTOR = GPIOC_PSOR = GPIOC_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 3
+    case PORTD:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTD & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTD) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOD_PDIR = ((unsigned char)(ulPort_in_D & ~GPIOD_PDDR) | (GPIOD_PDOR & GPIOD_PDDR)); // input state
+    #else
+            ulNewState = (GPIOD_PDOR | GPIOD_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOD_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOD_PTOR;                                    // toggle bits from toggle register
+            GPIOD_PDOR = ulNewState;
+            GPIOD_PDIR = ((ulPort_in_D & ~GPIOD_PDDR) | (GPIOD_PDOR & GPIOD_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTD_GPCLR != 0) || (PORTD_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTD, PORTD_GPCHR, PORTD_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port D access without port D powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOD_PTOR = GPIOD_PSOR = GPIOD_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 4
+    case PORTE:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTE & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTE) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOE_PDIR = ((unsigned char)(ulPort_in_E & ~GPIOE_PDDR) | (GPIOE_PDOR & GPIOE_PDDR)); // input state
+    #else
+            ulNewState = (GPIOE_PDOR | GPIOE_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOE_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOE_PTOR;                                    // toggle bits from toggle register
+            GPIOE_PDOR = ulNewState;
+            GPIOE_PDIR = ((ulPort_in_E & ~GPIOE_PDDR) | (GPIOE_PDOR & GPIOE_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTE_GPCLR != 0) || (PORTE_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTE, PORTE_GPCHR, PORTE_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port E access without port E powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOE_PTOR = GPIOE_PSOR = GPIOE_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 5
+    case PORTF:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTF & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTF) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOF_PDIR = ((unsigned char)(ulPort_in_F & ~GPIOF_PDDR) | (GPIOF_PDOR & GPIOF_PDDR)); // input state
+    #else
+            ulNewState = (GPIOF_PDOR | GPIOF_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOF_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOF_PTOR;                                    // toggle bits from toggle register
+            GPIOF_PDOR = ulNewState;
+            GPIOF_PDIR = ((ulPort_in_F & ~GPIOF_PDDR) | (GPIOF_PDOR & GPIOF_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTF_GPCLR != 0) || (PORTF_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTF, PORTF_GPCHR, PORTF_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port F access without port F powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOF_PTOR = GPIOF_PSOR = GPIOF_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 6
+    case PORTG:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTG & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTG) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOG_PDIR = ((unsigned char)(ulPort_in_G & ~GPIOG_PDDR) | (GPIOG_PDOR & GPIOG_PDDR)); // input state
+    #else
+            ulNewState = (GPIOG_PDOR | GPIOG_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOG_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOG_PTOR;                                    // toggle bits from toggle register
+            GPIOG_PDOR = ulNewState;
+            GPIOG_PDIR = ((ulPort_in_G & ~GPIOG_PDDR) | (GPIOG_PDOR & GPIOG_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTG_GPCLR != 0) || (PORTG_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTG, PORTG_GPCHR, PORTG_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port G access without port G powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOG_PTOR = GPIOG_PSOR = GPIOG_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 7
+    case PORTH:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTH & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTH) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOH_PDIR = ((unsigned char)(ulPort_in_H & ~GPIOH_PDDR) | (GPIOH_PDOR & GPIOH_PDDR)); // input state
+    #else
+            ulNewState = (GPIOH_PDOR | GPIOH_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOH_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOH_PTOR;                                    // toggle bits from toggle register
+            GPIOH_PDOR = ulNewState;
+            GPIOH_PDIR = ((ulPort_in_H & ~GPIOH_PDDR) | (GPIOH_PDOR & GPIOH_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTH_GPCLR != 0) || (PORTH_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTH, PORTH_GPCHR, PORTH_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port H access without port H powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOH_PTOR = GPIOH_PSOR = GPIOH_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+#if PORTS_AVAILABLE > 8
+    case PORTI:
+    #if defined KINETIS_WITH_PCC
+        if ((PCC_PORTI & PCC_CGC) != 0)                                  // if port is clocked
+    #elif defined SIM_SCGC5
+        if ((SIM_SCGC5 & SIM_SCGC5_PORTI) != 0)                          // if port is clocked
+    #endif
+        {
+    #if defined KINETIS_KM
+            GPIOI_PDIR = ((unsigned char)(ulPort_in_I & ~GPIOI_PDDR) | (GPIOI_PDOR & GPIOI_PDDR)); // input state
+    #else
+            ulNewState = (GPIOI_PDOR | GPIOI_PSOR);                      // set bits from set register
+            ulNewState &= ~(GPIOI_PCOR);                                 // clear bits from clear register
+            ulNewState ^= GPIOI_PTOR;                                    // toggle bits from toggle register
+            GPIOI_PDOR = ulNewState;
+            GPIOI_PDIR = ((ulPort_in_I & ~GPIOI_PDDR) | (GPIOI_PDOR & GPIOI_PDDR)); // input state
+        #if !defined KINETIS_KE || defined KINETIS_KE15 || defined KINETIS_KE18
+            if ((PORTI_GPCLR != 0) || (PORTI_GPCHR != 0)) {
+                fnSetPinCharacteristics(_PORTI, PORTI_GPCHR, PORTI_GPCLR);
+            }
+        #endif
+    #endif
+        }
+    #if defined KINETIS_WITH_PCC || defined SIM_SCGC5
+        else {
+            _EXCEPTION("Port I access without port I powered up!!!!");
+        }
+    #endif
+    #if !defined KINETIS_KM
+        GPIOI_PTOR = GPIOI_PSOR = GPIOI_PCOR = 0;                        // registers always read 0
+    #endif
+        return;
+#endif
+    default:
+        break;
+    }
 #if defined KINETIS_WITH_PCC
     if ((PCC_PORTA & PCC_CGC) != 0)                                      // if port is clocked
-#elif !defined KINETIS_KE
+#elif defined SIM_SCGC5
     if ((SIM_SCGC5 & SIM_SCGC5_PORTA) != 0)                              // if port is clocked
 #endif
     {

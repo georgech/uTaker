@@ -11,7 +11,7 @@
     File:      spi_flash_kinetis_MX25L.h - Macronix
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
@@ -211,7 +211,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_DATA_BYTES:                                                // 50MHz read - first setting the address and then reading the defined amount of data bytes
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -221,7 +221,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         if ((DataLength != 0) || (iEraseCommand != 0)) {
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 16));   // write parameters
     #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
@@ -230,12 +230,12 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
             WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));    // send page number offset
     #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
-            CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
             discardCount += 1;
     #else
             discardCount += 4;
@@ -247,7 +247,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset));     // send page number offset
             }
     #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
     #endif
             if (dataWrites == 0) {
                 dummyWrites = DataLength;                                // since we are reading we perform only dummy writes
@@ -260,18 +260,18 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #else
             WRITE_SPI_CMD0(*ucData++);                                   // always a write pair performed
         #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
         #endif
         #if (SPI_FLASH_FIFO_DEPTH < 2)
             WAIT_SPI_RECEPTION_END();                                    // wait until the command has been sent
             (void)READ_SPI_FLASH_DATA();                                 // discard the received byte
-            CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
         #endif
             WRITE_SPI_CMD0_LAST(*ucData);
             discardCount = 3;
     #endif
     #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
     #endif
         }
         break;
@@ -279,7 +279,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_JEDEC_ID:                                                  // read identification sequence (0x9f)
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -295,7 +295,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_STATUS_REGISTER:                                           // read single byte from status register (0x05)
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -315,7 +315,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case ENABLE_WRITE_STATUS_REG:
         WRITE_SPI_CMD0_LAST(ucCommand);                                  // write single command byte
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
         discardCount = 1;
         break;
@@ -323,7 +323,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case WRITE_STATUS_REGISTER:
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
     #if (SPI_FLASH_FIFO_DEPTH < 2)
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -335,7 +335,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0_LAST(ucCommand);                                  // write new value
     #if defined _WINDOWS
-        fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);       // simulate the SPI FLASH device
+        fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);      // simulate the SPI FLASH device
     #endif
         DataLength = 0;
         break;
@@ -349,7 +349,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
         else {
     #if defined _WINDOWS
-            SPI_RX_BYTE = fnSimS25FL1_K(S25FL1_K_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
+            SPI_RX_BYTE = fnSimSPI_Flash(S25FL1_K_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
     #endif
             *ucData++ = READ_SPI_FLASH_DATA();                           // read the byte from the receive FIFO and save to the application buffer
             DataLength--;
@@ -372,7 +372,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // write final data byte
             }
     #if defined _WINDOWS
-            fnSimS25FL1_K(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);   // simulate the SPI FLASH device
+            fnSimSPI_Flash(S25FL1_K_WRITE, (unsigned char)SPI_TX_BYTE);  // simulate the SPI FLASH device
     #endif
             dataWrites--;
             DataLength--;
@@ -393,7 +393,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }
         #endif
-    fnSimS25FL1_K(S25FL1_K_CHECK_SS, 0);                                 // simulate the SPI FLASH device
+    fnSimSPI_Flash(S25FL1_K_CHECK_SS, 0);                                // simulate the SPI FLASH device
     #endif
     #if defined REMOVE_SPI_FLASH_MODE
     REMOVE_SPI_FLASH_MODE();

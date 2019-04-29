@@ -520,7 +520,7 @@ extern signed char fnGetCANOwner(int iChannel, int i);                   // {41}
 
 
 extern void fnInitTime(char *argv[]);
-extern void fnSimPorts(void);
+extern void fnSimPorts(int);
 extern int  fnSimTimers(void);
 extern int  fnPortChanges(int);                                          // {28}
 extern unsigned long fnGetPresentPortState(int);
@@ -587,27 +587,28 @@ extern unsigned char fnSimM95xxx(int iSimType, unsigned char ucTxByte, unsigned 
 extern void fnInitSPI_DataFlash(void);                                   // {2}
 extern unsigned char *fnGetDataFlashStart(void);
 extern unsigned long fnGetDataFlashSize(void);
-extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte); // {14}
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte);
+//extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte); // {14}
     #define AT45DBXXX_READ     0
     #define AT45DBXXX_WRITE    1
     #define AT45DBXXX_CHECK_SS 2
 
-extern unsigned char fnSimSTM25Pxxx(int iSimType, unsigned char ucTxByte); // {13}{14}
+//extern unsigned char fnSimSTM25Pxxx(int iSimType, unsigned char ucTxByte); // {13}{14}
     #define STM25PXXX_READ     0
     #define STM25PXXX_WRITE    1
     #define STM25PXXX_CHECK_SS 2
 
-extern unsigned char fnSimSST25(int iSimType, unsigned char ucTxByte);   // {16}
+//extern unsigned char fnSimSST25(int iSimType, unsigned char ucTxByte);   // {16}
     #define SST25_READ         0
     #define SST25_WRITE        1
     #define SST25_CHECK_SS     2
 
-extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte);
+//extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte);
     #define W25Q_READ          0
     #define W25Q_WRITE         1
     #define W25Q_CHECK_SS      2
 
-extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte);
+//extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte);
     #define S25FL1_K_READ      0
     #define S25FL1_K_WRITE     1
     #define S25FL1_K_CHECK_SS  2

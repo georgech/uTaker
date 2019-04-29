@@ -11,7 +11,7 @@
    File:        spi_flash_lm3s_atmel.h [Luminary Micro]
    Project:     Single Chip Embedded Internet 
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
    This file contains SPI FLASH specific code for all chips that are supported.
    It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -151,7 +151,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     GPIODATA_A &= ~ucChipSelectLine;                                     // assert SS low before starting
     SSIDR_0 = ucCommand;                                                 // send command
 #ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);             // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);             // simulate the SPI FLASH device
     SSISR_0 &= ~SSI_BSY;                                                 // clear flag for simulator
 #endif
 
@@ -160,15 +160,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
   //case WRITE_BUFFER_2:
         SSIDR_0 = 0;
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
         SSIDR_0 = (unsigned char)(ulPageNumberOffset >> 8);
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
         SSIDR_0 = (unsigned char)ulPageNumberOffset;
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
         SSISR_0 &= ~SSI_BSY;                                             // clear flag for simulator
 #endif
         break;
@@ -201,7 +201,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
 #endif
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
 #if SPI_FLASH_PAGE_LENGTH >= 1024                                        // {4}
     #if SPI_FLASH_PAGE_LENGTH == 1024
@@ -223,11 +223,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
 #endif
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
         SSIDR_0 = 0;                                                     // dummy byte
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
         SSISR_0 &= ~SSI_BSY;                                             // clear flag for simulator
 #endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
@@ -236,15 +236,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case CONTINUOUS_ARRAY_READ:                                          // this is a legacy command for compatibility between B and D-devices
         SSIDR_0 = (unsigned char)(ulPageNumberOffset >> 16);
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
         SSIDR_0 = (unsigned char)(ulPageNumberOffset >> 8);
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
 #endif
         SSIDR_0 = (unsigned char)(ulPageNumberOffset);
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
         SSISR_0 &= ~SSI_BSY;                                             // clear flag for simulator
         SSISR_0 |= SSI_RNE;                                              // set flag for simulator
 #endif
@@ -269,14 +269,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         ucTxCount = (unsigned char)SSIDR_0;                              // clear command rx byte from RX FIFO
         while (DataLength--) {
 #ifdef _WINDOWS
-            SSIDR_0 = fnSimAT45DBXXX(AT45DBXXX_READ, (unsigned char)0);  // simulate the SPI FLASH device
+            SSIDR_0 = fnSimSPI_Flash(AT45DBXXX_READ, (unsigned char)0);  // simulate the SPI FLASH device
 #endif
             *ucData++ = (unsigned char)SSIDR_0;
         }
         GPIODATA_A |= ucChipSelectLine;                                  // deassert SS when complete
         REMOVE_SPI_FLASH_MODE();                                         // {1}
 #ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
 #endif
         return;
 
@@ -300,7 +300,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 SSIDR_0 = *ucData++;                                     // send data
                 DataLength--;
 #ifdef _WINDOWS
-                fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SSIDR_0); // simulate the SPI FLASH device
+                fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SSIDR_0); // simulate the SPI FLASH device
 #endif
                 if (++iDataCnt >= 8) {                                   // maximum FIFO depth
                     break;
@@ -336,7 +336,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 #endif
                 while (!(SSISR_0 & SSI_RNE)) {}                          // wait only if no reception ready
 #ifdef _WINDOWS
-                SSIDR_0 = fnSimAT45DBXXX(AT45DBXXX_READ, (unsigned char)0);// simulate the SPI FLASH device
+                SSIDR_0 = fnSimSPI_Flash(AT45DBXXX_READ, (unsigned char)0);// simulate the SPI FLASH device
 #endif
                 *ucData++ = (unsigned char)SSIDR_0;                      // read bytes to the return buffer
             } while (iDataCnt--);
@@ -351,7 +351,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     GPIODATA_A |= ucChipSelectLine;                                      // deassert SS when complete
     REMOVE_SPI_FLASH_MODE();                                             // {1}
 #ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
     SSISR_0 &= ~SSI_RNE;                                                 // clear flag for simulator
 #endif
 }

@@ -11,7 +11,7 @@
    File:        spi_flash_lm3s_sst25.h [Luminary Micro]
    Project:     Single Chip Embedded Internet 
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
    This file contains SPI FLASH specific code for all chips that are supported.
    It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -145,7 +145,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SSIDR_0 = ucCommand;                                                 // send command
 
     #ifdef _WINDOWS
-    fnSimSST25(SST25_WRITE, (unsigned char)SSIDR_0);                     // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSIDR_0);                 // simulate the SPI FLASH device
     SSISR_0 &= ~SSI_BSY;                                                 // clear flag for simulator
     #endif
 
@@ -186,7 +186,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SSIDR_0 = 0xff;                                              // empty transmission byte
             while (SSISR_0 & SSI_BSY) {};                                // wait for transfer to complete
     #ifdef _WINDOWS
-            SSIDR_0 = fnSimSST25(SST25_READ, 0);                         // simulate the SPI FLASH device
+            SSIDR_0 = fnSimSPI_Flash(SST25_READ, 0);                     // simulate the SPI FLASH device
             SSISR_0 &= ~(SSI_RNE | SSI_BSY);                             // simulate tx and rx interrupt flags being cleared
     #endif
             *ucData++ = (unsigned char)SSIDR_0;                          // read received byte and clear rx interrupt
@@ -200,7 +200,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         GPIODATA_A |= ucChipSelectLine;                                  // deassert SS when complete
         REMOVE_SPI_FLASH_MODE();                                         // {1}
     #ifdef _WINDOWS
-        fnSimSST25(SST25_CHECK_SS, 0);                                   // simulate the SPI FLASH device
+        fnSimSPI_Flash(SST25_CHECK_SS, 0);                               // simulate the SPI FLASH device
     #endif
         return;
 
@@ -213,7 +213,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     while (ucTxCount < sizeof(ucCommandBuffer)) {                        // complete the command sequence
         SSIDR_0 = ucCommandBuffer[ucTxCount++];                          // send data
     #ifdef _WINDOWS
-        fnSimSST25(SST25_WRITE, (unsigned char)SSIDR_0);                 // simulate the SPI FLASH device
+        fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSIDR_0);             // simulate the SPI FLASH device
         SSISR_0 &= ~(SSI_BSY);                                           // simulate tx and rx interrupt flags being cleared
         SSISR_0 |= SSI_RNE;
     #endif
@@ -234,7 +234,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             }
             else {
     #ifdef _WINDOWS
-                SSIDR_0 = fnSimSST25(SST25_READ, 0);                     // simulate the SPI FLASH device
+                SSIDR_0 = fnSimSPI_Flash(SST25_READ, 0);                 // simulate the SPI FLASH device
                 SSISR_0 &= ~(SSI_BSY);
     #endif
                 *ucData++ = (unsigned char)SSIDR_0;                      // save next valid byte
@@ -245,7 +245,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be written
             SSIDR_0 = *ucData++;                                         // send data
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SSIDR_0);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSIDR_0);         // simulate the SPI FLASH device
             SSISR_0 &= ~(SSI_RNE | SSI_BSY);                             // simulate tx and rx interrupt flags being cleared
     #endif
         }
@@ -260,7 +260,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     GPIODATA_A |= ucChipSelectLine;                                      // deassert SS when complete
     REMOVE_SPI_FLASH_MODE();                                             // {1}
     #ifdef _WINDOWS
-    fnSimSST25(SST25_CHECK_SS, 0);                                       // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_CHECK_SS, 0);                                   // simulate the SPI FLASH device
     #endif
 }
 

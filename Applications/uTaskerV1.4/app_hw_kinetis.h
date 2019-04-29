@@ -1627,6 +1627,9 @@
       //#define SUPPORT_RTC                                              // support real time clock
           //#define SUPPORT_RTC_ms                                       // ms RTC support
           //#define SUPPORT_RTC_us                                       // us RTC support
+        #if defined SUPPORT_RTC && defined FRDM_KE15Z
+            #define RTC_CLOCKOUT_ENABLE_32kHz                            // output 32kHz sigal on RTC_CLKOUT
+        #endif
     #endif
     #define ALARM_TASK   TASK_APPLICATION                                // alarm is handled by the application task (handled by time keeper if not defined)
     #if defined TWR_KL46Z48M || defined TWR_KL43Z48M
@@ -1634,9 +1637,6 @@
     #elif defined KINETIS_KL && !defined FRDM_KL03Z && !defined FRDM_KL27Z && !defined FRDM_KL28Z && !defined FRDM_KL82Z && !defined TWR_KL82Z72M // FRDM-KL03Z, FRDM-KL27Z, FRDM-KL28Z and FRDM-KL82Z have 32kHz crystals which are used as preference
         #define RTC_USES_LPO_1kHz                                        // use the 1kHz LPO clock as RTC source (not high accuracy)
       //#define RTC_USES_RTC_CLKIN                                       // 32.768kHz input on RTC_CLKIN
-    #endif
-    #if defined FRDM_KE15Z
-        #define RTC_CLOCKOUT_ENABLE_32kHz
     #endif
 #endif
 
@@ -2379,7 +2379,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
     #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
     #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
-  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
+  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-leveling)
 #elif defined SPI_FLASH_S25FL1_K
     #define SPI_FLASH_S25FL164K                                          // specific type used
     #define SPI_FLASH_SIZE               (8 * 1024 * 1024)               // 64 Mbits/8 MBytes
@@ -2388,7 +2388,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SPI_FLASH_SECTOR_LENGTH      (4 * 1024)                      // sector size of SPI FLASH
     #define SPI_FLASH_SECTORS            (SPI_FLASH_SIZE/SPI_FLASH_SECTOR_LENGTH)
     #define SPI_FLASH_BLOCK_LENGTH       SPI_FLASH_SECTOR_LENGTH         // for compatibility - file system granularity
-  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-levelling)
+  //#define SUPPORT_ERASE_SUSPEND                                        // automatically suspend an erase that is in progress when a write or a read is performed in a different sector (advised when FAT used in SPI Flash with block management/wear-leveling)
 #elif defined SPI_FLASH_W25Q
     #define SPI_FLASH_W25Q128
   //#define SPI_FLASH_W25Q16
@@ -3042,7 +3042,9 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SUPPORT_PDB                                                  // {19} support programmable delay block (can be used as timer and/or for triggering ADC/DAC)
 #endif
 
-//#define SUPPORT_I2S_SAI                                                // support I2S/SAI
+#if defined FRDM_K66F
+  //#define SUPPORT_I2S_SAI                                              // support I2S/SAI (DA7212 - dialog ultra-low power stereo codec)
+#endif
 
 #if !defined KINETIS_WITHOUT_PIT
     #define SUPPORT_PITS                                                 // support PITs
@@ -4510,8 +4512,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define BLINK_LED              (DEMO_LED_1)
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                     // let the port set up do this (the user can disable blinking)
-        #define CONFIG_TEST_OUTPUT()                                    // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+        #define INIT_WATCHDOG_LED()   _CONFIG_PORT_INPUT_FAST_HIGH(E, BLINK_LED, PORT_PS_UP_ENABLE) // let the port set up do this (the user can disable blinking)
+        #define CONFIG_TEST_OUTPUT()  _CONFIG_PORT_INPUT_FAST_HIGH(C, DEMO_LED_2, PORT_PS_UP_ENABLE) // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
     #else
         #define INIT_WATCHDOG_LED()  _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #define CONFIG_TEST_OUTPUT() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(C, (DEMO_LED_2), (DEMO_LED_2), (PORT_SRE_SLOW | PORT_DSE_HIGH))

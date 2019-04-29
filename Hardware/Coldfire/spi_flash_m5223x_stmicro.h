@@ -171,7 +171,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     QAR = QSPI_TRANSMIT_RAM_0;                                           // set address to first transmit location
     QDR = ucCommand;                                                     // prepare command
 	#ifdef _WINDOWS
-    fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);                 // simulate the SPI FLASH device
+    fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);                 // simulate the SPI FLASH device
     QIR |= QSPI_SPIF;
 	#endif
 
@@ -183,15 +183,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case PAGE_PROG:                                                      // program data to a page (programming started when CS line negated)
         QDR = (unsigned char)(ulPageNumberOffset >> 16);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = (unsigned char)(ulPageNumberOffset >> 8);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = (unsigned char)ulPageNumberOffset;
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 		#endif
 		SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the chip will be busy for some time
@@ -201,15 +201,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case SECTOR_ERASE:                                                   // erase one sector
         QDR = (unsigned char)(ulPageNumberOffset >> 16);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = (unsigned char)(ulPageNumberOffset >> 8);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = 0;                                                         // page offset is don't care
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 		#endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
@@ -218,15 +218,15 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_DATA_BYTES:                                                // read data from the chip
         QDR = (unsigned char)(ulPageNumberOffset >> 16);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = (unsigned char)(ulPageNumberOffset >> 8);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 		#endif
         QDR = (unsigned char)(ulPageNumberOffset);
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 		#endif
         ucTxCount = 3;
@@ -248,13 +248,13 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 		*ucData = (unsigned char)QDR;									 // dummy read
         while (DataLength--) {
 		#ifdef _WINDOWS
-            QDR = fnSimSTM25Pxxx(STM25PXXX_READ, (unsigned char)QAR);    // simulate the SPI FLASH device
+            QDR = fnSimSPI_Flash(STM25PXXX_READ, (unsigned char)QAR);    // simulate the SPI FLASH device
 		#endif
             *ucData++ = (unsigned char)QDR;
         }
         _SETBITS(QS, ucChipSelectLine);                                  // deassert SS when complete
 		#ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
 		#endif
         return;
 
@@ -289,13 +289,13 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         if (ucCommand != READ_DATA_BYTES) {                              // write type
             QDR = *ucData++;                                             // prepare data
 		#ifdef _WINDOWS
-            fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);         // simulate the SPI FLASH device
+            fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);         // simulate the SPI FLASH device
             QIR |= QSPI_SPIF;                                            // set flag for simulator
 		#endif
             while (--DataLength != 0) {                                  // for each byte in the QSPI transfer block
                 QDR = *ucData++;                                         // prepare data
 		#ifdef _WINDOWS
-                fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)QDR);     // simulate the SPI FLASH device
+                fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)QDR);     // simulate the SPI FLASH device
 		#endif
                 if (++iDataCnt >= 15) {                                  // maximum QSPI transfer length reached
                     DataLength--;
@@ -330,7 +330,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             QAR = QSPI_RECEIVE_RAM_0;                                    // set address to first receive location
             do {                                                         // collect each byte
 		#ifdef _WINDOWS
-                QDR = fnSimSTM25Pxxx(STM25PXXX_READ, (unsigned char)QAR);// simulate the SPI FLASH device
+                QDR = fnSimSPI_Flash(STM25PXXX_READ, (unsigned char)QAR);// simulate the SPI FLASH device
 		#endif
                 *ucData++ = (unsigned char)QDR;                          // read bytes to the return buffer
             } while (iDataCnt--);
@@ -342,7 +342,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     }
     _SETBITS(QS, ucChipSelectLine);                                      // deassert SS when complete
 		#ifdef _WINDOWS
-    fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
 		#endif
 }
 

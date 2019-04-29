@@ -219,7 +219,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         ulBit <<= 1;
         port_bit++;
     }
-    _SIM_PORT_CHANGE;
+    _SIM_PORT_CHANGE(-1);
 }
     #else
     #if !defined NO_PORT_INTERRUPTS_PORTA && (defined irq_PORT_A_E_ID || defined irq_PORTA_ID) // if port A is available and support has not been removed
@@ -1057,7 +1057,7 @@ static void fnEnterPortInterruptHandler(INTERRUPT_SETUP *port_interrupt, unsigne
         ulBit <<= 1;
         port_bit++;
     }
-    _SIM_PORT_CHANGE;
+    _SIM_PORT_CHANGE(-1);
 }
     #endif
 #endif

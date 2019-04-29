@@ -1003,7 +1003,7 @@ INITHW void fnInitHW(void)                                               // perf
 #endif
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things - note that heap cannot be used by this routine
 #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 #if defined SPI_SW_UPLOAD || defined SPI_FLASH_FAT || ((defined SPI_FILE_SYSTEM || defined SPI_EEPROM_FILE_SYSTEM) && defined FLASH_FILE_SYSTEM)
     // Power up the SPI interface, configure the pins used and select the mode and speed

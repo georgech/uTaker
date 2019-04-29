@@ -11,7 +11,7 @@
     File:      dns.c (DNS client)
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     26.12.2009 Add random ID to ensure that no routers block repeated ID values {1}
     09.12.2013 Correction of DNS query length and allow a host name to end with '.' (thanks to Jakob M.N) {2}
@@ -245,19 +245,19 @@ static int fnDNSListner(USOCKET dns_socket, unsigned char ucEvent, unsigned char
             return -1;                                                   // wrong ID
         }
 #endif
-        if (!(*ucData & 0x80)) {
+        if ((*ucData & 0x80) == 0) {
             return -1;                                                   // not an answer - we are not DNS server...
         }
-        if ((*ucData++ & 0x7a)) {
+        if ((*ucData++ & 0x7a) != 0) {
             fnDNS_error(DNS_ERROR_GENERAL);
             return -1;                                                   // op code not zero or message truncated
         }
-        if ((*ucData & 0x7f) && (*ucData & 0x80)) {
+        if (((*ucData & 0x7f) != 0) && ((*ucData & 0x80) != 0)) {
             fnDNS_error(DNS_OPCODE_ERROR);
             return -1;                                                   // op code not zero with recursion available
         }
         ucData++;
-        if ((*ucData++) || (*ucData++ != 1)) {
+        if ((*ucData++ != 0) || (*ucData++ != 1)) {
             fnDNS_error(DNS_ERROR_GENERAL);
             return -1;                                                   // more that one answer to a single question...
         }
@@ -274,7 +274,7 @@ static int fnDNSListner(USOCKET dns_socket, unsigned char ucEvent, unsigned char
 
         cTmpPtr = ptrDNS_host_name;
         while ((ucLabLen = *ucData++) != 0) {                            // label length
-            if (uMemcmp(ucData, (const unsigned char *)cTmpPtr, ucLabLen)) {
+            if (uMemcmp(ucData, (const unsigned char *)cTmpPtr, ucLabLen) != 0) {
                 return -1;                                               // compare with the searched host name
             }
             ucData += ucLabLen;
@@ -289,7 +289,7 @@ static int fnDNSListner(USOCKET dns_socket, unsigned char ucEvent, unsigned char
             }
         }
 
-        if (uMemcmp(ucZeroQTypeClass, (ucData - 1), sizeof(ucZeroQTypeClass))) {
+        if (uMemcmp(ucZeroQTypeClass, (ucData - 1), sizeof(ucZeroQTypeClass)) != 0) {
             fnDNS_error(DNS_ERROR_GENERAL);
             return -1;                                                   // bad type / class
         }

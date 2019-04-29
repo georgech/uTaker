@@ -168,14 +168,14 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
     //#define FreeLON                                                    // K64 based with integrated LON
     //#define TWR_K65F180M                                               // tower board http://www.utasker.com/kinetis/TWR-K65F180M.html
     //#define K66FX1M0                                                   // development board with K66FX1M0
-      #define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
+    //#define FRDM_K66F                                                  // freedom board http://www.utasker.com/kinetis/FRDM-K66F.html
     //#define TEENSY_3_6                                                 // USB development board with K66FX1M0 - http://www.utasker.com/kinetis/TEENSY_3.6.html
 
     //#define TWR_K70F120M                                               // K processors Cortex M4 with graphical LCD, Ethernet, USB, encryption, tamper - tower board http://www.utasker.com/kinetis/TWR-K70F120M.html
@@ -251,11 +251,11 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
     //#define NUCLEO_F207ZG                                              // evaluation board with STM32F207ZGT6U
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
+      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
     //#define NUCLEO_F496ZG                                              // evaluation board with STM32F496ZGT6U
     //#define NUCLEO_F746ZG                                              // evaluation board with STM32F746ZGT6U
     //#define NUCLEO_F767ZI                                              // evaluation board with STM32F767ZIT6U
-      #define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U (400MHz cortex-m7 with FPU)
+    //#define NUCLEO_H743ZI                                              // evaluation board with STM32H743ZIT6U (400MHz cortex-m7 with FPU)
 
     //#define DISCOVERY_32F411E                                          // evaluation board with STM32F411VET6 (cortex-m4 with FPU)
     //#define ST_MB913C_DISCOVERY                                        // discovery board with STM32F100RB
@@ -482,6 +482,7 @@
     #define KINETIS_KL26
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
+  //#define NMI_IN_FLASH                                                 // test handling NMI input directly at startup
 #elif defined rcARM_KL26
     #define TARGET_HW            "FRDM-KL26Z"
     #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((10 * 1024) * MEM_FACTOR)
@@ -637,7 +638,7 @@
     #define KINETIS_KL43
     #define DEVICE_WITHOUT_CAN                                           // KL doesn't have CAN controller
     #define DEVICE_WITHOUT_ETHERNET                                      // KL doesn't have Ethernet controller
-    #define STOP_WATCH_APPLICATION
+  //#define STOP_WATCH_APPLICATION
     #if defined STOP_WATCH_APPLICATION
         #undef _TICK_RESOLUTION
         #define _TICK_RESOLUTION     TICK_UNIT_MS(10) 
@@ -1390,9 +1391,14 @@
 #if defined FLASH_FILE_SYSTEM && defined SPI_FILE_SYSTEM                 // when a file system is located in SPI flash
     // Specify the SPI flash type used
     //
+  //#define SPI_FLASH_SECOND_SOURCE_MODE                                 // allow multiple flash types to be detected and used
+      //#define SIM_DISABLE_IS25                                         // since only one device type is used at a time disable the types to not be simulated
+        #define SIM_DISABLE_W25Q
+        #define SIM_DISABLE_MX25L
+  //#define SPI_FLASH_IS25                                               // use ISSI IS25 SPI flash rather than ATMEL
   //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
-  //#define SPI_FLASH_MX66L
-    #define SPI_FLASH_MX25L                                              // use Macronix SPI flash rather than ATMEL
+    #define SPI_FLASH_MX25L                                              // use Macronix MX25 SPI flash rather than ATMEL
+  //#define SPI_FLASH_MX66L                                              // use Macronix MX66 SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL
   //#define SPI_FLASH_S25FL1_K                                           // use Spansion SPI flash rather than ATMEL
@@ -1405,7 +1411,7 @@
         #endif
     #elif defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L
         #define FILE_GRANULARITY (8 * SPI_FLASH_BLOCK_LENGTH)            // 32k file granularity
-    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q
+    #elif defined SPI_FLASH_SST25 || defined SPI_FLASH_W25Q || defined SPI_FLASH_IS25
         #define FILE_GRANULARITY (SPI_FLASH_BLOCK_LENGTH)                // (4096 byte blocks) file granularity is equal to sub-sector FLASH granularity (as defined by the device)
     #else
       //#define FILE_GRANULARITY (4 * SPI_FLASH_BLOCK_LENGTH)            // (4224/2112 byte blocks) file granularity is equal to a multiple of the FLASH granularity (as defined by the device)
@@ -1584,6 +1590,8 @@
         #if defined USE_DMX_RDM_SLAVE
             #define USER_DEFINED_UART_TX_FRAME_COMPLETE                  // user callback on completion of frame transmission
         #endif
+    #else
+        #define USER_DEFINED_UART_RX_HANDLER
     #endif
 
   //#define USE_PPP                                                      // allow TCP/IP on serial
@@ -1632,7 +1640,7 @@
           //#define USE_USB_AUDIO                                        // audio device
             #if defined USE_USB_AUDIO
                 #define AUDIO_BUFFER_COUNT  (32)                         // this many isochronous packets can fit into the buffer (the buffer size is AUDIO_BUFFER_COUNT * isochronous endpoint size)
-                #define AUDIO_FFT                                        // perform FFT on audio input input
+              //#define AUDIO_FFT                                        // perform FFT on audio input input
                     #define CMSIS_DSP_FFT_512                            // enable 512 point FFT
             #endif
             #if defined USE_USB_CDC

@@ -11,7 +11,7 @@
     File:        spi_flash_lpc_sst25.h
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2013
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -168,7 +168,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SSPDR_X = ucCommand;                                                 // send command
 
     #ifdef _WINDOWS
-    fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);                     // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);                 // simulate the SPI FLASH device
     SSPSR_X &= ~SSP_BSY;                                                 // clear flag for simulator
     #endif
 
@@ -185,15 +185,15 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         if ((DataLength != 0) || (iEraseCommand != 0)) {
             SSPDR_X = (unsigned char)(ulPageNumberOffset >> 16);         // send page number offset
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
     #endif
             SSPDR_X = (unsigned char)(ulPageNumberOffset >> 8);          // send page number offset
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
     #endif
             SSPDR_X = (unsigned char)(ulPageNumberOffset);               // send page number offset
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
             SSPSR_X &= ~SSP_BSY;                                         // clear flag for simulator
     #endif
             iDiscard = 4;
@@ -211,7 +211,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 SSPDR_X = *ucData++;                                     // send data
                 iDiscard++;
     #ifdef _WINDOWS
-                fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
+                fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);     // simulate the SPI FLASH device
                 SSPSR_X &= ~SSP_BSY;                                     // clear flag for simulator
     #endif
             }
@@ -226,7 +226,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 while (iFifoDepth--) {
     #ifdef _WINDOWS
                     if (iDiscard == 0) {
-                        SSPDR_X = fnSimSST25(SST25_READ, 0);             // simulate the SPI FLASH device
+                        SSPDR_X = fnSimSPI_Flash(SST25_READ, 0);         // simulate the SPI FLASH device
                     }
                     else {
                         SSPDR_X = 0xff;
@@ -248,7 +248,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (iFifoDepth--) {
     #ifdef _WINDOWS
             if (iDiscard == 0) {
-                SSPDR_X = fnSimSST25(SST25_READ, 0);                     // simulate the SPI FLASH device
+                SSPDR_X = fnSimSPI_Flash(SST25_READ, 0);                 // simulate the SPI FLASH device
             }
             else {
                 SSPDR_X = 0xff;
@@ -277,7 +277,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SSPDR_X = (unsigned char)*ucData++;                          // send data
             iDiscard++;
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
             SSPSR_X &= ~SSP_BSY;                                         // clear flag for simulator
     #endif
             if (++iFifoDepth >= 8) {
@@ -297,7 +297,7 @@ extern void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     }
     CS_SET_PORT = ulChipSelectLine;                     _SIM_PORT_CHANGE // deassert SS when complete
     #ifdef _WINDOWS
-    fnSimSST25(SST25_CHECK_SS, 0);                                       // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_CHECK_SS, 0);                                   // simulate the SPI FLASH device
     #endif
     REMOVE_SPI_FLASH_MODE();
 }

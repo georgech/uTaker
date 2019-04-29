@@ -49,6 +49,7 @@
     09.06.2018 Add FREE_RUNNING_RX_DMA_RECEPTION mode for SREC/iHEX loader in order to avoid need for an intermediate programming buffer and XON/XOFF pause operation {33}
     11.06.2018 Update KBOOT to V2.0.0
     09.11.2018 Add AES-256 decryption option to KBOOT UART/USB loaders   {34}
+    25.04.2019 Allow iHEX/SREC to be terminated by CR or LF, or CR+LF or LF+CR {35}
 
 */
 
@@ -351,7 +352,7 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         tInterfaceParameters.Config &= ~(USE_XON_OFF);                   // disable XON/XOFF flow control
         uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
         #else
-        tInterfaceParameters.ucDMAConfig = 0;
+        tInterfaceParameters.ucDMAConfig = 0; // (UART_TX_DMA);
         #endif
     #endif
     #if defined USER_DEFINED_UART_RX_HANDLER
@@ -829,11 +830,11 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
         }
     #else
-        if (ucSerialInputMessage[iInputLength] == '\n') {                // ignore
-            continue;
-        }
         switch (iAppState) {
         case STATE_ACTIVE:
+            if (ucSerialInputMessage[0] == '\n') {
+                continue;
+            }
             if (ucSerialInputMessage[iInputLength] == '\r') {
                 int iLastLength = iInputLength;
                 iInputLength = 0;
@@ -990,14 +991,18 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
             break;
         #if !defined REMOVE_SREC_LOADING                                 // {17}
         case STATE_LOADING:
-            if (ucSerialInputMessage[iInputLength] == 0x03) {            // ctrl + C to abort before, or during load
+            if ((0 == iInputLength) && ((ucSerialInputMessage[0] == '\n') || (ucSerialInputMessage[0] == '\r'))) { // {35} ignore CR or LF at the start of a line
+                continue;
+            }
+            if (ucSerialInputMessage[iInputLength] == ASCII_ETX) {       // ctrl + C to abort before, or during load (0x03)
                 fnDebugMsg(" Aborted!\r\n");
                 iInputLength = 0;
                 fnPrintScreen();
                 iAppState = STATE_ACTIVE;
                 break;
             }
-            if (ucSerialInputMessage[iInputLength++] == '\r') {          // line received
+            if ((ucSerialInputMessage[iInputLength] == '\r') || (ucSerialInputMessage[iInputLength] == '\n')) { // {35} line received (LF or CR)
+                iInputLength++;
             #if defined USB_MSD_ACCEPTS_SREC_FILES || defined USB_MSD_ACCEPTS_HEX_FILES // {30}
                 switch (fnHandleRecord(ucSerialInputMessage, (ucSerialInputMessage + iInputLength), SERIAL_LOADING_IN_OPERATION))
             #else
@@ -1047,9 +1052,12 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
                 }
                 iInputLength = 0;
             }
+            else {                                                       // {35}
+                iInputLength++;
+            }
             break;
         case STATE_ERROR:
-            if (ucSerialInputMessage[iInputLength] == 0x12) {            // CTRL + R
+            if (ucSerialInputMessage[iInputLength] == ASCII_DC2) {       // CTRL + R (0x12)
                 uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.2 * SEC), T_RESET);
                 iAppState = STATE_RESETTING;
             }

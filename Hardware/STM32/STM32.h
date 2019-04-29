@@ -44,14 +44,14 @@
 
 
 #if defined _WINDOWS
-    #define _SIM_PORT_CHANGE   fnSimPorts();
+    #define _SIM_PORT_CHANGE(port) fnSimPorts(port);
     #define _EXCEPTION(x)      *(unsigned char *)0 = 0                   // generate exception when simulating
 #else
     #define _EXCEPTION(x)                                                // ignore on target
     #ifdef COMPILE_IAR
         #include <intrinsics.h>                                          // include IAR intrinsic (disable/enable interrupt) V6
     #endif
-    #define _SIM_PORT_CHANGE
+    #define _SIM_PORT_CHANGE(x)
 #endif
 #if !defined __CONFIG__
     #include "config.h"
@@ -8394,7 +8394,7 @@ typedef struct stVECTOR_TABLE
     (((characteristics) << 10) & (0x1000 & pins)) | \
     (((characteristics) << 11) & (0x2000 & pins)) | \
     (((characteristics) << 12) & (0x4000 & pins)) | \
-    (((characteristics) << 13) & (0x8000 & pins))));   _SIM_PORT_CHANGE
+    (((characteristics) << 13) & (0x8000 & pins))));   _SIM_PORT_CHANGE(PORT##ref)
 
   #define OUTPUT_SLOW                 (GPIO_OSPEEDR_2MHz)                // 2 MHz
   #define OUTPUT_MEDIUM               (GPIO_OSPEEDR_25MHz)               // 25 MHz
@@ -8442,7 +8442,7 @@ typedef struct stVECTOR_TABLE
      ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((characteristics) << 16)) | \
      ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((characteristics) << 20)) | \
      ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((characteristics) << 24)) | \
-     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics) << 28))); _SIM_PORT_CHANGE
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics) << 28))); _SIM_PORT_CHANGE(PORT##ref)
 
     #define OUTPUT_SLOW                 0x2                              // 2 MHz
     #define OUTPUT_MEDIUM               0x1                              // 10 MHz
@@ -8500,7 +8500,7 @@ typedef struct stVECTOR_TABLE
      ((characteristics << 18) & (((0x1000 & pins) << 12)| ((0x1000 & pins) << 13)))| \
      ((characteristics << 20) & (((0x2000 & pins) << 13)| ((0x2000 & pins) << 14)))| \
      ((characteristics << 22) & (((0x4000 & pins) << 14)| ((0x4000 & pins) << 15)))| \
-     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); _SIM_PORT_CHANGE // {17}
+     ((unsigned long)((unsigned long long)(characteristics) << 24) & (((0x8000 & pins) << 15)| ((0x8000 & pins) << 16)))); _SIM_PORT_CHANGE(PORT##ref) // {17}
 #elif defined _STM32F103X
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  __POWER_UP_GPIO(ref); GPIO##ref##_ODR |= ((characteristics >> 16) & pins); GPIO##ref##_ODR &= ~((~characteristics >> 16) & pins); \
          GPIO##ref##_CRL = ((GPIO##ref##_CRL & \
@@ -8536,7 +8536,7 @@ typedef struct stVECTOR_TABLE
          ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((characteristics & 0x0f) << 16)) | \
          ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((characteristics & 0x0f) << 20)) | \
          ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((characteristics & 0x0f) << 24)) | \
-         ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics & 0x0f) << 28))); _SIM_PORT_CHANGE
+         ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics & 0x0f) << 28))); _SIM_PORT_CHANGE(PORT##ref)
 
 #else
     #define _CONFIG_PORT_INPUT(ref, pins, characteristics)  __POWER_UP_GPIO(ref); GPIO##ref##_ODR |= (characteristics >> 16); \
@@ -8573,7 +8573,7 @@ typedef struct stVECTOR_TABLE
          ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((characteristics & 0x0f) << 16)) | \
          ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((characteristics & 0x0f) << 20)) | \
          ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((characteristics & 0x0f) << 24)) | \
-         ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics & 0x0f) << 28))); _SIM_PORT_CHANGE
+         ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & ((characteristics & 0x0f) << 28))); _SIM_PORT_CHANGE(PORT##ref)
 #endif
 
 // Configure peripheral functions
@@ -8694,7 +8694,7 @@ typedef struct stVECTOR_TABLE
      ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
      ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
      ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
-     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE(PORT##ref)
 
     // Enable power to port, clear the pins' to inputs and set alternative function and output characteristics, then set the specific function type
     //
@@ -8769,7 +8769,7 @@ typedef struct stVECTOR_TABLE
      ((((0x1000 & pins) << 4) | ((0x1000 & pins) << 5)  | ((0x1000 & pins) << 6)  | ((0x1000 & pins) << 7))  & ((per_func) << 16)) | \
      ((((0x2000 & pins) << 7) | ((0x2000 & pins) << 8)  | ((0x2000 & pins) << 9)  | ((0x2000 & pins) << 10)) & ((per_func) << 20)) | \
      ((((0x4000 & pins) << 10)| ((0x4000 & pins) << 11) | ((0x4000 & pins) << 12) | ((0x4000 & pins) << 13)) & ((per_func) << 24)) | \
-     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE
+     ((((0x8000 & pins) << 13)| ((0x8000 & pins) << 14) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16)) & (unsigned long)((unsigned long long)(per_func) << 28))); _SIM_PORT_CHANGE(PORT##ref)
 
     // Enable power to port, set the pins' to analog inputs
     //
@@ -8863,24 +8863,32 @@ typedef struct stVECTOR_TABLE
 
 // Write full port width
 //
-#define _WRITE_PORT(ref, value)        GPIO##ref##_ODR = (value); _SIM_PORT_CHANGE
+#define _WRITE_PORT(ref, value)        GPIO##ref##_ODR = (value); _SIM_PORT_CHANGE(PORT##ref)
 
 
 // Write to a port with a mask
 //
-#define _WRITE_PORT_MASK(ref, value, mask)  GPIO##ref##_ODR = ((GPIO##ref##_ODR & ~mask) | (value & mask)); _SIM_PORT_CHANGE
+#define _WRITE_PORT_MASK(ref, value, mask)  GPIO##ref##_ODR = ((GPIO##ref##_ODR & ~mask) | (value & mask)); _SIM_PORT_CHANGE(PORT##ref)
 
 // Toggle a port with a mask
 //
-#define _TOGGLE_PORT(ref, mask)        GPIO##ref##_ODR ^= (mask); _SIM_PORT_CHANGE
+#define _TOGGLE_PORT(ref, mask)        GPIO##ref##_ODR ^= (mask); _SIM_PORT_CHANGE(PORT##ref)
 
 // Read full port width
 //
-#define _READ_PORT(ref)                GPIO##ref##_IDR;
+#if defined _WINDOWS
+    #define _READ_PORT(ref)            fnCheckPortRead(PORT##ref, (GPIO##ref##_IDR))
+#else
+    #define _READ_PORT(ref)            GPIO##ref##_IDR;
+#endif
 
 // Read from a port with a mask
 //
-#define _READ_PORT_MASK(ref, mask)    (GPIO##ref##_IDR & (mask))
+#if defined _WINDOWS
+    #define _READ_PORT_MASK(ref, mask)     fnCheckPortRead(PORT##ref, (GPIO##ref##_IDR & (mask)))
+#else
+    #define _READ_PORT_MASK(ref, mask)    (GPIO##ref##_IDR & (mask))
+#endif
 
 // Configure outputs and then set a value to them
 //
@@ -8900,7 +8908,7 @@ typedef struct stVECTOR_TABLE
          (((0x0100 & pins) << 8)  | ((0x0100 & pins) << 9)  | ((0x0200 & pins) << 9)  | ((0x0200 & pins) << 10))  | \
          (((0x0400 & pins) << 10) | ((0x0400 & pins) << 11) | ((0x0800 & pins) << 11) | ((0x0800 & pins) << 12))  | \
          (((0x1000 & pins) << 12) | ((0x1000 & pins) << 13) | ((0x2000 & pins) << 13) | ((0x2000 & pins) << 14))  | \
-         (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))); _SIM_PORT_CHANGE
+         (((0x4000 & pins) << 14) | ((0x4000 & pins) << 15) | ((0x8000 & pins) << 15) | ((0x8000 & pins) << 16))))); _SIM_PORT_CHANGE(PORT##ref)
 #else
     #define _FLOAT_PORT(ref, pins)         GPIO##ref##_CRL &= ~(((pins & 0x0001) << 2)  | ((pins & 0x0001) << 3)  | \
                                                                 ((pins & 0x0002) << 5)  | ((pins & 0x0002) << 6)  | \
@@ -8917,7 +8925,7 @@ typedef struct stVECTOR_TABLE
                                                                 ((pins & 0x1000) << 6)  | ((pins & 0x1000) << 7)  | \
                                                                 ((pins & 0x2000) << 9)  | ((pins & 0x2000) << 10) | \
                                                                 ((pins & 0x4000) << 12) | ((pins & 0x4000) << 13) | \
-                                                                ((pins & 0x8000) << 15) | ((pins & 0x8000) << 16)); _SIM_PORT_CHANGE
+                                                                ((pins & 0x8000) << 15) | ((pins & 0x8000) << 16)); _SIM_PORT_CHANGE(PORT##ref)
 #endif
 
 // Set from inputs to outputs 
@@ -8926,7 +8934,7 @@ typedef struct stVECTOR_TABLE
     #define _DRIVE_PORT_OUTPUT(ref, pins)  GPIO##ref##_MODER = (GPIO##ref##_MODER | \
          (((0x0001 & pins)) | ((0x0002 & pins) << 1) | ((0x0004 & pins) << 2) | ((0x0008 & pins) << 3) | ((0x0010 & pins) << 4) | ((0x0020 & pins) << 5) | \
          ((0x0040 & pins) << 6) | ((0x0080 & pins) << 7) | ((0x0100 & pins) << 8) | ((0x0200 & pins) << 9) | ((0x0400 & pins) << 10)| ((0x0800 & pins) << 11)| \
-         ((0x1000 & pins) << 12)| ((0x2000 & pins) << 13)| ((0x4000 & pins) << 14)| ((0x8000 & pins) << 15))); _SIM_PORT_CHANGE
+         ((0x1000 & pins) << 12)| ((0x2000 & pins) << 13)| ((0x4000 & pins) << 14)| ((0x8000 & pins) << 15))); _SIM_PORT_CHANGE(PORT##ref)
 #else
     #define _DRIVE_PORT_OUTPUT(ref, pins)   GPIO##ref##_CRL |=  (((pins & 0x0001) << 2)  | ((pins & 0x0001) << 3)  | \
                                                                 ((pins & 0x0002) << 5)  | ((pins & 0x0002) << 6)  | \
@@ -8943,7 +8951,7 @@ typedef struct stVECTOR_TABLE
                                                                 ((pins & 0x1000) << 6)  | ((pins & 0x1000) << 7)  | \
                                                                 ((pins & 0x2000) << 9)  | ((pins & 0x2000) << 10) | \
                                                                 ((pins & 0x4000) << 12) | ((pins & 0x4000) << 13) | \
-                                                                ((pins & 0x8000) << 15) | ((pins & 0x8000) << 16)); _SIM_PORT_CHANGE
+                                                                ((pins & 0x8000) << 15) | ((pins & 0x8000) << 16)); _SIM_PORT_CHANGE(PORT##ref)
 #endif
 
 // Set from inputs to outputs and set a value to them
@@ -8954,8 +8962,8 @@ typedef struct stVECTOR_TABLE
 // Set and clear individual bits of a port
 //
 #ifdef _WINDOWS
-    #define _SETBITS(ref, mask)        GPIO##ref##_ODR |= (mask); _SIM_PORT_CHANGE
-    #define _CLEARBITS(ref, mask)      GPIO##ref##_ODR &= ~(mask); _SIM_PORT_CHANGE
+    #define _SETBITS(ref, mask)        GPIO##ref##_ODR |= (mask); _SIM_PORT_CHANGE(PORT##ref)
+    #define _CLEARBITS(ref, mask)      GPIO##ref##_ODR &= ~(mask); _SIM_PORT_CHANGE(PORT##ref)
 #else
     #if defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX
         #define _SETBITS(ref, mask)        GPIO##ref##_BSRR = (mask & 0xffff)

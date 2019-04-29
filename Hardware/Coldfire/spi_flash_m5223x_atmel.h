@@ -11,7 +11,7 @@
     File:      spi_flash_m5223x_atmel.h [FREESCALE Coldfire V2 MCU]
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2017
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -176,8 +176,8 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
   //QDR = (QSPI_BITSE | QSPI_CS_3 | QSPI_CS_2 | QSPI_CS_1 | QSPI_CS_0);  // no chip select since we control it via port - 8 bit access {2}
     QAR = QSPI_TRANSMIT_RAM_0;                                           // set address to first transmit location
     QDR = ucCommand;                                                     // prepare command
-#ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);                 // simulate the SPI FLASH device
+#if defined _WINDOWS
+    fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);                 // simulate the SPI FLASH device
     QIR |= QSPI_SPIF;
 #endif
 
@@ -192,16 +192,16 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case WRITE_BUFFER_1:                                                 // write data to the buffer
   //case WRITE_BUFFER_2:
         QDR = 0;
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
         QDR = (unsigned char)(ulPageNumberOffset >> 8);
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
         QDR = (unsigned char)ulPageNumberOffset;
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 #endif
         break;
@@ -236,8 +236,8 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         QDR = (unsigned char)(ulPageNumberOffset >> 7);
     #endif
 #endif
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
 #if SPI_FLASH_PAGE_LENGTH >= 1024
     #if SPI_FLASH_PAGE_LENGTH == 1024                                    // power of 2s mode
@@ -258,12 +258,12 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         QDR = (unsigned char)(ulPageNumberOffset << 1);
     #endif
 #endif
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
         QDR = 0;                                                         // dummy byte
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 #endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
@@ -271,16 +271,16 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     case CONTINUOUS_ARRAY_READ:                                          // this is a legacy command for compatibility between B and D-devices
         QDR = (unsigned char)(ulPageNumberOffset >> 16);
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
         QDR = (unsigned char)(ulPageNumberOffset >> 8);
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
 #endif
         QDR = (unsigned char)(ulPageNumberOffset);
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);             // simulate the SPI FLASH device
         QIR |= QSPI_SPIF;                                                // set flag for simulator
 #endif
         QDR = 0xff;                                                      // 4 dummy bytes needed before the device returns data
@@ -308,14 +308,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         QAR = QSPI_RECEIVE_RAM_0;                                        // set address to first receive location
         ucTxCount = (unsigned char)QDR;                                  // clear command rx byte
         while (DataLength--) {
-#ifdef _WINDOWS
-            QDR = fnSimAT45DBXXX(AT45DBXXX_READ, (unsigned char)QAR);    // simulate the SPI FLASH device
+#if defined _WINDOWS
+            QDR = fnSimSPI_Flash(AT45DBXXX_READ, (unsigned char)QAR);    // simulate the SPI FLASH device
 #endif
             *ucData++ = (unsigned char)QDR;
         }
         _SETBITS(QS, ucChipSelectLine);                                  // deassert SS when complete
-#ifdef _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+#if defined _WINDOWS
+        fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
 #endif
         return;
 
@@ -337,14 +337,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         QAR = QSPI_TRANSMIT_RAM_0;                                       // set address to first transmit location
         if (ucCommand != CONTINUOUS_ARRAY_READ) {                        // write type
             QDR = *ucData++;                                             // prepare data
-#ifdef _WINDOWS
-            fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);         // simulate the SPI FLASH device
+#if defined _WINDOWS
+            fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);         // simulate the SPI FLASH device
             QIR |= QSPI_SPIF;                                            // set flag for simulator
 #endif
             while (--DataLength != 0) {                                  // for each byte in the QSPI transfer block
                 QDR = *ucData++;                                         // prepare data
-#ifdef _WINDOWS
-                fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)QDR);     // simulate the SPI FLASH device
+#if defined _WINDOWS
+                fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)QDR);     // simulate the SPI FLASH device
 #endif
                 if (++iDataCnt >= 15) {                                  // maximum QSPI transfer length reached
                     DataLength--;
@@ -378,21 +378,21 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
             QAR = QSPI_RECEIVE_RAM_0;                                    // set address to first receive location
             do {                                                         // collect each byte
-#ifdef _WINDOWS
-                QDR = fnSimAT45DBXXX(AT45DBXXX_READ, (unsigned char)QAR);// simulate the SPI FLASH device
+#if defined _WINDOWS
+                QDR = fnSimSPI_Flash(AT45DBXXX_READ, (unsigned char)QAR);// simulate the SPI FLASH device
 #endif
                 *ucData++ = (unsigned char)QDR;                          // read bytes to the return buffer
             } while (iDataCnt--);
         }
     }
     if (ucCommand != CONTINUOUS_ARRAY_READ) {                            // commands that have only written wait here for transmission to complete
-        while (!(QIR & QSPI_SPIF)) {};                                   // wait for transfer to complete
+        while ((QIR & QSPI_SPIF) == 0) {};                               // wait for transfer to complete
         QIR = QSPI_SPIF;                                                 // clear interrupt flag
     }
 
     _SETBITS(QS, ucChipSelectLine);                                      // deassert SS when complete
-#ifdef _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+#if defined _WINDOWS
+    fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
 #endif
 }
 

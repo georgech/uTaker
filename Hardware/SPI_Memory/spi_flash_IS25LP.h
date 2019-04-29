@@ -8,7 +8,7 @@
     www.uTasker.com    Skype: M_J_Butcher
 
     ---------------------------------------------------------------------
-    File:      spi_flash_w25q.h - Winbond
+    File:      spi_flash_IS25LP.h - ISSI
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
     Copyright (C) M.J.Butcher Consulting 2004..2019
@@ -17,22 +17,41 @@
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
     Its goal is to improve overall readability of the hardware interface.
 
-    15.01.2016 Added SPI_FLASH_W25Q128 and control of final SPI byte for Kinetis parts with FIFO based SPI CS
-    02.02.2017 Correct read for FIFO based SPI                           {1}
-    01.03.2017 Correct write for FIFO based SPI                          {2}
-    13.07.2017 Adapt chip select line control dependency                 {3}
-    19.08.2017 Correct chip select control of multiple SPI devices       {4}
-
     **********************************************************************/
 
 
-#if defined SPI_FLASH_W25Q
+#if defined SPI_FLASH_IS25
 
 #if defined _SPI_DEFINES
+    #if defined _STM32
+        #define MANUAL_FLASH_CS_CONTROL
+        #define ASSERT_CS_LINE(cs_line)      __ASSERT_CS(cs_line)
+        #define NEGATE_CS_LINE(cs_line)      __NEGATE_CS(cs_line)
+        #define FLUSH_SPI_FIFO_AND_FLAGS()
+        #define WRITE_SPI_CMD0(ucCommand)    SSPDR_X = ucCommand
+        #define WRITE_SPI_CMD0_LAST(ucData)  SSPDR_X = ucData
+        #define READ_SPI_FLASH_DATA()        (unsigned char)SSPDR_X
+        #define CLEAR_RECEPTION_FLAG()
+        #if defined _WINDOWS
+            #define WAIT_TRANSFER_END()      while ((SSPSR_X & SPISR_TXE) == 0) { SSPSR_X |= SPISR_TXE;} \
+                                             while (SSPSR_X & SPISR_BSY) {SSPSR_X &= ~SPISR_BSY;}
+        #else
+            #define WAIT_TRANSFER_END()      while ((SSPSR_X & SPISR_TXE) == 0) {} \
+                                             while (SSPSR_X & SPISR_BSY) {}
+        #endif
+        #define WAIT_SPI_RECEPTION_END()     WAIT_TRANSFER_END()
+        #if !defined SPI_FLASH_FIFO_DEPTH
+            #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
+        #endif
+    #elif defined _KINETIS
+        #if !defined SPI_FLASH_FIFO_DEPTH
+            #define SPI_FLASH_FIFO_DEPTH     1                           // if no fifo depth is specified we assume that it is 1
+        #endif
+    #endif
     #if defined SPI_FLASH_MULTIPLE_CHIPS
-        #define __EXTENDED_CS     iChipSelect,                           // {4}
-        static unsigned char fnCheckW25Qxx(int iChipSelect);
-        static const STORAGE_AREA_ENTRY spi_flash_storage = {
+        #define __EXTENDED_CS     iChipSelect,
+        static unsigned char fnCheckIS25XXX(int iChipSelect);
+        static const STORAGE_AREA_ENTRY spi_flash_storage_IS25 = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH + (SPI_DATA_FLASH_SIZE - 1)),
@@ -40,9 +59,9 @@
             SPI_FLASH_DEVICE_COUNT                                       // multiple devices
         };
     #else
-        #define __EXTENDED_CS                                            // {4}
-        static unsigned char fnCheckW25Qxx(void);
-        static const STORAGE_AREA_ENTRY spi_flash_storage = {
+        #define __EXTENDED_CS
+        static unsigned char fnCheckIS25XXX(void);
+        static const STORAGE_AREA_ENTRY spi_flash_storage_IS25 = {
             (void *)&default_flash,                                      // link to internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH),      // spi flash area starts after internal flash
             (unsigned char *)(FLASH_START_ADDRESS + SIZE_OF_FLASH + (SPI_DATA_FLASH_SIZE - 1)),
@@ -57,32 +76,37 @@
     // - if there are multiple devices, each will be recorded
     //
 #if defined _CHECK_SPI_CHIPS
-        #if defined SPI_FLASH_MULTIPLE_CHIPS
-    ucSPI_FLASH_Type[0] = fnCheckW25Qxx(0);                              // flag whether the first SPI FLASH device is connected
-        #else
-    ucSPI_FLASH_Type[0] = fnCheckW25Qxx();                               // flag whether the SPI FLASH device is connected
-        #endif
-    if (ucSPI_FLASH_Type[0] < W25Q10) {                                  // we expect at least this part to be available
+    #if defined SPI_FLASH_MULTIPLE_CHIPS
+    ucSPI_FLASH_Type[0] = fnCheckIS25XXX(0);                             // flag whether the first SPI FLASH device is connected
+    #else
+    ucSPI_FLASH_Type[0] = fnCheckIS25XXX();                              // flag whether the SPI FLASH device is connected
+    #endif
+    if (ucSPI_FLASH_Type[0] < IS25LP_WP_256D) {                          // we expect at least this part to be available
+    #if !defined SPI_FLASH_SECOND_SOURCE_MODE
         POWER_DOWN_SPI_FLASH_INTERFACE();                                // power down SPI 
+    #endif
     }
     else {
-        #if defined SPI_FLASH_MULTIPLE_CHIPS                             // check for further devices
+    #if defined SPI_FLASH_MULTIPLE_CHIPS                                 // check for further devices
         int i = 0;
         while (++i < SPI_FLASH_DEVICE_COUNT) {
-            ucSPI_FLASH_Type[i] = fnCheckW25Qxx(i);
+            ucSPI_FLASH_Type[i] = fnCheckIS25XXX(i);
         }
-        #endif
-        UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage;   // insert spi flash as storage medium
+    #endif
+        UserStorageListPtr = (STORAGE_AREA_ENTRY *)&spi_flash_storage_IS25; // insert spi flash as storage medium
+    #if defined SPI_FLASH_SECOND_SOURCE_MODE
+        fnSPI_command = fnSPI_command_is25;
+    #endif
     }
 #endif
 
 
 
 #if defined _SPI_FLASH_INTERFACE
-// This is the main interface code to the Winbond SPI FLASH device
+// This is the main interface code to the ISSI SPI FLASH device
 //
 /* =================================================================== */
-/*                             W25Qxx driver                           */
+/*                             IS25 driver                             */
 /* =================================================================== */
 
 #define CHECK_SPI_FLASH_BUSY     0x00                                    // pseudo request to see whether device is ready
@@ -106,8 +130,8 @@
 #define PAGE_PROG                0x02
 #define QUAD_PROGRAM_PAGE        0x32
 #define SUB_SECTOR_ERASE         0x20                                    // sector erase - 4k (name for compatibility)
-#define HALF_SECTOR_ERASE        0x52                                    // half block erase - 32k (name for compatibility)
-#define SECTOR_ERASE             0xd8                                    // block erase - 64k (name for compatibility)
+#define HALF_BLOCK_ERASE         0x52                                    // half block erase - 32k
+#define BLOCK_ERASE              0xd8                                    // block erase - 64k
 #define CHIP_ERASE               0x60
 #define ERASE_SUSPEND            0x75
 #define ERASE_RESUME             0x7a
@@ -127,32 +151,24 @@
 #define FAST_READ_QUAD_I_O       0xeb
 #define WORD_READ_QUAD_I_O       0xe7
 #define OCTAL_WORD_READ_QUAD_I_O 0xe3
+#if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    #define ENTER_4_BYTE_MODE    0xb7
+    #define EXIT_4_BYTE_MODE     0xe9
+#endif
 
-#define MANUFACTURER_ID_WB       0xef                                    // Winbond manufacturer's ID
+#define MANUFACTURER_ID_ISSI     0x9d                                    // ISSI manufacturer's ID
 
 // Unique ID's
 //
-#define DEVICE_ID_1_DATA_WB_FLASH_1M    0x??                             // 1MBit / 128kByte - W25X10
-#define DEVICE_ID_1_DATA_WB_FLASH_2M    0x??                             // 2MBit / 256kByte - W25X20
-#define DEVICE_ID_1_DATA_WB_FLASH_Q2M   0x??                             // 2MBit / 256kByte - W25Q20
-#define DEVICE_ID_1_DATA_WB_FLASH_4M    0x??                             // 4MBit / 512kByte - W25X40
-#define DEVICE_ID_1_DATA_WB_FLASH_Q4M   0x??                             // 4MBit / 512kByte - W25Q40
-#define DEVICE_ID_1_DATA_WB_FLASH_Q8M   0x??                             // 8MBit / 1MegByte - W25Q80
-#define DEVICE_ID_1_DATA_WB_FLASH_Q16M  0x15                             // 16MBit / 2MegByte - W25Q16
-#define DEVICE_TYPE_Q16                 0x40
-#define DEVICE_ID_1_DATA_WB_FLASH_Q32M  0x??                             // 32MBit / 4MegByte - W25Q32
-#define DEVICE_ID_1_DATA_WB_FLASH_Q64M  0x??                             // 64MBit / 8MegByte - W25Q64
-#define DEVICE_ID_1_DATA_WB_FLASH_Q128M 0x18                             // 128MBit / 16MegByte - W25Q128
-#define DEVICE_TYPE_Q128                0x60
-#define DEVICE_ID_1_DATA_WB_FLASH_Q256M 0x??                             // 256MBit / 32MegByte - W25Q256
+#define DEVICE_ID_1_DATA_ISSI_FLASH_256M 0x19                            // 256MBit / 32MegByte - IS25LP256D/IS25WP256D
 
 
 // SPI FLASH hardware interface
 //
     #if defined SPI_FLASH_MULTIPLE_CHIPS
-static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOffset, int iChipSelect, volatile unsigned char *ucData, MAX_FILE_LENGTH DataLength)
+static void fnSPI_command_is25(unsigned char ucCommand, unsigned long ulPageNumberOffset, int iChipSelect, volatile unsigned char *ucData, MAX_FILE_LENGTH DataLength)
     #else
-static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOffset, volatile unsigned char *ucData, MAX_FILE_LENGTH DataLength)
+static void fnSPI_command_is25(unsigned char ucCommand, unsigned long ulPageNumberOffset, volatile unsigned char *ucData, MAX_FILE_LENGTH DataLength)
     #endif
 {
     #define CMD_WRITE 0x01
@@ -167,7 +183,11 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     int iRead = 0;
     int iErase = 0;
     unsigned char ucTxCount = 0;
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    unsigned char ucCommandBuffer[4];
+    #else
     unsigned char ucCommandBuffer[3];
+    #endif
 
     FLUSH_SPI_FIFO_AND_FLAGS();                                          // ensure that the FIFOs are empty and the status flags are reset before starting
 
@@ -175,7 +195,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         volatile unsigned char ucStatus;
         SPI_FLASH_Danger[iChipSelect] = 0;                               // device will no longer be busy after continuing
         do {
-            fnSPI_command(READ_STATUS_REGISTER_1, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
+            fnSPI_command_is25(READ_STATUS_REGISTER_1, 0, __EXTENDED_CS &ucStatus, 1); // read busy status register
     #if defined MANAGED_FILES
             if (ucCommand == CHECK_SPI_FLASH_BUSY) {                     // pseudo request to see whether device is ready
                 if ((ucStatus & STATUS_BUSY) == 0) {
@@ -197,13 +217,13 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SET_SPI_FLASH_MODE();
 
-    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // control chip select line when no automation is available or when specifically preferred
     ASSERT_CS_LINE(ulChipSelectLine);                                    // assert the chip select line
     #endif
 
     switch (ucCommand) {
-    case HALF_SECTOR_ERASE:                                              // 32k half-block
-    case SECTOR_ERASE:                                                   // 64k block erase
+    case BLOCK_ERASE:                                                    // 64k block erase
+    case HALF_BLOCK_ERASE:                                               // 32k half-block
     case SUB_SECTOR_ERASE:                                               // 4k sector
         iErase = 1;
     case PAGE_PROG:
@@ -213,14 +233,21 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #if defined _WINDOWS
         fnSimSPI_Flash(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);          // simulate the SPI FLASH device
     #endif
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+        ucCommandBuffer[0] = (unsigned char)(ulPageNumberOffset >> 24);  // define the address to be read, written or erased
+        ucCommandBuffer[1] = (unsigned char)(ulPageNumberOffset >> 16);
+        ucCommandBuffer[2] = (unsigned char)(ulPageNumberOffset >> 8);
+        ucCommandBuffer[3] = (unsigned char)(ulPageNumberOffset);
+    #else
         ucCommandBuffer[0] = (unsigned char)(ulPageNumberOffset >> 16);  // define the address to be read, written or erased
         ucCommandBuffer[1] = (unsigned char)(ulPageNumberOffset >> 8);
         ucCommandBuffer[2] = (unsigned char)(ulPageNumberOffset);
+    #endif
         while (ucTxCount < sizeof(ucCommandBuffer)) {                    // complete the command sequence
             WAIT_SPI_RECEPTION_END();                                    // wait until at least one byte is in the receive FIFO
-            (void)READ_SPI_FLASH_DATA();                                 // {1} the rx data is not interesting here
+            (void)READ_SPI_FLASH_DATA();                                 // the rx data is not interesting here
             CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
-            if ((ucTxCount == 2) && (iErase != 0)) {                     // erase doesn't have further data after the address
+            if ((ucTxCount == (sizeof(ucCommandBuffer) - 1)) && (iErase != 0)) { // erase doesn't have further data after the address
                 WRITE_SPI_CMD0_LAST(ucCommandBuffer[ucTxCount++]);       // send address with no further data to follow
             }
             else {
@@ -232,18 +259,19 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
         break;
 
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+    case ENTER_4_BYTE_MODE:
+    #endif
     case WRITE_DISABLE:
     case WRITE_ENABLE:
         WRITE_SPI_CMD0_LAST(ucCommand);                                  // send command
     #if defined _WINDOWS
         fnSimSPI_Flash(W25Q_WRITE, (unsigned char)SPI_TX_BYTE);          // simulate the SPI FLASH device
     #endif
-  //#if !defined DSPI_SPI                                                // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
         (void)READ_SPI_FLASH_DATA();                                     // discard the received byte
-  //#endif
-    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
-        NEGATE_CS_LINE(ulChipSelectLine);                                //  negate the chip select line
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // control chip select line when no automation is available or when specifically preferred
+        NEGATE_CS_LINE(ulChipSelectLine);                                // negate the chip select line
     #endif
     #if defined _WINDOWS
         #if defined DSPI_SPI
@@ -300,8 +328,8 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     }
     else {
         WAIT_SPI_RECEPTION_END();                                        // wait until tx byte has been sent
-        (void)READ_SPI_FLASH_DATA();                                     // {2} discard
-        CLEAR_RECEPTION_FLAG();                                          // {2} clear the receive flag
+        (void)READ_SPI_FLASH_DATA();                                     // discard
+        CLEAR_RECEPTION_FLAG();                                          // clear the receive flag
         while (DataLength-- != 0) {                                      // while data bytes to be written
             if (DataLength == 0) {                                       // final byte
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // send data (final byte)
@@ -316,12 +344,12 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
             }
             WAIT_SPI_RECEPTION_END();                                    // wait until tx byte has been sent
-            (void)READ_SPI_FLASH_DATA();                                 // {2} discard
-            CLEAR_RECEPTION_FLAG();                                      // {2} clear the receive flag
+            (void)READ_SPI_FLASH_DATA();                                 // discard
+            CLEAR_RECEPTION_FLAG();                                      // clear the receive flag
         }
     }
 
-    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // {3} control chip select line when no automation is available or when specifically preferred
+    #if !defined DSPI_SPI || defined MANUAL_FLASH_CS_CONTROL             // control chip select line when no automation is available or when specifically preferred
     NEGATE_CS_LINE(ulChipSelectLine);                                    // negate the chip select line
     #endif
     #if defined _WINDOWS
@@ -338,23 +366,23 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 // Check whether a known SPI FLASH device can be detected - called only once on start up
 //
 #if defined SPI_FLASH_MULTIPLE_CHIPS
-static unsigned char fnCheckW25Qxx(int iChipSelect)
+static unsigned char fnCheckIS25XXX(int iChipSelect)
 #else
-static unsigned char fnCheckW25Qxx(void)
+static unsigned char fnCheckIS25XXX(void)
 #endif
 {
     volatile unsigned char ucID[3];
     unsigned char ucReturnType = NO_SPI_FLASH_AVAILABLE;
-    fnDelayLoop(10000);                                                  // the SPI Flash requires maximum 10ms after power has been applied until it can be read
-    fnSPI_command(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
-    if (ucID[0] == MANUFACTURER_ID_WB) {                                 // Winbond memory part recognised
+    fnDelayLoop(10000);                                                  // the SPI Flash requires maximum 10ms after power has been applied until it can be written
+    fnSPI_command_is25(READ_JEDEC_ID, 0, __EXTENDED_CS ucID, sizeof(ucID));
+    if (ucID[0] == MANUFACTURER_ID_ISSI) {                               // ISSI memory part recognised
         switch (ucID[2]) {
-        case DEVICE_ID_1_DATA_WB_FLASH_Q16M:
-            ucReturnType = W25Q16;
+    #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)
+        case DEVICE_ID_1_DATA_ISSI_FLASH_256M:
+            fnSPI_command_is25(ENTER_4_BYTE_MODE, 0, __EXTENDED_CS ucID, 0); // switch to 4 byte mode so that more that 16MByte can be addressed
+            ucReturnType = IS25LP_WP_256D;
             break;
-        case DEVICE_ID_1_DATA_WB_FLASH_Q128M:
-            ucReturnType = W25Q128;
-            break;
+    #endif
         default:                                                         // possibly a larger part but we don't accept it
             return NO_SPI_FLASH_AVAILABLE;
         }

@@ -151,7 +151,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case WRITE_ENABLE:                                                   // enable subsequent writes
         WRITE_SPI_CMD0_LAST(ucCommand);                                  // single byte write
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
         WAIT_SPI_RECEPTION_END();
 #if defined KINETIS_KL
@@ -163,7 +163,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SPI_TX_BYTE &= ~(ulChipSelectLine);
         }
     #endif
-        fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
 #endif
         REMOVE_SPI_FLASH_MODE();
         return;
@@ -184,7 +184,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_MANUFACTURER_ID:                                           // get then manufacturer and chip size information
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
 #if defined KINETIS_KL
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -204,7 +204,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     case READ_STATUS_REGISTER:                                           // read single byte from status register
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
 #if defined KINETIS_KL
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -222,7 +222,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     if (iNoWriteAddress == 0) {                                          // if a command and three address bytes are to be sent
         WRITE_SPI_CMD0(ucCommand);                                       // write command byte
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
 #if defined KINETIS_KL
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -230,7 +230,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 16));
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
 #if defined KINETIS_KL
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -238,7 +238,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
 #if defined KINETIS_KL
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -251,7 +251,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             WRITE_SPI_CMD0_LAST((unsigned char)ulPageNumberOffset);      // if no data length this is the final byte
         }
 #if defined _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
 #endif
     }
 
@@ -263,7 +263,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
         else {
 #if defined _WINDOWS
-            SPI_RX_BYTE = fnSimSTM25Pxxx(STM25PXXX_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
+            SPI_RX_BYTE = fnSimSPI_Flash(STM25PXXX_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
 #endif
             *ucData++ = READ_SPI_FLASH_DATA();                           // read the byte from the receive FIFO and save to the application buffer
             DataLength--;
@@ -286,7 +286,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // write final data byte
             }
 #if defined _WINDOWS
-            fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
+            fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
 #endif
             dataWrites--;
             DataLength--;
@@ -307,7 +307,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }
     #endif
-    fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
 #endif
     REMOVE_SPI_FLASH_MODE();
 }

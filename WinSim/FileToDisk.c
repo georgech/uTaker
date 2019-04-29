@@ -134,10 +134,12 @@
         #define SPI_FLASH_FILE "SST25XXXX.ini"                           // {7}
     #elif defined SPI_FLASH_S25FL1_K
         #define SPI_FLASH_FILE "S25FL1-K.ini"
-    #elif defined SPI_FLASH_MX25L
+    #elif defined SPI_FLASH_MX25L && !(defined SPI_FLASH_SECOND_SOURCE_MODE && defined SIM_DISABLE_MX25L)
         #define SPI_FLASH_FILE "MX25Lxxxxx.ini"
-    #elif defined SPI_FLASH_W25Q
+    #elif defined SPI_FLASH_W25Q && !(defined SPI_FLASH_SECOND_SOURCE_MODE && defined SIM_DISABLE_W25Q)
         #define SPI_FLASH_FILE "W25QXXX.ini"
+    #elif defined SPI_FLASH_IS25 && !(defined SPI_FLASH_SECOND_SOURCE_MODE && defined SIM_DISABLE_IS25)
+        #define SPI_FLASH_FILE "IS25XXX.ini"
     #else
         #define SPI_FLASH_FILE "AT45DBXXX.ini"                           // {3}
     #endif

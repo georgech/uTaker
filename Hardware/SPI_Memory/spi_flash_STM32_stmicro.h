@@ -169,7 +169,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SSPDR_X = ucCommand;                                                 // send command
 
     #ifdef _WINDOWS
-    fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
+    fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SSPDR_X);             // simulate the SPI FLASH device
     #endif
     WAIT_TRANSFER_END();                                                 // wait until tx byte has been sent and rx byte has been completely received
     ulDummy = SSPDR_X;                                                   // reset receive data flag with dummy read - the rx data is not interesting here
@@ -196,13 +196,13 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SSPDR_X = 0xff;                                              // empty transmission byte
             WAIT_TRANSFER_END();                                         // wait until dummy tx byte has been sent and rx byte has been completely received
     #ifdef _WINDOWS
-            SSPDR_X = fnSimSTM25Pxxx(STM25PXXX_READ, 0);                 // simulate the SPI FLASH device
+            SSPDR_X = fnSimSPI_Flash(STM25PXXX_READ, 0);                 // simulate the SPI FLASH device
     #endif
             *ucData++ = (unsigned char)SSPDR_X;                          // read received byte and clear rx interrupt
         }
         __NEGATE_CS(ulChipSelectLine);                                   // negate chip select when complete
     #ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                           // simulate the SPI FLASH device
     #endif
         return;
     }
@@ -210,7 +210,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     while (ucTxCount < sizeof(ucCommandBuffer)) {                        // complete the command sequence
         SSPDR_X = ucCommandBuffer[ucTxCount++];                          // send data
     #ifdef _WINDOWS
-        fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
+        fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SSPDR_X);         // simulate the SPI FLASH device
     #endif
         WAIT_TRANSFER_END();                                             // wait until tx byte has been sent
     }
@@ -220,7 +220,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be read
             SSPDR_X = 0xff;
     #ifdef _WINDOWS
-            SSPDR_X = fnSimSTM25Pxxx(STM25PXXX_READ, 0);                 // simulate the SPI FLASH device
+            SSPDR_X = fnSimSPI_Flash(STM25PXXX_READ, 0);                 // simulate the SPI FLASH device
     #endif
             WAIT_TRANSFER_END();                                         // wait until tx byte has been sent and rx byte has been completely received
             *ucData++ = (unsigned char)SSPDR_X;
@@ -230,7 +230,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be written
             SSPDR_X = *ucData++;                                         // send data
     #ifdef _WINDOWS
-            fnSimSTM25Pxxx(STM25PXXX_WRITE, (unsigned char)SSPDR_X);     // simulate the SPI FLASH device
+            fnSimSPI_Flash(STM25PXXX_WRITE, (unsigned char)SSPDR_X);     // simulate the SPI FLASH device
     #endif
             WAIT_TRANSFER_END();                                         // wait until tx byte has been sent
         }
@@ -239,7 +239,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     __NEGATE_CS(ulChipSelectLine);                                       // negate chip select when complete
     #ifdef _WINDOWS
-    fnSimSTM25Pxxx(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(STM25PXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
     #endif
 }
 

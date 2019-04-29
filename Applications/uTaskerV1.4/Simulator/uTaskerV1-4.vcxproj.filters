@@ -1774,6 +1774,9 @@
     <ClInclude Include="..\..\..\Hardware\STM32\stm32_DMA.h">
       <Filter>Hardware\STM32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_IS25LP.h">
+      <Filter>Hardware\SPI_Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cursor1.cur">

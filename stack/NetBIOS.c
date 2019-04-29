@@ -11,7 +11,7 @@
     File:      NetBIOS.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     21.12.2012 Change fnStartNetBIOS_Server() return value to USOCKET    {1}
     07.04.2013 Don't reply when the IP address is presently 0.0.0.0 (eg. before DHCP has completed) {2}

@@ -20,15 +20,7 @@
 
 #if defined _STM32 && !defined __APP_HW_STM32__
 #define __APP_HW_STM32__
-
-#if defined _WINDOWS
-    #define _SIM_PORTS fnSimPorts()
-#else
-    #define _SIM_PORTS
-#endif
-
 #define SD_CONTROLLER_AVAILABLE                                          // older kwikstik's can't use this (default then to SPI interface) but from Rev. 5 they need it
-
 
 #if defined STM3210C_EVAL                                                // STM32F107VCT (72MHz)
     #define CRYSTAL_FREQ        25000000

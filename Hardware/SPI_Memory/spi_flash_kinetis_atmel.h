@@ -11,7 +11,7 @@
     File:      spi_flash_kinetis_atmel.h
     Project:   Single Chip Embedded Internet 
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -180,7 +180,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     WRITE_SPI_CMD0(ucCommand);                                           // write command byte
     #if defined _WINDOWS
-    fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);         // simulate the SPI FLASH device
     #endif
     switch (ucCommand) {
     #if SPI_FLASH_PAGE_LENGTH == 256 || SPI_FLASH_PAGE_LENGTH == 512 || SPI_FLASH_PAGE_LENGTH == 1024 // {1}
@@ -197,7 +197,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0(0);
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -205,7 +205,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));        // write command byte
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -213,7 +213,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset));
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dataWrites = DataLength;
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
@@ -255,7 +255,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         #endif
     #endif
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -281,7 +281,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         #endif
     #endif
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -294,7 +294,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             WRITE_SPI_CMD0(0);                                           // dummy byte
         }
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         SPI_FLASH_Danger[iChipSelect] = 1;                               // mark that the device will be busy for some time
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
@@ -311,7 +311,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 16));
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -319,7 +319,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset >> 8));
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
         WAIT_SPI_RECEPTION_END();                                        // wait until the command has been sent
@@ -327,7 +327,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #endif
         WRITE_SPI_CMD0((unsigned char)(ulPageNumberOffset));
     #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
     #endif
         dummyWrites = (DataLength + 4);                                  // 4 dummy bytes needed before the device returns data
     #if !defined DSPI_SPI && !defined LPSPI_SPI                          // {2}
@@ -353,7 +353,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     #else
         WRITE_SPI_CMD0_LAST(0xff);                                       // dummy write
         #if defined _WINDOWS
-        fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
+        fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE);     // simulate the SPI FLASH device
         #endif
     #endif
         discardCount = 1;
@@ -370,7 +370,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         }
         else {
     #if defined _WINDOWS
-            SPI_RX_BYTE = fnSimAT45DBXXX(AT45DBXXX_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
+            SPI_RX_BYTE = fnSimSPI_Flash(AT45DBXXX_READ, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
     #endif
             *ucData++ = READ_SPI_FLASH_DATA();                           // read the byte from the receive FIFO and save to the application buffer
             DataLength--;
@@ -393,7 +393,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
                 WRITE_SPI_CMD0_LAST(*ucData++);                          // write final data byte
             }
     #if defined _WINDOWS
-            fnSimAT45DBXXX(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
+            fnSimSPI_Flash(AT45DBXXX_WRITE, (unsigned char)SPI_TX_BYTE); // simulate the SPI FLASH device
     #endif
             dataWrites--;
             DataLength--;
@@ -414,7 +414,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         SPI_TX_BYTE &= ~(ulChipSelectLine);
     }
         #endif
-    fnSimAT45DBXXX(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
+    fnSimSPI_Flash(AT45DBXXX_CHECK_SS, 0);                               // simulate the SPI FLASH device
     #endif
     REMOVE_SPI_FLASH_MODE();
 }

@@ -4510,6 +4510,7 @@ Build_Luminary.bat</Command>
     </ClInclude>
     <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_eeprom_kinetis_25AA160.h" />
     <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_interface.h" />
+    <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_IS25LP.h" />
     <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_atmel.h" />
     <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_sst25.h" />
     <ClInclude Include="..\..\..\Hardware\SPI_Memory\spi_flash_kinetis_stmicro.h" />

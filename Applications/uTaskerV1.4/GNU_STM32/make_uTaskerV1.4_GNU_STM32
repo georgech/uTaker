@@ -94,6 +94,7 @@ SPI_FLASH_DEP = ../../../Hardware/SPI_Memory/spi_flash_STM32_atmel.h \
                 ../../../Hardware/SPI_Memory/spi_flash_MX25L.h \
                 ../../../Hardware/SPI_Memory/spi_flash_STM32_MX66L.h \
                 ../../../Hardware/SPI_Memory/spi_flash_s25fl1-k.h \
+				../../../Hardware/SPI_Memory/spi_flash_IS25LP.h \
 				../../../Hardware/SPI_Memory/spi_eeprom_25AA160.h
 
 

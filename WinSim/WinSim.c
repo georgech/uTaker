@@ -287,7 +287,7 @@ extern int main(int argc, char *argv[])
 #endif
         fnSetProjectDetails(++argv);
 	    fnInitHW();                                                      // initialise hardware  
-        fnSimPorts();                                                    // ensure simulator is aware of any hardware port initialisations
+        fnSimPorts(-1);                                                  // ensure simulator is aware of any hardware port initialisations
 #if !defined APPLICATION_WITHOUT_OS
 #if defined RUN_IN_FREE_RTOS
         {
@@ -824,7 +824,7 @@ _abort_multi:
         #endif
                 uTaskerSchedule();                                       // let the tasker run a few more times to allow internal message passing to be processed and free running tasks to run a while
     #endif
-                fnSimPorts();
+                fnSimPorts(-1);
     #if defined MULTISTART
                 if (ptrNewstart != 0) {
                     iOpSysActive = 0;                                    // {36}
@@ -2141,36 +2141,36 @@ static void fnCloseAll(void)
         }
     }
 #endif
-	if (iUART_File0) {
+	if (iUART_File0 != 0) {
 	    _close(iUART_File0);
 	}
-	if (iUART_File1) {
+	if (iUART_File1 != 0) {
 	    _close(iUART_File1);
 	}
-	if (iUART_File2) {
+	if (iUART_File2 != 0) {
 	    _close(iUART_File2);
 	}
-	if (iUART_File3) {
+	if (iUART_File3 != 0) {
 	    _close(iUART_File3);
 	}
 #if NUMBER_EXTERNAL_SERIAL > 0                                           // {49}
-	if (iExt_UART_File0) {
+	if (iExt_UART_File0 != 0) {
 	    _close(iExt_UART_File0);
 	}
-	if (iExt_UART_File1) {
+	if (iExt_UART_File1 != 0) {
 	    _close(iExt_UART_File1);
 	}
-	if (iExt_UART_File2) {
+	if (iExt_UART_File2 != 0) {
 	    _close(iExt_UART_File2);
 	}
-	if (iExt_UART_File3) {
+	if (iExt_UART_File3 != 0) {
 	    _close(iExt_UART_File3);
 	}
 #endif
-	if (iEthTxFile) {
+	if (iEthTxFile != 0) {
 	    _close(iEthTxFile);
 	}
-    if (iSSC_File0) {                                                    // {47}
+    if (iSSC_File0 != 0) {                                               // {47}
 	    _close(iSSC_File0);        
     }
 #if defined SDCARD_SUPPORT
@@ -2302,7 +2302,7 @@ extern unsigned long fnGetExtFlashSize(void)
     #define SPI_FLASH_DEVICE_COUNT         1
 #endif
 
-    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_MX66L // {14}
+    #if !defined SPI_FLASH_ST && !defined SPI_FLASH_SST25 && !defined SPI_FLASH_W25Q && !defined SPI_FLASH_S25FL1_K && !defined SPI_FLASH_MX25L && !defined SPI_FLASH_MX66L && !defined SPI_FLASH_IS25 // {14}
 
 static unsigned char ucAT45DBXXX[SPI_DATA_FLASH_SIZE];                   // all SPI FLASH devices in one buffer
 
@@ -2325,7 +2325,7 @@ extern unsigned long fnGetDataFlashSize(void)
 }
 
 
-extern unsigned char fnSimAT45DBXXX(int iSimType, unsigned char ucTxByte)// {16}{48}
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte)// {16}{48}
 {
     #if SPI_FLASH_PAGES == 512
         #define FLASH_SIZE 0x0c                                          // 1MBit
@@ -2803,7 +2803,7 @@ extern unsigned long fnGetDataFlashSize(void)
     return SPI_DATA_FLASH_SIZE;
 }
 
-extern unsigned char fnSimSTM25Pxxx(int iSimType, unsigned char ucTxByte)
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte)
 {
     static unsigned char  ucChipCommand[SPI_FLASH_DEVICE_COUNT] = {0};
     static int            iState[SPI_FLASH_DEVICE_COUNT] = {0};
@@ -3017,18 +3017,30 @@ extern unsigned char fnSimSTM25Pxxx(int iSimType, unsigned char ucTxByte)
     }
     return 0xff;
 }
-    #elif defined SPI_FLASH_W25Q
-        #define MANUFACTURER_WB     0xef
+    #elif (defined SPI_FLASH_W25Q && !(defined SPI_FLASH_SECOND_SOURCE_MODE && defined SIM_DISABLE_W25Q)) || (defined SPI_FLASH_IS25 && !(defined SPI_FLASH_SECOND_SOURCE_MODE && defined SIM_DISABLE_IS25))
+        #if defined SPI_FLASH_IS25 && !defined SIM_DISABLE_IS25
+            #define MANUFACTURER_ID     0x9d
 
-        #if defined SPI_FLASH_W25Q256                                    // {70}
-            #define MEMORY_TYPE     0x60
-            #define MEMORY_CAPACITY 0x19                                 // 256M Bit
-        #elif defined SPI_FLASH_W25Q128                                  // {70}
-            #define MEMORY_TYPE     0x60
-            #define MEMORY_CAPACITY 0x18                                 // 128M Bit
-        #elif defined SPI_FLASH_W25Q16
-            #define MEMORY_TYPE     0x40
-            #define MEMORY_CAPACITY 0x15                                 // 16M Bit
+            #if defined SPI_FLASH_IS25LP256D
+                #define MEMORY_TYPE     0x60
+                #define MEMORY_CAPACITY 0x19                             // 256M Bit
+            #elif defined SPI_FLASH_IS25WP256D
+                #define MEMORY_TYPE     0x70
+                #define MEMORY_CAPACITY 0x19                             // 256M Bit
+            #endif
+        #else
+            #define MANUFACTURER_ID     0xef
+
+            #if defined SPI_FLASH_W25Q256                                // {70}
+                #define MEMORY_TYPE     0x60
+                #define MEMORY_CAPACITY 0x19                             // 256M Bit
+            #elif defined SPI_FLASH_W25Q128                              // {70}
+                #define MEMORY_TYPE     0x60
+                #define MEMORY_CAPACITY 0x18                             // 128M Bit
+            #elif defined SPI_FLASH_W25Q16
+                #define MEMORY_TYPE     0x40
+                #define MEMORY_CAPACITY 0x15                             // 16M Bit
+            #endif
         #endif
 
  
@@ -3283,13 +3295,13 @@ static void fnActionW25Q(int iSel, unsigned long ulDeviceOffset)
         }
     }
     else if ((WEL[iSel] == 1) && (iState[iSel] == iEraseValid)) {        // if erase enabled
-        if (ucChipCommand[iSel] == 0x20) {                               // delete sub-sector
+        if (ucChipCommand[iSel] == 0x20) {                               // delete sector
             memset(&ucW25Q[(ulAccessAddress[iSel] & ~(SPI_FLASH_SUB_SECTOR_LENGTH - 1)) + ulDeviceOffset], 0xff, SPI_FLASH_SUB_SECTOR_LENGTH); // delete sub-sector
         }
         else if (ucChipCommand[iSel] == 0x52) {                          // delete half sector
             memset(&ucW25Q[(ulAccessAddress[iSel] & ~(SPI_FLASH_HALF_SECTOR_LENGTH - 1)) + ulDeviceOffset], 0xff, SPI_FLASH_HALF_SECTOR_LENGTH); // delete half sector
         }
-        else if (ucChipCommand[iSel] == 0xd8) {                          // delete sector
+        else if (ucChipCommand[iSel] == 0xd8) {                          // delete block
             memset(&ucW25Q[(ulAccessAddress[iSel] & ~(SPI_FLASH_SECTOR_LENGTH - 1)) + ulDeviceOffset], 0xff, SPI_FLASH_SECTOR_LENGTH); // delete sector
         }
         ucStatus[iSel] &= ~0x02;
@@ -3307,7 +3319,7 @@ static void fnActionW25Q(int iSel, unsigned long ulDeviceOffset)
     iState[iSel] = 0;
 }
 
-extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte)
 {
     int iSel = 0;
         #if defined SPI_FLASH_MULTIPLE_CHIPS
@@ -3497,7 +3509,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         case 0xab:
             if (ulAccessAddress[iSel] == 0) {
                 ulAccessAddress[iSel] = 1;
-                return (MANUFACTURER_WB);                                // Winbond
+                return (MANUFACTURER_ID);
             }
             else if (ulAccessAddress[iSel] == 0x1) {
                 ulAccessAddress[iSel] = 0;
@@ -3507,7 +3519,7 @@ extern unsigned char fnSimW25Qxx(int iSimType, unsigned char ucTxByte)
         case 0x9f:                                                       // read manufacturer's ID
             iState[iSel]++;
             if (iState[iSel] == 1) {
-                return (MANUFACTURER_WB);                                // Winbond
+                return (MANUFACTURER_ID);
             }
             else if (iState[iSel] == 2) {
                 return (MEMORY_TYPE);
@@ -3678,7 +3690,7 @@ static void fnActionS25FL1_K(int iSel, unsigned long ulDeviceOffset)
     iState[iSel] = 0;
 }
 
-extern unsigned char fnSimS25FL1_K(int iSimType, unsigned char ucTxByte)
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte)
 {
     int iSel = 0;
         #if defined SPI_FLASH_MULTIPLE_CHIPS
@@ -4232,7 +4244,7 @@ static void fnActionSST25(int iSel, unsigned long ulDeviceOffset)
     iState[iSel] = 0;
 }
 
-extern unsigned char fnSimSST25(int iSimType, unsigned char ucTxByte)
+extern unsigned char fnSimSPI_Flash(int iSimType, unsigned char ucTxByte)
 {
     int iSel = 0;
         #if defined SPI_FLASH_MULTIPLE_CHIPS

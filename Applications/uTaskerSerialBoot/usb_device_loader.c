@@ -3301,7 +3301,7 @@ static void fnDeleteFile(unsigned char ucDisk, int iFileNumber)
         }
         fnEraseFlashSector((unsigned char *)lun_information[ucDisk].ptr_disk_start[1], (lun_information[ucDisk].ptr_disk_end[1] - lun_information[ucDisk].ptr_disk_start[1]));
         iParameterState[ucDisk] = PARAMETER_FILE_EMPTY;
-        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), (TIMEOUT_RESET_NOW)); // reset after completing so that the üassword file is cleaned out
+        uTaskerMonoTimer(OWN_TASK, (DELAY_LIMIT)(0.1 * SEC), (TIMEOUT_RESET_NOW)); // reset after completing so that the password file is cleaned out
     }
     else {
         fnDeleteApplication(ucDisk);                                     // deleted file found so we delete the original firmware
@@ -3687,7 +3687,7 @@ static void fnSetObjectDetails(DIR_ENTRY_STRUCTURE_FAT32 *ptrEntry, FILE_OBJECT_
 }
 #endif
 
-#if defined SERIAL_INTERFACE || defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USE_HTTP || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) // {18}
+#if defined SERIAL_INTERFACE || defined SDCARD_SUPPORT || defined SPI_FLASH_FAT || defined USE_HTTP || (defined USB_INTERFACE && defined HID_LOADER && defined KBOOT_HID_LOADER) || (defined USB_INTERFACE && defined USB_MSD_DEVICE_LOADER && !defined USE_USB_MSD) // {18}
 // After an SREC download has terminated this routine programs a file entry for the new software with a default name and date but with physical size
 //
 extern int fnAddSREC_file(FILE_OBJECT_INFO *ptrFileObjectInfo)           // {9}
@@ -3713,21 +3713,21 @@ extern int fnAddSREC_file(FILE_OBJECT_INFO *ptrFileObjectInfo)           // {9}
     ptrFileEntry->DIR_Attr = DIR_ATTR_ARCHIVE;                           // file
     ptrFileEntry->DIR_FstClusLO[0] = 3;                                  // first cluster used for file content
     fnSetObjectDetails(ptrFileEntry, ptrFileObjectInfo);
-        #if defined MEMORY_SWAP
+    #if defined MEMORY_SWAP
     if (fnWriteBytesFlash((unsigned char *)(UTASKER_APP_START + (SIZE_OF_FLASH/2) - (2 * FLASH_GRANULARITY)), ucScratchPad, sizeof(ucScratchPad))) {
         return -1;
     }
-        #else
+    #else
     if (fnWriteBytesFlash((unsigned char *)UTASKER_APP_START, ucScratchPad, sizeof(ucScratchPad))) {
         return -1;
     }
-        #endif
-        #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
+    #endif
+    #if defined FLASH_ROW_SIZE && FLASH_ROW_SIZE > 0
     fnWriteBytesFlash(0, 0, 0);                                          // close any outstanding FLASH buffer
-        #endif
+    #endif
     return 0;
 }
-    #endif
+#endif
 
 #if defined FAT_EMULATION
 

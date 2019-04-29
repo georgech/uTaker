@@ -12,9 +12,9 @@
 # (set to Cortex-M4, Cortex-M7 [with or without hard FPU] or Cortex-M0+ accordingly)
 #C_FLAGS = -mcpu=cortex-m0plus -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
-#C_FLAGS = -mcpu=cortex-m3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+C_FLAGS = -mcpu=cortex-m3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
-C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
+#C_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 #C_FLAGS = -mcpu=cortex-m7 -mthumb -mlittle-endian -mthumb -Wall -Wstrict-prototypes -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wundef
 
 
@@ -65,6 +65,7 @@ SPI_FLASH_DEP = ../../../Hardware/SPI_Memory/spi_flash_kinetis_atmel.h \
 				../../../Hardware/SPI_Memory/spi_flash_w25q.h \
 				../../../Hardware/SPI_Memory/spi_flash_s25fl1-k.h \
 				../../../Hardware/SPI_Memory/spi_flash_MX25L.h \
+				../../../Hardware/SPI_Memory/spi_flash_IS25LP.h \
                 ../../../Hardware/SPI_Memory/spi_eeprom_25AA160.h
 
 
@@ -174,7 +175,7 @@ Build/modbus_app.o: ../modbus_app.c $(DEPENDS)
 # Create output file and show its size
 #
 uTaskerSerialBoot.elf: $(OBJS) uTaskerSTM32.ld uTaskerSTM32_F4.ld STM32F4_512_128.ld uTaskerSTM32_F4_16k.ld
-	$(CC) $(C_FLAGS) -TSTM32F4_512_128.ld -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -o uTaskerSerialBoot.elf $(OBJS)
+	$(CC) $(C_FLAGS) -TuTaskerSTM32.ld -D _GNU -D _STM32 -g -Os -Wl,-Map=uTaskerSerialBoot.map -nostartfiles -o uTaskerSerialBoot.elf $(OBJS)
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=ihex uTaskerSerialBoot.elf uTaskerSerialBoot.hex
 	$(CC_OBJ) --only-section=.data --only-section=.init --only-section=.text --only-section=.rodata --only-section=.vectors --output-target=binary uTaskerSerialBoot.elf uTaskerSerialBoot.bin
 	$(CC_SIZE) uTaskerSerialBoot.elf

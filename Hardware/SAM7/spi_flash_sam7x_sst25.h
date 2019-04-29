@@ -11,7 +11,7 @@
     File:        spi_flash_sam7x_sst25.h [Atmel AT91SAM7X128 / 256 / 512]
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2013
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file contains SPI FLASH specific code for all chips that are supported.
     It is declared as a header so that projects do not need to specify that it is not to be compiled.
@@ -169,7 +169,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     SPI_TDR = ucCommand;                                                 // send command
 
     #ifdef _WINDOWS
-    fnSimSST25(SST25_WRITE, (unsigned char)SPI_TDR);                     // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_WRITE, (unsigned char)SPI_TDR);                 // simulate the SPI FLASH device
     SPI_SR |= SPI_RDRF;
     #endif
     while (!(SPI_SR & SPI_RDRF)) {};                                     // wait until tx byte has been sent and rx byte has been completely received
@@ -210,14 +210,14 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
             SPI_TDR = 0xff;                                              // empty transmission byte
             while (!(SPI_SR & SPI_RDRF)) {};                             // wait until dummy tx byte has been sent and rx byte has been completely received
     #ifdef _WINDOWS
-            SPI_RDR = fnSimSST25(SST25_READ, 0);                         // simulate the SPI FLASH device
+            SPI_RDR = fnSimSPI_Flash(SST25_READ, 0);                     // simulate the SPI FLASH device
             SPI_SR |= (SPI_RDRF | SPI_TXEMPTY);                          // simulate tx and rx interrupt flags being set
     #endif
             *ucData++ = (unsigned char)SPI_RDR;                          // read received byte and clear rx interrupt
         }
         SPI_FLASH_PORT_SET = ulChipSelectLine;          _SIM_PORT_CHANGE // deassert SS when complete
     #ifdef _WINDOWS
-        fnSimSST25(SST25_CHECK_SS, 0);                                   // simulate the SPI FLASH device
+        fnSimSPI_Flash(SST25_CHECK_SS, 0);                               // simulate the SPI FLASH device
     #endif
         REMOVE_SPI_FLASH_MODE();
         return;
@@ -231,7 +231,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
     while (ucTxCount < sizeof(ucCommandBuffer)) {                        // complete the command sequence
         SPI_TDR = ucCommandBuffer[ucTxCount++];                          // send data
     #ifdef _WINDOWS
-        fnSimSST25(SST25_WRITE, (unsigned char)SPI_TDR);                 // simulate the SPI FLASH device
+        fnSimSPI_Flash(SST25_WRITE, (unsigned char)SPI_TDR);             // simulate the SPI FLASH device
         SPI_SR |= (SPI_RDRF | SPI_TXEMPTY);                              // simulate tx and rx interrupt flags being set
     #endif
         while (!(SPI_SR & SPI_TXEMPTY)) {};                              // wait until tx byte has been sent
@@ -242,7 +242,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be read
             SPI_TDR = 0xff;
     #ifdef _WINDOWS
-            SPI_RDR = fnSimSST25(SST25_READ, 0);                         // simulate the SPI FLASH device
+            SPI_RDR = fnSimSPI_Flash(SST25_READ, 0);                     // simulate the SPI FLASH device
             SPI_SR |= (SPI_RDRF | SPI_TXEMPTY);                          // simulate tx and rx interrupt flags being set
     #endif
             while (!(SPI_SR & SPI_RDRF)) {};                             // wait until tx byte has been sent and rx byte has been completely received
@@ -253,7 +253,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
         while (DataLength-- != 0) {                                      // while data bytes to be written
             SPI_TDR = *ucData++;                                         // send data
     #ifdef _WINDOWS
-            fnSimSST25(SST25_WRITE, (unsigned char)SPI_TDR);             // simulate the SPI FLASH device
+            fnSimSPI_Flash(SST25_WRITE, (unsigned char)SPI_TDR);         // simulate the SPI FLASH device
             SPI_SR |= (SPI_RDRF | SPI_TXEMPTY);                          // simulate tx and rx interrupt flags being set
     #endif
             while (!(SPI_SR & SPI_TXEMPTY)) {};                          // wait until tx byte has been sent
@@ -263,7 +263,7 @@ static void fnSPI_command(unsigned char ucCommand, unsigned long ulPageNumberOff
 
     SPI_FLASH_PORT_SET = ulChipSelectLine;              _SIM_PORT_CHANGE // negate SS when complete
     #ifdef _WINDOWS
-    fnSimSST25(SST25_CHECK_SS, 0);                                       // simulate the SPI FLASH device
+    fnSimSPI_Flash(SST25_CHECK_SS, 0);                                   // simulate the SPI FLASH device
     #endif
     REMOVE_SPI_FLASH_MODE();
 }
