@@ -1597,10 +1597,10 @@
     #define MEASURE_LOW_POWER_OFF()
 
     #define CONFIG_TEST_OUTPUT()
-    #define TOGGLE_TEST_OUTPUT()      _TOGGLE_PORT(B, LED2)
+    #define TOGGLE_TEST_OUTPUT()       _TOGGLE_PORT(B, LED2)
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
+        #define INIT_WATCHDOG_LED()    _CONFIG_PORT_INPUT(B, (BLINK_LED | LED2), (FLOATING_INPUT)) // we let the application configure all LEDs but we ensure that the port is enabled to avoid any access problems
     #else
         #define INIT_WATCHDOG_LED()    _CONFIG_PORT_OUTPUT(B, BLINK_LED, (OUTPUT_SLOW | OUTPUT_PUSH_PULL))
     #endif    

@@ -132,6 +132,7 @@
     09.08.2018 Add TIMER_FREEZE and TIMER_CONTINUE flags                 {111}
     13.10.2018 Add comparator interface                                  {112}
     04.01.2019 Add return value to fnConfigDMA_buffer()                  {113}
+    29.04.2019 Add checking of GPIO clocking when reading ports          {114}
 */
 
 #if defined _WINDOWS
@@ -145,7 +146,7 @@
     extern int  fnCheckBitBandPeripheralValue(unsigned long *bit_band_address);
 
     extern unsigned long fnGetPCC_clock(int iReference);
-    extern unsigned long fnCheckPortRead(int iPortRef, unsigned long ulValue);
+    extern unsigned long fnCheckPortRead(int iPortRef, unsigned long ulValue); // {114}
 #else
     #if defined _COMPILE_IAR
         #include <intrinsics.h>                                          // for __disable_interrupt(), __enable_interrupt() and __sleep_mode(), etc.
@@ -19649,7 +19650,7 @@ extern void fnEnterNMI(void(*_NMI_handler)(void));
 
 // Read full port width eg. _READ_PORT(A)
 //
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // {114}
     #define _READ_PORT(ref)                fnCheckPortRead(PORT##ref, (GPIO##ref##_PDIR))
 #else
     #define _READ_PORT(ref)                (GPIO##ref##_PDIR)
@@ -19657,7 +19658,7 @@ extern void fnEnterNMI(void(*_NMI_handler)(void));
 
 // Read from a port with a mask eg. _READ_PORT(D, (PORTD_BIT3 | PORTD_BIT0))
 //
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // {114}
     #define _READ_PORT_MASK(ref, mask)     fnCheckPortRead(PORT##ref, (GPIO##ref##_PDIR & (mask)))
 #else
     #define _READ_PORT_MASK(ref, mask)     (GPIO##ref##_PDIR & (mask))

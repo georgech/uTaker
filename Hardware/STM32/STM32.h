@@ -39,6 +39,7 @@
     17.10.2017 Timer calculations changed to reference PCLK1 rather than PCLK2 {24}
     28.11.2018 Add fnSetFlashOption() prototype                          {25}
     30.11.2018 Add cortex debug and trace registers                      {26}
+    29.04.2019 Add checking of GPIO clocking when reading ports          {27}
 
 */
 
@@ -46,6 +47,7 @@
 #if defined _WINDOWS
     #define _SIM_PORT_CHANGE(port) fnSimPorts(port);
     #define _EXCEPTION(x)      *(unsigned char *)0 = 0                   // generate exception when simulating
+    extern unsigned long fnCheckPortRead(int iPortRef, unsigned long ulValue); // {27}
 #else
     #define _EXCEPTION(x)                                                // ignore on target
     #ifdef COMPILE_IAR
@@ -8876,7 +8878,7 @@ typedef struct stVECTOR_TABLE
 
 // Read full port width
 //
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // {27}
     #define _READ_PORT(ref)            fnCheckPortRead(PORT##ref, (GPIO##ref##_IDR))
 #else
     #define _READ_PORT(ref)            GPIO##ref##_IDR;
@@ -8884,7 +8886,7 @@ typedef struct stVECTOR_TABLE
 
 // Read from a port with a mask
 //
-#if defined _WINDOWS
+#if defined _WINDOWS                                                     // {27}
     #define _READ_PORT_MASK(ref, mask)     fnCheckPortRead(PORT##ref, (GPIO##ref##_IDR & (mask)))
 #else
     #define _READ_PORT_MASK(ref, mask)    (GPIO##ref##_IDR & (mask))
