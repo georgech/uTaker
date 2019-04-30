@@ -1728,7 +1728,7 @@ extern void fnCheckUSBOut(int iDevice, int iEndpoint)
 
 // We can update port state displays if we want
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iThisPort)
 {
 #if CHIP_HAS_UARTS > 0 && defined RTS_0_PIN                              // RTS outputs
     if ((RTS_0_PORT_POWER & RCGC2) && (RTS_0_PORT_ENABLE & RTS_0_PIN) && (RTS_0_PORT_DDR & RTS_0_PIN)) { // user defined RTS pin configured as output

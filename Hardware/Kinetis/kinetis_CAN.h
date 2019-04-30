@@ -642,7 +642,7 @@ static void fnSetFilterMask(KINETIS_CAN_CONTROL *ptrCAN_control, KINETIS_CAN_BUF
     }
     do {
         *ptrMaskRegister = ulRxIDMask;                                   // write the mask value
-    } while (*ptrMaskRegister != ulRxIDMask);                            // {6} even after entereing in to freeze mode is is sometimes found that this register can't be set immediately so we write until it sticks
+    } while (*ptrMaskRegister != ulRxIDMask);                            // {6} even after entering in to freeze mode is is sometimes found that this register can't be set immediately so we write until it sticks
 }
 
 // Hardware configuration of CAN controller

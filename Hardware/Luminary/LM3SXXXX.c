@@ -526,13 +526,13 @@ INITHW void fnInitHW(void)                                               // perf
     }
 
 #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 
 #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 
 #if !defined SPI_INTERFACE && (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
