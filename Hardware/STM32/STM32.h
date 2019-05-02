@@ -40,6 +40,7 @@
     28.11.2018 Add fnSetFlashOption() prototype                          {25}
     30.11.2018 Add cortex debug and trace registers                      {26}
     29.04.2019 Add checking of GPIO clocking when reading ports          {27}
+    02.05.2019 Correct some __GPIO_IS_POWERED() and __GPIO_IS_IN_RESET() macros {28}
 
 */
 
@@ -8326,12 +8327,12 @@ typedef struct stVECTOR_TABLE
     #define __GPIO_IS_IN_RESET(ref) (RCC_AHB2RSTR & (RCC_AHB2RSTR_GPIOARST << ref))
 #elif defined _STM32F031
     #define __POWER_UP_GPIO(ref)    RCC_AHBENR |= (RCC_AHBENR_IOP##ref##EN)
-    #define __GPIO_IS_POWERED(ref)  (RCC_AHBENR & (RCC_AHBENR << ref))
+    #define __GPIO_IS_POWERED(ref)  (RCC_AHBENR & (RCC_AHBENR_IOPAEN << ref)) // {28}
     #define __GPIO_IS_IN_RESET(ref) (0)
 #else
     #define __POWER_UP_GPIO(ref)    RCC_APB2ENR |= (RCC_APB2ENR_IOP##ref##EN)
-    #define __GPIO_IS_POWERED(ref)  (RCC_APB2ENR & (RCC_APB2ENR << ref))
-    #define __GPIO_IS_IN_RESET(ref) (RCC_APB2RSTR & (RCC_APB2ENR_IOPAEN << ref))
+    #define __GPIO_IS_POWERED(ref)  (RCC_APB2ENR & (RCC_APB2ENR_IOPAEN << ref)) // {28}
+    #define __GPIO_IS_IN_RESET(ref) (RCC_APB2RSTR & (RCC_APB2RSTR_IOPARST << ref)) // {28}
 #endif
 
 

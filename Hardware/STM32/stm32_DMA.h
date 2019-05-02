@@ -328,9 +328,11 @@ static __interrupt void _DMA_Interrupt_15(void)
 extern int fnConfigDMA_buffer(unsigned long ulDmaTriggerSource, unsigned long ulBufLength, void *ptrBufSource, void *ptrBufDest, unsigned long ulRules, void (*int_handler)(void), int int_priority)
 {
     unsigned char ucSize = (unsigned char)(ulRules & 0x07);              // transfer size 1, 2 or 4 bytes
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
     unsigned long ulTransferType;
-    STM32_DMA *ptrDMA_controller;
     STM32_DMA_STREAM *ptrDMAstream;
+#endif
+    STM32_DMA *ptrDMA_controller;
     int iStream = (ulDmaTriggerSource & 0x7);
     int iIntChannel = iStream;
     int iInterruptID;
@@ -425,6 +427,7 @@ extern STM32_DMA_STREAM *fnGetDMA_stream(unsigned long ulDmaTriggerSource)
     #endif
 }
 
+#if (defined _STM32F2XX || defined _STM32F4XX || defined _STM32F7XX || defined _STM32H7XX)
 static void fnClearChannelInterruptFlags(unsigned long ulDmaTriggerSource, unsigned char ucFlags)
 {
     STM32_DMA *ptrDMA_controller;
@@ -452,6 +455,7 @@ static void fnClearChannelInterruptFlags(unsigned long ulDmaTriggerSource, unsig
     *(ptrDLA_flag - 2) &= ~(ulFlags);
     #endif
 }
+#endif
 
 extern void fnDMA_BufferReset(unsigned long ulDmaTriggerSource, int iAction)
 {

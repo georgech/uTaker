@@ -1193,6 +1193,7 @@ extern unsigned long fnSimDMA(char *argv[])
                         break;
                     }
 #endif
+#if defined DMA_SxCR_CHSEL_0
                     // SPI2 Rx DMA
                     //
                     if (IS_POWERED_UP(APB1, (RCC_APB1ENR_SPI2EN)) != 0) {// if SPI2 powered
@@ -1206,7 +1207,8 @@ extern unsigned long fnSimDMA(char *argv[])
                             }
                         }
                     }
-                    iMasks |= ulChannel;                                 // no enabled DMA triger source so ignore this time round
+#endif
+                    iMasks |= ulChannel;                                 // no enabled DMA trigger source so ignore this time round
                     break;
                 case 0x00000010:                                         // DMA controller 1 - stream 4
 #if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA
@@ -1263,6 +1265,7 @@ extern unsigned long fnSimDMA(char *argv[])
                     }
     #endif
 #endif
+#if defined DMA_SxCR_CHSEL_0
                     // SPI2 Tx DMA
                     //
                     if (IS_POWERED_UP(APB1, (RCC_APB1ENR_SPI2EN)) != 0) {// if SPI2 powered
@@ -1276,7 +1279,8 @@ extern unsigned long fnSimDMA(char *argv[])
                             }
                         }
                     }
-                    iMasks |= ulChannel;                                 // no enabled DMA triger source so ignore this time round
+#endif
+                    iMasks |= ulChannel;                                 // no enabled DMA trigger source so ignore this time round
                     break;
                 case 0x00000020:                                         // DMA controller 1 - stream 5
                     break;
