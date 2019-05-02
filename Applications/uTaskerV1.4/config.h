@@ -186,10 +186,10 @@
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 #elif defined _iMX
-    #define MIMXRT1020
+  //#define MIMXRT1020
   //#define MIMXRT1050
   //#define MIMXRT1060
-  //#define MIMXRT1064
+    #define MIMXRT1064
 #elif defined _M5223X
     //#define M52110BOARD                                                // board for M52110 (basic CAN MCU)
     //#define M5282EVB                                                   // with SDRAM interface and FEC
@@ -1035,6 +1035,18 @@
     #define FRDM_K82F
     #define KINETIS_MAX_SPEED    150000000
     #define TARGET_HW            "MIMXRT1020"
+    #define KINETIS_K80                                                  // specify the sub-family
+    #define KINETIS_K82                                                  // specify part
+    #define KINETIS_K_FPU                                                // part with floating point unit
+    #define KINETIS_REVISION_2
+    #define OUR_HEAP_SIZE        (HEAP_REQUIREMENTS)((30 * 1024) * MEM_FACTOR)
+#elif defined MIMXRT1064
+    #define iMX_RT106X
+    #define iMX_RT1064
+    #define iMX_MAX_SPEED        600000000
+    #define FRDM_K82F
+    #define KINETIS_MAX_SPEED    150000000
+    #define TARGET_HW            "MIMXRT1064"
     #define KINETIS_K80                                                  // specify the sub-family
     #define KINETIS_K82                                                  // specify part
     #define KINETIS_K_FPU                                                // part with floating point unit

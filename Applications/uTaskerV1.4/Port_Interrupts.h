@@ -200,7 +200,7 @@ static void fnInitIRQ(void)
     #if defined _KINETIS || defined _iMX                                 // {5}
     interrupt_setup.int_type       = PORT_INTERRUPT;                     // identifier to configure port interrupt
     interrupt_setup.int_handler    = test_irq_4;                         // handling function
-        #if defined MIMXRT1020
+        #if defined MIMXRT1020 || defined MIMXRT1064
     interrupt_setup.int_priority   = PRIORITY_PORT_1_0;                  // interrupt priority level
     interrupt_setup.int_port       = PORT1;                              // the port that the interrupt input is on
     interrupt_setup.int_port_bits  = PORT1_BIT0;                         // the IRQ input connected - PORT1_BIT0 has a unique handler
@@ -453,7 +453,7 @@ static void fnInitIRQ(void)
         #endif
         #if (PORTS_AVAILABLE > 4) && (!defined KINETIS_KL || defined TEENSY_LC) && !defined TWR_K22F120M && !defined TWR_K20D50M && !defined TWR_K20D72M && !defined TWR_K53N512 && !defined TWR_K40D100M && !defined TWR_K21D50M && !defined TWR_K21F120M  && !defined FRDM_KE15Z
     interrupt_setup.int_handler    = test_irq_5;                         // handling function
-            #if defined MIMXRT1020
+            #if defined MIMXRT1020 || defined MIMXRT1064
     interrupt_setup.int_port = PORT3;                                    // the port that the interrupt input is on
     interrupt_setup.int_port_bits  = PORT3_BIT0;                         // the input to generate an interrupt
     interrupt_setup.int_priority   = PRIORITY_PORT_3_LOW;                // interrupt priority level

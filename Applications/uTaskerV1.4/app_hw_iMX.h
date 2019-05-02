@@ -22,7 +22,7 @@
 
 // Define clock settings
 //
-#if defined MIMXRT1020
+#if defined MIMXRT1020 || defined MIMXRT1064
   //#define USE_FAST_INTERNAL_CLOCK                                      // use 4MHz IRC as source for MCGIRCLK (otherwise 32kHz)
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    12000000                                // 12 MHz crystal
@@ -65,6 +65,12 @@
   //#define SIZE_OF_FLASH       (0 * 1024)                               // no on-chip flash FLASH
     #define SIZE_OF_FLASH       (256 * 1024)                             // temporary
     #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
+    #define QSPI_FILE_SYSTEM                                             // user QSPI interface
+#elif defined MIMXRT1064
+    #define PIN_COUNT           PIN_COUNT_196_PIN                        // 196 pin MAPBGA package
+    #define PACKAGE_TYPE        PACKAGE_MAPBGA                           // MAPBGA
+    #define SIZE_OF_FLASH       (4 * 1024 * 1024)                        // 4Meg on-chip flash
+    #define SIZE_OF_RAM         (1024 * 1024)                            // 1Meg SRAM
     #define QSPI_FILE_SYSTEM                                             // user QSPI interface
 #endif
 
@@ -218,7 +224,7 @@
     #define MII_MANAGEMENT_CLOCK_SPEED    2500000                        // typ. 2.5MHz Speed
     #define PHY_POLL_LINK                                                // activate polling of the link state
     #define INTERRUPT_TASK_PHY     TASK_NETWORK_INDICATOR                // link status reported to this task (do not use together with LAN_REPORT_ACTIVITY)
-#elif defined FRDM_K64F || defined FRDM_K66F || defined FreeLON || defined MIMXRT1020
+#elif defined FRDM_K64F || defined FRDM_K66F || defined FreeLON || defined MIMXRT1020 || defined MIMXRT1064
     #if defined FRDM_K66F
         #define ETHERNET_RMII_CLOCK_INPUT                                // the ENET_1588_CLKIN is used as clock since a 50MHz PHY clock is not available on EXTAL
         #define MII_MANAGEMENT_CLOCK_SPEED    800000                     // due to weak pull-up we use a reduced clock speed
@@ -1751,7 +1757,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // Ports
 //
-#if defined MIMXRT1020
+#if defined MIMXRT1020 || defined MIMXRT1064
     #define USER_LED               (PORT1_BIT5)                      // USER_LED ('0' drives LED on)
 
     #define DEMO_LED_1             (USER_LED)                        // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -1790,8 +1796,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(1, DEMO_LED_2)
     #define SET_TEST_OUTPUT()       _SETBITS(1, DEMO_LED_2)
     #define CLEAR_TEST_OUTPUT()     _CLEARBITS(1, DEMO_LED_2)
-
-    #define KEYPAD "KeyPads/MIMXRT1020-EVK.bmp"
+    #if defined MIMXRT1064
+        #define KEYPAD "KeyPads/MIMXRT1060-EVK.bmp"
+    #else
+        #define KEYPAD "KeyPads/MIMXRT1020-EVK.bmp"
+    #endif
 
     #define BUTTON_KEY_DEFINITIONS  {USER_BUTTON_PORT, USER_BUTTON,   {17, 103, 35, 120 }},
 

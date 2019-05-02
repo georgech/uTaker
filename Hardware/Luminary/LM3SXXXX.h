@@ -204,6 +204,8 @@
     #error Invalid PLL output frequency: a frequency from the allowed list must be used!!
 #endif
 
+#define CORE_CLOCK      (PLL_OUTPUT_FREQ)                                // for compatibility
+
 #define FLASH_START_ADDRESS            0x00000000                        // start of internal FLASH (fixed)
 #define RAM_START_ADDRESS              0x20000000                        // start of internal RAM (fixed)
 

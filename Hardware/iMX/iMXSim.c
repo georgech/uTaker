@@ -46,7 +46,7 @@ unsigned long vector_ram[(sizeof(VECTOR_TABLE))/sizeof(unsigned long)];  // long
     extern unsigned long fnGetExtPortState(int iExtPortReference);
 #endif
 
-static unsigned long ulPort_in_1, ulPort_in_2, ulPort_in_3, ulPort_in_5;
+static unsigned long ulPort_in_1, ulPort_in_2, ulPort_in_3, ulPort_in_4, ulPort_in_5;
 #if defined SERIAL_INTERFACE
     static int iUART_rx_Active[LPUARTS_AVAILABLE + UARTS_AVAILABLE] = {0};
 #endif
@@ -1033,6 +1033,10 @@ static void fnSetDevice(unsigned long *port_inits)
     initial_input_state = fnKeyPadState(*port_inits++, _PORT3);
     GPIO3_PSR  = (PORT_CAST)(ulPort_in_3 = initial_input_state);
 #endif
+#if defined iMX_RT106X && (PORTS_AVAILABLE > 3)
+    initial_input_state = fnKeyPadState(*port_inits++, _PORT4);
+    GPIO4_PSR = (PORT_CAST)(ulPort_in_4 = initial_input_state);
+#endif
 #if PORTS_AVAILABLE > 4
     initial_input_state = fnKeyPadState(*port_inits++, _PORT5);
     GPIO5_PSR  = (PORT_CAST)(ulPort_in_5 = initial_input_state);
@@ -1375,6 +1379,10 @@ extern unsigned long fnGetPresentPortState(int portNr)
 #if PORTS_AVAILABLE > 2
     case _PORT3:
         return ((GPIO3_GDIR & GPIO3_PSR) | (~GPIO3_GDIR & ulPort_in_3));
+#endif
+#if defined iMX_RT106X && (PORTS_AVAILABLE > 3)
+    case _PORT4:
+        return ((GPIO4_GDIR & GPIO4_PSR) | (~GPIO4_GDIR & ulPort_in_4));
 #endif
 #if PORTS_AVAILABLE > 4
     case _PORT5:
@@ -2947,20 +2955,27 @@ static int fnIsGPIO_clocked(int iPortRef)
 {
     switch (iPortRef) {
     case PORT1:
-        if ((CCM_CCGR1 & CCM_CCGR1_GPIO1_CLOCKS_MASK) == CCM_CCGR1_GPIO1_CLOCKS_OFF){
+        if ((CCM_CCGR1 & CCM_CCGR1_GPIO1_CLOCK_MASK) == CCM_CCGR1_GPIO1_CLOCK_OFF){
             return 0;
         }
         break;
     case PORT2:
-        if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCKS_MASK) == CCM_CCGR0_GPIO2_CLOCKS_OFF) {
+        if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCK_MASK) == CCM_CCGR0_GPIO2_CLOCK_OFF) {
             return 0;
         }
         break;
     case PORT3:
-        if ((CCM_CCGR2 & CCM_CCGR2_GPIO3_CLOCKS_MASK) == CCM_CCGR2_GPIO3_CLOCKS_OFF) {
+        if ((CCM_CCGR2 & CCM_CCGR2_GPIO3_CLOCK_MASK) == CCM_CCGR2_GPIO3_CLOCK_OFF) {
             return 0;
         }
         break;
+  #if defined iMX_RT106X
+    case PORT4:
+        if ((CCM_CCGR3 & CCM_CCGR3_GPIO4_CLOCK_MASK) == CCM_CCGR3_GPIO4_CLOCK_OFF) {
+            return 0;
+        }
+        break;
+  #endif
     case PORT5:
         break;
     default:
@@ -3061,6 +3076,35 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
             }
             if (ulPort_in_3 != ulOriginal_port_state) {                  // if a change took place
                 fnPortInterrupt(_PORT3, ulPort_in_3, ulBit);             // handle interrupts and DMA on the pin
+        #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
+                fnHandleTimerInput(_PORTC, ulPort_in_C, ulBit, ptrPCR);  // {50}
+        #endif
+            }
+        }
+        break;
+#endif
+#if defined iMX_RT106X && (PORTS_AVAILABLE > 3)
+    case _PORT4:
+        if (~GPIO4_GDIR & ulBit) {                                       // if configured as input
+            unsigned long ulOriginal_port_state = ulPort_in_4;
+            if (fnIsGPIO_clocked(PORT4) == 0) {                          // ignore if port is not clocked
+                return;
+            }
+            if (iChange == TOGGLE_INPUT) {
+                ulPort_in_4 ^= ulBit;                                    // set new pin state
+                GPIO4_PSR &= ~ulBit;
+                GPIO4_PSR |= (ulPort_in_4 & ulBit);                      // set new input register state
+            }
+            else if (iChange == SET_INPUT) {
+                ulPort_in_4 |= ulBit;
+                GPIO4_PSR |= ulBit;                                      // set new input register state
+            }
+            else {
+                ulPort_in_4 &= ~ulBit;
+                GPIO4_PSR &= ~ulBit;                                     // set new input register state
+            }
+            if (ulPort_in_4 != ulOriginal_port_state) {                  // if a change took place
+                fnPortInterrupt(_PORT4, ulPort_in_4, ulBit);             // handle interrupts and DMA on the pin
         #if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)
                 fnHandleTimerInput(_PORTC, ulPort_in_C, ulBit, ptrPCR);  // {50}
         #endif
@@ -3386,10 +3430,10 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
 
 // Update ports based on present register settings
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iThisPort)
 {
     unsigned long ulNewState;
-    if ((CCM_CCGR1 & CCM_CCGR1_GPIO1_CLOCKS_MASK) != CCM_CCGR1_GPIO1_CLOCKS_OFF) { // if this port is clocked
+    if ((CCM_CCGR1 & CCM_CCGR1_GPIO1_CLOCK_MASK) != CCM_CCGR1_GPIO1_CLOCK_OFF) { // if this port is clocked
         ulNewState = (GPIO1_DR | GPIO1_DR_SET);                          // set bits from set register
         ulNewState &= ~(GPIO1_DR_CLEAR);                                 // clear bits from clear register
         ulNewState ^= GPIO1_DR_TOGGLE;                                   // toggle bits from toggle register
@@ -3399,7 +3443,7 @@ extern void fnSimPorts(void)
     }
     GPIO1_DR_SET = GPIO1_DR_CLEAR = GPIO1_DR_TOGGLE = 0;                 // registers always read 0
 #if PORTS_AVAILABLE > 1
-    if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCKS_MASK) != CCM_CCGR0_GPIO2_CLOCKS_OFF) { // if this port is clocked
+    if ((CCM_CCGR0 & CCM_CCGR0_GPIO2_CLOCK_MASK) != CCM_CCGR0_GPIO2_CLOCK_OFF) { // if this port is clocked
         ulNewState = (GPIO2_DR | GPIO2_DR_SET);                          // set bits from set register
         ulNewState &= ~(GPIO2_DR_CLEAR);                                 // clear bits from clear register
         ulNewState ^= GPIO2_DR_TOGGLE;                                   // toggle bits from toggle register
@@ -3410,7 +3454,7 @@ extern void fnSimPorts(void)
     GPIO2_DR_SET = GPIO2_DR_CLEAR = GPIO2_DR_TOGGLE = 0;                 // registers always read 0
 #endif
 #if PORTS_AVAILABLE > 2
-    if ((CCM_CCGR2 & CCM_CCGR2_GPIO3_CLOCKS_MASK) != CCM_CCGR2_GPIO3_CLOCKS_OFF) { // if this port is clocked
+    if ((CCM_CCGR2 & CCM_CCGR2_GPIO3_CLOCK_MASK) != CCM_CCGR2_GPIO3_CLOCK_OFF) { // if this port is clocked
         ulNewState = (GPIO3_DR | GPIO3_DR_SET);                          // set bits from set register
         ulNewState &= ~(GPIO3_DR_CLEAR);                                 // clear bits from clear register
         ulNewState ^= GPIO3_DR_TOGGLE;                                   // toggle bits from toggle register
@@ -3420,7 +3464,18 @@ extern void fnSimPorts(void)
     }
     GPIO3_DR_SET = GPIO3_DR_CLEAR = GPIO3_DR_TOGGLE = 0;                 // registers always read 0
 #endif
-#if PORTS_AVAILABLE > 3
+#if defined iMX_RT106X && (PORTS_AVAILABLE > 3)
+    if ((CCM_CCGR2 & CCM_CCGR3_GPIO4_CLOCK_MASK) != CCM_CCGR3_GPIO4_CLOCK_OFF) { // if this port is clocked
+        ulNewState = (GPIO4_DR | GPIO4_DR_SET);                          // set bits from set register
+        ulNewState &= ~(GPIO4_DR_CLEAR);                                 // clear bits from clear register
+        ulNewState ^= GPIO4_DR_TOGGLE;                                   // toggle bits from toggle register
+        GPIO4_DR = ulNewState;
+        GPIO4_PSR = ((ulPort_in_4 & ~GPIO4_GDIR) | (GPIO4_DR & GPIO4_GDIR)); // input state
+        GPIO4_PSR &= ~(ulPeripherals[PORT4]);                            // bits read 0 when the pin is not connected to GPIO
+    }
+    GPIO5_DR_SET = GPIO5_DR_CLEAR = GPIO5_DR_TOGGLE = 0;                 // registers always read 0
+#endif
+#if PORTS_AVAILABLE > 4
     {                                                                    // port 5 doesn't have a clock gate
         ulNewState = (GPIO5_DR | GPIO5_DR_SET);                          // set bits from set register
         ulNewState &= ~(GPIO5_DR_CLEAR);                                 // clear bits from clear register

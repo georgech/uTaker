@@ -31,26 +31,35 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
     switch (iPortRef) {
     case PORT1:
         ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00_ADD;
-        CCM_CCGR1 &= ~(CCM_CCGR1_GPIO1_CLOCKS_MASK);
-        CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCKS_STOP);
-        //CCM_CCGR1  |= (CCM_CCGR1_GPIO1_CLOCKS_RUN);
+        CCM_CCGR1 &= ~(CCM_CCGR1_GPIO1_CLOCK_MASK);
+        CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCK_STOP);
+        //CCM_CCGR1  |= (CCM_CCGR1_GPIO1_CLOCK_RUN);
         ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD;
         break;
     case PORT2:
         ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
-        CCM_CCGR0 &= ~(CCM_CCGR0_GPIO2_CLOCKS_MASK);
-        CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCKS_STOP);
-      //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCKS_RUN);
+        CCM_CCGR0 &= ~(CCM_CCGR0_GPIO2_CLOCK_MASK);
+        CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCK_STOP);
+      //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCK_RUN);
         ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;
         break;
     case PORT3:
-        CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCKS_MASK);
-        CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCKS_STOP);
-        //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCKS_RUN);
+        CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCK_MASK);
+        CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCK_STOP);
+        //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCK_RUN);
         ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
         ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD;
         iPort3 = 1;
         break;
+    #if defined iMX_RT106X
+    case PORT4:
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
+        CCM_CCGR3 &= ~(CCM_CCGR3_GPIO4_CLOCK_MASK);
+        CCM_CCGR3 |= (CCM_CCGR3_GPIO4_CLOCK_STOP);
+      //CCM_CCGR3  |= (CCM_CCGR0_GPIO4_CLOCK_RUN);
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;
+        break;
+    #endif
     case PORT5:
         ptrGPIO = IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD;
         ptrChars = IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP_ADD;

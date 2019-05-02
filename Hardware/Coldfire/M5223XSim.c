@@ -11,7 +11,7 @@
     File:      M5223XSim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     16.03.2007 Limit tx UART characters to amount possible in a TICK period {1}
     16.03.2007 Added fnGetFlashAdd() for simulation of direct FLASH access {2}
@@ -92,6 +92,7 @@
     16.10.2012 Reflect general purpose time inputs in their data register{72}
     13.03.2013 Add additional set and clear routines for _M5225X         {73}
     20.10.2013 Add GPT input state monitoring                            {74}
+    02.05.2019 Add parameter to fnSimPorts() for compatibility           {75}
 
 */  
 
@@ -3285,7 +3286,7 @@ extern int fnSimulateEthernetIn(unsigned char *ucData, unsigned short usLen, int
 
 // We can update port state displays if we want
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iThisPort)                                    // {75}
 {
     static int iRTS[3] = {0};                                            // {14}
 
