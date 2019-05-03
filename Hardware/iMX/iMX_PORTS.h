@@ -52,7 +52,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCK_MASK);
         CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCK_STOP);                       // power up the port
         //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCK_RUN);
-    #if defined MIMXRT1064
+    #if defined iMX_RT106X
         ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00_ADD;               // pad multiplexer register block
         ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00_ADD;              // pad characteristics register block
     #else
@@ -196,7 +196,7 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         }
         ptrGPIO++;
         ulBit <<= 1;
-    #if defined MIMXRT1064
+    #if defined iMX_RT106X
         if (iPort3 != 0) {
             if (ulBit == PORT3_BIT11) {                                  // exception for port 3, which moves from SD_B1 pads to SD B0 pads and then EMC pads
                 ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD;

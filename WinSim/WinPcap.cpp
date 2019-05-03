@@ -23,6 +23,7 @@
 
 #define _EXCLUDE_WINDOWS_
 #include "config.h"
+#define LAN_LED_FLASH_DURATION (50000 / TICK_RESOLUTION)
 
 #undef H                                                                 // {3}
 #undef C
@@ -65,7 +66,7 @@ extern "C" void fnWinPcapSendPkt(int len, unsigned char * ptr)
 {                                                                        // this is called by WinSim.c
     if (bWinPcapActive == TRUE) {
         iWinPcapSending = 1;
-        iTxActivity = 2;
+        iTxActivity = LAN_LED_FLASH_DURATION;
         pcap_sendpacket(hDev,ptr,len);
         iWinPcapSending = 0;
     }
@@ -200,7 +201,7 @@ static void ReadDevice(ThrArgs *hArgs)
         }
 
         if (ptr[2] != 0) {
-            iRxActivity = 2;
+            iRxActivity = LAN_LED_FLASH_DURATION;
         }
 #endif
     }

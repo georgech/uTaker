@@ -146,7 +146,7 @@ typedef struct st_iMX_IOMUXC_SW
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15;
-#if defined MIMXRT1064
+#if defined iMX_RT106X
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_01;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_02;

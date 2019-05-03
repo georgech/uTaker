@@ -241,7 +241,7 @@ static const unsigned char UART_DMA_TX_INT_PRIORITY[UARTS_AVAILABLE + LPUARTS_AV
 };
 #endif
 
- #if defined SERIAL_SUPPORT_DMA_RX                                       // DMA support on reception
+#if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX          // DMA support on reception
 // DMA channel assignments for each UART/LPUART receiver
 //
 static const unsigned char UART_DMA_RX_CHANNEL[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {
@@ -332,7 +332,7 @@ static unsigned char ucUART_mask[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // 
 #if defined TRUE_UART_TX_2_STOPS
     static unsigned char ucStops[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
 #endif
-#if defined SERIAL_INTERFACE && defined SERIAL_SUPPORT_DMA_RX
+#if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
     static unsigned long ulSerialDMA_rules[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0}; // {214}
     #if defined SERIAL_SUPPORT_DMA_RX_FREERUN
     static unsigned long ulDMA_progress[UARTS_AVAILABLE + LPUARTS_AVAILABLE] = {0};
@@ -1464,7 +1464,7 @@ extern QUEUE_TRANSFER fnAbortTxDMA(QUEUE_HANDLE channel, QUEQUE *ptrQueue)
 /*                LPUART/UART Rx DMA interrupt handlers                */
 /* =================================================================== */
 
-    #if defined SERIAL_SUPPORT_DMA_RX
+    #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
 static __interrupt void _uart0_rx_dma_Interrupt(void)
 {
     fnSciRxByte(0, 0);                                                   // tty block ready for read
@@ -2056,7 +2056,7 @@ extern void fnRxOff(QUEUE_HANDLE Channel)
     #endif
 }
 
-#if defined SERIAL_SUPPORT_DMA_RX                                        // {214}
+#if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX          // {214}
 // Prepare the receive DMA mode that is required
 //
 static void fnPrepareRxDMA_mode(unsigned char ucDMAConfig, QUEUE_HANDLE Channel)
@@ -2123,7 +2123,7 @@ static void fnConfigLPUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_LPUART_
     }
     #endif
     lpuart_reg->LPUART_BAUD &= ~(LPUART_BAUD_LBKDIE);                    // disable break detection interrupt by default
-    #if defined SERIAL_SUPPORT_DMA_RX                                    // {209}
+    #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX      // {209}
     if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // dma required on receiver
         lpuart_reg->LPUART_CTRL &= ~(LPUART_CTRL_RIE);                   // ensure rx interrupt is not enabled
         lpuart_reg->LPUART_BAUD |= LPUART_BAUD_RDMAE;                    // use DMA rather than interrupts for reception
@@ -2375,7 +2375,7 @@ static void fnConfigUART(QUEUE_HANDLE Channel, TTYTABLE *pars, KINETIS_UART_CONT
         uart_reg->UART_C5 &= ~(UART_C5_TDMAS);                           // disable tx DMA so that tx interrupt mode can be used
         #endif
     }
-        #if defined SERIAL_SUPPORT_DMA_RX
+        #if defined SERIAL_SUPPORT_DMA && defined SERIAL_SUPPORT_DMA_RX
     if ((pars->ucDMAConfig & UART_RX_DMA) != 0) {                        // {8} reception dma is required 
             #if defined KINETIS_KL                                       // {209}
                 #if (UARTS_AVAILABLE > 1)
@@ -2906,7 +2906,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SELECT_PCC_PERIPHERAL_SOURCE(LPUART0, LPUART0_PCC_SOURCE);   // select the PCC clock used by LPUART0
             POWER_UP_ATOMIC(5, LPUART0);
         #else
-            #if defined KINETIS_KL
+            #if defined _iMX
+            POWER_UP_ATOMIC(5, LPUART1_CLOCK);                           // power up the LPUART1 (iMX counts LPUARTs from 1)
+            #elif defined KINETIS_KL
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
             #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
             POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
@@ -2922,7 +2924,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (1):                                                        // LPUART 1
             #endif
-            #if defined KINETIS_WITH_PCC
+            #if defined _iMX
+            POWER_UP_ATOMIC(0, LPUART2_CLOCK);                           // power up LPUART 2 (i.MX counts LPUARTs from 1)
+            #elif defined KINETIS_WITH_PCC
             SELECT_PCC_PERIPHERAL_SOURCE(LPUART1, LPUART1_PCC_SOURCE);   // select the PCC clock used by LPUART1
             POWER_UP_ATOMIC(5, LPUART1);
             #else
@@ -2941,7 +2945,9 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (2):                                                        // LPUART 2
             #endif
-            #if defined KINETIS_WITH_PCC
+            #if defined _iMX
+            POWER_UP_ATOMIC(0, LPUART3_CLOCK);                           // power up LPUART 3 (i.MX counts LPUARTs from 1)
+            #elif defined KINETIS_WITH_PCC
             SELECT_PCC_PERIPHERAL_SOURCE(LPUART2, LPUART2_PCC_SOURCE);   // select the PCC clock used by LPUART2
             POWER_UP_ATOMIC(5, LPUART2);
             #else
@@ -2960,7 +2966,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (3):                                                        // LPUART 3
             #endif
+            #if defined _iMX
+            POWER_UP_ATOMIC(1, LPUART4_CLOCK);                           // power up LPUART 4 (i.MX counts LPUARTs from 1)
+            #else
             POWER_UP_ATOMIC(2, LPUART3);                                 // power up LPUART 3
+            #endif
             fnConfigLPUART_clock(3, &baud_config);                       // configure the clock source to be used
             break;
         #endif
@@ -2970,7 +2980,11 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             #else
         case (4):                                                        // LPUART 4
             #endif
+            #if defined _iMX
+            POWER_UP_ATOMIC(3, LPUART5_CLOCK);                           // power up LPUART 5 (i.MX counts LPUARTs from 1)
+            #else
             POWER_UP_ATOMIC(2, LPUART4);                                 // power up LPUART 4
+            #endif
             fnConfigLPUART_clock(4, &baud_config);                       // configure the clock source to be used
             break;
         #endif

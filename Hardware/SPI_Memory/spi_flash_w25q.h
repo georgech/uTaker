@@ -407,7 +407,7 @@ static unsigned char fnCheckW25Qxx(void)
             break;
     #if SPI_FLASH_SIZE >= (32 * 1024 * 1024)                             // {6}
         case DEVICE_ID_1_DATA_WB_FLASH_Q256M:
-            fnSPI_command_w25q(ENTER_4_BYTE_MODE, 0, __EXTENDED_CS ucID, 0); // switch to 4 byte mode so that more that 16MByte can be addressed
+            fnSPI_command_w25q(ENTER_4_BYTE_MODE, 0, __EXTENDED_CS ucID, 0); // switch to 4 byte mode so that more than 16MByte can be addressed
             ucReturnType = W25Q256;
             break;
     #endif

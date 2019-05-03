@@ -40,7 +40,11 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         switch (iPinReference) {
         case LPUART_TX_PIN:                                              // LPUART0 tx pin configuration
         #if defined _iMX
-            _CONFIG_PERIPHERAL(GPIO_AD_B0_06, LPUART1_TX, UART_PULL_UPS); // select LPUART1 Tx on GPIO1-06 [iMX LPUARTs count 1..8]
+            #if defined iMX_RT106X
+            _CONFIG_PERIPHERAL(GPIO_AD_B0_12, LPUART1_TX, UART_PULL_UPS); // select LPUART1 Tx on GPIO1-12 - alt function 2 [iMX LPUARTs count 1..8]
+            #else
+            _CONFIG_PERIPHERAL(GPIO_AD_B0_06, LPUART1_TX, UART_PULL_UPS); // select LPUART1 Tx on GPIO1-06 - alt function 2 [iMX LPUARTs count 1..8]
+            #endif
         #elif defined KINETIS_K27 || defined KINETIS_K28
             _CONFIG_PERIPHERAL(C, 24, (PC_24_LPUART0_TX | UART_PULL_UPS)); // LPUART0_TX on PC24 (alt. function 3)
         #elif defined KINETIS_KL03
@@ -99,7 +103,11 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
 
         case LPUART_RX_PIN:                                              // LPUART0 rx pin configuration
         #if defined _iMX
-            _CONFIG_PERIPHERAL(GPIO_AD_B0_07, LPUART1_RX, UART_PULL_UPS); // select LPUART1 Rx on GPIO1-07 [iMX LPUARTs count 1..8]
+            #if defined iMX_RT106X
+            _CONFIG_PERIPHERAL(GPIO_AD_B0_13, LPUART1_RX, UART_PULL_UPS); // select LPUART1 Rx on GPIO1-13 alt. function 2 [iMX LPUARTs count 1..8]
+            #else
+            _CONFIG_PERIPHERAL(GPIO_AD_B0_07, LPUART1_RX, UART_PULL_UPS); // select LPUART1 Rx on GPIO1-07 alt. function 2 [iMX LPUARTs count 1..8]
+            #endif
         #elif defined KINETIS_K27 || defined KINETIS_K28
             _CONFIG_PERIPHERAL(C, 25, (PC_25_LPUART0_RX | UART_PULL_UPS)); // LPUART0_RX on PC25 (alt. function 3)
         #elif defined KINETIS_KL03

@@ -352,7 +352,7 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = cPinDefaults[_PORT1][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = cPinDefaults[_PORT1][31];
 
-#if defined MIMXRT1064
+#if defined iMX_RT106X
     IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00 = cPinDefaults[_PORT2][0];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_01 = cPinDefaults[_PORT2][1];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_02 = cPinDefaults[_PORT2][2];
@@ -419,7 +419,7 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_30 = cPinDefaults[_PORT2][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_31 = cPinDefaults[_PORT2][31];
     #endif
-    #if defined MIMXRT1064
+    #if defined iMX_RT106X
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00 = cPinDefaults[_PORT3][0];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01 = cPinDefaults[_PORT3][1];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02 = cPinDefaults[_PORT3][2];

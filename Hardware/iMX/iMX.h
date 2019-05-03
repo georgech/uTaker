@@ -1029,31 +1029,18 @@ typedef struct stRESET_VECTOR
     #define FLASH_START_ADDRESS     0x00000000                           // up to 2Meg
 #endif
 
-// SRAM
+// ROM
 //
-#if defined KINETIS_KV50
-    #define RAM_START_ADDRESS    0x00000000                              // ITCM ram (M7 mainly and backdoor access for DMA and ethernet)
-    #define RAM_START_ADDRESS_1  0x20000000                              // D0TCM ram (M7 mainly and backdoor access for DMA and ethernet)
-    #define RAM_START_ADDRESS_2  0x20010000                              // D1TCM ram (M7 mainly and backdoor access for DMA and ethernet)
-    #define RAM_START_ADDRESS_3  0x2f000000                              // OCRAM (all masters)
-#elif defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV10 || defined KINETIS_KM // {42}
-    #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/4))           // SRAM L is 1/4 of the RAM size and is anchored to end at 0x1ffffffff
-                                                                         // SRAM H is 3/4 of the RAM size and is anchored to start at 0x20000000
-#elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (48 * 1024))
-    #define RAM_START_ADDRESS   (0x20000000 - (16 * 1024))               // SRAM L is 16k and is anchored to end at 0x1ffffffff
-                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
-#elif defined KINETIS_K22 && defined KINETIS_K_FPU && (SIZE_OF_RAM == (24 * 1024))
-    #define RAM_START_ADDRESS   (0x20000000 - (8 * 1024))                // SRAM L is 8k and is anchored to end at 0x1ffffffff
-                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
-#elif defined KINETIS_K64 || defined KINETIS_K24 || defined KINETIS_K26 || defined KINETIS_K65 || defined KINETIS_K66 || defined KINETIS_K80
-    #define RAM_START_ADDRESS   (0x20000000 - (64 * 1024))               // SRAM L is 64k and is anchored to end at 0x1ffffffff
-                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
-#elif defined KINETIS_KV30
-    #define RAM_START_ADDRESS   (0x20000000 - (32 * 1024))               // SRAM L is 32k and is anchored to end at 0x1ffffffff
-                                                                         // SRAM H is the remainder of RAM size and is anchored to start at 0x20000000
-#else
-    #define RAM_START_ADDRESS   (0x20000000 - (SIZE_OF_RAM/2))           // SRAM is symmetrical around 0x20000000
-#endif
+#define BOOT_ROM_START_ADDRESS    0x00200000
+#define BOOT_ROM_SIZE             0x00020000                             // 128k
+
+// SRAM (CM7)
+//
+#define RAM_START_ADDRESS    0x20200000                                  // OCRAM2
+#define RAM_START_ADDRESS_1  0x00000000                                  // ITCM
+#define RAM_START_ADDRESS_2  0x20000000                                  // DTCM
+
+
 
 #if KINETIS_MAX_SPEED >= 100000000                                       // devices with less that 100MHz speed don't generally have memory protection unit
     #if !(defined KINETIS_K22 && ((SIZE_OF_FLASH <= (512 * 1024)) && !defined KINETIS_FLEX)) // {86} exception of K22 FN with 512k Flash or less
@@ -1570,16 +1557,18 @@ typedef struct stRESET_VECTOR
 #define PORT3                2
 #define PORT4                3
 #define PORT5                4
+#define PORT6                5
+#define PORT7                6
+#define PORT8                7
+#define PORT9                8
 
-#define PORTS_AVAILABLE      5
-#define PORT_NOT_AVAILABLE   PORT4                                       // this port is not usable on this processor
-
-// Port inputs that don't support interrupts
-//
-#if defined KINETIS_KL02
-    #define RESTRICTED_PORT_A_BITS  0x0000237c
-    #define RESTRICTED_PORT_B_BITS  0x00003f00
+#if defined iMX_RT106X
+    #define PORTS_AVAILABLE  5
+#else
+    #define PORTS_AVAILABLE  5
+    #define PORT4_NO_AVAILABLE                                           // this port is not usable on this processor
 #endif
+
 
 // DMA configuration
 //
@@ -1589,17 +1578,12 @@ typedef struct stRESET_VECTOR
     #define DMA_CHANNEL_COUNT        32
 #endif
 
-#if defined KINETIS_K70 || ((defined KINETIS_K60 && defined KINETIS_K_FPU) && !defined KINETIS_K64 && !defined KINETIS_K66) || (defined KINETIS_K20 && (KINETIS_MAX_SPEED > 100000000))
-    #define DMAMUX1_AVAILABLE
-#endif
 
 
-
-// Kinetis interrupts
+// i.MX RT interrupts
 //
 typedef struct stPROCESSOR_IRQ
 {
-#if defined _iMX
     void  (*irq_DMA0)(void);                                             // 0
     void  (*irq_DMA1)(void);                                             // 1
     void  (*irq_DMA2)(void);                                             // 2
@@ -1742,7 +1726,6 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLEXPWM2_2)(void);                                       // 139
     void  (*irq_FLEXPWM2_3)(void);                                       // 140
     void  (*irq_FLEXPWM2_Fault)(void);                                   // 141
-#endif
 } PROCESSOR_IRQ;
 
 
@@ -1907,11 +1890,11 @@ typedef struct stVECTOR_TABLE
     #define irq_FLEXPWM2_Fault_ID         141
 #endif
 
-#define VECTOR_SIZE                      (sizeof(VECTOR_TABLE))
+#define VECTOR_SIZE                       (sizeof(VECTOR_TABLE))
 
 #if defined _iMX
-    #define LAST_PROCESSOR_IRQ     irq_FLEXPWM2_Fault
-    #define CHECK_VECTOR_SIZE                632                         // (16 + 141 + 1) = 158) * 4 - adequate for this processor [0x278]
+    #define LAST_PROCESSOR_IRQ            irq_FLEXPWM2_Fault
+    #define CHECK_VECTOR_SIZE             632                            // (16 + 141 + 1) = 158) * 4 - adequate for this processor [0x278]
 #endif
 
 
@@ -1992,10 +1975,22 @@ typedef struct st_iMX_ADC
     #define GPIO1_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT1])) // GPIO
     #define GPIO2_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT2])) // GPIO
     #define GPIO3_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT3])) // GPIO
-  #if defined iMX_RT106X
+  #if !defined PORT4_NO_AVAILABLE
     #define GPIO4_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT4])) // GPIO
   #endif
     #define GPIO5_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT5])) // GPIO
+  #if PORTS_AVAILABLE > 5
+    #define GPIO6_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT6])) // GPIO
+  #endif
+  #if PORTS_AVAILABLE > 6
+    #define GPIO7_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT7])) // GPIO
+  #endif
+  #if PORTS_AVAILABLE > 7
+    #define GPIO8_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT8])) // GPIO
+  #endif
+  #if PORTS_AVAILABLE > 8
+    #define GPIO9_BLOCK                        ((unsigned char *)(&iMX.GPIO[PORT9])) // GPIO
+  #endif
 
     #define CCM_BLOCK                          ((unsigned char *)(&iMX.CCM)) // clock control module
 
@@ -2352,10 +2347,22 @@ typedef struct st_iMX_ADC
     #define GPIO1_BLOCK                        0x401b8000                // GPIO 1
     #define GPIO2_BLOCK                        0x401bc000                // GPIO 2
     #define GPIO3_BLOCK                        0x401c0000                // GPIO 3
-  #if defined iMX_RT106X
-    #define GPIO5_BLOCK                        0x401c4000                // GPIO 4
-  #endif
+    #if !defined PORT4_NO_AVAILABLE
+        #define GPIO4_BLOCK                    0x401c4000                // GPIO 4
+    #endif
     #define GPIO5_BLOCK                        0x400c8000                // GPIO 5
+    #if PORTS_AVAILABLE > 5
+        #define GPIO6_BLOCK                    0x42000000                // GPIO 6
+    #endif
+    #if PORTS_AVAILABLE > 6
+        #define GPIO7_BLOCK                    0x42004000                // GPIO 7
+    #endif
+    #if PORTS_AVAILABLE > 7
+        #define GPIO8_BLOCK                    0x42008000                // GPIO 8
+    #endif
+    #if PORTS_AVAILABLE > 8
+        #define GPIO9_BLOCK                    0x4200c000                // GPIO 9
+    #endif
 
     #define CCM_BLOCK                          0x400fc000                // clock control module
 
@@ -9801,25 +9808,9 @@ typedef struct stKINETIS_LPTMR_CTL
 #define PROTECTED_CLEAR_VARIABLE(var, bits)    uDisable_Interrupt(); var &= ~(bits); uEnable_Interrupt()
 
 #if defined KINETIS_KE
-    #define POWER_UP(reg, module)              SIM_SCGC |= (module)      // power up a module (apply clock to it)
-    #define POWER_DOWN(reg, module)            SIM_SCGC &= ~(module)     // power down a module (disable clock to it)
-    #if defined KINETIS_WITH_PCC                                         // {102}
-        #define POWER_UP_ATOMIC(reg, module)   PCC_##module |= PCC_CGC
-        #define POWER_DOWN_ATOMIC(reg, module) PCC_##module &= ~(PCC_CGC)
-        #define IS_POWERED_UP(reg, module)     ((PCC_##module & PCC_CGC) != 0)
-    #else
-        #if defined _WINDOWS                                             // {99}
-            #define POWER_UP_ATOMIC(reg, module)     *(SIM_SCGC_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (SIM_SCGC_##module)
-            #define POWER_DOWN_ATOMIC(reg, module)   *(SIM_SCGC_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(SIM_SCGC_##module)
-        #else
-            #define POWER_UP_ATOMIC(reg, module)     *SIM_SCGC_BME_OR = (SIM_SCGC_##module) // bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
-            #define POWER_DOWN_ATOMIC(reg, module)   *SIM_SCGC_BME_AND = ~(SIM_SCGC_##module)
-        #endif
-        #define IS_POWERED_UP(reg, module)  ((SIM_SCGC & (SIM_SCGC_##module)) != 0) // {102}
-    #endif
 #else
-    #define POWER_UP(reg, module)              SIM_SCGC##reg |= (module) // power up a module or multiple modules sharing a register (apply clock to it)
-    #define POWER_DOWN(reg, module)            SIM_SCGC##reg &= ~(module)// power down a module or multiple modules sharing a register (disable clock to it)
+    #define POWER_UP(reg, module)              // power up a module (apply clock to it)
+    #define POWER_DOWN(reg, module)            // power down a module or multiple modules sharing a register (disable clock to it)
     #if defined KINETIS_WITH_PCC                                         // {102}
         #if defined ARM_MATH_CM0PLUS
             #if defined _WINDOWS
@@ -9836,16 +9827,13 @@ typedef struct stKINETIS_LPTMR_CTL
         #define IS_POWERED_UP(reg, module)     ((PCC_##module & PCC_CGC) != 0)
     #else
         #if defined ARM_MATH_CM0PLUS                                     // {99} bit-banding is not implemented in cortex-m0+ but instead it has BME (bit manipulation engine)
-            #if defined _WINDOWS
-                #define POWER_UP_ATOMIC(reg, module)   *(SIM_SCGC##reg##_BME_OR - (BME_OR_OFFSET/sizeof(unsigned long))) |= (SIM_SCGC##reg##_##module)
-                #define POWER_DOWN_ATOMIC(reg, module) *(SIM_SCGC##reg##_BME_AND - (BME_AND_OFFSET/sizeof(unsigned long))) &= ~(SIM_SCGC##reg##_##module)
-            #else
-                #define POWER_UP_ATOMIC(reg, module)   *SIM_SCGC##reg##_BME_OR = (SIM_SCGC##reg##_##module)
-                #define POWER_DOWN_ATOMIC(reg, module) *SIM_SCGC##reg##_BME_AND = ~(SIM_SCGC##reg##_##module)
-            #endif
         #elif defined ARM_MATH_CM7
-            #define POWER_UP_ATOMIC(reg, module)   SIM_SCGC##reg |= (SIM_SCGC##reg##_##module)
-            #define POWER_DOWN_ATOMIC(reg, module) SIM_SCGC##reg &= ~(SIM_SCGC##reg##_##module)
+            #if defined CLOCKS_DISABLED_IN_WAIT_AND_STOP
+                #define POWER_UP_ATOMIC(reg, module)    CCM_CCGR##reg |= (CCM_CCGR##reg##_##module##_RUN)
+            #else
+                #define POWER_UP_ATOMIC(reg, module)    CCM_CCGR##reg |= (CCM_CCGR##reg##_##module##_STOP)
+            #endif
+            #define POWER_DOWN_ATOMIC(reg, module)  CCM_CCGR##reg &= ~(CCM_CCGR##reg##_##module##_MASK)
         #else                                                            // cortex-m4
             #define POWER_UP_ATOMIC(reg, module)   ATOMIC_SET_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {98}{102} power up a single module using bit-banding access (apply clock to it)
             #define POWER_DOWN_ATOMIC(reg, module) ATOMIC_CLEAR_REGISTER(SIM_SCGC##reg##_SIM_SCGC##reg##_##module) // {102} power down a single module using bit-banding access (disable clock to it)
@@ -17842,6 +17830,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7   0x00000007             // MUX mode select field - ALT7
   #if defined iMX_RT106X
     #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8   0x00000008             // MUX mode select field - ALT8
+    #define IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9   0x00000009             // MUX mode select field - ALT9
   #endif
 // i.MX IOMUXC SNVS GPR
 //
@@ -18855,6 +18844,16 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_07_REF_24M_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
   #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00dc) // SW_MUX_CTL_PAD_GPIO_AD_B0_08 SW MUX control register [GPIO1-08]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_08_JTAG_MOD                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_08_GPT2_COMPARE3            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_08_ENET_RX_DATA03           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_08_SAI2_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_08_CSI_DATA05               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_08_GPIO1_IO08               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_08_XBAR1_IN20               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_08_ENET_1588_EVENT3_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_08_ENET_TX_CLK              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_08_LPI2C3_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_08_LPUART1_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18862,14 +18861,39 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_08_ENET_REF_CLK1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_08_GPIO1_IO08               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_08_ARM_CM7_TXEV             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00e0) // SW_MUX_CTL_PAD_GPIO_AD_B0_09 SW MUX control register [GPIO1-09]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_09_JTAG_TDI                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_09_FLEXPWM2_PWMA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_09_ENET_RX_DATA02           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_09_SAI2_TX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_09_CSI_DATA04               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_09_GPIO1_IO09               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_09_XBAR1_IN21               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_09_GPT2_CLK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B0_09_SEMC_DQS4                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B0_09_ENET_RDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_09_LPI2C3_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_09_LPUART1_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
     #define GPIO_AD_B0_09_KPP_ROW00                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_AD_B0_09_GPIO1_IO09               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_09_ARM_CM7_RXEV             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00e4) // SW_MUX_CTL_PAD_GPIO_AD_B0_10 SW MUX control register [GPIO1-10]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_10_JTAG_TDO                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_10_FLEXPWM1_PWMA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_10_ENET_CRS                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_10_SAI2_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_10_CSI_DATA03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_10_GPIO1_IO10               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_10_XBAR1_IN22               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_10_ENET_1588_EVENT0_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B0_10_FLEXCAN3_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B0_10_ARM_TRACE_SWO            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B0_10_ENET_RDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_10_LPSPI1_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_10_LPUART5_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18877,7 +18901,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_10_FLEXPWM2_PWMA02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_10_GPIO1_IO10               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_10_ARM_CM7_TRACE_CLK        (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00e8) // SW_MUX_CTL_PAD_GPIO_AD_B0_11 SW MUX control register [GPIO1-11]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_11_JTAG_TRSTB               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_11_FLEXPWM1_PWMB03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_11_ENET_COL                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_11_WDOG1_WDOG_B             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_11_CSI_DATA02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_11_GPIO1_IO11               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_11_XBAR1_IN23               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_11_ENET_1588_EVENT0_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B0_11_FLEXCAN3_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B0_11_SEMC_CLK6                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B0_11_ENET_RX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_11_LPSPI1_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_11_LPUART5_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18885,7 +18922,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_11_FLEXPWM2_PWMB02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_11_GPIO1_IO11               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_11_ARM_CM7_TRACE_SWO        (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00ec) // SW_MUX_CTL_PAD_GPIO_AD_B0_12 SW MUX control register [GPIO1-12]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_12_LPI2C4_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_12_CCM_PMIC_READY           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_12_LPUART1_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_12_WDOG2_WDOG_B             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_12_FLEXPWM1_PWMX02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_12_GPIO1_IO12               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_12_ENET_1588_EVENT1_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_12_NMI_GLUE_NMI             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_12_ENET_RX_ER               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_12_LPSPI1_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_12_LPUART3_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18894,7 +18942,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_12_GPIO1_IO12               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_12_ARM_CM7_TRACE00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_12_SNVS_HP_VIO_5_CTL        (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00f0) // SW_MUX_CTL_PAD_GPIO_AD_B0_13 SW MUX control register [GPIO1-13]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_13_LPI2C4_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_13_GPT1_CLK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_13_LPUART1_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_13_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_13_FLEXPWM1_PWMX03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_13_GPIO1_IO13               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_13_ENET_1588_EVENT1_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_13_REF_CLK_24M              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_13_ENET_TX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_13_LPSPI1_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_13_LPUART3_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18903,6 +18962,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_13_GPIO1_IO13               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_13_ARM_CM7_TRACE01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_13_SNVS_HP_VIO_5_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00f4) // SW_MUX_CTL_PAD_GPIO_AD_B0_14 SW MUX control register [GPIO1-14]
     #define GPIO_AD_B0_14_ENET_TDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_14_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
@@ -20219,6 +20279,12 @@ typedef struct stPDB_SETUP                                               // {37}
     #define CCM_CCGR3_LPUART5_CLOCK_OFF          0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
     #define CCM_CCGR3_LPUART5_CLOCK_RUN          0x00000004              // clock is on in RUN mode but off in WAIT and STOP modes
     #define CCM_CCGR3_LPUART5_CLOCK_STOP         0x0000000c              // clock is on during all modes except STOP mode
+  #if defined iMX_RT106X
+    #define CCM_CCGR3_FLEXIO2_CLOCKS_MASK        0x00000003
+    #define CCM_CCGR3_FLEXIO2_CLOCKS_OFF         0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)
+    #define CCM_CCGR3_FLEXIO2_CLOCKS_RUN         0x00000001              // clock is on in RUN mode but off in WAIT and STOP modes
+    #define CCM_CCGR3_FLEXIO2_CLOCKS_STOP        0x00000003              // clock is on during all modes except STOP mode
+  #endif
 #define CCM_CCGR4                       *(volatile unsigned long *)(CCM_BLOCK + 0x0078) // CCM clock gating register 4
     #define CCM_CCGR4_ENC2_CLOCKS_MASK           0x0c000000
     #define CCM_CCGR4_ENC2_CLOCKS_OFF            0x00000000              // clock is off during all modes (stop enter hardware handshake disabled)

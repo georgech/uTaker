@@ -536,6 +536,10 @@ static unsigned short fnAddMimeContent(unsigned char *ptrBuffer, unsigned char u
     case MIME_JAVA_SCRIPT:
         return (fnAddContentType((CHAR *)ptrBuffer, "application/javascript", 1));
     #endif
+    #if defined MIME_JSON
+    case MIME_JSON:
+        return (fnAddContentType((CHAR *)ptrBuffer, "application/json", 1));
+    #endif
     #if defined MIME_PNG
     case MIME_PNG:
         return (fnAddContentType((CHAR *)ptrBuffer, "image/png", 1));

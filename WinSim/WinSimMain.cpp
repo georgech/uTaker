@@ -151,6 +151,8 @@
 #include <windows.h>
 #include <process.h>
 
+#define LAN_LED_FLASH_DURATION (50000/TICK_RESOLUTION)
+
 #define _WITH_STATUS_BAR
 #define BUFSSIZE        512
 #if defined _WITH_STATUS_BAR                                             // {84}
@@ -4424,7 +4426,7 @@ extern void fnInjectFrame(unsigned char *ptrData, unsigned short usLength)
     if (usLength <= MAX_ETHERNET_BUFFER) {
         _main(RX_ETHERNET, ptr);                                            // send this to the ethernet input
         if (ptr[2]) {
-            iRxActivity = 2;                                                // cause activity LED blinking
+            iRxActivity = LAN_LED_FLASH_DURATION;                           // cause activity LED blinking
         }
     }
 }

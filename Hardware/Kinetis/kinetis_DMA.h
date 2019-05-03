@@ -679,7 +679,9 @@ extern int fnConfigDMA_buffer(unsigned char ucDMA_channel, unsigned short usDmaT
         ptrDMA_TCD->DMA_TCD_CITER_ELINK = (signed short)(ulBufLength / ucSize); // the number of service requests to be performed each buffer cycle
     }
     ptrDMA_TCD->DMA_TCD_BITER_ELINK = ptrDMA_TCD->DMA_TCD_CITER_ELINK;
+    #if !defined _iMX
     POWER_UP_ATOMIC(6, DMAMUX0);                                         // enable DMA multiplexer 0
+    #endif
         #if defined TRGMUX_AVAILABLE
     if ((usDmaTriggerSource & DMAMUX_CHCFG_TRIG) != 0) {                 // triggered source (LPIT)
     #if defined _WINDOWS

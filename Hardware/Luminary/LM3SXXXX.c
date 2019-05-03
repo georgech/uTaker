@@ -1135,7 +1135,8 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
     #else
     #define PUT_FIFO_LONG(x) MACDATA = x
     #endif
-    #ifdef _WINDOWS
+    #if defined _WINDOWS
+    unsigned char *ptrSentData;
     while (DataLen < 60) {                                               // device performs automatic zero padding
         *ptr_put++ = 0x00;                                               // pad with zeros if smaller than 60 [chip must send at least 60]
         DataLen++;
@@ -1146,6 +1147,9 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
     ptr_put -= (DataLen + 2);                                            // move back to long word boundary and put length in the buffer
     *ptr_put++ = (unsigned char)(DataLen - ETH_HEADER_LEN);              // put length (LSB) - only data without Ethernet header
     *ptr_put++ = (unsigned char)((DataLen - ETH_HEADER_LEN) >> 8);       // put length (MSB) - only data without Ethernet header
+    #if defined _WINDOWS
+    ptrSentData = ptr_put;
+    #endif
     ptr_put -= 2;                                                        // put back to start (on long word boundary)
     DataLen += 2;                                                        // include length
 
@@ -1165,11 +1169,9 @@ extern QUEUE_TRANSFER fnStartEthTx(QUEUE_TRANSFER DataLen, unsigned char *ptr_pu
     MACTR = NEWTX;                                                       // start transmission
 
     #if defined _WINDOWS
-    fnSimulateEthTx(length, (ptr_put - DataLen));
-    ptr_put -= length;
-    ptr_put += DataLen;
+    fnSimulateEthTx(length, ptrSentData);
     if (usPhyMode & PHY_LOOP_BACK) {                                     // if the PHY is in loop back mode, simulate reception of sent frame
-        fnSimulateEthernetIn(ptr_put, length, 1);
+        fnSimulateEthernetIn(ptrSentData, length, 1);
     }
         #ifdef PSEUDO_LOOPBACK                                           // if we detect an IP frame being sent to our own address we loop it back to the input
     else if (((*(ptr_put + 12)) == 0x08) && (!(uMemcmp(&network[DEFAULT_NETWORK].ucOurIP[0], (ptr_put + 26), IPV4_LENGTH)))) {
