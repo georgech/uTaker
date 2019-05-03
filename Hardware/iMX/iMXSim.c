@@ -352,6 +352,40 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = cPinDefaults[_PORT1][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = cPinDefaults[_PORT1][31];
 
+#if defined MIMXRT1064
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00 = cPinDefaults[_PORT2][0];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_01 = cPinDefaults[_PORT2][1];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_02 = cPinDefaults[_PORT2][2];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = cPinDefaults[_PORT2][3];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_04 = cPinDefaults[_PORT2][4];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_05 = cPinDefaults[_PORT2][5];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_06 = cPinDefaults[_PORT2][6];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_07 = cPinDefaults[_PORT2][7];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_08 = cPinDefaults[_PORT2][8];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_09 = cPinDefaults[_PORT2][9];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_10 = cPinDefaults[_PORT2][10];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_11 = cPinDefaults[_PORT2][11];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_12 = cPinDefaults[_PORT2][12];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_13 = cPinDefaults[_PORT2][13];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_14 = cPinDefaults[_PORT2][14];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_15 = cPinDefaults[_PORT2][15];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_00 = cPinDefaults[_PORT2][16];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_01 = cPinDefaults[_PORT2][17];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_02 = cPinDefaults[_PORT2][18];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_03 = cPinDefaults[_PORT2][19];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_04 = cPinDefaults[_PORT2][20];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_05 = cPinDefaults[_PORT2][21];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_06 = cPinDefaults[_PORT2][22];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_07 = cPinDefaults[_PORT2][23];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_08 = cPinDefaults[_PORT2][24];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_09 = cPinDefaults[_PORT2][25];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_10 = cPinDefaults[_PORT2][26];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_11 = cPinDefaults[_PORT2][27];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_12 = cPinDefaults[_PORT2][28];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_13 = cPinDefaults[_PORT2][29];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_14 = cPinDefaults[_PORT2][30];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_15 = cPinDefaults[_PORT2][31];
+#else
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00 = cPinDefaults[_PORT2][0];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_01 = cPinDefaults[_PORT2][1];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_02 = cPinDefaults[_PORT2][2];
@@ -384,6 +418,39 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_29 = cPinDefaults[_PORT2][29];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_30 = cPinDefaults[_PORT2][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_31 = cPinDefaults[_PORT2][31];
+    #endif
+    #if defined MIMXRT1064
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00 = cPinDefaults[_PORT3][0];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01 = cPinDefaults[_PORT3][1];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02 = cPinDefaults[_PORT3][2];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_03 = cPinDefaults[_PORT3][3];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_04 = cPinDefaults[_PORT3][4];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_05 = cPinDefaults[_PORT3][5];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_06 = cPinDefaults[_PORT3][6];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_07 = cPinDefaults[_PORT3][7];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_08 = cPinDefaults[_PORT3][8];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09 = cPinDefaults[_PORT3][9];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10 = cPinDefaults[_PORT3][10];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11 = cPinDefaults[_PORT3][11];
+
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00 = cPinDefaults[_PORT3][12];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01 = cPinDefaults[_PORT3][13];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02 = cPinDefaults[_PORT3][14];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03 = cPinDefaults[_PORT3][15];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04 = cPinDefaults[_PORT3][16];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05 = cPinDefaults[_PORT3][17];
+
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32 = cPinDefaults[_PORT3][18];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_33 = cPinDefaults[_PORT3][19];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_34 = cPinDefaults[_PORT3][20];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_35 = cPinDefaults[_PORT3][21];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_36 = cPinDefaults[_PORT3][22];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_37 = cPinDefaults[_PORT3][23];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_38 = cPinDefaults[_PORT3][24];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_39 = cPinDefaults[_PORT3][25];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_40 = cPinDefaults[_PORT3][26];
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41 = cPinDefaults[_PORT3][27];
+    #else
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32 = cPinDefaults[_PORT3][0];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_33 = cPinDefaults[_PORT3][1];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_34 = cPinDefaults[_PORT3][2];
@@ -394,11 +461,6 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_39 = cPinDefaults[_PORT3][7];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_40 = cPinDefaults[_PORT3][8];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41 = cPinDefaults[_PORT3][9];
-    #if defined IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_42
-    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_42 = cPinDefaults[_PORT3][10];
-    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_43 = cPinDefaults[_PORT3][11];
-    IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_44 = cPinDefaults[_PORT3][12];
-    #endif
 
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00 = cPinDefaults[_PORT3][13];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01 = cPinDefaults[_PORT3][14];
@@ -419,6 +481,7 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09 = cPinDefaults[_PORT3][29];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10 = cPinDefaults[_PORT3][30];
     IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11 = cPinDefaults[_PORT3][31];
+    #endif
 
     IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP = cPinDefaults[_PORT5][0];
     IOMUXC_SNVS_SW_MUX_CTL_PAD_PMIC_ON_REQ = cPinDefaults[_PORT5][1];

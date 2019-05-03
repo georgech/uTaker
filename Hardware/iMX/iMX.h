@@ -18612,6 +18612,15 @@ typedef struct stPDB_SETUP                                               // {37}
   #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0094)
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0094) // SW_MUX_CTL_PAD_GPIO_EMC_32 SW MUX control register [GPIO3-00]
+  #if defined iMX_RT106X
+    #define GPIO_EMC_32_SEMC_DATA10                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_EMC_32_FLEXPWM3_PWMB01            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_EMC_32_LPUART7_RX                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_EMC_32_CCM_PMIC_RDY                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_EMC_32_CSI_DATA21                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_EMC_32_GPIO3_IO18                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_EMC_32_ENET2_TX_EN                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+  #else
     #define GPIO_EMC_32_SEMC_DATA08                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_EMC_32_QTIMER1_TIMER0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_EMC_32_LPUART4_TX                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18619,6 +18628,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_EMC_32_LPSPI4_SCK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_EMC_32_GPIO3_IO00                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_EMC_32_REF_24M_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_33          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0098) // SW_MUX_CTL_PAD_GPIO_EMC_33 SW MUX control register [GPIO3-01]
     #define GPIO_EMC_33_SEMC_DATA09                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_EMC_33_QTIMER1_TIMER1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
@@ -18688,6 +18698,9 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_EMC_40_ENET_TDATA03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_EMC_40_GPT1_COMPARE3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_41          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00b8) // SW_MUX_CTL_PAD_GPIO_EMC_41 SW MUX control register [GPIO3-09]
+  #if defined iMX_RT106X
+    #define GPIO_EMC_41_GPIO3_IO27                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+  #else
     #define GPIO_EMC_41_SEMC_READY                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_EMC_41_XBAR1_INOUT19              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_EMC_41_SPDIF_IN                   (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18696,20 +18709,64 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_EMC_41_GPIO3_IO09                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_EMC_41_ENET_TDATA02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_EMC_41_GPT1_COMPARE2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x00bc)
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00bc) // SW_MUX_CTL_PAD_GPIO_AD_B0_00 SW MUX control register [GPIO1-00]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_00_FLEXPWM2_PWMA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_00_XBAR1_INOUT14            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_00_REF_CLK_32K              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_00_USB_OTG2_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_00_LPI2C1_SCLS              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_00_GPIO1_IO00               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_00_USDHC1_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_00_LPSPI3_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_00_JTAG_TMS                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_00_GPIO1_IO00               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_00_GPT1_COMPARE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00c0) // SW_MUX_CTL_PAD_GPIO_AD_B0_01 SW MUX control register [GPIO1-01]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_01_FLEXPWM2_PWMB03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_01_XBAR1_INOUT15            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_01_REF_CLK_24M              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_01_USB_OTG1_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_01_LPI2C1_SDAS              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_01_GPIO1_IO01               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_01_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_01_LPSPI3_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_01_JTAG_TCK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_01_GPIO1_IO01               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_01_GPT1_CAPTURE2            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00c4) // SW_MUX_CTL_PAD_GPIO_AD_B0_02 SW MUX control register [GPIO1-02]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_02_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_02_XBAR1_INOUT16            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_02_LPUART6_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_02_USB_OTG1_PWR             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_02_FLEXPWM1_PWMX00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_02_GPIO1_IO02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_02_LPI2C1_HREQ              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_02_LPSPI3_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_02_JTAG_MOD                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_02_GPIO1_IO02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_02_GPT1_CAPTURE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00c8) // SW_MUX_CTL_PAD_GPIO_AD_B0_03 SW MUX control register [GPIO1-03]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_03_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_03_XBAR1_INOUT17            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_03_LPUART6_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_03_USB_OTG1_OC              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_03_FLEXPWM1_PWMX01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_03_GPIO1_IO03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_03_REF_CLK_24M              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_03_LPSPI3_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_03_JTAG_TDI                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_03_USDHC2_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_03_WDOG1_B                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18718,7 +18775,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_03_GPIO1_IO03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_03_USB_OTG1_OC              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_03_CCM_PMIC_RDY             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00cc) // SW_MUX_CTL_PAD_GPIO_AD_B0_04 SW MUX control register [GPIO1-04]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_04_SRC_BOOT_MODE00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_04_MQS_RIGHT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_04_ENET_TX_DATA03           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_04_SAI2_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_04_CSI_DATA09               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_04_GPIO1_IO04               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_04_PIT_TRIGGER00            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_04_LPSPI3_PCS1              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_04_JTAG_TDO                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_04_FLEXCAN1_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_04_USDHC1_WP                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18727,7 +18795,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_04_GPIO1_IO04               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_04_USB_OTG1_PWR             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_04_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00d0) // SW_MUX_CTL_PAD_GPIO_AD_B0_05 SW MUX control register [GPIO1-05]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_05_SRC_BOOT_MODE01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_05_MQS_LEFT                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_05_ENET_TX_DATA02           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_05_SAI2_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_05_CSI_DATA08               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_05_GPIO1_IO05               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_05_XBAR1_INOUT17            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_05_LPSPI3_PCS2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_05_JTAG_TRSTB               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_05_FLEXCAN1_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_05_USDHC1_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18736,7 +18815,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_05_GPIO1_IO05               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_05_USB_OTG1_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_05_NMI_GLUE_NMI             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00d4) // SW_MUX_CTL_PAD_GPIO_AD_B0_06 SW MUX control register [GPIO1-06]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_06_JTAG_TMS                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_06_GPT2_COMPARE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_06_ENET_RX_CLK              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_06_SAI2_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_06_CSI_DATA07               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_06_GPIO1_IO06               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_06_XBAR1_INOUT18            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_06_LPSPI3_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_06_PIT_TRIGGER00            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_06_MQS_RIGHT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_06_LPUART1_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18744,7 +18834,18 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_06_FLEXPWM2_PWMA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_06_GPIO1_IO06               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_06_REF_32K_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00d8) // SW_MUX_CTL_PAD_GPIO_AD_B0_07 SW MUX control register [GPIO1-07]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_07_JTAG_TCK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_07_GPT2_COMPARE2            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_07_ENET_TX_ER               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_07_SAI2_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_07_CSI_DATA06               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_07_GPIO1_IO07               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_07_XBAR1_INOUT19            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_07_ENET_1588_EVENT3_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #else
     #define GPIO_AD_B0_07_PIT_TRIGGER01            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_07_MQS_LEFT                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_07_LPUART1_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18752,6 +18853,7 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_07_FLEXPWM2_PWMB03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_07_GPIO1_IO07               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_07_REF_24M_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00dc) // SW_MUX_CTL_PAD_GPIO_AD_B0_08 SW MUX control register [GPIO1-08]
     #define GPIO_AD_B0_08_ENET_TX_CLK              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_08_LPI2C3_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
@@ -18954,366 +19056,560 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_15_ENET_1588_EVENT0_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_AD_B1_15_FLEXIO1_FLEXIO00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_15_GPIO1_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x013c)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x013c) // SW_MUX_CTL_PAD_GPIO_SD_B0_00 SW MUX control register [GPIO3-13]
-    #define GPIO_SD_B0_00_USDHC1_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_00_QTIMER1_TIMER0           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_00_SAI1_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_00_SAI2_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_00_LPI2C3_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_00_GPIO3_IO13               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_00_FLEXSPI_A_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-    #define GPIO_SD_B0_00_XBAR1_INOUT14            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0140) // SW_MUX_CTL_PAD_GPIO_SD_B0_01 SW MUX control register [GPIO3-14]
-    #define GPIO_SD_B0_01_USDHC1_DATA3             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_01_QTIMER1_TIMER1           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_01_REF_24M_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_01_SAI2_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_01_LPI2C3_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_01_GPIO3_IO14               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_01_FLEXSPI_B_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-    #define GPIO_SD_B0_01_XBAR1_INOUT14            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0144) // SW_MUX_CTL_PAD_GPIO_SD_B0_02 SW MUX control register [GPIO3-15]
-    #define GPIO_SD_B0_02_USDHC1_CMD               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_02_QTIMER1_TIMER2           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_02_LPUART7_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_02_SAI2_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_02_LPSPI1_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_02_GPIO3_IO15               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_02_ENET_MDIO                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-    #define GPIO_SD_B0_02_XBAR1_INOUT16            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0148) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-16]
-    #define GPIO_SD_B0_03_USDHC1_CLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_03_QTIMER1_TIMER3           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_03_LPUART7_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_03_SAI2_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_03_LPSPI1_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_03_GPIO3_IO16               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_03_ENET_MDC                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x014c) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-17]
-    #define GPIO_SD_B0_04_USDHC1_DATA0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_04_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_04_LPUART7_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_04_SAI2_TX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_04LPSPI1_SDO                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_04_GPIO3_IO17               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_04_FLEXSPI_B_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0150) // SW_MUX_CTL_PAD_GPIO_SD_B0_05 SW MUX control register [GPIO3-18]
-    #define GPIO_SD_B0_05_USDHC1_DATA1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_05_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_05_LPUART7_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_05_SAI2_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_05_LPSPI1_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_05_GPIO3_IO18               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_05_FLEXSPI_B_DQS            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0154) // SW_MUX_CTL_PAD_GPIO_SD_B0_06 SW MUX control register [GPIO3-19]
-    #define GPIO_SD_B0_06_USDHC1_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B0_06_USDHC1_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B0_06_REF_32K_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B0_06_SAI2_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B0_06_WDOG1_B                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B0_06_GPIO3_IO19               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B0_06_XBAR1_INOUT17            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0158) // SW_MUX_CTL_PAD_GPIO_AD_B1_00 SW MUX control register [GPIO3-20]
-    #define GPIO_SD_B1_00_USDHC2_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_00_FLEXSPI_B_DATA03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_00_LPUART6_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_00_XBAR1_INOUT10            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_00_FLEXCAN1_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_00_GPIO3_IO20               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x015c) // SW_MUX_CTL_PAD_GPIO_AD_B1_01 SW MUX control register [GPIO3-21]
-    #define GPIO_SD_B1_01_USDHC2_DATA3             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_01_FLEXSPI_B_SCLK           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_01_LPUART6_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_01_FLEXSPI_A_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_01_FLEXCAN1_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_01_GPIO3_IO21               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0160) // SW_MUX_CTL_PAD_GPIO_AD_B1_02 SW MUX control register [GPIO3-22]
-    #define GPIO_SD_B1_02_USDHC2_CMD               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_02_FLEXSPI_B_DATA00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_02_LPUART8_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_02_LPI2C4_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_02_ENET_1588_EVENT1_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_02_GPIO3_IO22               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B1_02_CCM_CLKO1                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0164) // SW_MUX_CTL_PAD_GPIO_AD_B1_03 SW MUX control register [GPIO3-23]
-    #define GPIO_SD_B1_03_USDHC2_CLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_03_FLEXSPI_B_DATA02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_03_LPUART8_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_03_LPI2C4_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_03_ENET_1588_EVENT1_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_03_GPIO3_IO23               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B1_03_CCM_CLKO2                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0168) // SW_MUX_CTL_PAD_GPIO_AD_B1_04 SW MUX control register [GPIO3-24]
-    #define GPIO_SD_B1_04_USDHC2_DATA0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_04_FLEXSPI_B_DATA01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_04_ENET_TX_CLK              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_04_ENET_REF_CLK1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_04_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_04_GPIO3_IO24               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B1_04_CCM_WAIT                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x016c) // SW_MUX_CTL_PAD_GPIO_AD_B1_05 SW MUX control register [GPIO3-25]
-    #define GPIO_SD_B1_05_USDHC2_DATA1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_05_FLEXSPI_A_DQS            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_05_ENET_RDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_05_SAI3_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_05_FLEXSPI_B_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_05_GPIO3_IO25               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B1_05_CCM_PMIC_RDY             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0170) // SW_MUX_CTL_PAD_GPIO_AD_B1_06 SW MUX control register [GPIO3-26]
-    #define GPIO_SD_B1_06_USDHC2_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_06_FLEXSPI_A_DATA03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_06_ENET_RDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_06_SAI3_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_06_LPSPI2_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_06_GPIO3_IO26               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-    #define GPIO_SD_B1_06_CCM_STOP                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0174) // SW_MUX_CTL_PAD_GPIO_AD_B1_07 SW MUX control register [GPIO3-27]
-    #define GPIO_SD_B1_07_USDHC2_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_07_FLEXSPI_A_SCLK           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_07_ENET_RX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_07_SAI3_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_07_LPSPI2_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_07_GPIO3_IO27               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0178) // SW_MUX_CTL_PAD_GPIO_AD_B1_08 SW MUX control register [GPIO3-28]
-    #define GPIO_SD_B1_08_USDHC2_DATA4             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_08_FLEXSPI_A_DATA00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_08_ENET_RX_ER               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_08_SAI3_TX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_08_LPSPI2_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_08_GPIO3_IO28               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x017c) // SW_MUX_CTL_PAD_GPIO_AD_B1_09 SW MUX control register [GPIO3-29]
-    #define GPIO_SD_B1_09_USDHC2_DATA5             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_09_FLEXSPI_A_DATA02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_09_ENET_TX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_09_SAI3_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_09_LPSPI2_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_09_GPIO3_IO29               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0180) // SW_MUX_CTL_PAD_GPIO_AD_B1_10 SW MUX control register [GPIO3-30]
-    #define GPIO_SD_B1_10_USDHC2_DATA6             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_10_FLEXSPI_A_DATA01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_10_ENET_TDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_10_SAI3_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_10_LPSPI2_PCS2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_10_GPIO3_IO30               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0184) // SW_MUX_CTL_PAD_GPIO_AD_B1_11 SW MUX control register [GPIO3-31]
-    #define GPIO_SD_B1_11_USDHC2_DATA7             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
-    #define GPIO_SD_B1_11_FLEXSPI_A_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
-    #define GPIO_SD_B1_11_ENET_TDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
-    #define GPIO_SD_B1_11_SAI3_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
-    #define GPIO_SD_B1_11_LPSPI2_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
-    #define GPIO_SD_B1_11_GPIO3_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0188)
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0188) // SW_PAD_CTL_PAD_GPIO_EMC_00 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_01          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x018c) // SW_PAD_CTL_PAD_GPIO_EMC_01 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_02          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0190) // SW_PAD_CTL_PAD_GPIO_EMC_02 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_03          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0194) // SW_PAD_CTL_PAD_GPIO_EMC_03 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_04          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0198) // SW_PAD_CTL_PAD_GPIO_EMC_04 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_05          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x019c) // SW_PAD_CTL_PAD_GPIO_EMC_05 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_06          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a0) // SW_PAD_CTL_PAD_GPIO_EMC_06 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_07          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a4) // SW_PAD_CTL_PAD_GPIO_EMC_07 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_08          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a8) // SW_PAD_CTL_PAD_GPIO_EMC_08 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_09          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ac) // SW_PAD_CTL_PAD_GPIO_EMC_09 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_10          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b0) // SW_PAD_CTL_PAD_GPIO_EMC_10 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_11          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b4) // SW_PAD_CTL_PAD_GPIO_EMC_11 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_12          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b8) // SW_PAD_CTL_PAD_GPIO_EMC_12 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_13          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01bc) // SW_PAD_CTL_PAD_GPIO_EMC_13 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_14          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c0) // SW_PAD_CTL_PAD_GPIO_EMC_14 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_15          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c4) // SW_PAD_CTL_PAD_GPIO_EMC_15 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_16          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c8) // SW_PAD_CTL_PAD_GPIO_EMC_16 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_17          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01cc) // SW_PAD_CTL_PAD_GPIO_EMC_17 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_18          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d0) // SW_PAD_CTL_PAD_GPIO_EMC_18 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_19          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d4) // SW_PAD_CTL_PAD_GPIO_EMC_19 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_20          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d8) // SW_PAD_CTL_PAD_GPIO_EMC_20 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_21          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01dc) // SW_PAD_CTL_PAD_GPIO_EMC_21 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_22          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e0) // SW_PAD_CTL_PAD_GPIO_EMC_22 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_23          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e4) // SW_PAD_CTL_PAD_GPIO_EMC_23 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_24          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e8) // SW_PAD_CTL_PAD_GPIO_EMC_24 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_25          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ec) // SW_PAD_CTL_PAD_GPIO_EMC_25 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_26          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f0) // SW_PAD_CTL_PAD_GPIO_EMC_26 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_27          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f4) // SW_PAD_CTL_PAD_GPIO_EMC_27 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_28          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f8) // SW_PAD_CTL_PAD_GPIO_EMC_28 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_29          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01fc) // SW_PAD_CTL_PAD_GPIO_EMC_29 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_30          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0200) // SW_PAD_CTL_PAD_GPIO_EMC_30 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_31          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0204) // SW_PAD_CTL_PAD_GPIO_EMC_31 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0208)
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0208) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_33          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x020c) // SW_PAD_CTL_PAD_GPIO_EMC_33 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_34          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0210) // SW_PAD_CTL_PAD_GPIO_EMC_34 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_35          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0214) // SW_PAD_CTL_PAD_GPIO_EMC_35 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_36          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0218) // SW_PAD_CTL_PAD_GPIO_EMC_36 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_37          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x021c) // SW_PAD_CTL_PAD_GPIO_EMC_37 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_38          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0220) // SW_PAD_CTL_PAD_GPIO_EMC_38 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_39          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0224) // SW_PAD_CTL_PAD_GPIO_EMC_39 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_40          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0228) // SW_PAD_CTL_PAD_GPIO_EMC_40 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_41          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x022c) // SW_PAD_CTL_PAD_GPIO_EMC_41 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x0230)
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0230) // SW_PAD_CTL_PAD_GPIO_AD_B0_00 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0234) // SW_PAD_CTL_PAD_GPIO_AD_B0_01 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0238) // SW_PAD_CTL_PAD_GPIO_AD_B0_02 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x023c) // SW_PAD_CTL_PAD_GPIO_AD_B0_03 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0240) // SW_PAD_CTL_PAD_GPIO_AD_B0_04 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0244) // SW_PAD_CTL_PAD_GPIO_AD_B0_05 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0248) // SW_PAD_CTL_PAD_GPIO_AD_B0_06 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x024c) // SW_PAD_CTL_PAD_GPIO_AD_B0_07 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0250) // SW_PAD_CTL_PAD_GPIO_AD_B0_08 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0254) // SW_PAD_CTL_PAD_GPIO_AD_B0_09 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0258) // SW_PAD_CTL_PAD_GPIO_AD_B0_10 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x025c) // SW_PAD_CTL_PAD_GPIO_AD_B0_11 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0260) // SW_PAD_CTL_PAD_GPIO_AD_B0_12 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0264) // SW_PAD_CTL_PAD_GPIO_AD_B0_13 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0268) // SW_PAD_CTL_PAD_GPIO_AD_B0_14 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x026c) // SW_PAD_CTL_PAD_GPIO_AD_B0_15 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0270) // SW_PAD_CTL_PAD_GPIO_AD_B1_00 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0274) // SW_PAD_CTL_PAD_GPIO_AD_B1_01 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0278) // SW_PAD_CTL_PAD_GPIO_AD_B1_02 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x027c) // SW_PAD_CTL_PAD_GPIO_AD_B1_03 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0280) // SW_PAD_CTL_PAD_GPIO_AD_B1_04 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0284) // SW_PAD_CTL_PAD_GPIO_AD_B1_05 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0288) // SW_PAD_CTL_PAD_GPIO_AD_B1_06 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x028c) // SW_PAD_CTL_PAD_GPIO_AD_B1_07 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0290) // SW_PAD_CTL_PAD_GPIO_AD_B1_08 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0294) // SW_PAD_CTL_PAD_GPIO_AD_B1_09 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0298) // SW_PAD_CTL_PAD_GPIO_AD_B1_10 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x029c) // SW_PAD_CTL_PAD_GPIO_AD_B1_11 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a0) // SW_PAD_CTL_PAD_GPIO_AD_B1_12 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a4) // SW_PAD_CTL_PAD_GPIO_AD_B1_13 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a8) // SW_PAD_CTL_PAD_GPIO_AD_B1_14 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ac) // SW_PAD_CTL_PAD_GPIO_AD_B1_15 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0)
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0) // SW_PAD_CTL_PAD_GPIO_SD_B0_00 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b4) // SW_PAD_CTL_PAD_GPIO_SD_B0_01 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b8) // SW_PAD_CTL_PAD_GPIO_SD_B0_02 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02bc) // SW_PAD_CTL_PAD_GPIO_SD_B0_03 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c0) // SW_PAD_CTL_PAD_GPIO_SD_B0_04 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c4) // SW_PAD_CTL_PAD_GPIO_SD_B0_05 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c8) // SW_PAD_CTL_PAD_GPIO_SD_B0_06 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02cc) // SW_PAD_CTL_PAD_GPIO_SD_B1_00 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d0) // SW_PAD_CTL_PAD_GPIO_SD_B1_01 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d4) // SW_PAD_CTL_PAD_GPIO_SD_B1_02 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d8) // SW_PAD_CTL_PAD_GPIO_SD_B1_03 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02dc) // SW_PAD_CTL_PAD_GPIO_SD_B1_04 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e0) // SW_PAD_CTL_PAD_GPIO_SD_B1_05 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e4) // SW_PAD_CTL_PAD_GPIO_SD_B1_06 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e8) // SW_PAD_CTL_PAD_GPIO_SD_B1_07 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ec) // SW_PAD_CTL_PAD_GPIO_SD_B1_08 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f0) // SW_PAD_CTL_PAD_GPIO_SD_B1_09 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f4) // SW_PAD_CTL_PAD_GPIO_SD_B1_10 SW PAD control register
-#define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f8) // SW_PAD_CTL_PAD_GPIO_SD_B1_11 SW PAD control register
-#define IOMUXC_ANATOP_USB_OTG_ID_SELECT_INPUT      *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02fc) // ANATOP_USB_OTG_ID_SELECT_INPUT DAISY register
-#define IOMUXC_CCM_PMIC_READY_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0300) // CCM_PMIC_READY_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_RMII_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0304) // ENET_RMII_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_MDIO_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0308) // ENET_MDIO_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x030c) // ENET_RX_DATA0_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_RX_DATA1_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0310) // ENET_RX_DATA1_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_RX_EN_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0314) // ENET_RX_EN_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_RX_ERR_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0318) // ENET_RX_ERR_SELECT_INPUT DAISY register
-#define IOMUXC_ENET_TX_CLK_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x031c) // ENET_TX_CLK_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXCAN1_RX_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0320) // FLEXCAN1_RX_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXCAN2_RX_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0324) // FLEXCAN2_RX_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMA0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0328) // FLEXPWM1_PWMA0_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMA1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x032c) // FLEXPWM1_PWMA1_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMA2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0330) // FLEXPWM1_PWMA2_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMA3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0334) // FLEXPWM1_PWMA3_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMB0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0338) // FLEXPWM1_PWMB0_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMB1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x033c) // FLEXPWM1_PWMB1_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMB2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0340) // FLEXPWM1_PWMB2_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM1_PWMB3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0344) // FLEXPWM1_PWMB3_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMA0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0348) // FLEXPWM2_PWMA0_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMA1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x034c) // FLEXPWM2_PWMA1_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMA2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0350) // FLEXPWM2_PWMA2_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMA3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0354) // FLEXPWM2_PWMA3_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMB0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0358) // FLEXPWM2_PWMB0_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMB1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x035c) // FLEXPWM2_PWMB1_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMB2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0360) // FLEXPWM2_PWMB2_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXPWM2_PWMB3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0364) // FLEXPWM2_PWMB3_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXSPI_A_DATA0_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0368) // FLEXSPI_A_DATA0_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXSPI_A_DATA1_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x036c) // FLEXSPI_A_DATA1_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXSPI_A_DATA2_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0370) // FLEXSPI_A_DATA2_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXSPI_A_DATA3_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0374) // FLEXSPI_A_DATA3_SELECT_INPUT DAISY register
-#define IOMUXC_FLEXSPI_A_SCLK_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0378) // FLEXSPI_A_SCLK_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C1_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x037c) // LPI2C1_SCL_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C1_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0380) // LPI2C1_SDA_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C2_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0384) // LPI2C2_SCL_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C2_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0388) // LPI2C2_SDA_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C3_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x038c) // LPI2C3_SCL_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C3_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0390) // LPI2C3_SDA_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C4_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0394) // LPI2C4_SCL_SELECT_INPUT DAISY register
-#define IOMUXC_LPI2C4_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0398) // LPI2C4_SDA_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI1_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x039c) // LPSPI1_PCS0_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI1_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a0) // LPSPI1_SCK_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI1_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a4) // LPSPI1_SDI_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI1_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a8) // LPSPI1_SDO_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI2_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ac) // LPSPI2_PCS0_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI2_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b0) // LPSPI2_SCK_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI2_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b4) // LPSPI2_SDI_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI2_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b8) // LPSPI2_SDO_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI4_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03bc) // LPSPI4_PCS0_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI4_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c0) // LPSPI4_SCK_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI4_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c4) // LPSPI4_SDI_SELECT_INPUT DAISY register
-#define IOMUXC_LPSPI4_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c8) // LPSPI4_SDO_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART2_CTS_B_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03cc) // LPUART2_CTS_B_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART2_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d0) // LPUART2_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART2_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d4) // LPUART2_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART3_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d8) // LPUART3_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART3_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03dc) // LPUART3_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART4_CTS_B_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e0) // LPUART4_CTS_B_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART4_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e4) // LPUART4_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART4_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e8) // LPUART4_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART5_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ec) // LPUART5_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART5_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f0) // LPUART5_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART6_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f4) // LPUART6_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART6_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f8) // LPUART6_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART7_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03fc) // LPUART7_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART7_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0400) // LPUART7_TX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART8_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0404) // LPUART8_RX_SELECT_INPUT DAISY register
-#define IOMUXC_LPUART8_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0408) // LPUART8_TX_SELECT_INPUT DAISY register
-#define IOMUXC_NMI_SELECT_INPUT                    *(unsigned long *)(IOMUXC_SW_BLOCK + 0x040c) // NMI_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER1_TIMER0_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0410) // QTIMER1_TIMER0_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER1_TIMER1_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0414) // QTIMER1_TIMER1_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER1_TIMER2_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0418) // QTIMER1_TIMER2_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER1_TIMER3_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x041c) // QTIMER1_TIMER3_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER2_TIMER0_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0420) // QTIMER2_TIMER0_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER2_TIMER1_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0424) // QTIMER2_TIMER1_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER2_TIMER2_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0428) // QTIMER2_TIMER2_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_QTIMER2_TIMER3_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x042c) // QTIMER2_TIMER3_INPUT_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0430) // SAI1_MCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0434) // SAI1_RX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0438) // SAI1_RX_DATA0_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_DATA1_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x043c) // SAI1_RX_DATA1_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_DATA2_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0440) // SAI1_RX_DATA2_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_DATA3_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0444) // SAI1_RX_DATA3_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0448) // SAI1_RX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x044c) // SAI1_TX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI1_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0450) // SAI1_TX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0454) // SAI2_MCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0458) // SAI2_RX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x045c) // SAI2_RX_DATA0_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0460) // SAI2_RX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0464) // SAI2_TX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI2_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0468) // SAI2_TX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x046c) // SAI3_MCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0470) // SAI3_RX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0474) // SAI3_RX_DATA0_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0478) // SAI3_RX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x047c) // SAI3_TX_BCLK_SELECT_INPUT DAISY register
-#define IOMUXC_SAI3_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0480) // SAI3_TX_SYNC_SELECT_INPUT DAISY register
-#define IOMUXC_SEMC_READY_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0484) // SEMC_READY_SELECT_INPUT DAISY register
-#define IOMUXC_SPDIF_IN_SELECT_INPUT               *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0488) // SPDIF_IN_SELECT_INPUT DAISY register
-#define IOMUXC_USB_OTG_OC_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x048c) // USB_OTG_OC_SELECT_INPUT DAISY register
-#define IOMUXC_USDHC1_CD_B_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0490) // USDHC1_CD_B_SELECT_INPUT DAISY register
-#define IOMUXC_USDHC1_WP_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0494) // USDHC1_WP_SELECT_INPUT DAISY register
-#define IOMUXC_USDHC2_CD_B_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0498) // USDHC2_CD_B_SELECT_INPUT DAISY register
-#define IOMUXC_USDHC2_WP_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x049c) // USDHC2_WP_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN14_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a0) // XBAR1_IN14_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN15_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a4) // XBAR1_IN15_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN16_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a8) // XBAR1_IN16_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN17_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04ac) // XBAR1_IN17_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN10_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b0) // XBAR1_IN10_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN12_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b4) // XBAR1_IN12_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN13_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b8) // XBAR1_IN13_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN18_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04bc) // XBAR1_IN18_SELECT_INPUT DAISY register
-#define IOMUXC_XBAR1_IN19_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04c0) // XBAR1_IN19_SELECT_INPUT DAISY register
+#if defined iMX_RT106X
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00_ADD       (unsigned long *)(IOMUXC_SW_BLOCK + 0x013c)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x013c) // SW_MUX_CTL_PAD_GPIO_B0_00 SW MUX control register [GPIO2-0]
+        #define GPIO_B0_00_LCD_CLK                     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_B0_00_QTIMER1_TIMER0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_B0_00_MQS_RIGHT                   (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_B0_00_LPSPI4_PCS0                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_B0_00_FLEXIO2_FLEXIO00            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_B0_00_GPIO2_IO00                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_B0_00_SEMC_CSX01                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+        #define GPIO_B0_00_ENET2_MDC                   (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_01           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0140) // SW_MUX_CTL_PAD_GPIO_B0_01 SW MUX control register [GPIO2-1]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_02           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0144) // SW_MUX_CTL_PAD_GPIO_B0_02 SW MUX control register [GPIO2-2]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0148) // SW_MUX_CTL_PAD_GPIO_B0_03 SW MUX control register [GPIO2-3]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_04           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x014c) // SW_MUX_CTL_PAD_GPIO_B0_04 SW MUX control register [GPIO2-4]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_05           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0150) // SW_MUX_CTL_PAD_GPIO_B0_05 SW MUX control register [GPIO2-5]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_06           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0154) // SW_MUX_CTL_PAD_GPIO_B0_06 SW MUX control register [GPIO2-6]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_07           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0158) // SW_MUX_CTL_PAD_GPIO_B0_08 SW MUX control register [GPIO2-7]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_08           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x015c) // SW_MUX_CTL_PAD_GPIO_B0_09 SW MUX control register [GPIO2-8]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_09           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0160) // SW_MUX_CTL_PAD_GPIO_B0_09 SW MUX control register [GPIO2-9]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_10           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0164) // SW_MUX_CTL_PAD_GPIO_B0_10 SW MUX control register [GPIO2-10]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_11           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0168) // SW_MUX_CTL_PAD_GPIO_B0_11 SW MUX control register [GPIO2-11]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_12           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x016c) // SW_MUX_CTL_PAD_GPIO_B0_12 SW MUX control register [GPIO2-12]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_13           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0170) // SW_MUX_CTL_PAD_GPIO_B0_13 SW MUX control register [GPIO2-13]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_14           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0174) // SW_MUX_CTL_PAD_GPIO_B0_14 SW MUX control register [GPIO2-14]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_15           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0178) // SW_MUX_CTL_PAD_GPIO_B0_15 SW MUX control register [GPIO2-15]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_00           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x017c) // SW_MUX_CTL_PAD_GPIO_B1_00 SW MUX control register [GPIO2-16]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_01           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0180) // SW_MUX_CTL_PAD_GPIO_B1_01 SW MUX control register [GPIO2-17]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_02           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0184) // SW_MUX_CTL_PAD_GPIO_B1_02 SW MUX control register [GPIO2-18]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_03           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0188) // SW_MUX_CTL_PAD_GPIO_B1_03 SW MUX control register [GPIO2-19]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_04           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x018c) // SW_MUX_CTL_PAD_GPIO_B1_04 SW MUX control register [GPIO2-20]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_05           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0190) // SW_MUX_CTL_PAD_GPIO_B1_05 SW MUX control register [GPIO2-21]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_06           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0194) // SW_MUX_CTL_PAD_GPIO_B1_06 SW MUX control register [GPIO2-22]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_07           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0198) // SW_MUX_CTL_PAD_GPIO_B1_07 SW MUX control register [GPIO2-23]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_08           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x019c) // SW_MUX_CTL_PAD_GPIO_B1_08 SW MUX control register [GPIO2-24]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_09           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a0) // SW_MUX_CTL_PAD_GPIO_B1_09 SW MUX control register [GPIO2-25]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_10           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a4) // SW_MUX_CTL_PAD_GPIO_B1_10 SW MUX control register [GPIO2-26]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_11           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a8) // SW_MUX_CTL_PAD_GPIO_B1_11 SW MUX control register [GPIO2-27]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_12           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ac) // SW_MUX_CTL_PAD_GPIO_B1_12 SW MUX control register [GPIO2-28]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_13           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b0) // SW_MUX_CTL_PAD_GPIO_B1_13 SW MUX control register [GPIO2-29]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_14           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b4) // SW_MUX_CTL_PAD_GPIO_B1_14 SW MUX control register [GPIO2-30]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_15           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b8) // SW_MUX_CTL_PAD_GPIO_B1_15 SW MUX control register [GPIO2-31]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x01bc)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01bc) // SW_MUX_CTL_PAD_GPIO_SD_B0_00 SW MUX control register [GPIO3-12]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c0) // SW_MUX_CTL_PAD_GPIO_SD_B0_01 SW MUX control register [GPIO3-13]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c4) // SW_MUX_CTL_PAD_GPIO_SD_B0_02 SW MUX control register [GPIO3-14]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c8) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-15]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01cc) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-16]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d0) // SW_MUX_CTL_PAD_GPIO_SD_B0_05 SW MUX control register [GPIO3-17]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x01d4)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d4) // SW_MUX_CTL_PAD_GPIO_SD_B1_00 SW MUX control register [GPIO3-0]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d8) // SW_MUX_CTL_PAD_GPIO_SD_B1_01 SW MUX control register [GPIO3-1]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01dc) // SW_MUX_CTL_PAD_GPIO_SD_B1_02 SW MUX control register [GPIO3-2]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e0) // SW_MUX_CTL_PAD_GPIO_SD_B1_04 SW MUX control register [GPIO3-3]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e4) // SW_MUX_CTL_PAD_GPIO_SD_B1_04 SW MUX control register [GPIO3-4]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e8) // SW_MUX_CTL_PAD_GPIO_SD_B1_05 SW MUX control register [GPIO3-5]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ec) // SW_MUX_CTL_PAD_GPIO_SD_B1_06 SW MUX control register [GPIO3-6]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f0) // SW_MUX_CTL_PAD_GPIO_SD_B1_07 SW MUX control register [GPIO3-7]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f4) // SW_MUX_CTL_PAD_GPIO_SD_B1_08 SW MUX control register [GPIO3-8]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f8) // SW_MUX_CTL_PAD_GPIO_SD_B1_09 SW MUX control register [GPIO3-9]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01fc) // SW_MUX_CTL_PAD_GPIO_SD_B1_10 SW MUX control register [GPIO3-10]
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0200) // SW_MUX_CTL_PAD_GPIO_SD_B1_11 SW MUX control register [GPIO3-11]
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0204)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0204) // SW_PAD_CTL_PAD_GPIO_EMC_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_01          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0208) // SW_PAD_CTL_PAD_GPIO_EMC_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_02          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x020c) // SW_PAD_CTL_PAD_GPIO_EMC_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_03          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0210) // SW_PAD_CTL_PAD_GPIO_EMC_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_04          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0214) // SW_PAD_CTL_PAD_GPIO_EMC_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_05          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0218) // SW_PAD_CTL_PAD_GPIO_EMC_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_06          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x021c) // SW_PAD_CTL_PAD_GPIO_EMC_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_07          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0220) // SW_PAD_CTL_PAD_GPIO_EMC_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_08          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0224) // SW_PAD_CTL_PAD_GPIO_EMC_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_09          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0228) // SW_PAD_CTL_PAD_GPIO_EMC_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_10          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x022c) // SW_PAD_CTL_PAD_GPIO_EMC_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_11          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0230) // SW_PAD_CTL_PAD_GPIO_EMC_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_12          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0234) // SW_PAD_CTL_PAD_GPIO_EMC_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_13          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0238) // SW_PAD_CTL_PAD_GPIO_EMC_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_14          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x023c) // SW_PAD_CTL_PAD_GPIO_EMC_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_15          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0240) // SW_PAD_CTL_PAD_GPIO_EMC_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_16          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0244) // SW_PAD_CTL_PAD_GPIO_EMC_16 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_17          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0248) // SW_PAD_CTL_PAD_GPIO_EMC_17 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_18          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x024c) // SW_PAD_CTL_PAD_GPIO_EMC_18 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_19          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0250) // SW_PAD_CTL_PAD_GPIO_EMC_19 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_20          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0254) // SW_PAD_CTL_PAD_GPIO_EMC_20 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_21          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0258) // SW_PAD_CTL_PAD_GPIO_EMC_21 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_22          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x025c) // SW_PAD_CTL_PAD_GPIO_EMC_22 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_23          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0260) // SW_PAD_CTL_PAD_GPIO_EMC_23 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_24          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0264) // SW_PAD_CTL_PAD_GPIO_EMC_24 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_25          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0268) // SW_PAD_CTL_PAD_GPIO_EMC_25 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_26          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x026c) // SW_PAD_CTL_PAD_GPIO_EMC_26 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_27          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0270) // SW_PAD_CTL_PAD_GPIO_EMC_27 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_28          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0274) // SW_PAD_CTL_PAD_GPIO_EMC_28 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_29          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0278) // SW_PAD_CTL_PAD_GPIO_EMC_29 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_30          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x027c) // SW_PAD_CTL_PAD_GPIO_EMC_30 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_31          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0280) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0284) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register address
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0284) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_33          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0288) // SW_PAD_CTL_PAD_GPIO_EMC_33 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_34          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x028c) // SW_PAD_CTL_PAD_GPIO_EMC_34 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_35          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0290) // SW_PAD_CTL_PAD_GPIO_EMC_35 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_36          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0294) // SW_PAD_CTL_PAD_GPIO_EMC_36 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_37          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0298) // SW_PAD_CTL_PAD_GPIO_EMC_37 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_38          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x029c) // SW_PAD_CTL_PAD_GPIO_EMC_38 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_39          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a0) // SW_PAD_CTL_PAD_GPIO_EMC_39 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_40          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a4) // SW_PAD_CTL_PAD_GPIO_EMC_40 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_41          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a8) // SW_PAD_CTL_PAD_GPIO_EMC_41 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x02ac)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ac) // SW_PAD_CTL_PAD_GPIO_AD_B0_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0) // SW_PAD_CTL_PAD_GPIO_AD_B0_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b4) // SW_PAD_CTL_PAD_GPIO_AD_B0_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b8) // SW_PAD_CTL_PAD_GPIO_AD_B0_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02bc) // SW_PAD_CTL_PAD_GPIO_AD_B0_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c0) // SW_PAD_CTL_PAD_GPIO_AD_B0_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c4) // SW_PAD_CTL_PAD_GPIO_AD_B0_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c8) // SW_PAD_CTL_PAD_GPIO_AD_B0_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02cc) // SW_PAD_CTL_PAD_GPIO_AD_B0_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d0) // SW_PAD_CTL_PAD_GPIO_AD_B0_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d4) // SW_PAD_CTL_PAD_GPIO_AD_B0_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d8) // SW_PAD_CTL_PAD_GPIO_AD_B0_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02dc) // SW_PAD_CTL_PAD_GPIO_AD_B0_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e0) // SW_PAD_CTL_PAD_GPIO_AD_B0_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e4) // SW_PAD_CTL_PAD_GPIO_AD_B0_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e8) // SW_PAD_CTL_PAD_GPIO_AD_B0_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ec) // SW_PAD_CTL_PAD_GPIO_AD_B1_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f0) // SW_PAD_CTL_PAD_GPIO_AD_B1_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f4) // SW_PAD_CTL_PAD_GPIO_AD_B1_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f8) // SW_PAD_CTL_PAD_GPIO_AD_B1_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02fc) // SW_PAD_CTL_PAD_GPIO_AD_B1_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0300) // SW_PAD_CTL_PAD_GPIO_AD_B1_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0304) // SW_PAD_CTL_PAD_GPIO_AD_B1_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0308) // SW_PAD_CTL_PAD_GPIO_AD_B1_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x030c) // SW_PAD_CTL_PAD_GPIO_AD_B1_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0310) // SW_PAD_CTL_PAD_GPIO_AD_B1_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0314) // SW_PAD_CTL_PAD_GPIO_AD_B1_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0318) // SW_PAD_CTL_PAD_GPIO_AD_B1_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x031c) // SW_PAD_CTL_PAD_GPIO_AD_B1_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0320) // SW_PAD_CTL_PAD_GPIO_AD_B1_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0324) // SW_PAD_CTL_PAD_GPIO_AD_B1_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0328) // SW_PAD_CTL_PAD_GPIO_AD_B1_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_00           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x032c) // SW_PAD_CTL_PAD_GPIO_B0_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_01           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0330) // SW_PAD_CTL_PAD_GPIO_B0_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_02           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0334) // SW_PAD_CTL_PAD_GPIO_B0_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0338) // SW_PAD_CTL_PAD_GPIO_B0_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_04           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x033c) // SW_PAD_CTL_PAD_GPIO_B0_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_05           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0340) // SW_PAD_CTL_PAD_GPIO_B0_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_06           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0344) // SW_PAD_CTL_PAD_GPIO_B0_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_07           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0348) // SW_PAD_CTL_PAD_GPIO_B0_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_08           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x034c) // SW_PAD_CTL_PAD_GPIO_B0_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_09           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0350) // SW_PAD_CTL_PAD_GPIO_B0_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_10           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0354) // SW_PAD_CTL_PAD_GPIO_B0_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_11           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0358) // SW_PAD_CTL_PAD_GPIO_B0_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_12           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x035c) // SW_PAD_CTL_PAD_GPIO_B0_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_13           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0360) // SW_PAD_CTL_PAD_GPIO_B0_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_14           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0364) // SW_PAD_CTL_PAD_GPIO_B0_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_15           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0368) // SW_PAD_CTL_PAD_GPIO_B0_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_00           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x036c) // SW_PAD_CTL_PAD_GPIO_B1_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_01           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0370) // SW_PAD_CTL_PAD_GPIO_B1_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_02           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0374) // SW_PAD_CTL_PAD_GPIO_B1_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_03           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0378) // SW_PAD_CTL_PAD_GPIO_B1_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_04           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x037c) // SW_PAD_CTL_PAD_GPIO_B1_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_05           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0380) // SW_PAD_CTL_PAD_GPIO_B1_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_06           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0384) // SW_PAD_CTL_PAD_GPIO_B1_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_07           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0388) // SW_PAD_CTL_PAD_GPIO_B1_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_08           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x038c) // SW_PAD_CTL_PAD_GPIO_B1_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_09           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0390) // SW_PAD_CTL_PAD_GPIO_B1_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_10           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0394) // SW_PAD_CTL_PAD_GPIO_B1_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_11           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0398) // SW_PAD_CTL_PAD_GPIO_B1_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_12           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x039c) // SW_PAD_CTL_PAD_GPIO_B1_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_13           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a0) // SW_PAD_CTL_PAD_GPIO_B1_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_14           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a4) // SW_PAD_CTL_PAD_GPIO_B1_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_B1_15           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a8) // SW_PAD_CTL_PAD_GPIO_B1_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x03ac)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ac) // SW_PAD_CTL_PAD_GPIO_SD_B0_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b0) // SW_PAD_CTL_PAD_GPIO_SD_B0_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b4) // SW_PAD_CTL_PAD_GPIO_SD_B0_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b8) // SW_PAD_CTL_PAD_GPIO_SD_B0_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03bc) // SW_PAD_CTL_PAD_GPIO_SD_B0_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c0) // SW_PAD_CTL_PAD_GPIO_SD_B0_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x03c4) // SW_PAD_CTL_PAD_GPIO_SD_B1_00 SW PAD control register address
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c4) // SW_PAD_CTL_PAD_GPIO_SD_B1_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c8) // SW_PAD_CTL_PAD_GPIO_SD_B1_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03cc) // SW_PAD_CTL_PAD_GPIO_SD_B1_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d0) // SW_PAD_CTL_PAD_GPIO_SD_B1_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d4) // SW_PAD_CTL_PAD_GPIO_SD_B1_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d8) // SW_PAD_CTL_PAD_GPIO_SD_B1_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03dc) // SW_PAD_CTL_PAD_GPIO_SD_B1_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e0) // SW_PAD_CTL_PAD_GPIO_SD_B1_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e4) // SW_PAD_CTL_PAD_GPIO_SD_B1_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e8) // SW_PAD_CTL_PAD_GPIO_SD_B1_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ec) // SW_PAD_CTL_PAD_GPIO_SD_B1_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f0) // SW_PAD_CTL_PAD_GPIO_SD_B1_11 SW PAD control register
+#else
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x013c)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x013c) // SW_MUX_CTL_PAD_GPIO_SD_B0_00 SW MUX control register [GPIO3-13]
+        #define GPIO_SD_B0_00_USDHC1_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_00_QTIMER1_TIMER0           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_00_SAI1_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_00_SAI2_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_00_LPI2C3_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_00_GPIO3_IO13               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_00_FLEXSPI_A_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+        #define GPIO_SD_B0_00_XBAR1_INOUT14            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0140) // SW_MUX_CTL_PAD_GPIO_SD_B0_01 SW MUX control register [GPIO3-14]
+        #define GPIO_SD_B0_01_USDHC1_DATA3             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_01_QTIMER1_TIMER1           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_01_REF_24M_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_01_SAI2_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_01_LPI2C3_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_01_GPIO3_IO14               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_01_FLEXSPI_B_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+        #define GPIO_SD_B0_01_XBAR1_INOUT14            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0144) // SW_MUX_CTL_PAD_GPIO_SD_B0_02 SW MUX control register [GPIO3-15]
+        #define GPIO_SD_B0_02_USDHC1_CMD               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_02_QTIMER1_TIMER2           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_02_LPUART7_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_02_SAI2_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_02_LPSPI1_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_02_GPIO3_IO15               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_02_ENET_MDIO                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+        #define GPIO_SD_B0_02_XBAR1_INOUT16            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0148) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-16]
+        #define GPIO_SD_B0_03_USDHC1_CLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_03_QTIMER1_TIMER3           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_03_LPUART7_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_03_SAI2_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_03_LPSPI1_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_03_GPIO3_IO16               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_03_ENET_MDC                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x014c) // SW_MUX_CTL_PAD_GPIO_SD_B0_04 SW MUX control register [GPIO3-17]
+        #define GPIO_SD_B0_04_USDHC1_DATA0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_04_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_04_LPUART7_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_04_SAI2_TX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_04LPSPI1_SDO                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_04_GPIO3_IO17               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_04_FLEXSPI_B_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0150) // SW_MUX_CTL_PAD_GPIO_SD_B0_05 SW MUX control register [GPIO3-18]
+        #define GPIO_SD_B0_05_USDHC1_DATA1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_05_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_05_LPUART7_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_05_SAI2_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_05_LPSPI1_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_05_GPIO3_IO18               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_05_FLEXSPI_B_DQS            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0154) // SW_MUX_CTL_PAD_GPIO_SD_B0_06 SW MUX control register [GPIO3-19]
+        #define GPIO_SD_B0_06_USDHC1_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B0_06_USDHC1_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B0_06_REF_32K_OUT              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B0_06_SAI2_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B0_06_WDOG1_B                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B0_06_GPIO3_IO19               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B0_06_XBAR1_INOUT17            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0158) // SW_MUX_CTL_PAD_GPIO_AD_B1_00 SW MUX control register [GPIO3-20]
+        #define GPIO_SD_B1_00_USDHC2_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_00_FLEXSPI_B_DATA03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_00_LPUART6_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_00_XBAR1_INOUT10            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_00_FLEXCAN1_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_00_GPIO3_IO20               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x015c) // SW_MUX_CTL_PAD_GPIO_AD_B1_01 SW MUX control register [GPIO3-21]
+        #define GPIO_SD_B1_01_USDHC2_DATA3             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_01_FLEXSPI_B_SCLK           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_01_LPUART6_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_01_FLEXSPI_A_SS1_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_01_FLEXCAN1_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_01_GPIO3_IO21               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0160) // SW_MUX_CTL_PAD_GPIO_AD_B1_02 SW MUX control register [GPIO3-22]
+        #define GPIO_SD_B1_02_USDHC2_CMD               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_02_FLEXSPI_B_DATA00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_02_LPUART8_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_02_LPI2C4_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_02_ENET_1588_EVENT1_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_02_GPIO3_IO22               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B1_02_CCM_CLKO1                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0164) // SW_MUX_CTL_PAD_GPIO_AD_B1_03 SW MUX control register [GPIO3-23]
+        #define GPIO_SD_B1_03_USDHC2_CLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_03_FLEXSPI_B_DATA02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_03_LPUART8_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_03_LPI2C4_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_03_ENET_1588_EVENT1_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_03_GPIO3_IO23               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B1_03_CCM_CLKO2                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0168) // SW_MUX_CTL_PAD_GPIO_AD_B1_04 SW MUX control register [GPIO3-24]
+        #define GPIO_SD_B1_04_USDHC2_DATA0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_04_FLEXSPI_B_DATA01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_04_ENET_TX_CLK              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_04_ENET_REF_CLK1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_04_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_04_GPIO3_IO24               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B1_04_CCM_WAIT                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x016c) // SW_MUX_CTL_PAD_GPIO_AD_B1_05 SW MUX control register [GPIO3-25]
+        #define GPIO_SD_B1_05_USDHC2_DATA1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_05_FLEXSPI_A_DQS            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_05_ENET_RDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_05_SAI3_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_05_FLEXSPI_B_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_05_GPIO3_IO25               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B1_05_CCM_PMIC_RDY             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0170) // SW_MUX_CTL_PAD_GPIO_AD_B1_06 SW MUX control register [GPIO3-26]
+        #define GPIO_SD_B1_06_USDHC2_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_06_FLEXSPI_A_DATA03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_06_ENET_RDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_06_SAI3_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_06_LPSPI2_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_06_GPIO3_IO26               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+        #define GPIO_SD_B1_06_CCM_STOP                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0174) // SW_MUX_CTL_PAD_GPIO_AD_B1_07 SW MUX control register [GPIO3-27]
+        #define GPIO_SD_B1_07_USDHC2_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_07_FLEXSPI_A_SCLK           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_07_ENET_RX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_07_SAI3_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_07_LPSPI2_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_07_GPIO3_IO27               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0178) // SW_MUX_CTL_PAD_GPIO_AD_B1_08 SW MUX control register [GPIO3-28]
+        #define GPIO_SD_B1_08_USDHC2_DATA4             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_08_FLEXSPI_A_DATA00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_08_ENET_RX_ER               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_08_SAI3_TX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_08_LPSPI2_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_08_GPIO3_IO28               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x017c) // SW_MUX_CTL_PAD_GPIO_AD_B1_09 SW MUX control register [GPIO3-29]
+        #define GPIO_SD_B1_09_USDHC2_DATA5             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_09_FLEXSPI_A_DATA02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_09_ENET_TX_EN               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_09_SAI3_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_09_LPSPI2_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_09_GPIO3_IO29               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0180) // SW_MUX_CTL_PAD_GPIO_AD_B1_10 SW MUX control register [GPIO3-30]
+        #define GPIO_SD_B1_10_USDHC2_DATA6             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_10_FLEXSPI_A_DATA01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_10_ENET_TDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_10_SAI3_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_10_LPSPI2_PCS2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_10_GPIO3_IO30               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0184) // SW_MUX_CTL_PAD_GPIO_AD_B1_11 SW MUX control register [GPIO3-31]
+        #define GPIO_SD_B1_11_USDHC2_DATA7             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+        #define GPIO_SD_B1_11_FLEXSPI_A_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+        #define GPIO_SD_B1_11_ENET_TDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+        #define GPIO_SD_B1_11_SAI3_RX_DATA             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+        #define GPIO_SD_B1_11_LPSPI2_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+        #define GPIO_SD_B1_11_GPIO3_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0188)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0188) // SW_PAD_CTL_PAD_GPIO_EMC_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_01          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x018c) // SW_PAD_CTL_PAD_GPIO_EMC_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_02          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0190) // SW_PAD_CTL_PAD_GPIO_EMC_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_03          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0194) // SW_PAD_CTL_PAD_GPIO_EMC_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_04          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0198) // SW_PAD_CTL_PAD_GPIO_EMC_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_05          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x019c) // SW_PAD_CTL_PAD_GPIO_EMC_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_06          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a0) // SW_PAD_CTL_PAD_GPIO_EMC_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_07          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a4) // SW_PAD_CTL_PAD_GPIO_EMC_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_08          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01a8) // SW_PAD_CTL_PAD_GPIO_EMC_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_09          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ac) // SW_PAD_CTL_PAD_GPIO_EMC_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_10          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b0) // SW_PAD_CTL_PAD_GPIO_EMC_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_11          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b4) // SW_PAD_CTL_PAD_GPIO_EMC_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_12          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01b8) // SW_PAD_CTL_PAD_GPIO_EMC_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_13          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01bc) // SW_PAD_CTL_PAD_GPIO_EMC_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_14          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c0) // SW_PAD_CTL_PAD_GPIO_EMC_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_15          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c4) // SW_PAD_CTL_PAD_GPIO_EMC_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_16          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01c8) // SW_PAD_CTL_PAD_GPIO_EMC_16 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_17          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01cc) // SW_PAD_CTL_PAD_GPIO_EMC_17 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_18          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d0) // SW_PAD_CTL_PAD_GPIO_EMC_18 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_19          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d4) // SW_PAD_CTL_PAD_GPIO_EMC_19 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_20          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01d8) // SW_PAD_CTL_PAD_GPIO_EMC_20 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_21          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01dc) // SW_PAD_CTL_PAD_GPIO_EMC_21 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_22          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e0) // SW_PAD_CTL_PAD_GPIO_EMC_22 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_23          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e4) // SW_PAD_CTL_PAD_GPIO_EMC_23 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_24          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01e8) // SW_PAD_CTL_PAD_GPIO_EMC_24 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_25          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01ec) // SW_PAD_CTL_PAD_GPIO_EMC_25 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_26          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f0) // SW_PAD_CTL_PAD_GPIO_EMC_26 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_27          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f4) // SW_PAD_CTL_PAD_GPIO_EMC_27 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_28          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01f8) // SW_PAD_CTL_PAD_GPIO_EMC_28 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_29          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x01fc) // SW_PAD_CTL_PAD_GPIO_EMC_29 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_30          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0200) // SW_PAD_CTL_PAD_GPIO_EMC_30 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_31          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0204) // SW_PAD_CTL_PAD_GPIO_EMC_31 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD      (unsigned long *)(IOMUXC_SW_BLOCK + 0x0208)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0208) // SW_PAD_CTL_PAD_GPIO_EMC_32 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_33          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x020c) // SW_PAD_CTL_PAD_GPIO_EMC_33 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_34          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0210) // SW_PAD_CTL_PAD_GPIO_EMC_34 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_35          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0214) // SW_PAD_CTL_PAD_GPIO_EMC_35 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_36          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0218) // SW_PAD_CTL_PAD_GPIO_EMC_36 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_37          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x021c) // SW_PAD_CTL_PAD_GPIO_EMC_37 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_38          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0220) // SW_PAD_CTL_PAD_GPIO_EMC_38 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_39          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0224) // SW_PAD_CTL_PAD_GPIO_EMC_39 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_40          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0228) // SW_PAD_CTL_PAD_GPIO_EMC_40 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_41          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x022c) // SW_PAD_CTL_PAD_GPIO_EMC_41 SW PAD control register
+
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x0230)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0230) // SW_PAD_CTL_PAD_GPIO_AD_B0_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0234) // SW_PAD_CTL_PAD_GPIO_AD_B0_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0238) // SW_PAD_CTL_PAD_GPIO_AD_B0_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x023c) // SW_PAD_CTL_PAD_GPIO_AD_B0_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0240) // SW_PAD_CTL_PAD_GPIO_AD_B0_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0244) // SW_PAD_CTL_PAD_GPIO_AD_B0_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0248) // SW_PAD_CTL_PAD_GPIO_AD_B0_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x024c) // SW_PAD_CTL_PAD_GPIO_AD_B0_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0250) // SW_PAD_CTL_PAD_GPIO_AD_B0_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0254) // SW_PAD_CTL_PAD_GPIO_AD_B0_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0258) // SW_PAD_CTL_PAD_GPIO_AD_B0_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x025c) // SW_PAD_CTL_PAD_GPIO_AD_B0_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0260) // SW_PAD_CTL_PAD_GPIO_AD_B0_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0264) // SW_PAD_CTL_PAD_GPIO_AD_B0_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0268) // SW_PAD_CTL_PAD_GPIO_AD_B0_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x026c) // SW_PAD_CTL_PAD_GPIO_AD_B0_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0270) // SW_PAD_CTL_PAD_GPIO_AD_B1_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0274) // SW_PAD_CTL_PAD_GPIO_AD_B1_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0278) // SW_PAD_CTL_PAD_GPIO_AD_B1_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x027c) // SW_PAD_CTL_PAD_GPIO_AD_B1_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0280) // SW_PAD_CTL_PAD_GPIO_AD_B1_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0284) // SW_PAD_CTL_PAD_GPIO_AD_B1_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0288) // SW_PAD_CTL_PAD_GPIO_AD_B1_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x028c) // SW_PAD_CTL_PAD_GPIO_AD_B1_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0290) // SW_PAD_CTL_PAD_GPIO_AD_B1_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0294) // SW_PAD_CTL_PAD_GPIO_AD_B1_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0298) // SW_PAD_CTL_PAD_GPIO_AD_B1_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x029c) // SW_PAD_CTL_PAD_GPIO_AD_B1_11 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a0) // SW_PAD_CTL_PAD_GPIO_AD_B1_12 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a4) // SW_PAD_CTL_PAD_GPIO_AD_B1_13 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02a8) // SW_PAD_CTL_PAD_GPIO_AD_B1_14 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ac) // SW_PAD_CTL_PAD_GPIO_AD_B1_15 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD    (unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0)
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b0) // SW_PAD_CTL_PAD_GPIO_SD_B0_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b4) // SW_PAD_CTL_PAD_GPIO_SD_B0_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02b8) // SW_PAD_CTL_PAD_GPIO_SD_B0_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02bc) // SW_PAD_CTL_PAD_GPIO_SD_B0_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c0) // SW_PAD_CTL_PAD_GPIO_SD_B0_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c4) // SW_PAD_CTL_PAD_GPIO_SD_B0_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02c8) // SW_PAD_CTL_PAD_GPIO_SD_B0_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02cc) // SW_PAD_CTL_PAD_GPIO_SD_B1_00 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d0) // SW_PAD_CTL_PAD_GPIO_SD_B1_01 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d4) // SW_PAD_CTL_PAD_GPIO_SD_B1_02 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02d8) // SW_PAD_CTL_PAD_GPIO_SD_B1_03 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02dc) // SW_PAD_CTL_PAD_GPIO_SD_B1_04 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e0) // SW_PAD_CTL_PAD_GPIO_SD_B1_05 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e4) // SW_PAD_CTL_PAD_GPIO_SD_B1_06 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02e8) // SW_PAD_CTL_PAD_GPIO_SD_B1_07 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02ec) // SW_PAD_CTL_PAD_GPIO_SD_B1_08 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f0) // SW_PAD_CTL_PAD_GPIO_SD_B1_09 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f4) // SW_PAD_CTL_PAD_GPIO_SD_B1_10 SW PAD control register
+    #define IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02f8) // SW_PAD_CTL_PAD_GPIO_SD_B1_11 SW PAD control register
+    #define IOMUXC_ANATOP_USB_OTG_ID_SELECT_INPUT      *(unsigned long *)(IOMUXC_SW_BLOCK + 0x02fc) // ANATOP_USB_OTG_ID_SELECT_INPUT DAISY register
+    #define IOMUXC_CCM_PMIC_READY_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0300) // CCM_PMIC_READY_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_RMII_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0304) // ENET_RMII_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_MDIO_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0308) // ENET_MDIO_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x030c) // ENET_RX_DATA0_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_RX_DATA1_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0310) // ENET_RX_DATA1_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_RX_EN_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0314) // ENET_RX_EN_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_RX_ERR_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0318) // ENET_RX_ERR_SELECT_INPUT DAISY register
+    #define IOMUXC_ENET_TX_CLK_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x031c) // ENET_TX_CLK_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXCAN1_RX_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0320) // FLEXCAN1_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXCAN2_RX_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0324) // FLEXCAN2_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMA0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0328) // FLEXPWM1_PWMA0_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMA1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x032c) // FLEXPWM1_PWMA1_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMA2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0330) // FLEXPWM1_PWMA2_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMA3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0334) // FLEXPWM1_PWMA3_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMB0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0338) // FLEXPWM1_PWMB0_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMB1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x033c) // FLEXPWM1_PWMB1_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMB2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0340) // FLEXPWM1_PWMB2_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM1_PWMB3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0344) // FLEXPWM1_PWMB3_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMA0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0348) // FLEXPWM2_PWMA0_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMA1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x034c) // FLEXPWM2_PWMA1_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMA2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0350) // FLEXPWM2_PWMA2_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMA3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0354) // FLEXPWM2_PWMA3_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMB0_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0358) // FLEXPWM2_PWMB0_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMB1_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x035c) // FLEXPWM2_PWMB1_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMB2_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0360) // FLEXPWM2_PWMB2_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXPWM2_PWMB3_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0364) // FLEXPWM2_PWMB3_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXSPI_A_DATA0_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0368) // FLEXSPI_A_DATA0_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXSPI_A_DATA1_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x036c) // FLEXSPI_A_DATA1_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXSPI_A_DATA2_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0370) // FLEXSPI_A_DATA2_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXSPI_A_DATA3_SELECT_INPUT        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0374) // FLEXSPI_A_DATA3_SELECT_INPUT DAISY register
+    #define IOMUXC_FLEXSPI_A_SCLK_SELECT_INPUT         *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0378) // FLEXSPI_A_SCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C1_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x037c) // LPI2C1_SCL_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C1_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0380) // LPI2C1_SDA_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C2_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0384) // LPI2C2_SCL_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C2_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0388) // LPI2C2_SDA_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C3_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x038c) // LPI2C3_SCL_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C3_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0390) // LPI2C3_SDA_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C4_SCL_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0394) // LPI2C4_SCL_SELECT_INPUT DAISY register
+    #define IOMUXC_LPI2C4_SDA_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0398) // LPI2C4_SDA_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI1_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x039c) // LPSPI1_PCS0_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI1_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a0) // LPSPI1_SCK_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI1_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a4) // LPSPI1_SDI_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI1_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03a8) // LPSPI1_SDO_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI2_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ac) // LPSPI2_PCS0_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI2_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b0) // LPSPI2_SCK_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI2_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b4) // LPSPI2_SDI_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI2_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03b8) // LPSPI2_SDO_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI4_PCS0_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03bc) // LPSPI4_PCS0_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI4_SCK_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c0) // LPSPI4_SCK_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI4_SDI_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c4) // LPSPI4_SDI_SELECT_INPUT DAISY register
+    #define IOMUXC_LPSPI4_SDO_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03c8) // LPSPI4_SDO_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART2_CTS_B_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03cc) // LPUART2_CTS_B_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART2_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d0) // LPUART2_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART2_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d4) // LPUART2_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART3_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03d8) // LPUART3_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART3_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03dc) // LPUART3_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART4_CTS_B_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e0) // LPUART4_CTS_B_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART4_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e4) // LPUART4_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART4_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03e8) // LPUART4_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART5_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03ec) // LPUART5_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART5_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f0) // LPUART5_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART6_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f4) // LPUART6_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART6_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03f8) // LPUART6_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART7_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x03fc) // LPUART7_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART7_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0400) // LPUART7_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART8_RX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0404) // LPUART8_RX_SELECT_INPUT DAISY register
+    #define IOMUXC_LPUART8_TX_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0408) // LPUART8_TX_SELECT_INPUT DAISY register
+    #define IOMUXC_NMI_SELECT_INPUT                    *(unsigned long *)(IOMUXC_SW_BLOCK + 0x040c) // NMI_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER1_TIMER0_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0410) // QTIMER1_TIMER0_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER1_TIMER1_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0414) // QTIMER1_TIMER1_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER1_TIMER2_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0418) // QTIMER1_TIMER2_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER1_TIMER3_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x041c) // QTIMER1_TIMER3_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER2_TIMER0_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0420) // QTIMER2_TIMER0_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER2_TIMER1_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0424) // QTIMER2_TIMER1_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER2_TIMER2_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0428) // QTIMER2_TIMER2_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_QTIMER2_TIMER3_INPUT_SELECT_INPUT   *(unsigned long *)(IOMUXC_SW_BLOCK + 0x042c) // QTIMER2_TIMER3_INPUT_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0430) // SAI1_MCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0434) // SAI1_RX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0438) // SAI1_RX_DATA0_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_DATA1_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x043c) // SAI1_RX_DATA1_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_DATA2_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0440) // SAI1_RX_DATA2_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_DATA3_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0444) // SAI1_RX_DATA3_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0448) // SAI1_RX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x044c) // SAI1_TX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI1_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0450) // SAI1_TX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0454) // SAI2_MCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0458) // SAI2_RX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x045c) // SAI2_RX_DATA0_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0460) // SAI2_RX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0464) // SAI2_TX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI2_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0468) // SAI2_TX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_MCLK_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x046c) // SAI3_MCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_RX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0470) // SAI3_RX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_RX_DATA0_SELECT_INPUT          *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0474) // SAI3_RX_DATA0_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_RX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0478) // SAI3_RX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_TX_BCLK_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x047c) // SAI3_TX_BCLK_SELECT_INPUT DAISY register
+    #define IOMUXC_SAI3_TX_SYNC_SELECT_INPUT           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0480) // SAI3_TX_SYNC_SELECT_INPUT DAISY register
+    #define IOMUXC_SEMC_READY_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0484) // SEMC_READY_SELECT_INPUT DAISY register
+    #define IOMUXC_SPDIF_IN_SELECT_INPUT               *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0488) // SPDIF_IN_SELECT_INPUT DAISY register
+    #define IOMUXC_USB_OTG_OC_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x048c) // USB_OTG_OC_SELECT_INPUT DAISY register
+    #define IOMUXC_USDHC1_CD_B_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0490) // USDHC1_CD_B_SELECT_INPUT DAISY register
+    #define IOMUXC_USDHC1_WP_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0494) // USDHC1_WP_SELECT_INPUT DAISY register
+    #define IOMUXC_USDHC2_CD_B_SELECT_INPUT            *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0498) // USDHC2_CD_B_SELECT_INPUT DAISY register
+    #define IOMUXC_USDHC2_WP_SELECT_INPUT              *(unsigned long *)(IOMUXC_SW_BLOCK + 0x049c) // USDHC2_WP_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN14_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a0) // XBAR1_IN14_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN15_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a4) // XBAR1_IN15_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN16_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04a8) // XBAR1_IN16_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN17_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04ac) // XBAR1_IN17_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN10_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b0) // XBAR1_IN10_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN12_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b4) // XBAR1_IN12_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN13_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04b8) // XBAR1_IN13_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN18_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04bc) // XBAR1_IN18_SELECT_INPUT DAISY register
+    #define IOMUXC_XBAR1_IN19_SELECT_INPUT             *(unsigned long *)(IOMUXC_SW_BLOCK + 0x04c0) // XBAR1_IN19_SELECT_INPUT DAISY register
+#endif
 
     #define PAD_MUX_MODE_GPIO           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5) // GPIO mode is always thsi value
 

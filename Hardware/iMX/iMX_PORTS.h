@@ -30,46 +30,56 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
 
     switch (iPortRef) {
     case PORT1:
-        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00_ADD;
         CCM_CCGR1 &= ~(CCM_CCGR1_GPIO1_CLOCK_MASK);
-        CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCK_STOP);
+        CCM_CCGR1 |= (CCM_CCGR1_GPIO1_CLOCK_STOP);                       // power up the port
         //CCM_CCGR1  |= (CCM_CCGR1_GPIO1_CLOCK_RUN);
-        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD;
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_00_ADD;               // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B0_00_ADD;              // pad characteristics register block
         break;
     case PORT2:
-        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
         CCM_CCGR0 &= ~(CCM_CCGR0_GPIO2_CLOCK_MASK);
-        CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCK_STOP);
-      //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCK_RUN);
-        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;
+        CCM_CCGR0 |= (CCM_CCGR0_GPIO2_CLOCK_STOP);                       // power up the port
+        //CCM_CCGR0  |= (CCM_CCGR0_GPIO2_CLOCK_RUN);
+    #if defined iMX_RT106X
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;                 // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;                // pad characteristics register block
+    #else
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;                 // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;                // pad characteristics register block
+    #endif
         break;
     case PORT3:
         CCM_CCGR2 &= ~(CCM_CCGR2_GPIO3_CLOCK_MASK);
-        CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCK_STOP);
+        CCM_CCGR2 |= (CCM_CCGR2_GPIO3_CLOCK_STOP);                       // power up the port
         //CCM_CCGR2  |= (CCM_CCGR2_GPIO3_CLOCK_RUN);
-        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
-        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD;
+    #if defined MIMXRT1064
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B1_00_ADD;               // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B1_00_ADD;              // pad characteristics register block
+    #else
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;                 // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD;                // pad characteristics register block
+    #endif
         iPort3 = 1;
         break;
     #if defined iMX_RT106X
     case PORT4:
-        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
         CCM_CCGR3 &= ~(CCM_CCGR3_GPIO4_CLOCK_MASK);
-        CCM_CCGR3 |= (CCM_CCGR3_GPIO4_CLOCK_STOP);
+        CCM_CCGR3 |= (CCM_CCGR3_GPIO4_CLOCK_STOP);                       // power up the port
       //CCM_CCGR3  |= (CCM_CCGR0_GPIO4_CLOCK_RUN);
-        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;
+        ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;                 // pad multiplexer register block
+        ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_00_ADD;                // pad characteristics register block
         break;
     #endif
     case PORT5:
-        ptrGPIO = IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD;
-        ptrChars = IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP_ADD;
+        ptrGPIO = IOMUXC_SNVS_SW_MUX_CTL_PAD_WAKEUP_ADD;                 // pad multiplexer register block
+        ptrChars = IOMUXC_SNVS_SW_PAD_CTL_PAD_WAKEUP_ADD;                // pad characteristics register block
         break;
     default:
         _EXCEPTION("The port that is being accessed is not available on this processor!!");
         return;
     }
 
-    // Complete set of GPIO pins as reference
+    // Complete set of GPIO pins as reference (1020)
     //
     /*
     _CONFIG_PERIPHERAL(GPIO_AD_B0_00, GPIO1_IO00, UART_PULL_UPS);
@@ -186,11 +196,25 @@ extern void fnConnectGPIO(int iPortRef, unsigned long ulPortBits, unsigned long 
         }
         ptrGPIO++;
         ulBit <<= 1;
+    #if defined MIMXRT1064
+        if (iPort3 != 0) {
+            if (ulBit == PORT3_BIT11) {                                  // exception for port 3, which moves from SD_B1 pads to SD B0 pads and then EMC pads
+                ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD;
+                ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD;
+            }
+            else if (ulBit == PORT3_BIT13) {
+                iPort3 = 0;
+                ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_32_ADD;
+                ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_32_ADD;
+            }
+        }
+    #else
         if ((iPort3 != 0) && (ulBit == PORT3_BIT13)) {                   // exception for port 3, which moves from EMC pads to SD pads
             iPort3 = 0;
-            ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD;
             ptrGPIO = IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00_ADD;
+            ptrChars = IOMUXC_SW_PAD_CTL_PAD_GPIO_SD_B0_00_ADD;
         }
+    #endif
     }
     _SIM_PER_CHANGE;
 }

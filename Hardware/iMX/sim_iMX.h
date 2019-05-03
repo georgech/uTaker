@@ -146,6 +146,40 @@ typedef struct st_iMX_IOMUXC_SW
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15;
+#if defined MIMXRT1064
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_01;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_02;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_04;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_05;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_06;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_07;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_08;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_09;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_10;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_11;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_12;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_13;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_14;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_15;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_00;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_01;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_02;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_03;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_04;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_05;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_06;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_07;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_08;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_09;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_10;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_11;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_12;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_13;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_14;
+    unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_B1_15;
+#else
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_00;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_01;
     unsigned long IOMUXC_SW_MUX_CTL_PAD_GPIO_SD_B0_02;
@@ -178,6 +212,7 @@ typedef struct st_iMX_IOMUXC_SW
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_10;
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_11;
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_12;
+#endif
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_13;
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_14;
     unsigned long IOMUXC_SW_PAD_CTL_PAD_GPIO_EMC_15;
