@@ -124,7 +124,7 @@
     28.06.2015 Add VYBRID
     27.07.2015 Add TIVA
     03.10.2016 Always update NIC when a setting changes                  {105}
-    07.11.2016 Add software version to window title (if avaiable)        {106}
+    07.11.2016 Add software version to window title (if available)       {106}
     15.11.2016 Pass complete change state in fnInjectInputChange()       {107}
     24.12.2016 Add fnInjectI2C()                                         {108}
     02.02.2017 Allow sub-ms tick setting                                 {109}
@@ -137,6 +137,7 @@
     18.02.2019 Add CAN frame injection                                   {116}
     14.03.2019 Add Crystal Fontz UART display simulation [CRYSTAL_FONTZ_UART_LCD_SIMULATION]
     04.04.2019 Add single UART<->UART internal loop back option [USER_INTERNALLY_CONNECTED_UART_A and USER_INTERNALLY_CONNECTED_UART_B]
+    06.05.2019 Redraw keypad, followed by LCD when LCD is over keypad each time the window is resized // {117}
 
     */
 
@@ -196,6 +197,9 @@ HINSTANCE hInst;                                                         // pres
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szWindowClass[MAX_LOADSTRING];
 HWND ghWnd = NULL;
+#if defined LCD_ON_KEYPAD
+int iRefreshKeyPad = 0;
+#endif
 
 extern "C"
 {
@@ -4618,6 +4622,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_SIZE:
 #if defined _WITH_STATUS_BAR                                             // {84}
             SendMessage(GetDlgItem(hWnd, IDC_STATUS_BAR_1), WM_SIZE, 0, 0);
+#endif
+#if defined LCD_ON_KEYPAD
+            iRefreshKeyPad = 1;                                          // {117} redraw the keypad and LCD
 #endif
             break;
 

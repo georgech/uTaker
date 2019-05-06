@@ -27,6 +27,7 @@
     29.08.2018 Add optional sticky buttons (not released when the ESC key is pressed) {11}
     18.09.2018 Add EXTENDED_USER_BUTTONS option                          {12}
     25.12.2018 Only update keypad image when its rectangle has been invalidated {13}
+    06.05.2019 Redraw keypad, followed by LCD when LCD is over keypad each time the window is resized {14}
 
 */
 
@@ -37,7 +38,7 @@
 #if defined SUPPORT_KEY_SCAN || defined KEYPAD || defined BUTTON_KEY_DEFINITIONS
 
 extern void fnDisplayKeypadLEDs(HDC hdc);
-extern void fnSetLastPort(int iInputLastPort, unsigned long ulInputPortBit);        // {9}
+extern void fnSetLastPort(int iInputLastPort, unsigned long ulInputPortBit); // {9}
 
 #if !defined KEYPAD && defined SUPPORT_KEY_SCAN
     #define KEYPAD "keypad.bmp"
@@ -52,6 +53,7 @@ static int cxDib, cyDib;
 static BITMAPFILEHEADER *pbmfh = 0;
 #if defined LCD_ON_KEYPAD
     static BITMAPFILEHEADER *pbmfh_backup = 0;
+    extern int iRefreshKeyPad;                                           // {14}
 #endif
 static BITMAPINFO *pbmi = 0;
 static BYTE *pBits;
@@ -168,6 +170,13 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
 
     HDC hdc = GetDC(hwnd);                                               // get the devie context
     
+#if defined LCD_ON_KEYPAD
+    if ((iRefreshKeyPad != 0) && (pbmfh_backup != 0)) {                  // {14} single shot redraw of keypad and LCD
+        pbmfh = pbmfh_backup;
+        iRefreshKeyPad = 0;
+    }
+#endif
+
     if ((pbmfh != 0) && (fnUpdateAreaEnclosed(rt, refresh_rect) != 0)) { // {13} if there is a bit map for a front panel/keypad
 #if defined KEYPAD_LED_DEFINITIONS                                       // {5}
         extern void fnConfigureKeypad_leds(RECT kb_rect);
