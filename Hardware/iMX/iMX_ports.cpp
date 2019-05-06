@@ -86,6 +86,40 @@ static const char *pads[] = {
     "GPIO_AD_B1_14",
     "GPIO_AD_B1_15",
 
+#if defined iMX_RT106X
+    "GPIO_B0_00",                                                     // GPIO2
+    "GPIO_B0_01",
+    "GPIO_B0_02",
+    "GPIO_B0_03",
+    "GPIO_B0_04",
+    "GPIO_B0_05",
+    "GPIO_B0_06",
+    "GPIO_B0_07",
+    "GPIO_B0_08",
+    "GPIO_B0_09",
+    "GPIO_B0_10",
+    "GPIO_B0_11",
+    "GPIO_B0_12",
+    "GPIO_B0_13",
+    "GPIO_B0_14",
+    "GPIO_B0_15",
+    "GPIO_B1_00",
+    "GPIO_B1_01",
+    "GPIO_B1_02",
+    "GPIO_B1_03",
+    "GPIO_B1_04",
+    "GPIO_B1_05",
+    "GPIO_B1_06",
+    "GPIO_B1_07",
+    "GPIO_B1_08",
+    "GPIO_B1_09",
+    "GPIO_B1_10",
+    "GPIO_B1_11",
+    "GPIO_B1_12",
+    "GPIO_B1_13",
+    "GPIO_B1_14",
+    "GPIO_B1_15",
+#else
     "GPIO_EMC_00",                                                       // GPIO2
     "GPIO_EMC_01",
     "GPIO_EMC_02",
@@ -118,6 +152,7 @@ static const char *pads[] = {
     "GPIO_EMC_29",
     "GPIO_EMC_30",
     "GPIO_EMC_31",
+#endif
 
     "GPIO_EMC_32",                                                       // GPIO3
     "GPIO_EMC_33",

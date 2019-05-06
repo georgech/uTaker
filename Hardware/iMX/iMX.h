@@ -1624,11 +1624,21 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_CAN1)(void);                                             // 37
     void  (*irq_CM7_FlexRAM)(void);                                      // 38
     void  (*irq_KPP)(void);                                              // 39
+  #if defined iMX_RT106X
+    void  (*irq_TSC_DIG)(void);                                          // 40
+  #else
     void  (*reserved40)(void);
+  #endif
     void  (*irq_GPR_IRQ)(void);                                          // 41
+  #if defined iMX_RT106X
+    void  (*irq_LCDIF)(void);                                            // 42
+    void  (*irq_CSI)(void);                                              // 43
+    void  (*irq_PXP)(void);                                              // 44
+  #else
     void  (*reserved42)(void);
     void  (*reserved43)(void);
     void  (*reserved44)(void);
+  #endif
     void  (*irq_WDOG2)(void);                                            // 45
     void  (*irq_SNVS_Func)(void);                                        // 46
     void  (*irq_SNVS_Security)(void);                                    // 47
@@ -1670,12 +1680,21 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_GPIO2_16_31)(void);                                      // 83
     void  (*irq_GPIO3_0_15)(void);                                       // 84
     void  (*irq_GPIO3_16_31)(void);                                      // 85
+  #if !defined PORT4_NO_AVAILABLE
+    void  (*irq_GPIO4_0_15)(void);                                       // 86
+    void  (*irq_GPIO4_16_31)(void);                                      // 87
+  #else
     void  (*reserved86)(void);
     void  (*reserved87)(void);
+  #endif
     void  (*irq_GPIO5_0_15)(void);                                       // 88
     void  (*irq_GPIO5_16_31)(void);                                      // 89
     void  (*irq_FlexIO)(void);                                           // 90
+  #if defined iMX_RT106X
+    void  (*irq_FlexIO2)(void);                                          // 91
+  #else
     void  (*reserved91)(void);
+  #endif
     void  (*irq_WDOG0)(void);                                            // 92
     void  (*irq_RTWDOG)(void);                                           // 93
     void  (*irq_EWM)(void);                                              // 94
@@ -1691,12 +1710,20 @@ typedef struct stPROCESSOR_IRQ
     void  (*irq_FLEXPWM1_2)(void);                                       // 104
     void  (*irq_FLEXPWM1_3)(void);                                       // 105
     void  (*irq_FLEXPWM1_Fault)(void);                                   // 106
+  #if defined iMX_RT106X
+    void  (*irq_FLEXSPI1)(void);                                         // 107
+  #else
     void  (*reserved107)(void);
+  #endif
     void  (*irq_FLEXSPI)(void);                                          // 108
     void  (*irq_SEMC)(void);                                             // 109
     void  (*irq_USDHC1)(void);                                           // 110
     void  (*irq_USDHC2)(void);                                           // 111
+  #if defined iMX_RT106X
+    void  (*irq_USB_OTG1)(void);                                         // 112
+  #else
     void  (*reserved112)(void);
+  #endif
     void  (*irq_USB_OTG)(void);                                          // 113
     void  (*irq_ETH)(void);                                              // 114
     void  (*irq_ETH_1588)(void);                                         // 115
@@ -1715,17 +1742,45 @@ typedef struct stPROCESSOR_IRQ
     void  (*reserved128)(void);
     void  (*irq_ENC1)(void);                                             // 129
     void  (*irq_ENC2)(void);                                             // 130
+  #if defined iMX_RT106X
+    void  (*irq_ENC3)(void);                                             // 131
+    void  (*irq_ENC4)(void);                                             // 132
+  #else
     void  (*reserved131)(void);
     void  (*reserved132)(void);
+  #endif
     void  (*irq_QTIMER1)(void);                                          // 133
     void  (*irq_QTIMER2)(void);                                          // 134
+  #if defined iMX_RT106X
+    void  (*irq_QTIMER3)(void);                                          // 135
+    void  (*irq_QTIMER4)(void);                                          // 136
+  #else
     void  (*reserved135)(void);
     void  (*reserved136)(void);
+  #endif
     void  (*irq_FLEXPWM2_0)(void);                                       // 137
     void  (*irq_FLEXPWM2_1)(void);                                       // 138
     void  (*irq_FLEXPWM2_2)(void);                                       // 139
     void  (*irq_FLEXPWM2_3)(void);                                       // 140
     void  (*irq_FLEXPWM2_Fault)(void);                                   // 141
+  #if defined iMX_RT106X
+    void  (*irq_FLEXPWM3_0)(void);                                       // 142
+    void  (*irq_FLEXPWM3_1)(void);                                       // 143
+    void  (*irq_FLEXPWM3_2)(void);                                       // 144
+    void  (*irq_FLEXPWM3_3)(void);                                       // 145
+    void  (*irq_FLEXPWM3_Fault)(void);                                   // 146
+    void  (*irq_FLEXPWM4_0)(void);                                       // 147
+    void  (*irq_FLEXPWM4_1)(void);                                       // 148
+    void  (*irq_FLEXPWM4_2)(void);                                       // 149
+    void  (*irq_FLEXPWM4_3)(void);                                       // 150
+    void  (*irq_FLEXPWM4_Fault)(void);                                   // 151
+    void  (*irq_ETH1)(void);                                             // 152
+    void  (*irq_ETH1_1588)(void);                                        // 153
+    void  (*irq_CAN3)(void);                                             // 154
+    void  (*reserved155)(void);
+    void  (*irq_FlexIO3)(void);                                          // 156
+    void  (*irq_GPIO6_7_8_9)(void);                                      // 157
+  #endif
 } PROCESSOR_IRQ;
 
 
@@ -1773,29 +1828,35 @@ typedef struct stVECTOR_TABLE
     #define irq_CM7_CTIIRQ0_ID            17
     #define irq_CM7_CTIIRQ1_ID            18
     #define irq_CM7_IRQ_ID                19
-    #define irq_LPUART0_ID                20
-    #define irq_LPUART1_ID                21
-    #define irq_LPUART2_ID                22
-    #define irq_LPUART3_ID                23
-    #define irq_LPUART4_ID                24
-    #define irq_LPUART5_ID                25
-    #define irq_LPUART6_ID                26
-    #define irq_LPUART7_ID                27
-    #define irq_LPI2C0_ID                 28
-    #define irq_LPI2C1_ID                 29
-    #define irq_LPI2C2_ID                 30
-    #define irq_LPI2C3_ID                 31
-    #define irq_LPSPI0_ID                 32
-    #define irq_LPSPI1_ID                 33
-    #define irq_LPSPI2_ID                 34
-    #define irq_LPSPI3_ID                 35
-    #define irq_CAN0_ID                   36
-    #define irq_CAN1_ID                   37
+    #define irq_LPUART0_ID                20                             // LPUART1 - interrupt vector numbering for general compatibility
+    #define irq_LPUART1_ID                21                             // LPUART2 - interrupt vector numbering for general compatibility
+    #define irq_LPUART2_ID                22                             // LPUART3 - interrupt vector numbering for general compatibility
+    #define irq_LPUART3_ID                23                             // LPUART4 - interrupt vector numbering for general compatibility
+    #define irq_LPUART4_ID                24                             // LPUART5 - interrupt vector numbering for general compatibility
+    #define irq_LPUART5_ID                25                             // LPUART6 - interrupt vector numbering for general compatibility
+    #define irq_LPUART6_ID                26                             // LPUART7 - interrupt vector numbering for general compatibility
+    #define irq_LPUART7_ID                27                             // LPUART8 - interrupt vector numbering for general compatibility
+    #define irq_LPI2C0_ID                 28                             // LPI2C1 - interrupt vector numbering for general compatibility
+    #define irq_LPI2C1_ID                 29                             // LPI2C2 - interrupt vector numbering for general compatibility
+    #define irq_LPI2C2_ID                 30                             // LPI2C3 - interrupt vector numbering for general compatibility
+    #define irq_LPI2C3_ID                 31                             // LPI2C4 - interrupt vector numbering for general compatibility
+    #define irq_LPSPI0_ID                 32                             // LPSPI1 - interrupt vector numbering for general compatibility
+    #define irq_LPSPI1_ID                 33                             // LPSPI2 - interrupt vector numbering for general compatibility
+    #define irq_LPSPI2_ID                 34                             // LPSPI3 - interrupt vector numbering for general compatibility
+    #define irq_LPSPI3_ID                 35                             // LPSPI4 - interrupt vector numbering for general compatibility
+    #define irq_CAN1_ID                   36
+    #define irq_CAN2_ID                   37
     #define irq_CM7_FlexRAM_ID            38
     #define irq_KPP_ID                    39
-
+  #if defined iMX_RT106X
+    #define irq_TSC_DIG_ID                40
+  #endif
     #define irq_GPR_IRQ_ID                41
-
+  #if defined iMX_RT106X
+    #define irq_LCDIF_ID                  42
+    #define irq_CSI_ID                    43
+    #define irq_PXP_ID                    44
+  #endif
     #define irq_WDOG2_ID                  45
     #define irq_SNVS_Func_ID              46
     #define irq_SNVS_Security_ID          47
@@ -1836,11 +1897,16 @@ typedef struct stVECTOR_TABLE
     #define irq_GPIO2_16_31_ID            83
     #define irq_GPIO3_0_15_ID             84
     #define irq_GPIO3_16_31_ID            85
-
+  #if !defined PORT4_NO_AVAILABLE
+    #define irq_GPIO4_0_15_ID             86
+    #define irq_GPIO4_16_31_ID            87
+  #endif
     #define irq_GPIO5_0_15_ID             88
     #define irq_GPIO5_16_31_ID            89
-    #define irq_FlexIO_ID                 90
-
+    #define irq_FlexIO1_ID                90
+  #if defined iMX_RT106X
+    #define irq_FlexIO2_ID                91
+  #endif
     #define irq_WDOG_ID                   92
     #define irq_RTWDOG_ID                 93
     #define irq_EWM_ID                    94
@@ -1856,15 +1922,19 @@ typedef struct stVECTOR_TABLE
     #define irq_FLEXPWM1_2_ID             104
     #define irq_FLEXPWM1_3_ID             105
     #define irq_FLEXPWM1_Fault_ID         106
-
-    #define irq_FLEXSPI_ID                108
+  #if defined iMX_RT106X
+    #define irq_FLEXSPI1_ID               107
+  #endif
+    #define irq_FLEXSPI0_ID               108
     #define irq_SEMC_ID                   109
     #define irq_USDHC1_ID                 110
     #define irq_USDHC2_ID                 111
-
-    #define irq_USB_OTG_ID                113
-    #define irq_ETH_ID                    114
-    #define irq_ETH_1588_ID               115
+  #if defined iMX_RT106X
+    #define irq_USB_OTG1_ID               112
+  #endif
+    #define irq_USB_OTG0_ID               113
+    #define irq_ETH0_ID                   114
+    #define irq_ETH0_1588_ID              115
     #define irq_XBAR1_0_1_ID              116
     #define irq_XBAR1_2_3_ID              117
     #define irq_ADC_ETC_0_ID              118
@@ -1879,20 +1949,48 @@ typedef struct stVECTOR_TABLE
 
     #define irq_ENC1_ID                   129
     #define irq_ENC2_ID                   130
-
+  #if defined iMX_RT106X
+    #define irq_ENC3_ID                   131
+    #define irq_ENC4_ID                   132
+  #endif
     #define irq_QTIMER1_ID                133
     #define irq_QTIMER2_ID                134
-
+  #if defined iMX_RT106X
+    #define irq_QTIMER3_ID                135
+    #define irq_QTIMER4_ID                136
+  #endif
     #define irq_FLEXPWM2_0_ID             137
     #define irq_FLEXPWM2_1_ID             138
     #define irq_FLEXPWM2_2_ID             139
     #define irq_FLEXPWM2_3_ID             140
     #define irq_FLEXPWM2_Fault_ID         141
+  #if defined iMX_RT106X
+    #define irq_FLEXPWM3_0_ID             142
+    #define irq_FLEXPWM3_1_ID             143
+    #define irq_FLEXPWM3_2_ID             144
+    #define irq_FLEXPWM3_3_ID             145
+    #define irq_FLEXPWM3_Fault_ID         146
+    #define irq_FLEXPWM4_0_ID             147
+    #define irq_FLEXPWM4_1_ID             148
+    #define irq_FLEXPWM4_2_ID             149
+    #define irq_FLEXPWM4_3_ID             150
+    #define irq_FLEXPWM4_Fault_ID         151
+    #define irq_ETH1_ID                   152
+    #define irq_ETH1_1588_ID              153
+    #define irq_CAN3_ID                   154
+
+    #define irq_FlexIO3_ID                156
+    #define irq_GPIO6_7_8_9_ID            157
+  #endif
 #endif
 
 #define VECTOR_SIZE                       (sizeof(VECTOR_TABLE))
 
-#if defined _iMX
+#if defined iMX_RT106X
+    #define LAST_PROCESSOR_IRQ            irq_GPIO6_7_8_9
+    #define CHECK_VECTOR_SIZE             696                            // (16 + 157 + 1) = 174) * 4 - adequate for this processor [0x2B8]
+
+#else
     #define LAST_PROCESSOR_IRQ            irq_FLEXPWM2_Fault
     #define CHECK_VECTOR_SIZE             632                            // (16 + 141 + 1) = 158) * 4 - adequate for this processor [0x278]
 #endif
@@ -18964,6 +19062,16 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_13_SNVS_HP_VIO_5_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
   #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00f4) // SW_MUX_CTL_PAD_GPIO_AD_B0_14 SW MUX control register [GPIO1-14]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_14_USB_OTG2_OC              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_14_XBAR1_IN24               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_14_LPUART1_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_14_ENET_1588_EVENT0_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_14_CSI_VSYNC                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_14_GPIO1_IO14               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_14_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_14_FLEXCAN3_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+  #else
     #define GPIO_AD_B0_14_ENET_TDATA00             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_14_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_14_LPUART3_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18972,7 +19080,19 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_14_GPIO1_IO14               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_14_ARM_CM7_TRACE02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B0_14_WDOG1_ANY                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B0_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00f8) // SW_MUX_CTL_PAD_GPIO_AD_B0_15 SW MUX control register [GPIO1-15]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B0_15_USB_OTG2_PWR             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B0_15_XBAR1_IN25               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B0_15_LPUART1_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B0_15_ENET_1588_EVENT0_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B0_15_CSI_HSYNC                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B0_15_GPIO1_IO15               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B0_15_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B0_15_WDOG1_WDOG_RST_B_DEB     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B0_15_FLEXCAN3_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+  #else
     #define GPIO_AD_B0_15_ENET_TDATA01             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B0_15_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B0_15_LPUART3_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18980,7 +19100,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B0_15_FLEXPWM2_PWMB00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B0_15_GPIO1_IO15               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B0_15_ARM_CM7_TRACE03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_00        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x00fc) // SW_MUX_CTL_PAD_GPIO_AD_B1_00 SW MUX control register [GPIO1-16]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_00_USB_OTG2_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_00_QTIMER3_TIMER0           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_00_LPUART2_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_00_LPI2C1_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_00_WDOG1_B                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_00_GPIO1_IO16               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_00_USDHC1_WP                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_00_KPP_ROW07                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_00_ENET2_1588_EVENT0_OUT    (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_00_FLEXIO3_FLEXIO00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_00_SEMC_READY               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_00_FLEXSPI_A_DATA03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_00_FLEXCAN2_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18989,7 +19122,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_00_GPIO1_IO16               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_00_ENET_1588_EVENT2_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_00_KPP_COL04                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_01        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0100) // SW_MUX_CTL_PAD_GPIO_AD_B1_01 SW MUX control register [GPIO1-17]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_01_USB_OTG1_PWR             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_01_QTIMER3_TIMER1           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_01_LPUART2_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_01_LPI2C1_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_01_CCM_PMIC_READY           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_01_GPIO1_IO17               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_01_USDHC1_VSELECT           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_01_KPP_COL07                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_01_ENET2_1588_EVENT0_IN     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_01_FLEXIO3_FLEXIO01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_01_SEMC_CSX00               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_01_FLEXSPI_A_SCLK           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_01_FLEXCAN2_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -18998,7 +19144,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_01_GPIO1_IO17               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_01_ENET_1588_EVENT2_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_01_KPP_ROW04                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_02        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0104) // SW_MUX_CTL_PAD_GPIO_AD_B1_02 SW MUX control register [GPIO1-18]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_02_USB_OTG1_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_02_QTIMER3_TIMER2           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_02_LPUART2_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_02_SPDIF_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_02_ENET_1588_EVENT2_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_02_GPIO1_IO18               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_02_USDHC1_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_02_KPP_ROW06                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_02_GPT2_CLK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_02_FLEXIO3_FLEXIO02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_02_SEMC_CSX01               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_02_FLEXSPI_A_DATA00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_02_LPSPI4_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19007,7 +19166,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_02_GPIO1_IO18               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_02_ENET_1588_EVENT3_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_02_KPP_COL05                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_03        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0108) // SW_MUX_CTL_PAD_GPIO_AD_B1_03 SW MUX control register [GPIO1-19]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_03_USB_OTG1_OC              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_03_QTIMER3_TIMER3           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_03_LPUART2_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_03_SPDIF_IN                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_03_ENET_1588_EVENT2_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_03_GPIO1_IO19               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_03_USDHC2_CD_B              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_03_KPP_COL06                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_03_GPT2_CAPTURE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_03_FLEXIO3_FLEXIO03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_03_SEMC_CSX02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_03_FLEXSPI_A_DATA02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_03_LPSPI4_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19016,7 +19188,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_03_GPIO1_IO19               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_03_ENET_1588_EVENT3_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_03_KPP_ROW05                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_04        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x010c) // SW_MUX_CTL_PAD_GPIO_AD_B1_04 SW MUX control register [GPIO1-20]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_04_FLEXSPIB_DATA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_04_ENET_MDC                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_04_LPUART3_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_04_SPDIF_SR_CLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_04_CSI_PIXCLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_04_GPIO1_IO20               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_04_USDHC2_DATA0             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_04_KPP_ROW05                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_04_GPT2_CAPTURE2            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_04_FLEXIO3_FLEXIO04         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_04_SEMC_CSX03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_04_FLEXSPI_A_DATA01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_04_LPSPI4_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19025,7 +19210,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_04_GPIO1_IO20               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_04_LPSPI1_PCS1              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_04_KPP_COL06                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_05        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0110) // SW_MUX_CTL_PAD_GPIO_AD_B1_05 SW MUX control register [GPIO1-21]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_05_FLEXSPIB_DATA02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_05_ENET_MDIO                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_05_LPUART3_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_05_SPDIF_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_05_CSI_MCLK                 (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_05_GPIO1_IO21               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_05_USDHC2_DATA1             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_05_KPP_COL05                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_05_GPT2_COMPARE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_05_FLEXIO3_FLEXIO05         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_05_USDHC1_WP                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_05_FLEXSPI_A_SS0_B          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_05_LPSPI4_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19034,7 +19232,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_05_GPIO1_IO21               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_05_LPSPI1_PCS2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_05_KPP_ROW06                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_06        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0114) // SW_MUX_CTL_PAD_GPIO_AD_B1_06 SW MUX control register [GPIO1-22]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_06_FLEXSPIB_DATA01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_06_LPI2C3_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_06_LPUART3_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_06_SPDIF_LOCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_06_CSI_VSYNC                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_06_GPIO1_IO22               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_06_USDHC2_DATA2             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_06_KPP_ROW04                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_06_GPT2_COMPARE2            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_06_FLEXIO3_FLEXIO06         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_06_USDHC1_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_06_FLEXPWM1_PWMA00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_06_LPUART2_CTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19043,7 +19254,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_06_GPIO1_IO22               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_06_LPSPI1_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_06_KPP_COL07                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_07        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0118) // SW_MUX_CTL_PAD_GPIO_AD_B1_07 SW MUX control register [GPIO1-23]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_07_FLEXSPIB_DATA00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_07_LPI2C3_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_07_LPUART3_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_07_SPDIF_EXT_CLK            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_07_CSI_HSYNC                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_07_GPIO1_IO23               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_07_USDHC2_DATA3             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_07_KPP_COL04                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_07_GPT2_COMPARE3            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_07_FLEXIO3_FLEXIO07         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_07_USDHC1_VSELECT           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_07_FLEXPWM1_PWMB00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_07_LPUART2_RTS_B            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19052,7 +19276,19 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_07_GPIO1_IO23               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_07_LPSPI3_PCS3              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_07_KPP_ROW07                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_08        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x011c) // SW_MUX_CTL_PAD_GPIO_AD_B1_08 SW MUX control register [GPIO1-24]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_08_FLEXSPIA_SS1_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_08_FLEXPWM4_PWMA00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_08_FLEXCAN1_TX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_08_CCM_PMIC_READY           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_08_CSI_DATA09               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_08_GPIO1_IO24               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_08_USDHC2_CMD               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_08_KPP_ROW03                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_08_FLEXIO3_FLEXIO08         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_08_LPI2C2_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_08_FLEXPWM1_PWMA01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_08_LPUART2_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19061,7 +19297,19 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_08_GPIO1_IO24               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_08_LPSPI3_PCS2              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_08_XBAR1_INOUT12            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0120) // SW_MUX_CTL_PAD_GPIO_AD_B1_09 SW MUX control register [GPIO1-25]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_09_FLEXSPIA_DQS             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_09_FLEXPWM4_PWMA01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_09_FLEXCAN1_RX              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_09_SAI1_MCLK                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_09_CSI_DATA08               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_09_GPIO1_IO25               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_09_USDHC2_CLK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_09_KPP_COL03                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_09_FLEXIO3_FLEXIO09         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_09_LPI2C2_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_09_FLEXPWM1_PWMB01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_09_LPUART2_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19070,7 +19318,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_09_GPIO1_IO25               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_09_LPSPI3_PCS1              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
     #define GPIO_AD_B1_09_XBAR1_INOUT13            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_10        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0124) // SW_MUX_CTL_PAD_GPIO_AD_B1_10 SW MUX control register [GPIO1-26]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_10_FLEXSPIA_DATA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_10_WDOG1_B                  (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_10_LPUART8_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_10_SAI1_RX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_10_CSI_DATA07               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_10_GPIO1_IO26               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_10_USDHC2_WP                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_10_KPP_ROW02                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_10_ENET2_1588_EVENT1_OUT    (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_10_FLEXIO3_FLEXIO10         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_10_USB_OTG1_PWR             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_10_FLEXPWM1_PWMA02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_10_LPUART4_TX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19078,7 +19339,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_10_FLEXIO1_FLEXIO05         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_10_GPIO1_IO26               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_10_GPT2_CAPTURE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_11        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0128) // SW_MUX_CTL_PAD_GPIO_AD_B1_11 SW MUX control register [GPIO1-27]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_11_FLEXSPIA_DATA02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_11_EWM_OUT_B                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_11_LPUART8_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_11_SAI1_RX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_11_CSI_DATA06               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_11_GPIO1_IO27               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_11_USDHC2_RESET_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_11_KPP_COL02                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_11_ENET2_1588_EVENT1_IN     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_11_FLEXIO3_FLEXIO11         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_11_USB_OTG1_ID              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_11_FLEXPWM1_PWMB02          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_11_LPUART4_RX               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19086,7 +19360,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_11_FLEXIO1_FLEXIO04         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_11_GPIO1_IO27               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_11_GPT2_COMPARE1            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_12        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x012c) // SW_MUX_CTL_PAD_GPIO_AD_B1_12 SW MUX control register [GPIO1-28]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_12_FLEXSPIA_DATA01          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_12_ACMP_OUT00               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_12_LPSPI3_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_12_SAI1_RX_DATA00           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_12_CSI_DATA05               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_12_GPIO1_IO28               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_12_USDHC2_DATA4             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_12_KPP_ROW01                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_12_ENET2_1588_EVENT2_OUT    (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_12_FLEXIO3_FLEXIO12         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_12_USB_OTG1_OC              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_12_ACMP1_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_12_LPSPI3_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19094,7 +19381,20 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_12_FLEXIO1_FLEXIO03         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_12_GPIO1_IO28               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_12_FLEXPWM1_PWMA03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0130) // SW_MUX_CTL_PAD_GPIO_AD_B1_13 SW MUX control register [GPIO1-29]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_13_FLEXSPIA_DATA00          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_13_ACMP_OUT01               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_13_LPSPI3_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_13_SAI1_TX_DATA00           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_13_CSI_DATA04               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_13_GPIO1_IO29               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_13_USDHC2_DATA5             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_13_KPP_COL01                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_13_ENET2_1588_EVENT2_IN     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_13_FLEXIO3_FLEXIO13         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_13_LPI2C1_HREQ              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_13_ACMP2_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_13_LPSPI3_PCS0              (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
@@ -19102,20 +19402,47 @@ typedef struct stPDB_SETUP                                               // {37}
     #define GPIO_AD_B1_13_FLEXIO1_FLEXIO02         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_13_GPIO1_IO29               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
     #define GPIO_AD_B1_13_FLEXPWM1_PWMB03          (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0134) // SW_MUX_CTL_PAD_GPIO_AD_B1_14 SW MUX control register [GPIO1-30]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_14_FLEXSPIA_SCLK            (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_14_ACMP_OUT02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_14_LPSPI3_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_14_SAI1_TX_BCLK             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_14_CSI_DATA03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_14_GPIO1_IO30               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_14_USDHC2_DATA6             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_14_KPP_ROW00                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_14_ENET2_1588_EVENT3_OUT    (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_14_FLEXIO3_FLEXIO14         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_14_LPI2C1_SCL               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_14_ACMP3_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_14_LPSPI3_SDO               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
     #define GPIO_AD_B1_14_ENET_1588_EVENT0_OUT     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_AD_B1_14_FLEXIO1_FLEXIO01         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_14_GPIO1_IO30               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+  #endif
 #define IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15        *(unsigned long *)(IOMUXC_SW_BLOCK + 0x0138) // SW_MUX_CTL_PAD_GPIO_AD_B1_15 SW MUX control register [GPIO1-31]
+  #if defined iMX_RT106X
+    #define GPIO_AD_B1_15_FLEXSPIA_SS0_B           (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
+    #define GPIO_AD_B1_15_ACMP_OUT03               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
+    #define GPIO_AD_B1_15_LPSPI3_SCK               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
+    #define GPIO_AD_B1_15_SAI1_TX_SYNC             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
+    #define GPIO_AD_B1_15_CSI_DATA02               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
+    #define GPIO_AD_B1_15_GPIO1_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+    #define GPIO_AD_B1_15_USDHC2_DATA7             (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT6)
+    #define GPIO_AD_B1_15_KPP_COL00                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT7)
+    #define GPIO_AD_B1_15_ENET2_1588_EVENT3_IN     (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT8)
+    #define GPIO_AD_B1_15_FLEXIO3_FLEXIO15         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT9)
+  #else
     #define GPIO_AD_B1_15_LPI2C1_SDA               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT0)
     #define GPIO_AD_B1_15_ACMP4_OUT                (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT1)
     #define GPIO_AD_B1_15_LPSPI3_SDI               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT2)
     #define GPIO_AD_B1_15_ENET_1588_EVENT0_IN      (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT3)
     #define GPIO_AD_B1_15_FLEXIO1_FLEXIO00         (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT4)
     #define GPIO_AD_B1_15_GPIO1_IO31               (IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_ALT5)
+  #endif
 #if defined iMX_RT106X
     #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00_ADD       (unsigned long *)(IOMUXC_SW_BLOCK + 0x013c)
     #define IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00           *(unsigned long *)(IOMUXC_SW_BLOCK + 0x013c) // SW_MUX_CTL_PAD_GPIO_B0_00 SW MUX control register [GPIO2-0]

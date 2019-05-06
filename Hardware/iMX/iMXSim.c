@@ -3576,7 +3576,11 @@ extern void fnSimPers(void)
                 break;
             case _PORT2:
                 {
+    #if defined iMX_RT106X
+                    unsigned long *ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_00_ADD;
+    #else
                     unsigned long *ptrGPIO_EMC = IOMUXC_SW_MUX_CTL_PAD_GPIO_EMC_00_ADD;
+    #endif
                     ptrGPIO_EMC += iPin;
                     ucPortFunctions[iPort][iPin] = (unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK);
                     if ((unsigned char)(*ptrGPIO_EMC & IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_MASK) != IOMUXC_SW_MUX_CTL_PAD_MUX_MODE_GPIO) {
