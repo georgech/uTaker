@@ -283,7 +283,7 @@ extern QUEUE_TRANSFER fnWrite(QUEUE_HANDLE driver_id, unsigned char *output_buff
         return (fnWriteInternal(output_buffer, nr_of_bytes));            // routing info contained in message itself
     }
     else if (driver_id == NETWORK_HANDLE) {                              // debug output to network
-#if defined ETH_INTERFACE || defined USB_CDC_RNDIS                       // {6}
+#if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USER_NETWORK_WRITE // {6}
         return (fnNetworkTx(output_buffer, nr_of_bytes));
 #else
         return 0;

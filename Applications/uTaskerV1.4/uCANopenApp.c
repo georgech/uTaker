@@ -418,7 +418,7 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     tCANParameters.ulSpeed = 250000;                                     // 250k speed
     tCANParameters.ulTxID = (121);                                       // default ID of destination (not used by CANopen)
     tCANParameters.ulRxID = (CAN_EXTENDED_ID | 0x00080000 | CANOPEN_RX_NODE_ID); // extended node ID that we receive
-    tCANParameters.ulRxIDMask = (0x00080000 | CANOPEN_RX_NODE_ID); // receive extended address with 0x80000 set and exactly matching the node ID
+    tCANParameters.ulRxIDMask = (0x00080000 | CANOPEN_RX_NODE_ID);       // receive extended address with 0x80000 set and exactly matching the node ID
     tCANParameters.usMode = 0;                                           // use normal mode
     tCANParameters.ucTxBuffers = 2;                                      // assign two tx buffers for use
     tCANParameters.ucRxBuffers = 1;                                      // assign one rx buffers for extended ID use
@@ -435,4 +435,3 @@ static QUEUE_HANDLE fnInitCANopenInterface(void)
     return CANopenHandle;                                                // open CAN interface
 }
 #endif
-

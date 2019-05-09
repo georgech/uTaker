@@ -3144,7 +3144,7 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
         return;                                                          // if ADC we do not handle digital functions
     }
 #endif
-#if defined KINETIS_KE && !defined KINETIS_KE15  && !defined KINETIS_KE18// KE uses byte terminology but physically hve long word ports
+#if defined PORTS_AVAILABLE_8_BIT                                        // KE uses byte terminology but physically have long word ports
     ulBit = (0x80000000 >> (ucPortBit + ((3 - (ucPort % 4)) * 8)));      // convert to long word port representation
     ucPort /= 4;
 #endif

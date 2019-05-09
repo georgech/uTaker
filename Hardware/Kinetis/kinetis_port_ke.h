@@ -908,7 +908,7 @@ static const char *cPer[PORTS_AVAILABLE_8_BIT][PORT_WIDTH * 4][8] = {    // KEA6
         {  "PTI7",         "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTI7
     }
 };
-#elif defined KINETIS_KE15 || defined KINETIS_KE18
+#elif defined KINETIS_KE14 || defined KINETIS_KE15 || defined KINETIS_KE16 || defined KINETIS_KE18
 #if PIN_COUNT == PIN_COUNT_100_PIN                                       // 100 pin LQFP
     #define _PIN_COUNT      0
 #elif PIN_COUNT == PIN_COUNT_64_PIN                                      // 64 pin LQFP
@@ -1163,16 +1163,16 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE_8_BIT][PORT_WIDTH] = {
 static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port A
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port B
-    #if PORTS_AVAILABLE_BIT > 2
+    #if PORTS_AVAILABLE > 2
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port C
     #endif
-    #if PORTS_AVAILABLE_BIT > 3
+    #if PORTS_AVAILABLE > 3
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port D
     #endif
-    #if PORTS_AVAILABLE_BIT > 4
+    #if PORTS_AVAILABLE > 4
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port E
     #endif
-    #if PORTS_AVAILABLE_BIT > 5
+    #if PORTS_AVAILABLE > 5
     { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 }, // port F
     #endif
 };
@@ -1182,7 +1182,7 @@ static int ADC_MUX_CHANNEL[PORTS_AVAILABLE][PORT_WIDTH] = {
 static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
         // ALT0            ALT 1           ALT 2             ALT3          ALT4           ALT5            ALT6                 ALT 7
-    #if defined KINETIS_KE18
+    #if defined KINETIS_KE14 || defined KINETIS_KE16 || defined KINETIS_KE18
         {  "ADC0_SE0/ACMP0_IN0","PTA0",    "FTM2_CH1",       "LPI2C0_SCLS","FXIO_D2",     "FTM2_QD_PHA",  "LPUART0_CTS",       "TRGMUX_OUT3" }, // PTA0
         {  "ADC0_SE1/ACMP0_IN1","PTA1",    "FTM1_CH1",       "LPI2C0_SDAS","FXIO_D3",     "FTM1_QD_PHA",  "LPUART0_RTS",       "TRGMUX_OUT0" }, // PTA1
         {  "ADC1_SE0",     "PTA2",         "FTM3_CH0",       "LPI2C0_SDA", "EWM_OUT_b",   "-",            "LPUART0_RX",        "-"           }, // PTA2
@@ -1240,22 +1240,44 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
     {
         {  "ADC0_SE4",     "PTB0",         "LPUART0_RX",     "LPSPI0_PCS0","LPTMR0_ALT3", "PWT_IN3",      "-",                 "-"           }, // PTB0
         {  "ADC0_SE5",     "PTB1",         "LPUART0_TX",     "LPSPI0_SOUT","TCLK0",       "-",            "-",                 "-"           }, // PTB1
+    #if defined KINETIS_KE14 || defined KINETIS_KE16 || defined KINETIS_KE18
+        {  "ADC0_SE6",     "PTB2",         "FTM1_CH0",       "LPSPI0_SCK", "FTM1_QD_PHB", "-",            "TRGMUX_IN3",        "-"           }, // PTB2
+        {  "ADC0_SE7",     "PTB3",         "FTM1_CH1",       "LPSPI0_SIN", "FTM1_QD_PHA", "-",            "TRGMUX_IN2",        "-"           }, // PTB3
+        {  "ACMP1_IN2",    "PTB4",         "FTM0_CH4",       "LPSPI0_SOUT","-",           "-",            "TRGMUX_IN1",        "-"           }, // PTB4
+        {  "-",            "PTB5",         "FTM0_CH5",       "LPSPI0_PCS1","-",           "-",            "TRGMUX_IN0",        "ACMP1_OUT"   }, // PTB5
+    #else
         {  "ADC0_SE6/TSI0_CH20","PTB2",    "FTM1_CH0",       "LPSPI0_SCK", "FTM1_QD_PHB", "-",            "TRGMUX_IN3",        "-"           }, // PTB2
         {  "ADC0_SE7/TSI0_CH21","PTB3",    "FTM1_CH1",       "LPSPI0_SIN", "FTM1_QD_PHA", "-",            "TRGMUX_IN2",        "-"           }, // PTB3
         {  "ACMP1_IN2/TSI0_CH8","PTB4",    "FTM0_CH4",       "LPSPI0_SOUT","-",           "-",            "TRGMUX_IN1",        "-"           }, // PTB4
         {  "TSI0_CH9",     "PTB5",         "FTM0_CH5",       "LPSPI0_PCS1","-",           "-",            "TRGMUX_IN0",        "ACMP1_OUT"   }, // PTB5
+    #endif
         {  "XTAL",         "PTB6",         "LPI2C0_SDA",     "-",          "-",           "-",            "-",                 "-"           }, // PTB6
         {  "EXTAL",        "PTB7",         "LPI2C0_SCL",     "-",          "-",           "-",            "-",                 "-"           }, // PTB7
+    #if defined KINETIS_KE14 || defined KINETIS_KE16 || defined KINETIS_KE18
+        {  "ADC2_SE11",    "PTB8",         "FTM3_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTB8
+        {  "ADC2_SE10",    "PTB9",         "FTM3_CH1",       "I2C0_SCLS",  "-",           "-",            "-",                 "-"           }, // PTB9
+        {  "ADC2_SE9",     "PTB10",        "FTM3_CH2",       "I2C0_SDAS",  "-",           "-",            "-",                 "-"           }, // PTB10
+        {  "ADC2_SE8",     "PTB11",        "FTM3_CH3",       "I2C0_HREQ",  "-",           "-",            "-",                 "-"           }, // PTB11
+        {  "ADC1_SE7",     "PTB12",        "FTM0_CH0",       "FTM3_FLT2",  "-",           "-",            "-",                 "-"           }, // PTB12
+        {  "ADC1_SE8",     "PTB13",        "FTM0_CH1",       "FTM3_FLT1",  "-",           "-",            "-",                 "-"           }, // PTB13
+    #else
         {  "-",            "PTB8",         "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB8
         {  "-",            "PTB9",         "-",              "I2C0_SCLS",  "-",           "-",            "-",                 "-"           }, // PTB9
         {  "-",            "PTB10",        "-",              "I2C0_SDAS",  "-",           "-",            "-",                 "-"           }, // PTB10
         {  "-",            "PTB11",        "-",              "I2C0_HREQ",  "-",           "-",            "-",                 "-"           }, // PTB11
         {  "ADC1_SE7",     "PTB12",        "FTM0_CH0",       "-",          "-",           "-",            "-",                 "-"           }, // PTB12
         {  "ADC1_SE8",     "PTB13",        "FTM0_CH1",       "-",          "-",           "-",            "-",                 "-"           }, // PTB13
+    #endif
         {  "ADC1_SE9",     "PTB14",        "FTM0_CH2",       "LPSPI1_SCK", "-",           "-",            "-",                 "-"           }, // PTB14
+    #if defined KINETIS_KE14 || defined KINETIS_KE16 || defined KINETIS_KE18
+        {  "ADC1_SE14",    "PTB15",        "FTM0_CH3",       "LPSPI1_SIN", "-",           "-",            "-",                 "-"           }, // PTB15
+        {  "ADC1_SE15",    "PTB16",        "FTM0_CH4",       "LPSPI1_SOUT","-",           "-",            "-",                 "-"           }, // PTB16
+        {  "ADC2_SE3",     "PTB17",        "FTM0_CH5",       "LPSPI1_PCS3","-",           "-",            "-",                 "-"           }, // PTB17
+    #else
         {  "-",            "PTB15",        "FTM0_CH3",       "LPSPI1_SIN", "-",           "-",            "-",                 "-"           }, // PTB15
         {  "-",            "PTB16",        "FTM0_CH4",       "LPSPI1_SOUT","-",           "-",            "-",                 "-"           }, // PTB16
         {  "-",            "PTB17",        "FTM0_CH5",       "LPSPI1_PCS3","-",           "-",            "-",                 "-"           }, // PTB17
+    #endif
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB18
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB19
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB20
@@ -1272,7 +1294,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",            "-",              "-",          "-",           "-",            "-",                 "-"           }, // PTB31
     },
     {
-    #if defined KINETIS_KE18
+    #if defined KINETIS_KE14 || defined KINETIS_KE16 || defined KINETIS_KE18
         {  "ADC0_SE8/ACMP1_IN4","PTC0",    "FTM0_CH0",       "-",          "-",           "-",            "FTM1_CH6",          "-"           }, // PTC0
         {  "ADC0_SE9/ACMP1_IN3","PTC1",    "FTM0_CH1",       "-",          "-",           "-",            "FTM1_CH7",          "-"           }, // PTC1
         {  "ADC0_SE10/ACMP0_IN5/XTAL32",   "PTC2","FTM0_CH2","CAN0_RX",    "-",           "-",            "-",                 "-"           }, // PTC2
