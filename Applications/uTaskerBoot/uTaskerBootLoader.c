@@ -182,6 +182,17 @@
             #define KEY_PRIME               0xafe1                   // never set to 0
             #define CODE_OFFSET             0xc298
             #define VALID_VERSION_MAGIC_NUMBER  0xe020
+        #elif defined CAPUCCINO_KL27 && defined DEV5
+            static const unsigned char ucKey[] = {0x88, 0x2e, 0x4b, 0xd7, 0x02, 0xba};
+            #define _ENCRYPTED
+            #if defined _ENCRYPTED
+                static const unsigned char ucDecrypt[] = {0x99, 0x37, 0xe6, 0x50, 0x09, 0x82, 0xca, 0xa4, 0x2c, 0xed}; // must be even in length (dividable by unsigned short)
+                #define KEY_PRIME               0x0086                       // never set to 0
+                #define CODE_OFFSET             0x5ade
+                #define VALID_VERSION_MAGIC_NUMBER  0x1357
+            #else
+                #define VALID_VERSION_MAGIC_NUMBER  0x1234                   // ensure encrypted version has different magic number
+            #endif
         #else
             static const unsigned char ucKey[] = {0xb7, 0x48, 0xb6, 0x53, 0x11, 0x24};
           //#define _ENCRYPTED

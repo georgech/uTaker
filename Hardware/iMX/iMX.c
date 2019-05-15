@@ -2645,20 +2645,12 @@ extern void prvSetupHardware(void)
 // The initial stack pointer and PC value - this is usually linked at address 0x00000000 (or to application start location when working with a boot loader)
 //
 #if defined _COMPILE_IAR
-__root const _RESET_VECTOR __vector_table @ ".intvec"                     // __root forces the function to be linked in IAR project
+__root const _RESET_VECTOR __vector_table @ ".intvec"                    // __root forces the function to be linked in IAR project
 #elif defined _GNU
-const _RESET_VECTOR __attribute__((section(".vectors"))) reset_vect
-#elif defined _CODE_WARRIOR
-#pragma define_section vectortable ".RESET" ".RESET" ".RESET" far_abs R
-static __declspec(vectortable) _RESET_VECTOR __vect_table
+const _RESET_VECTOR __attribute__((section(".vectors"))) __vector_table
 #elif defined _COMPILE_KEIL
-__attribute__((section("VECT"))) const _RESET_VECTOR reset_vect
+__attribute__((section("VECT"))) const _RESET_VECTOR __vector_table
 #else
-    #if defined _COMPILE_GHS                                             // {110}
-        #pragma ghs section rodata=".vectors"
-    #elif defined _COMPILE_COSMIC                                        // {113}
-        #pragma section const {vector}
-    #endif
 const _RESET_VECTOR __vector_table
 #endif
 = {
@@ -2869,70 +2861,293 @@ const _RESET_VECTOR __vector_table
 };
 
 #if !defined _BM_BUILD && !(defined _APPLICATION_VALIDATION && defined _GNU)
-    #if defined USE_BOOT_ROM_CONFIGURATION
-        #if defined _GNU
-const BOOT_ROM_CONFIGURATION __attribute__((section(".f_BCA"))) __Boot_ROM_config
-        #else
-const BOOT_ROM_CONFIGURATION __Boot_ROM_config
-        #endif
-= {
-    { 0xff, 0xff, 0xff, 0xff },
-    { 0xff, 0xff, 0xff, 0xff },
-    { 0xff, 0xff, 0xff, 0xff },
-    { 0xff, 0xff, 0xff, 0xff },
-    0,
-    0,
-    { 0xff, 0xff },
-    { 0xff, 0xff },
-    { 0xff, 0xff },
-    { 0xff, 0xff, 0xff, 0xff },
-    0,
-    0,
-    0,
-    { 0xff, 0xff, 0xff, 0xff },
-};
-    #endif
+typedef struct _lut_sequence
+{
+    unsigned char seqNum; //!< Sequence Number, valid number: 1-16
+    unsigned char seqId;  //!< Sequence Index, valid number: 0-15
+    unsigned char reserved[2];
+} flexspi_lut_seq_t;
 
-// Flash configuration - this is linked at address 0x00000400 (when working with standalone-build)
+typedef struct _FlexSPIConfig
+{
+    unsigned long tag;               //!< [0x000-0x003] Tag, fixed value 0x42464346UL
+    unsigned long version;           //!< [0x004-0x007] Version,[31:24] -'V', [23:16] - Major, [15:8] - Minor, [7:0] - bugfix
+    unsigned long reserved0;         //!< [0x008-0x00b] Reserved for future use
+    unsigned char readSampleClkSrc;   //!< [0x00c-0x00c] Read Sample Clock Source, valid value: 0/1/3
+    unsigned char csHoldTime;         //!< [0x00d-0x00d] CS hold time, default value: 3
+    unsigned char csSetupTime;        //!< [0x00e-0x00e] CS setup time, default value: 3
+    unsigned char columnAddressWidth; //!< [0x00f-0x00f] Column Address with, for HyperBus protocol, it is fixed to 3, For
+                                //! Serial NAND, need to refer to datasheet
+    unsigned char deviceModeCfgEnable; //!< [0x010-0x010] Device Mode Configure enable flag, 1 - Enable, 0 - Disable
+    unsigned char deviceModeType; //!< [0x011-0x011] Specify the configuration command type:Quad Enable, DPI/QPI/OPI switch,
+                            //! Generic configuration, etc.
+    unsigned short waitTimeCfgCommands; //!< [0x012-0x013] Wait time for all configuration commands, unit: 100us, Used for
+                                  //! DPI/QPI/OPI switch or reset command
+    flexspi_lut_seq_t deviceModeSeq; //!< [0x014-0x017] Device mode sequence info, [7:0] - LUT sequence id, [15:8] - LUt
+                                     //! sequence number, [31:16] Reserved
+    unsigned long deviceModeArg;    //!< [0x018-0x01b] Argument/Parameter for device configuration
+    unsigned char configCmdEnable;   //!< [0x01c-0x01c] Configure command Enable Flag, 1 - Enable, 0 - Disable
+    unsigned char configModeType[3]; //!< [0x01d-0x01f] Configure Mode Type, similar as deviceModeTpe
+    flexspi_lut_seq_t configCmdSeqs[3]; //!< [0x020-0x02b] Sequence info for Device Configuration command, similar as deviceModeSeq
+    unsigned long reserved1;   //!< [0x02c-0x02f] Reserved for future use
+    unsigned long configCmdArgs[3];     //!< [0x030-0x03b] Arguments/Parameters for device Configuration commands
+    unsigned long reserved2;            //!< [0x03c-0x03f] Reserved for future use
+    unsigned long controllerMiscOption; //!< [0x040-0x043] Controller Misc Options, see Misc feature bit definitions for more
+                                   //! details
+    unsigned char deviceType;    //!< [0x044-0x044] Device Type:  See Flash Type Definition for more details
+    unsigned char sflashPadType; //!< [0x045-0x045] Serial Flash Pad Type: 1 - Single, 2 - Dual, 4 - Quad, 8 - Octal
+    unsigned char serialClkFreq; //!< [0x046-0x046] Serial Flash Frequencey, device specific definitions, See System Boot
+                           //! Chapter for more details
+    unsigned char lutCustomSeqEnable; //!< [0x047-0x047] LUT customization Enable, it is required if the program/erase cannot
+                                //! be done using 1 LUT sequence, currently, only applicable to HyperFLASH
+    unsigned long reserved3[2];           //!< [0x048-0x04f] Reserved for future use
+    unsigned long sflashA1Size;           //!< [0x050-0x053] Size of Flash connected to A1
+    unsigned long sflashA2Size;           //!< [0x054-0x057] Size of Flash connected to A2
+    unsigned long sflashB1Size;           //!< [0x058-0x05b] Size of Flash connected to B1
+    unsigned long sflashB2Size;           //!< [0x05c-0x05f] Size of Flash connected to B2
+    unsigned long csPadSettingOverride;   //!< [0x060-0x063] CS pad setting override value
+    unsigned long sclkPadSettingOverride; //!< [0x064-0x067] SCK pad setting override value
+    unsigned long dataPadSettingOverride; //!< [0x068-0x06b] data pad setting override value
+    unsigned long dqsPadSettingOverride;  //!< [0x06c-0x06f] DQS pad setting override value
+    unsigned long timeoutInMs;            //!< [0x070-0x073] Timeout threshold for read status command
+    unsigned long commandInterval;        //!< [0x074-0x077] CS deselect interval between two commands
+    unsigned short dataValidTime[2]; //!< [0x078-0x07b] CLK edge to data valid time for PORT A and PORT B, in terms of 0.1ns
+    unsigned short busyOffset;       //!< [0x07c-0x07d] Busy offset, valid value: 0-31
+    unsigned short busyBitPolarity;  //!< [0x07e-0x07f] Busy flag polarity, 0 - busy flag is 1 when flash device is busy, 1 -
+                               //! busy flag is 0 when flash device is busy
+    unsigned long lookupTable[64];           //!< [0x080-0x17f] Lookup table holds Flash command sequences
+    flexspi_lut_seq_t lutCustomSeq[12]; //!< [0x180-0x1af] Customizable LUT Sequences
+    unsigned long reserved4[4];              //!< [0x1b0-0x1bf] Reserved for future use
+} flexspi_mem_config_t;
+
+typedef struct stFLEXSPI_NOR_BOOT_CONFIGURATION
+{
+    flexspi_mem_config_t memConfig; //!< Common memory configuration info via FlexSPI
+    unsigned long pageSize;              //!< Page size of Serial NOR
+    unsigned long sectorSize;            //!< Sector size of Serial NOR
+    unsigned char ipcmdSerialClkFreq;     //!< Clock frequency for IP command
+    unsigned char isUniformBlockSize;     //!< Sector/Block size is the same
+    unsigned char reserved0[2];           //!< Reserved for future use
+    unsigned char serialNorType;          //!< Serial NOR Flash type: 0/1/2/3
+    unsigned char needExitNoCmdMode;      //!< Need to exit NoCmd mode before other IP command
+    unsigned char halfClkForNonReadCmd;   //!< Half the Serial Clock for non-read command: true/false
+    unsigned char needRestoreNoCmdMode;   //!< Need to Restore NoCmd mode after IP commmand execution
+    unsigned long blockSize;             //!< Block size
+    unsigned long reserve2[11];          //!< Reserved for future use
+} FLEXSPI_NOR_BOOT_CONFIGURATION;
+
+#define FLEXSPI_CFG_BLK_TAG (0x42464346UL)     // ascii "FCFB" Big Endian
+#define FLEXSPI_CFG_BLK_VERSION (0x56010400UL) // V1.4.0
+
+#define kFlexSPIReadSampleClk_LoopbackInternally       0
+#define kFlexSPIReadSampleClk_LoopbackFromDqsPad       1
+#define kFlexSPIReadSampleClk_LoopbackFromSckPad       2
+#define kFlexSPIReadSampleClk_ExternalInputFromDqsPad  3
+
+
+#define kSerialFlash_1Pad          1
+#define kSerialFlash_2Pads         2
+#define kSerialFlash_4Pads         4
+#define kSerialFlash_8Pads         8
+
+#define kFlexSpiSerialClk_30MHz    1
+#define kFlexSpiSerialClk_50MHz    2
+#define kFlexSpiSerialClk_60MHz    3
+#define kFlexSpiSerialClk_75MHz    4
+#define kFlexSpiSerialClk_80MHz    5
+#define kFlexSpiSerialClk_100MHz   6
+#define kFlexSpiSerialClk_133MHz   7
+#define kFlexSpiSerialClk_166MHz   8
+#define kFlexSpiSerialClk_200MHz   9
+
+
+#define FLEXSPI_LUT_OPERAND0_MASK                (0xFFU)
+#define FLEXSPI_LUT_OPERAND0_SHIFT               (0U)
+#define FLEXSPI_LUT_OPERAND0(x)                  (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_OPERAND0_SHIFT)) & FLEXSPI_LUT_OPERAND0_MASK)
+#define FLEXSPI_LUT_NUM_PADS0_MASK               (0x300U)
+#define FLEXSPI_LUT_NUM_PADS0_SHIFT              (8U)
+#define FLEXSPI_LUT_NUM_PADS0(x)                 (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_NUM_PADS0_SHIFT)) & FLEXSPI_LUT_NUM_PADS0_MASK)
+#define FLEXSPI_LUT_OPCODE0_MASK                 (0xFC00U)
+#define FLEXSPI_LUT_OPCODE0_SHIFT                (10U)
+#define FLEXSPI_LUT_OPCODE0(x)                   (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_OPCODE0_SHIFT)) & FLEXSPI_LUT_OPCODE0_MASK)
+#define FLEXSPI_LUT_OPERAND1_MASK                (0xFF0000U)
+#define FLEXSPI_LUT_OPERAND1_SHIFT               (16U)
+#define FLEXSPI_LUT_OPERAND1(x)                  (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_OPERAND1_SHIFT)) & FLEXSPI_LUT_OPERAND1_MASK)
+#define FLEXSPI_LUT_NUM_PADS1_MASK               (0x3000000U)
+#define FLEXSPI_LUT_NUM_PADS1_SHIFT              (24U)
+#define FLEXSPI_LUT_NUM_PADS1(x)                 (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_NUM_PADS1_SHIFT)) & FLEXSPI_LUT_NUM_PADS1_MASK)
+#define FLEXSPI_LUT_OPCODE1_MASK                 (0xFC000000U)
+#define FLEXSPI_LUT_OPCODE1_SHIFT                (26U)
+#define FLEXSPI_LUT_OPCODE1(x)                   (((unsigned long)(((unsigned long)(x)) << FLEXSPI_LUT_OPCODE1_SHIFT)) & FLEXSPI_LUT_OPCODE1_MASK)
+
+#define FLEXSPI_LUT_SEQ(cmd0, pad0, op0, cmd1, pad1, op1)  (FLEXSPI_LUT_OPERAND0(op0) | FLEXSPI_LUT_NUM_PADS0(pad0) | FLEXSPI_LUT_OPCODE0(cmd0) | FLEXSPI_LUT_OPERAND1(op1) | FLEXSPI_LUT_NUM_PADS1(pad1) | FLEXSPI_LUT_OPCODE1(cmd1))
+
+#define CMD_SDR 0x01
+#define CMD_DDR 0x21
+#define RADDR_SDR 0x02
+#define RADDR_DDR 0x22
+#define CADDR_SDR 0x03
+#define CADDR_DDR 0x23
+#define MODE1_SDR 0x04
+#define MODE1_DDR 0x24
+#define MODE2_SDR 0x05
+#define MODE2_DDR 0x25
+#define MODE4_SDR 0x06
+#define MODE4_DDR 0x26
+#define MODE8_SDR 0x07
+#define MODE8_DDR 0x27
+#define WRITE_SDR 0x08
+#define WRITE_DDR 0x28
+#define READ_SDR 0x09
+#define READ_DDR 0x29
+#define LEARN_SDR 0x0A
+#define LEARN_DDR 0x2A
+#define DATSZ_SDR 0x0B
+#define DATSZ_DDR 0x2B
+#define DUMMY_SDR 0x0C
+#define DUMMY_DDR 0x2C
+#define DUMMY_RWDS_SDR 0x0D
+#define DUMMY_RWDS_DDR 0x2D
+#define JMP_ON_CS 0x1F
+#define STOP 0
+
+#define FLEXSPI_1PAD 0
+#define FLEXSPI_2PAD 1
+#define FLEXSPI_4PAD 2
+#define FLEXSPI_8PAD 3
+
+
+// FlexSPI NOR configuration block (located at start of the FlexSPI Flash)
 //
 #if defined _COMPILE_IAR
-__root const KINETIS_FLASH_CONFIGURATION __flash_config @ ".f_config"    // __root forces the function to be linked in IAR project
+__root const FLEXSPI_NOR_BOOT_CONFIGURATION __boot_config @ ".boot_hdr.conf" // __root forces the function to be linked in IAR project
 #elif defined _GNU
-const KINETIS_FLASH_CONFIGURATION __attribute__((section(".f_config"))) __flash_config
-#elif defined _CODE_WARRIOR
-#pragma define_section flash_cfg ".FCONFIG" ".FCONFIG" ".FCONFIG" far_abs R
-static __declspec(flash_cfg) KINETIS_FLASH_CONFIGURATION flash_config
+const FLEXSPI_NOR_BOOT_CONFIGURATION __attribute__((section(".boot_hdr.conf"))) __boot_config
 #elif defined _COMPILE_KEIL
-__attribute__((section("F_INIT"))) const KINETIS_FLASH_CONFIGURATION __flash_config
+__attribute__((section(".boot_hdr.conf"))) const FLEXSPI_NOR_BOOT_CONFIGURATION __boot_config
 #else
-    #if defined _COMPILE_GHS                                             // {110}
-        #pragma ghs section rodata=".f_config"
-    #elif defined _COMPILE_COSMIC                                        // {113}
-        #pragma section {}
-        #pragma section const {config}
-    #endif
-const KINETIS_FLASH_CONFIGURATION __flash_config
+const FLEXSPI_NOR_BOOT_CONFIGURATION __boot_config
 #endif
 = {
-    KINETIS_FLASH_CONFIGURATION_BACKDOOR_KEY,
-    #if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // {122}
-    0xffffffff,                                                          // reserved - must be 0xffffffff
-    KINETIS_FLASH_CONFIGURATION_EEPROM_PROT,
-    KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION,
-    KINETIS_FLASH_CONFIGURATION_SECURITY,
-    KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION
-    #else
-    KINETIS_FLASH_CONFIGURATION_PROGRAM_PROTECTION,
-    KINETIS_FLASH_CONFIGURATION_SECURITY,
-    KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION,
-    KINETIS_FLASH_CONFIGURATION_EEPROM_PROT,
-    KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT
-    #endif
+    .memConfig =                                                         // for IS25LP064A on MIMXRT1020
+        {
+            .tag = FLEXSPI_CFG_BLK_TAG,
+            .version = FLEXSPI_CFG_BLK_VERSION,
+            .readSampleClkSrc = kFlexSPIReadSampleClk_LoopbackFromDqsPad,
+            .csHoldTime = 3u,
+            .csSetupTime = 3u,
+            // Enable DDR mode, Wordaddassable, Safe configuration, Differential clock
+            //
+            .sflashPadType = kSerialFlash_4Pads,
+            .serialClkFreq = kFlexSpiSerialClk_100MHz,
+            .sflashA1Size = (8u * 1024u * 1024u),
+            .lookupTable =
+                {
+                    // Read LUTs
+                    FLEXSPI_LUT_SEQ(CMD_SDR, FLEXSPI_1PAD, 0xEB, RADDR_SDR, FLEXSPI_4PAD, 0x18),
+                    FLEXSPI_LUT_SEQ(DUMMY_SDR, FLEXSPI_4PAD, 0x06, READ_SDR, FLEXSPI_4PAD, 0x04),
+                },
+        },
+    .pageSize = 256u,
+    .sectorSize = (4u * 1024u),
+    .blockSize = (256u * 1024u),
+    .isUniformBlockSize = 0,
 };
-#if defined _COMPILE_GHS                                                 // {110}
-    #pragma ghs section rodata=default
-#elif defined _COMPILE_COSMIC                                            // {113}
-    #pragma section {}
+
+
+typedef struct stBOOT_DATA
+{
+    unsigned long start;           /* boot start location */
+    unsigned long size;            /* size */
+    unsigned long plugin;          /* plugin flag - 1 if downloaded application is plugin */
+    unsigned long placeholder;		/* placehoder to make even 0x10 size */
+} BOOT_DATA;
+
+#define FLEXSPI_FLASH_BASE          0x60000000
+#define FLEXSPI_FLASH_SIZE  (0x800000U)
+#define PLUGIN_FLAG           (unsigned long)0
+
+#if defined _COMPILE_IAR
+__root const BOOT_DATA __boot_data @ ".boot_hdr.ivt" // __root forces the function to be linked in IAR project
+#elif defined _GNU
+const BOOT_DATA __attribute__((section(".boot_hdr.ivt"))) __boot_data
+#elif defined _COMPILE_KEIL
+__attribute__((section(".boot_hdr.ivt"))) const BOOT_DATA __boot_data
+#else
+const BOOT_DATA __boot_data
 #endif
+= {
+    FLEXSPI_FLASH_BASE,            /* boot start location */
+    FLEXSPI_FLASH_SIZE,         /* size */
+    PLUGIN_FLAG,                /* Plugin flag*/
+    0xFFFFFFFF  				  /* empty - extra data word */
+};
+
+
+
+#define IVT_MAJOR_VERSION           0x4
+#define IVT_MAJOR_VERSION_SHIFT     0x4
+#define IVT_MAJOR_VERSION_MASK      0xF
+#define IVT_MINOR_VERSION           0x1
+#define IVT_MINOR_VERSION_SHIFT     0x0
+#define IVT_MINOR_VERSION_MASK      0xF
+
+#define IVT_VERSION(major, minor)   ((((major) & IVT_MAJOR_VERSION_MASK) << IVT_MAJOR_VERSION_SHIFT) | (((minor) & IVT_MINOR_VERSION_MASK) << IVT_MINOR_VERSION_SHIFT))
+
+#define IVT_TAG_HEADER        0xD1       /**< Image Vector Table */
+#define IVT_SIZE              0x2000
+#define IVT_PAR               IVT_VERSION(IVT_MAJOR_VERSION, IVT_MINOR_VERSION)
+#define IVT_HEADER           (IVT_TAG_HEADER | (IVT_SIZE << 8) | (IVT_PAR << 24))
+
+typedef struct stIMAGE_VECTOR_TABLE {
+    /** @ref hdr with tag #HAB_TAG_IVT, length and HAB version fields
+    *  (see @ref data)
+    */
+    unsigned long hdr;
+    /** Absolute address of the first instruction to execute from the
+    *  image
+    */
+    unsigned long entry;
+    /** Reserved in this version of HAB: should be NULL. */
+    unsigned long reserved1;
+    /** Absolute address of the image DCD: may be NULL. */
+    unsigned long dcd;
+    /** Absolute address of the Boot Data: may be NULL, but not interpreted
+    *  any further by HAB
+    */
+    unsigned long boot_data;
+    /** Absolute address of the IVT.*/
+    unsigned long self;
+    /** Absolute address of the image CSF.*/
+    unsigned long csf;
+    /** Reserved in this version of HAB: should be zero. */
+    unsigned long reserved2;
+} IMAGE_VECTOR_TABLE;
+
+
+
+static const unsigned char __dcd_data[1] = {0x00};
+
+// Image Vector Table (located at 0x1000 offset in the FlexSPI Flash)
+//
+#if defined _COMPILE_IAR
+__root const IMAGE_VECTOR_TABLE __image_vector_table @ ".boot_hdr.ivt" // __root forces the function to be linked in IAR project
+#elif defined _GNU
+const IMAGE_VECTOR_TABLE __attribute__((section(".boot_hdr.ivt"))) __image_vector_table
+#elif defined _COMPILE_KEIL
+__attribute__((section(".boot_hdr.ivt"))) const IMAGE_VECTOR_TABLE __image_vector_table
+#else
+const IMAGE_VECTOR_TABLE __image_vector_table
+#endif
+= {
+    IVT_HEADER,                         /* IVT Header */
+    (unsigned long)&__vector_table,     /* Image Entry Function */
+    0,                           /* Reserved = 0 */
+    (unsigned long)&__dcd_data,           /* Address where DCD information is stored */
+    (unsigned long)&__boot_data,        /* Address where BOOT Data Structure is stored */
+    (unsigned long)&__image_vector_table, /* Pointer to IVT Self (absolute address) */
+    (unsigned long)0,              /* Address where CSF file is stored */
+    0                            /* Reserved = 0 */
+};
 #endif
 #endif

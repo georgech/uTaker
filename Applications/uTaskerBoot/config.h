@@ -90,6 +90,7 @@
         #define FRDM_KL27Z
       //#define CAPUCCINO_KL27                                           // KL27 with 256k flash / 32k SRAM
           //#define DEV4                                                 // temporary development version
+          //#define DEV5                                                 // temporary development version
       //#define FRDM_KL82Z
       //#define KINETIS_K40
       //#define KINETIS_K60
@@ -197,7 +198,14 @@
             #define USB_CRYSTAL_LESS                                     // use 48MHz HIRC as USB source (according to Freescale AN4905 - only possible in device mode) - rather than external pin
             #define ERRATE_1N87M
             #if defined CAPUCCINO_KL27
-                #if defined DEV4
+                #if defined DEV5
+                    #define PIN_COUNT       PIN_COUNT_32_PIN
+                    #define PACKAGE_TYPE    PACKAGE_QFN
+                    #define SIZE_OF_FLASH   (256 * 1024)                 // 256k program Flash
+                    #define SIZE_OF_RAM     (32 * 1024)                  // 32k SRAM
+                    #define uFILE_START     (FLASH_START_ADDRESS + (214 * 1024)) // FLASH location at 0x35800 start
+                    #define FILE_SYSTEM_SIZE (40 * 1024)                 // 40k application accepted
+                #elif defined DEV4
                     #define PIN_COUNT       PIN_COUNT_48_PIN
                     #define PACKAGE_TYPE    PACKAGE_QFN
                     #define SIZE_OF_FLASH   (128 * 1024)                 // 128k program Flash
@@ -422,7 +430,9 @@
             #if !defined FRDM_KL28Z && !defined KINETIS_KE15
                 #define BOOTLOADER_ERRATA
             #endif
-                #if defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined KINETIS_KE15
+                #if defined CAPUCCINO_KL27 && defined DEV5
+                    #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_ENABLE | FTFL_FOPT_NMI_DISABLED) // use boot ROM if NMI is held low at reset
+                #elif defined TWR_KL43Z48M || defined FRDM_KL43Z || defined FRDM_KL03Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined CAPUCCINO_KL27 || defined KINETIS_KE15
                     #define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_NMI_DISABLED) // never use boot ROM
                   //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION  (FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_BOOTSRC_SEL_FLASH | FTFL_FOPT_BOOTPIN_OPT_ENABLE | FTFL_FOPT_NMI_DISABLED) // use boot ROM if NMI is held low at reset
                   //#define KINETIS_FLASH_CONFIGURATION_NONVOL_OPTION (FTFL_FOPT_BOOTSRC_SEL_ROM | FTFL_FOPT_BOOTPIN_OPT_DISABLE | FTFL_FOPT_FAST_INIT | FTFL_FOPT_LPBOOT_CLK_DIV_1 | FTFL_FOPT_RESET_PIN_ENABLED | FTFL_FOPT_NMI_DISABLED) // always use boot ROM

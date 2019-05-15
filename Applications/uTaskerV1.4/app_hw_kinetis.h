@@ -262,7 +262,7 @@
         #define FLASH_CLOCK_DIVIDE   1                                   // no dividers required since the default speed is low enough
         #define BUS_CLOCK_DIVIDE     1                                   // 
     #endif
-#elif defined TWR_KW24D512
+#elif defined TWR_KW24D512 || defined FRDM_KW41Z
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
     #if defined RUN_FROM_MODEM_CLK_OUT
@@ -902,7 +902,7 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
   //#define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KW24D512
+#elif defined TWR_KW24D512 || defined FRDM_KW41Z
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
   //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
@@ -8261,6 +8261,64 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define KEYPAD "KeyPads/TWR_KV31.bmp"
     #endif
+#elif defined FRDM_KW41Z
+    #define DEMO_LED_1             (PORTA_BIT19)                         // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_2             (PORTC_BIT1)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_3             (PORTA_BIT18)                         // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define DEMO_LED_4             (PORTA_BIT17)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define BLINK_LED              (DEMO_LED_1)
+
+    #define SWITCH_2               (PORTC_BIT19)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_3               (PORTC_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_4               (PORTC_BIT5)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+    #define SWITCH_5               (PORTC_BIT16)                         // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
+
+    #define SWITCH_2_PORT          _PORTC
+    #define SWITCH_3_PORT          _PORTC
+    #define SWITCH_4_PORT          _PORTC
+    #define SWITCH_5_PORT          _PORTC
+
+    #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
+        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+    #else
+        #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
+    #endif
+
+    #define SHIFT_DEMO_LED_1        19                                   // since the port bits may be spread out shift each to the lowest 4 bits
+    #define SHIFT_DEMO_LED_2        0
+    #define SHIFT_DEMO_LED_3        16
+    #define SHIFT_DEMO_LED_4        14
+
+    #define MAPPED_DEMO_LED_1       (DEMO_LED_1 >> SHIFT_DEMO_LED_1)
+    #define MAPPED_DEMO_LED_2       (DEMO_LED_2 >> SHIFT_DEMO_LED_2)
+    #define MAPPED_DEMO_LED_3       (DEMO_LED_3 >> SHIFT_DEMO_LED_3)
+    #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
+
+    #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_3) == 0)  // pull this input down at reset to disable watchdog [hold SW3]
+    #define ACTIVATE_WATCHDOG()     SIM_COPC = (SIM_COPC_COPCLKS_1K | SIM_COPC_COPT_LONGEST) // 1.024s watchdog timeout
+    #define TOGGLE_WATCHDOG_LED()   _TOGGLE_PORT(A, BLINK_LED)
+
+    #define CONFIG_TEST_OUTPUT()                                         // we use DEMO_LED_2 which is configured by the user code (and can be disabled in parameters if required)
+    #define TOGGLE_TEST_OUTPUT()    _TOGGLE_PORT(C, DEMO_LED_2)
+    #define SET_TEST_OUTPUT()       _SETBITS(C, DEMO_LED_2)
+    #define CLEAR_TEST_OUTPUT()     _CLEARBITS(C, DEMO_LED_2)
+
+
+    #define BUTTON_KEY_DEFINITIONS  {SWITCH_2_PORT,    SWITCH_2,  {213, 118, 224, 132 }}, \
+                                    {SWITCH_3_PORT,    SWITCH_3,  {213, 144, 224, 161 }}, \
+                                    {SWITCH_4_PORT,    SWITCH_4,  {213, 184, 224, 197 }}, \
+                                    {SWITCH_5_PORT,    SWITCH_5,  {213, 227, 224, 243 }}
+                                    
+
+        // '0'          '1'           input state   center (x,   y)   0 = circle, radius, controlling port, controlling pin 
+    #define KEYPAD_LED_DEFINITIONS  \
+        {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 232, 203, 242 }, _PORTD, BLINK_LED}, \
+        {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 184, 203, 194 }, _PORTD, DEMO_LED_2}, \
+        {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 141, 203, 151 }, _PORTD, DEMO_LED_3}, \
+        {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 112, 203, 122 }, _PORTD, DEMO_LED_4},
+
+    #define KEYPAD "KeyPads/FRDM-KW41Z.bmp"
 #elif defined TWR_KW21D256 || defined TWR_KW24D512
     #define DEMO_LED_1             (PORTD_BIT4)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT5)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -8340,7 +8398,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(E, (PORTE_BIT0 | PORTE_BIT1), 0); // configure as input
-    #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(E, PORTE_BIT0))    // right side rear connector - short pins 4 and 2 together to disable watchdog
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(E, PORTE_BIT0) == 0)// right side rear connector - short pins 4 and 2 together to disable watchdog
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #if defined SUPPORT_SLCD
         #define TOGGLE_WATCHDOG_LED()   if (IS_POWERED_UP(3, SLCD)) { TOGGLE_SLCD(3TO0, 0x1000); } // blink freescale logo in the SLCD
@@ -8390,7 +8448,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define MAPPED_DEMO_LED_4       (DEMO_LED_4 >> SHIFT_DEMO_LED_4)
 
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(C, SWITCH_1, PORT_PS_UP_ENABLE); // configure as input
-    #define WATCHDOG_DISABLE()      (!_READ_PORT_MASK(C, SWITCH_1))      // pull this input down to disable watchdog (hold SW1 at reset)
+    #define WATCHDOG_DISABLE()      (_READ_PORT_MASK(C, SWITCH_1) == 0)  // pull this input down to disable watchdog (hold SW1 at reset)
     #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
     #if defined SUPPORT_SLCD
         #define TOGGLE_WATCHDOG_LED() _TOGGLE_PORT(C, BLINK_LED); if (IS_POWERED_UP(3, SLCD)) { TOGGLE_SLCD(15TO12, 0x8000000); } // blink freescale logo in the SLCD

@@ -1885,6 +1885,8 @@
     <None Include="..\..\..\Hardware\NE64\crt0.s">
       <Filter>Hardware\NE64</Filter>
     </None>
+    <None Include="..\GNU_iMX\make_uTaskerV1.4_GNU_iMX" />
+    <None Include="..\GNU_iMX\Build_iMX_RT.bat" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="uTasker.rc">
