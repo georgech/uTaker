@@ -137,9 +137,9 @@
 #define WRITE_STATUS_REGISTER    0x01
 #define PAGE_PROG                0x02
 #define QUAD_PROGRAM_PAGE        0x32
-#define SUB_SECTOR_ERASE         0x20                                    // sector erase - 4k (name for compatibility)
-#define HALF_SECTOR_ERASE        0x52                                    // half block erase - 32k (name for compatibility)
-#define BLOCK_ERASE              0xd8                                    // block erase
+#define SUB_SECTOR_ERASE         0x20                                    // sector erase - 4k
+#define HALF_BLOCK_ERASE         0x52                                    // half block erase - 32k 
+#define BLOCK_ERASE              0xd8                                    // sector erase
 #define CHIP_ERASE               0x60
 #define ERASE_SUSPEND            0x75
 #define ERASE_RESUME             0x7a
@@ -242,9 +242,9 @@ static void fnSPI_command_w25q(unsigned char ucCommand, unsigned long ulPageNumb
     #endif
 
     switch (ucCommand) {
-    case HALF_SECTOR_ERASE:                                              // 32k half-block
-    case BLOCK_ERASE:                                                    // 64k block erase
-    case SUB_SECTOR_ERASE:                                               // 4k sector
+    case HALF_BLOCK_ERASE:                                               // 32k half-block
+    case BLOCK_ERASE:                                                    // 64k sector erase
+    case SUB_SECTOR_ERASE:                                               // 4k sub-sector
         iErase = 1;
     case PAGE_PROG:
         SPI_FLASH_Danger[iChipSelect] = 1;                               // a write/erase will be started so we need to poll the status before next command

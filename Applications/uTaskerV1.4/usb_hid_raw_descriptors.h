@@ -185,7 +185,7 @@ static const USB_CONFIGURATION_DESCRIPTOR_COLLECTION config_descriptor = {
     HID_RAW_TX_RATE                                                      // polling interval in ms
     },
 
-    {                                                                    // interrupt in endpoint descriptor for the interface
+    {                                                                    // interrupt out endpoint descriptor for the interface
     DESCRIPTOR_TYPE_ENDPOINT_LENGTH,                                     // descriptor size in bytes (0x07)
     DESCRIPTOR_TYPE_ENDPOINT,                                            // endpoint descriptor (0x05)
     (OUT_ENDPOINT | 0x02),                                               // direction and address of endpoint

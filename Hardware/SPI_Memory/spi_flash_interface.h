@@ -193,7 +193,7 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
     fnSPI_command(WRITE_ENABLE, 0, _EXTENDED_CS 0, 0);                   // command write enable to allow erasing
         #if !defined SST25_A_VERSION
     if ((ptrAccessDetails->BlockLength >= (64 * 1024)) && ((ptrAccessDetails->ulOffset & ((64 * 1024) - 1)) == 0)) { // if a complete 64k block can be deleted
-            #if defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L || defined SPI_FLASH_W25Q || defined SPI_FLASH_IS25
+            #if defined BLOCK_ERASE
         ucCommand = BLOCK_ERASE;                                         // delete block of 64k
             #else
         ucCommand = SECTOR_ERASE;                                        // delete block of 64k
@@ -210,7 +210,11 @@ static MAX_FILE_LENGTH fnDeleteSPI(ACCESS_DETAILS *ptrAccessDetails)
         #endif
         #if defined SPI_FLASH_S25FL1_K || defined SPI_FLASH_MX25L || defined SPI_FLASH_W25Q || defined SPI_FLASH_IS25
     {
-        ucCommand = SECTOR_ERASE;                                        // delete smallest sector of 4k
+            #if defined SPI_FLASH_SUB_SECTOR_LENGTH
+        ucCommand = SUB_SECTOR_ERASE;                                    // delete sub-sector of 4k
+            #else
+        ucCommand = SECTOR_ERASE;                                        // delete block of 64k
+            #endif
             #if defined SPI_FLASH_SUB_SECTOR_LENGTH
         BlockLength = (SPI_FLASH_SUB_SECTOR_LENGTH);
             #else

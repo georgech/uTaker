@@ -132,6 +132,7 @@
     //#define TWR_KW21D256                                               // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
     //#define TWR_KW24D512                                               // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
     //#define HEXIWEAR_KW40Z                                             // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
+    //#define FRDM_KW41Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KW41Z.html
 
     //#define MAPS_KS22F                                                 // KS22F
 
@@ -251,7 +252,7 @@
     //#define NUCLEO_L496RG                                              // evaluation board with STM32L496ZGT6U
     //#define NUCLEO_F207ZG                                              // evaluation board with STM32F207ZGT6U
     //#define NUCLEO_F401RE                                              // evaluation board with STM32F401RET6
-      #define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
+    //#define NUCLEO_F429ZI                                              // evaluation board with STM32F429ZIT6U (cortex-m4 with FPU)
     //#define NUCLEO_F496ZG                                              // evaluation board with STM32F496ZGT6U
     //#define NUCLEO_F746ZG                                              // evaluation board with STM32F746ZGT6U
     //#define NUCLEO_F767ZI                                              // evaluation board with STM32F767ZIT6U
@@ -267,7 +268,7 @@
     //#define STM3241G_EVAL                                              // ST-Micro evaluation board with STM32F417IGH6 - cortex-m4
     //#define ST_MB997A_DISCOVERY                                        // discovery board with STM32F407VGT6 - cortex-m4
     //#define STM32F407ZG_SK                                             // IAR prototyping board with STM32F407ZGT6 - cortex-m4
-    //#define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6 - cortex-m4
+      #define STM32_E407                                                 // Olimex prototyping board with STM32F407ZGT6 - cortex-m4
     //#define ST_IDP004                                                  // IO-link master multi-port evaluation board based on L6360 - cortex-m3
 #elif defined _HW_AVR32
   //#define AVR32_EVK1100                                                // evaluation board from ATMEL with Ethernet and LCD
@@ -667,6 +668,16 @@
     #define KINETIS_MAX_SPEED    50000000
     #define TARGET_HW       "TWR-KW24D512"
     #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KW24 doesn't have USB
+    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+#elif defined FRDM_KW41Z
+    #define KINETIS_KW4X
+    #define KINETIS_KW41
+    #define KINETIS_REVISION_2
+    #define KINETIS_MAX_SPEED    50000000
+    #define TARGET_HW       "FRDM-KW41Z"
+    #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KW41 doesn't have USB
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined K02F100M
     #define TARGET_HW            "K02F100M"
@@ -1408,8 +1419,8 @@
         #define SIM_DISABLE_W25Q
         #define SIM_DISABLE_MX25L
   //#define SPI_FLASH_IS25                                               // use ISSI IS25 SPI flash rather than ATMEL
-  //#define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
-    #define SPI_FLASH_MX25L                                              // use Macronix MX25 SPI flash rather than ATMEL
+    #define SPI_FLASH_W25Q                                               // use Winbond W25Q SPI flash rather than ATMEL
+  //#define SPI_FLASH_MX25L                                              // use Macronix MX25 SPI flash rather than ATMEL
   //#define SPI_FLASH_MX66L                                              // use Macronix MX66 SPI flash rather than ATMEL
   //#define SPI_FLASH_SST25                                              // use SST SPI SPI flash rather than ATMEL
   //#define SPI_FLASH_ST                                                 // use ST SPI flash rather than ATMEL

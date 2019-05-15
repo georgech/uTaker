@@ -2203,7 +2203,7 @@ typedef struct stKINETIS_SIM
         unsigned long SIM_SECKEY1;
         unsigned long SIM_SECKEY2;
         unsigned long SIM_SECKEY3;
-    #elif defined KINETIS_KL                                             // {15}
+    #elif defined KINETIS_KL || defined KINETIS_KW4X                     // {15}
         unsigned long ulRes3[39];
         unsigned long SIM_COPC;
         unsigned long SIM_SRVCOPC;

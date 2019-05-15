@@ -11,13 +11,13 @@
     File:      kinetis_port_kw.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
 */
 
 
-#if defined KINETIS_KW2X
+#if defined KINETIS_KW2X || defined KINETIS_KW4X
 
 #define _PIN_COUNT      0                                                // 63 LGA
 
@@ -130,6 +130,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][1] = {
         {  "-",    },                                                    // PC30
         {  "-",    },                                                    // PC31
     },
+#if PORTS_AVAILABLE > 3
     {
         // 63 LGA                                                        GPIO D
         {  "-",    },                                                    // PD0
@@ -249,6 +250,7 @@ static const char *cPinNumber[PORTS_AVAILABLE + 1][PORT_WIDTH][1] = {
         {  "55",   },                                                    // VBAT_RF
         {  "56",   },                                                    // XTAL_32M
     }
+#endif
 };
 
 static int ADC_DEDICATED_CHANNEL[PORT_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ADC_DM1_SINGLE, 0, 0};
@@ -376,6 +378,7 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
     },
+#if PORTS_AVAILABLE > 3
     {
         // ALT 0           ALT 1    ALT2         ALT 3         ALT 4          ALT 5        ALT 6       ALT 7
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }, // PORT D
@@ -453,5 +456,6 @@ static const char *cPer[PORTS_AVAILABLE][PORT_WIDTH][8] = {
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 },
         {  "-",            "-",     "-",         "-",          "-",           "-",         "-",        "-"                 }
     }
+#endif
 };
 #endif

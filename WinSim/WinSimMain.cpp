@@ -1130,7 +1130,7 @@ static void fnDisplayPorts(HDC hdc)
         #endif
     #endif
 #endif
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {74}{82}{92}{96}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW4X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {74}{82}{92}{96}
     #undef PORT_NAME_LENGTH
     #define PORT_NAME_LENGTH 9
     unsigned long ulMSB = (1 << (PORT_WIDTH - 1));
@@ -1538,7 +1538,7 @@ static void fnDisplayPorts(HDC hdc)
         }
     #endif
 #endif
-#if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X) && !(defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {70}{74}{82}{92}{96}
+#if defined _KINETIS && !(defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW4X) && !(defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {70}{74}{82}{92}{96}
         if (i >= (_PORTS_AVAILABLE - 1)) {                               // {91}
     #if defined _EXT_PORT_32_BIT
             ulPortMask = 0x00000000;
