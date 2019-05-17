@@ -676,7 +676,7 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
         #define MCGOUTCLK      (4000000)
     #elif defined RUN_FROM_HIRC
         #define MCGOUTCLK      (48000000)
-    #else
+    #elif !defined MCGOUTCLK
         #if defined RUN_FROM_EXTERNAL_CLOCK
             #define MCGOUTCLK  (_EXTERNAL_CLOCK)                         // connected directly to input clock
         #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK

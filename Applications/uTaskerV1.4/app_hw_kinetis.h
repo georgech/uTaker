@@ -722,7 +722,7 @@
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-  //#define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
     #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
     #if defined RUN_FROM_EXTERNAL_CLOCK_FLL

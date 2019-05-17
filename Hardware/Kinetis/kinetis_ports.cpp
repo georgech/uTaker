@@ -375,7 +375,7 @@ static void fnAddVoltage(int iPort, char *cPortDetails, int iBit)
 extern "C" int fnGetPWM_sim_channel(int iPort, int iPin, unsigned long *ptr_ulFrequency, unsigned char *ptr_ucMSR);
 static void fnAddPWM(int iPort, char *cPortDetails, int iBit)
 {
-    #if defined _PIN_COUNT
+    #if defined _PIN_COUNT && (FLEX_TIMERS_AVAILABLE > 0)
     char cBuf[BUF1SIZE];
     unsigned long ulFrequency;
     unsigned char ucMSR;
@@ -387,6 +387,8 @@ static void fnAddPWM(int iPort, char *cPortDetails, int iBit)
     STRCAT(cPortDetails, cBuf);
     SPRINTF(cBuf, " MSR=%d %%]", ucMSR);
     STRCAT(cPortDetails, cBuf);
+    #else
+    return;
     #endif
 }
 #endif
