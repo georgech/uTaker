@@ -131,6 +131,7 @@
     02.06.2018 Zero optional user UART callback handlers                 {110}
     05.07.2018 Add SPI tests                                             {111}
     19.02.2019 Add uCANopen                                              {112}
+    17.05.2019 Correct emulated FAT start address for compatibility with devices that don't have flash starting at 0x00000000 {113}
 
 */
 
@@ -1117,6 +1118,8 @@ extern void fnApplication(TTASKTABLE *ptrTaskTable)
         #endif
     #else
     if (((iAppState & (STATE_ACTIVE | STATE_DELAYING | STATE_ESCAPING | STATE_RESTARTING | STATE_VALIDATING)) != 0) && ((Length = fnMsgs(SerialPortID)) != 0)) {
+      //Length = fnPeekInput(SerialPortID, ucInputMessage, MEDIUM_MESSAGE, PEEK_NEWEST_INPUT);
+      //Length = fnPeekInput(SerialPortID, ucInputMessage, MEDIUM_MESSAGE, PEEK_OLDEST_INPUT);
         while ((Length = fnRead(SerialPortID, ucInputMessage, MEDIUM_MESSAGE)) != 0) { // handle UART input
         #if (defined USE_USB_CDC || defined USB_CDC_HOST) && !defined HELLO_WORLD // {24}{70}
             #if defined USE_MAINTENANCE
@@ -1646,7 +1649,7 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
         uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
             #endif
         #else
-      //tInterfaceParameters.ucDMAConfig = 0;
+      //tInterfaceParameters.ucDMAConfig = 0;                            // disable DMA in favour of interrupt driven operation
         tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                  // activate DMA on transmission
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER);
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK);
@@ -2234,7 +2237,7 @@ static void fnTestRTC(void)
 #define DATA_FILE_1_LENGTH    3722                                       // the number of raw data samples for file 1 (even)
 #define DATA_FILE_2_LENGTH    74982                                      // the number of raw data samples for file 2 (even)
 #define MAX_DATA_FILE_LENGTH  (128 * 1024)
-#define LINEAR_DATA_1         (const unsigned char *)(256 * 1024)        // internal flash address of the start of the file's raw data
+#define LINEAR_DATA_1         (const unsigned char *)(FLASH_START_ADDRESS + (256 * 1024)) // {113} internal flash address of the start of the file's raw data
 #define LINEAR_DATA_2         (const unsigned char *)(LINEAR_DATA_1 + MAX_DATA_FILE_LENGTH) // internal flash address of the start of the file's raw data
 
 static const CHAR cHTML_link[] = "<html><head><title>Emulated FAT</title></head><body bgcolor=#d8d8d8 marginheight=30><center><font color=#ff0000 style=font-size:30px><b style='mso-bidi-font-weight:normal'>&micro;Tasker FAT Emulation</font></b><br><br><br>Full details of this and many other features can be found at <a href=""http://www.uTasker.com/"">the uTasker web site</a>.</body></html>";
