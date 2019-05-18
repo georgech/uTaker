@@ -7313,7 +7313,7 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_FTM1_C2_C3    57                  // 0x39 FTM1 OR of channels 2 to 3
           #define DMAMUX0_CHCFG_SOURCE_FTM2_C2_C3    58                  // 0x3a FTM2 OR of channels 2 to 3
           #define DMAMUX0_CHCFG_SOURCE_LPTMR0        59                  // 0x3b LPTMR0
-        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_KV31 && !defined KINETIS_K80 && !defined KINETIS_K27 && !defined KINETIS_K28
+        #elif !defined KINETIS_K21 && !defined KINETIS_K22 && !defined KINETIS_K24 && !defined KINETIS_KV31 && !defined KINETIS_K80 && !defined KINETIS_K27 && !defined KINETIS_K28
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C4       54                  // 0x36 FTM3 channel 4
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C5       55                  // 0x37 FTM3 channel 5
           #define DMAMUX0_CHCFG_SOURCE_FTM3_C6       56                  // 0x38 FTM3 channel 6
