@@ -681,6 +681,8 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
             #define MCGOUTCLK  (_EXTERNAL_CLOCK)                         // connected directly to input clock
         #elif defined KINETIS_KM && defined RUN_FROM_DEFAULT_CLOCK
             #define MCGOUTCLK  (FAST_ICR/2)                              // 4MHz IRC divided by 2
+        #elif defined KINETIS_KM && defined RUN_FROM_EXTERNAL_CLOCK_FLL
+            #define MCGOUTCLK  ((_EXTERNAL_CLOCK/FRDIVIDER) * FLL_FACTOR)
         #elif defined RUN_FROM_DEFAULT_CLOCK
             #if !defined FLL_FACTOR
                 #define FLL_FACTOR     (640)                             // default value
