@@ -1,4 +1,4 @@
-﻿/***********************************************************************
+/*********************************************************************
     Mark Butcher    Bsc (Hons) MPhil MIET
 
     M.J.Butcher Consulting
@@ -395,7 +395,7 @@
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
     #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
     #if defined RUN_FROM_EXTERNAL_CLOCK_FLL
-        #define FRDIVIDER        256                                     // divide the crsytal input by 256 to obtain 31.25kHz
+        #define FRDIVIDER        256                                     // divide the crystal input by 256 to obtain 31.25kHz
     #endif
     #define FLL_FACTOR           1280                                    // specify the FLL factor to use (factors available are 640, 732, 1280, 1464, 1920, 2197, 2560 and 2929)
 #elif defined TWR_KW21D256
@@ -3341,7 +3341,7 @@
                                     {_PORTE,  PORTE_BIT30,  {373, 37,   388, 52  }},
 
     #define KEYPAD "KeyPads/TEENSY_LC.bmp"
-#elif defined TWR_KM34Z50M
+#elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
     #define BLINK_LED              (PORTE_BIT5)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_2               (PORTE_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_1               (PORTD_BIT0)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

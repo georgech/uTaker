@@ -2,7 +2,7 @@
     Mark Butcher    Bsc (Hons) MPhil MIET
 
     M.J.Butcher Consulting
-    Birchstrasse 20f,    CH-5406, Rütihof
+    Birchstrasse 20f,    CH-5406, RÃ¼tihof
     Switzerland
 
     www.uTasker.com    Skype: M_J_Butcher
@@ -2232,7 +2232,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
 {
     const CHAR *ptrStr;
 #if !defined KINETIS_KE                                                  // {11}
-    #if !defined KINETIS_KL
+    #if !defined KINETIS_KL && !defined KINETIS_KM
     static const CHAR cJtag[]          = "JTAG";
     #endif
 #endif
@@ -2248,7 +2248,7 @@ extern unsigned char fnAddResetCause(CHAR *ptrBuffer)
     static const CHAR cWatchdog[]      = "WDOG";
     static const CHAR cClockLoss[]     = "Clock loss";
     static const CHAR cUnknown[]       = "???";
-#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18 // {11}
+#if defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE16 && !defined KINETIS_KE18 // {11}
     static const CHAR cHostDebug[]     = "Host debugger";
     static const CHAR cPerFailure[]    = "peripheral failure";
     if ((SIM_SRSID & SIM_SRSID_POR) != 0) {                              // power on reset

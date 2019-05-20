@@ -63,206 +63,14 @@ static unsigned long ulPeripherals[PORTS_AVAILABLE] = {0};
 #if defined RUN_IN_FREE_RTOS
     extern void fnExecutePendingInterrupts(int iRecursive);
 #endif
-
+/*
 static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
-#if defined KINETIS_K00
-    0x00003020,                                                          // port A disabled default pins
-    0x000f0000,                                                          // port B disabled default pins
-    0x00000c30,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x00000003                                                           // port E disabled default pins
-#elif defined KINETIS_K12
-    (PORT1_BIT17 | PORT1_BIT16 | PORT1_BIT15 | PORT1_BIT14 | PORT1_BIT13 | PORT1_BIT12 | PORT1_BIT5), // port A disabled default pins
-    (PORT2_BIT19 | PORT2_BIT18 | PORT2_BIT17 | PORT2_BIT16 | PORT2_BIT13 | PORT2_BIT12 | PORT2_BIT11 | PORT2_BIT10), // port B disabled default pins
-    (PORT3_BIT17 | PORT3_BIT16 | PORT3_BIT13 | PORT3_BIT12 | PORT3_BIT11 | PORT3_BIT10 | PORT3_BIT5 | PORT3_BIT4), // port C disabled default pins
-    (PORT4_BIT3 | PORT4_BIT2 | PORT4_BIT0),                              // port D disabled default pins
-    (PORT5_BIT5 | PORT5_BIT4)                                            // port E disabled default pins
-#elif defined KINETIS_K10
-    0x3f01ce60,                                                          // port A disabled default pins
-    0x00f00300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K20
-    #if defined KINETIS_K22
-    0x3f01ce60,                                                          // port A disabled default pins
-    0x00ff8300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-    #elif PIN_COUNT == PIN_COUNT_64_PIN
-    0x00003020,                                                          // port A disabled default pins
-    0x00f00300,                                                          // port B disabled default pins
-    0x00000830,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0xffffffff                                                           // port E disabled default pins
-    #else
-    0x3f01ce60,                                                          // port A disabled default pins
-    0x00f00300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-    #endif
-#elif defined KINETIS_K30
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K40
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K50
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K51
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K52
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K53
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000000,                                                          // port C disabled default pins
-    0x0000fc00,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K64
-    (PORT1_BIT29 | PORT1_BIT28 | PORT1_BIT27 | PORT1_BIT26 | PORT1_BIT25 | PORT1_BIT24 | PORT1_BIT16 | PORT1_BIT15 | PORT1_BIT14 | PORT1_BIT11 | PORT1_BIT10 | PORT1_BIT9 | PORT1_BIT6 | PORT1_BIT5), // port A disabled default pins
-    (PORT2_BIT23 | PORT2_BIT22 | PORT2_BIT21 | PORT2_BIT20 | PORT2_BIT19 | PORT2_BIT18 | PORT2_BIT17 | PORT2_BIT16 | PORT2_BIT13 | PORT2_BIT12 | PORT2_BIT9 | PORT2_BIT8), // port B disabled default pins
-    (PORT3_BIT19 | PORT3_BIT18 | PORT3_BIT17 | PORT3_BIT16 | PORT3_BIT15 | PORT3_BIT14 | PORT3_BIT13 | PORT3_BIT12 | PORT3_BIT5 | PORT3_BIT4), // port C disabled default pins
-    (PORT4_BIT15 | PORT4_BIT14 | PORT4_BIT13 | PORT4_BIT12 | PORT4_BIT11 | PORT4_BIT10 | PORT4_BIT9 | PORT4_BIT8 | PORT4_BIT7 | PORT4_BIT4 | PORT4_BIT3 | PORT4_BIT2 | PORT4_BIT0), // port D disabled default pins
-    (PORT5_BIT28 | PORT5_BIT27 | PORT5_BIT26 | PORT5_BIT12 | PORT5_BIT11 | PORT5_BIT10 | PORT5_BIT9 | PORT5_BIT8 | PORT5_BIT7 | PORT5_BIT6 | PORT5_BIT5 | PORT5_BIT4) // port E disabled default pins
-#elif defined KINETIS_K60
     0x3f01ce40,                                                          // port A disabled default pins
     0x00f00300,                                                          // port B disabled default pins
     0x000ff030,                                                          // port C disabled default pins
     0x0000ff9d,                                                          // port D disabled default pins
     0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K61
-    0x00000020,                                                          // port A disabled default pins
-    0x00c00300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x000004f0,                                                          // port E disabled default pins
-    0x001ff900                                                           // port F disabled default pins
-#elif defined KINETIS_K64
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00ff0300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_K70
-    0x00000020,                                                          // port A disabled default pins
-    0x00c00300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x000004f0,                                                          // port E disabled default pins
-    0x001ff900                                                           // port F disabled default pins
-#elif defined KINETIS_K80
-    0x3f01ce40,                                                          // port A disabled default pins
-    0x00f00300,                                                          // port B disabled default pins
-    0x000ff030,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0x1c001ff0                                                           // port E disabled default pins
-#elif defined KINETIS_KE15 || defined KINETIS_KE18
-    0x0003ff00,                                                          // port A disabled default pins
-    0x00038f00,                                                          // port B disabled default pins
-    0x00003f00,                                                          // port C disabled default pins
-    0x0003fd00,                                                          // port D disabled default pins
-    0x0001f080                                                           // port E disabled default pins
-#elif defined KINETIS_KE                                                 // not used by most KE
-    0x00000000,
-    #if PORTS_AVAILABLE > 1
-    0x00000000
-    #endif
-#elif defined KINETIS_KL                                                 // {24}
-    #if defined KINETIS_KL02
-    0x00002c60,                                                          // port A disabled default pins
-    0x000030d8,                                                          // port B disabled default pins
-    #elif defined KINETIS_KL03
-    0x000000e0,                                                          // port A disabled default pins
-    0x00002cd8,                                                          // port B disabled default pins
-    #elif defined KINETIS_KL05
-    0x000fcc60,                                                          // port A disabled default pins
-    0x001f80d8,                                                          // port B disabled default pins
-    #elif defined KINETIS_KL25                                           // {31}
-    0x0003f026,                                                          // port A disabled default pins
-    0x00000f00,                                                          // port B disabled default pins
-    0x00033c38,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x8300003f                                                           // port E disabled default pins
-    #elif defined KINETIS_KL26
-    0x0003f0e6,                                                          // port A disabled default pins
-    0x00f01f00,                                                          // port B disabled default pins
-    0x00f73c38,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x8700003f                                                           // port E disabled default pins
-    #elif defined KINETIS_KL17 || defined KINETIS_KL27
-    0x00003026,                                                          // port A disabled default pins
-    0x000f0000,                                                          // port B disabled default pins
-    0x00000c38,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x83000003                                                           // port E disabled default pins
-    #elif defined KINETIS_KL28
-    (PORT1_BIT29 | PORT1_BIT16 | PORT1_BIT15 | PORT1_BIT14 | PORT1_BIT13 | PORT1_BIT12 | PORT1_BIT11 | PORT1_BIT10 | PORT1_BIT7 | PORT1_BIT6 | PORT1_BIT5 | PORT1_BIT4 | PORT1_BIT2 | PORT1_BIT1), // port A disabled default pins
-    (PORT2_BIT23 | PORT2_BIT22 | PORT2_BIT21 | PORT2_BIT20 | PORT2_BIT11 | PORT2_BIT10 | PORT2_BIT9 | PORT2_BIT8 | PORT2_BIT7 | PORT2_BIT6), // port B disabled default pins
-    (PORT3_BIT23 | PORT3_BIT22 | PORT3_BIT19 | PORT3_BIT18 | PORT3_BIT17 | PORT3_BIT16 | PORT3_BIT15 | PORT3_BIT14 | PORT3_BIT13 | PORT3_BIT12 | PORT3_BIT11 | PORT3_BIT10 | PORT3_BIT5 | PORT3_BIT4), // port C disabled default pins
-    (PORT4_BIT15 | PORT4_BIT14 | PORT4_BIT13 | PORT4_BIT12 | PORT4_BIT11 | PORT4_BIT10 | PORT4_BIT9 | PORT4_BIT8 | PORT4_BIT7 | PORT4_BIT4 | PORT4_BIT3 | PORT4_BIT2 | PORT4_BIT0), // port D disabled default pins
-    (PORT5_BIT31 | PORT5_BIT26 | PORT5_BIT6 | PORT5_BIT5 | PORT5_BIT4)   // port E disabled default pins
-    #elif defined KINETIS_KL82                                           // {44}
-    0x2003fc00,                                                          // port A disabled default pins
-    0x00f00ff0,                                                          // port B disabled default pins
-    0x000ffc38,                                                          // port C disabled default pins
-    0x0000ff9d,                                                          // port D disabled default pins
-    0xffffffff                                                           // port E disabled default pins
-    #else                                                                // KL20/KL40
-    0x0003f0e6,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-        #if PORTS_AVAILABLE > 2
-    0x00000000,                                                          // port C disabled default pins
-    0x00000000,                                                          // port D disabled default pins
-    0x8700007f                                                           // port E disabled default pins
-        #endif
-    #endif
-#elif defined KINETIS_KV10
-    0x00000006,                                                          // port A disabled default pins
-    0x00030000,                                                          // port B disabled default pins
-    0x00000030,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x03000000                                                           // port E disabled default pins
-#elif defined KINETIS_KV30 || defined KINETIS_KV40 || defined KINETIS_KV50
-    0x0001f020,                                                          // port A disabled default pins
-    0x00ff0200,                                                          // port B disabled default pins
-    0x0007f030,                                                          // port C disabled default pins
-    0x0000009d,                                                          // port D disabled default pins
-    0x04000070                                                           // port E disabled default pins
-#elif defined KINETIS_KW2X
-    0x00000000,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000030,                                                          // port C disabled default pins
-    0x0000000d,                                                          // port D disabled default pins
-    0x00000010                                                           // port E disabled default pins
-#elif defined KINETIS_KM
-    0x00000000,                                                          // port A disabled default pins
-    0x00000000,                                                          // port B disabled default pins
-    0x00000030,                                                          // port C disabled default pins
-    0x0000000d,                                                          // port D disabled default pins
-    0x00000010                                                           // port E disabled default pins
-#endif
-};
+};*/
 
 static void fnPortInterrupt(int iPort, unsigned long ulNewState, unsigned long ulChangedBit);
 
@@ -491,7 +299,6 @@ static void fnSetDevice(unsigned long *port_inits)
     IOMUXC_GPR_GPR10 = 0x00000007;
     IOMUXC_GPR_GPR15 = 0xffffffff;
 
-
     // Clock configuration module (CCM)
     //
     CCM_CCR = 0x0401107f;
@@ -519,6 +326,21 @@ static void fnSetDevice(unsigned long *port_inits)
     CCM_CCGR5 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
     CCM_CCGR6 = 0xffffffff;                                              // clocks are on during all modes except STOP mode
     CCM_CMEOR = 0xffffffff;
+
+    WDOG1_WCR = (WDOG_WCR_WDA | WDOG_WCR_SRS);
+    WDOG1_WRSR = WDOG_WRSR_POR;
+    WDOG1_WICR = 4;
+    WDOG1_WMCR = WDOG_WMCR_PDE;
+
+    WDOG2_WCR = (WDOG_WCR_WDA | WDOG_WCR_SRS);
+    WDOG2_WRSR = WDOG_WRSR_POR;
+    WDOG2_WICR = 4;
+    WDOG2_WMCR = WDOG_WMCR_PDE;
+
+    WDOG3_CS = (WDOG_CS_CMD32EN | WDOG_CS_CLK_1kHz | WDOG_CS_EN);
+    WDOG3_TOVAL = 0x00007d00;
+
+
 #if !defined KINETIS_KL
     FMC_PFAPR  = 0x00f8003f;                                             // flash memory controller
     #if defined KINETIS_K66
@@ -567,26 +389,6 @@ static void fnSetDevice(unsigned long *port_inits)
     SMC_PMSTAT = SMC_PMSTAT_RUN;
 #elif !defined KINETIS_KE && !defined KINETIS_KEA
     MC_SRSL = (MC_SRSL_POR | MC_SRSL_LVD);                               // mode control - reset status due to power on reset
-#endif
-#if defined KINETIS_WITH_WDOG32
-    WDOG0_CS = (0xffff0000 | WDOG_CS_CMD32EN | WDOG_CS_CLK_1kHz | WDOG_CS_EN);
-    WDOG0_CNT = 0x00000002;
-    WDOG0_TOVAL = 0x00000400;
-#elif defined KINETIS_KL && !defined KINETIS_KL82
-    SIM_COPC = SIM_COPC_COPT_LONGEST;                                    // COP (computer operating properly) rather than watchdog
-#elif defined KINETIS_KE
-    WDOG_CS1 = WDOG_CS1_EN;
-    WDOG_CS2 = WDOG_CS2_CLK_1kHz;
-    WDOG_TOVALL = 0x04;
-#else
-    WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC | WDOG_STCTRLH_WDOGEN); // watchdog
-    WDOG_STCTRLL = 0x0001;
-    WDOG_TOVALH = 0x004c;
-    WDOG_TOVALL = 0x4b4c;
-    WDOG_WINL = 0x0010;
-    WDOG_REFRESH = 0xb480;
-    WDOG_UNLOCK = 0xd928;
-    WDOG_PRESC = 0x0400;
 #endif
 #if defined KINETIS_WITH_SCG
     SCG_VERID = 0x01000000;
@@ -7525,144 +7327,23 @@ extern int fnSimTimers(void)
     }
     // Watchdog
     //
-#if defined KINETIS_WITH_WDOG32
-    if ((WDOG0_CS & WDOG_CS_EN) != 0) {                                  // if the watchdog is enabled
+    if ((WDOG3_CS & WDOG_CS_EN) != 0) {                                  // if the watchdog is enabled
     #if TICK_RESOLUTION >= 1000
-        #if defined KINETIS_KE15 || defined KINETIS_KE18
-        unsigned long ulCounter = ((128 * TICK_RESOLUTION)/1000);        // assume 128000Hz LPO clock
-        #else
         unsigned long ulCounter = (TICK_RESOLUTION / 1000);              // assume 1000Hz LPO clock
-        #endif
     #else
-        #if defined KINETIS_KE15 || defined KINETIS_KE18
-        unsigned long ulCounter = 128;                                   // assume 128000Hz LPO clock
-        #else
         unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
-        #endif
     #endif
-        unsigned long ulWdogCnt = WDOG0_CNT;                             // present watchdog count value
-        unsigned long ulWdogTimeout = WDOG0_TOVAL;                       // timeout value
-        if ((WDOG0_CS & WDOG_CS_PRES_256) != 0) {                        // if the fixed 256 prescaler is enabled
+        unsigned long ulWdogCnt = WDOG3_CNT;                             // present watchdog count value
+        unsigned long ulWdogTimeout = WDOG3_TOVAL;                       // timeout value
+        if ((WDOG3_CS & WDOG_CS_PRES_256) != 0) {                        // if the fixed 256 prescaler is enabled
             ulCounter /= 256;
         }
         ulWdogCnt += ulCounter;                                          // next value
         if (ulWdogCnt >= ulWdogTimeout) {
             return RESET_CARD_WATCHDOG;                                  // watchdog reset
         }
-        WDOG0_CNT = (unsigned short)ulWdogCnt;                           // new watchdog count value
+        WDOG3_CNT = (unsigned short)ulWdogCnt;                           // new watchdog count value
     }
-#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {24}
-    if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != SIM_COPC_COPT_DISABLED) {  // check only when COP is enabled 
-        if (SIM_SRVCOP == SIM_SRVCOP_2) {                                // assume retriggered
-            ulCOPcounter = 0;
-        }
-        else {
-            unsigned long ulCOP_trigger = 0;
-            if ((SIM_COPC & SIM_COPC_COPCLKS_BUS) != 0) {                // COP clocked from bus clock
-                ulCOPcounter += (unsigned long)(((unsigned long long)BUS_CLOCK * (unsigned long long)TICK_RESOLUTION)/1000000); // clocks in a tick period
-            }
-            else {                                                       // COP clocked from 1kHz clock
-    #if TICK_RESOLUTION >= 1000
-                ulCOPcounter += (TICK_RESOLUTION/1000);
-    #else
-                ulCOPcounter++;
-    #endif
-            }
-            switch (SIM_COPC & SIM_COPC_COPT_LONGEST) {                  // COP mode
-            case SIM_COPC_COPT_SHORTEST:
-                if (SIM_COPC & SIM_COPC_COPCLKS_BUS) {                   // COP clocked from bus clock
-                    ulCOP_trigger = (2 << (13 - 1));
-                }
-                else {                                                   // COP clocked from 1kHz clock
-                    ulCOP_trigger = (2 << (5 - 1));
-                }
-                break;
-            case SIM_COPC_COPT_MEDIUM:
-                if (SIM_COPC & SIM_COPC_COPCLKS_BUS) {                   // COP clocked from bus clock
-                    ulCOP_trigger = (2 << (16 - 1));
-                }
-                else {                                                   // COP clocked from 1kHz clock
-                    ulCOP_trigger = (2 << (8 - 1));
-                }
-                break;
-            case SIM_COPC_COPT_LONGEST:
-                if (SIM_COPC & SIM_COPC_COPCLKS_BUS) {                   // COP clocked from bus clock
-                    ulCOP_trigger = (2 << (18 - 1));
-                }
-                else {                                                   // COP clocked from 1kHz clock
-                    ulCOP_trigger = (2 << (10 - 1));
-                }
-                break;
-            }
-            if (ulCOPcounter >= ulCOP_trigger) {
-                return RESET_CARD_WATCHDOG;                              // watchdog reset
-            }
-        }
-        SIM_SRVCOP = SIM_SRVCOP_1;                                       // reset to detect next retrigger
-    }
-#elif defined KINETIS_KE
-    if ((WDOG_CS1 & WDOG_CS1_EN) != 0) {
-    #if TICK_RESOLUTION >= 1000
-        unsigned long ulCounter = (TICK_RESOLUTION/1000);                // assume 1000Hz LPO clock
-    #else
-        unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
-    #endif
-        unsigned long ulWdogCnt = ((WDOG_CNTH << 8) | WDOG_CNTL);        // present watchdog count value
-        unsigned long ulWdogTimeout = ((WDOG_TOVALH << 8) | WDOG_TOVALL);// timeout value
-        ulWdogCnt += ulCounter;                                          // next value
-        if (ulWdogCnt >= ulWdogTimeout) {
-            if ((WDOG_CS1 & WDOG_CS1_INT) != 0) {                        // if an interrupt is enabled we first call it
-                WDOG_CS2 |= WDOG_CS2_FLG;                                // set iterrupt flag
-                if (fnGenInt(irq_WDOG_ID) != 0) {                        // if watchdog interrupt is not disabled
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    ptrVect->processor_interrupts.irq_WDOG0();           // call the interrupt handler (the wathdog unconditionally resets after 128 bus clocks)
-                }
-            }
-            return RESET_CARD_WATCHDOG;                                  // watchdog reset
-        }
-        WDOG_CNTH = (unsigned char)(ulWdogCnt >> 8);                     // new watchdog count value
-        WDOG_CNTL = (unsigned char)(ulWdogCnt);
-    }
-#else
-    if ((WDOG_STCTRLH & WDOG_STCTRLH_WDOGEN) != 0) {                     // watchdog enabled
-    #if TICK_RESOLUTION >= 1000
-        unsigned long ulCounter = (TICK_RESOLUTION/1000);                // {28} assume 1000Hz LPO clock
-    #else
-        unsigned long ulCounter = 1;                                     // assume 1000Hz LPO clock
-    #endif
-        unsigned long ulWatchdogCount = ((WDOG_TMROUTH << 16) | (WDOG_TMROUTL)); // present watchdog count
-        unsigned long ulWatchdogTimeout = ((WDOG_TOVALH << 16) | (WDOG_TOVALL)); // watchdog timeout value        
-        if ((WDOG_STCTRLH & WDOG_STCTRLH_CLKSRC) != 0) {                 // not sure which source is which at the moment
-        }
-        else {
-            ulCounter /= (((WDOG_PRESC >> 8) & 0x7) + 1);                // {28} respect LPO clock presecaler
-        }        
-        if ((ulWatchdogCount + ulCounter) >= ulWatchdogTimeout) {
-            if ((WDOG_STCTRLH & WDOG_STCTRLH_IRQRSTEN) != 0) {           // if an interrupt is enabled we first call it
-                WDOG_STCTRLL |= WDOG_STCTRLL_INTFLG;
-    #if !defined irq_WDOG_ID && defined INTMUX0_AVAILABLE
-                if (fnGenInt(irq_INTMUX0_0_ID) != 0)                     // {46}
-    #else
-                if (fnGenInt(irq_WDOG_ID) != 0)
-    #endif
-                {                                                        // if watchdog interrupt is not disabled
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-    #if !defined irq_WDOG_ID
-                    fnCallINTMUX(INTMUX_WDOG0, INTMUX0_PERIPHERAL_WDOG0_EWM, (unsigned char *)&ptrVect->processor_interrupts.irq_WDOG0);
-    #else
-                    ptrVect->processor_interrupts.irq_WDOG0();           // call the interrupt handler
-    #endif
-                }
-            }
-            return RESET_CARD_WATCHDOG;                                  // watchdog reset
-        }
-        else {
-            ulWatchdogCount += ulCounter;
-            WDOG_TMROUTH = (unsigned short)(ulWatchdogCount >> 16);
-            WDOG_TMROUTL = (unsigned short)(ulWatchdogCount);
-        }
-    }
-#endif
     // SysTick
     //
     if ((SYSTICK_CSR & SYSTICK_ENABLE) != 0) {                           // SysTick is enabled

@@ -107,11 +107,6 @@ extern int fnSwapMemory(int iCheck);                                     // {70}
     #define KINETIS_WITH_PCC                                             // contains peripheral clock control module (rather than using SIM)
 #endif
 
-// Watchdog timer
-//
-#if defined KINETIS_KL28 || defined KINETIS_KE15 || defined KINETIS_KE18
-    #define KINETIS_WITH_WDOG32
-#endif
 
 // Low power timer
 //
@@ -1036,9 +1031,17 @@ typedef struct stRESET_VECTOR
 
 // SRAM (CM7)
 //
-#define RAM_START_ADDRESS    0x20200000                                  // OCRAM2
-#define RAM_START_ADDRESS_1  0x00000000                                  // ITCM
-#define RAM_START_ADDRESS_2  0x20000000                                  // DTCM
+#define RAM_START_ADDRESS_OCR   0x20200000                               // OCRAM2
+#define RAM_START_ADDRESS_ITC   0x00000000                               // ITCM
+#define RAM_START_ADDRESS_DTC   0x20000000                               // DTCM
+
+#define SIZE_OF_RAM_OCR         (128 * 1024)
+#define SIZE_OF_RAM_ITC         (64 * 1024)
+#define SIZE_OF_RAM_DTC         (64 * 1024)
+
+#define RAM_START_ADDRESS    (RAM_START_ADDRESS_DTC)
+#define SIZE_OF_RAM          (SIZE_OF_RAM_DTC)
+
 
 
 
@@ -1695,7 +1698,7 @@ typedef struct stPROCESSOR_IRQ
   #else
     void  (*reserved91)(void);
   #endif
-    void  (*irq_WDOG0)(void);                                            // 92
+    void  (*irq_WDOG1)(void);                                            // 92
     void  (*irq_RTWDOG)(void);                                           // 93
     void  (*irq_EWM)(void);                                              // 94
     void  (*irq_CCM1)(void);                                             // 95
@@ -1907,7 +1910,7 @@ typedef struct stVECTOR_TABLE
   #if defined iMX_RT106X
     #define irq_FlexIO2_ID                91
   #endif
-    #define irq_WDOG_ID                   92
+    #define irq_WDOG1_ID                  92
     #define irq_RTWDOG_ID                 93
     #define irq_EWM_ID                    94
     #define irq_CCM1_ID                   95
@@ -2136,9 +2139,9 @@ typedef struct st_iMX_ADC
     #if defined I2S_AVAILABLE
         #define I2S0_BLOCK                     ((unsigned char *)(&kinetis.I2S_SAI[0])) // I2S0
     #endif
-    #if defined KINETIS_WITH_WDOG32
-        #define WDOG32_BLOCK                   ((unsigned char *)(&kinetis.WDOG32)) // WDOG32
-    #endif
+    #define WDOG1_BLOCK                        ((unsigned char *)(&kinetis.WDOG[0])) // WDOG1
+    #define WDOG2_BLOCK                        ((unsigned char *)(&kinetis.WDOG[1])) // WDOG2
+    #define WDOG3_BLOCK                        ((unsigned char *)(&kinetis.WDOG3)) // WDOG3
     #if defined KINETIS_KE
         #define IRQ_BLOCK                      ((unsigned char *)(&kinetis.IRQ)) // external IRQ
     #endif
@@ -2241,9 +2244,6 @@ typedef struct st_iMX_ADC
         #if PORTS_AVAILABLE > 8
             #define PORT8_BLOCK                ((unsigned char *)(&kinetis.PORT[8]))
         #endif
-    #endif
-    #if !defined KINETIS_KL || defined KINETIS_KL82
-        #define WDOG_BLOCK                     ((unsigned char *)(&kinetis.WDOG)) // Watchdog Timer
     #endif
     #if defined CHIP_HAS_FLEXIO
         #define FLEXIO_BLOCK                   ((unsigned char *)(&kinetis.FLEXIO)) // FlexIO
@@ -2512,13 +2512,9 @@ typedef struct st_iMX_ADC
     #if defined I2S_AVAILABLE
         #define I2S0_BLOCK                     0x4002f000                // I2S0
     #endif
-    #if defined KINETIS_WITH_WDOG32
-        #if defined KINETIS_KE15
-            #define WDOG32_BLOCK               0x40052000                // WDOG32
-        #else
-            #define WDOG32_BLOCK               0x40076000                // WDOG32
-        #endif
-    #endif
+    #define WDOG1_BLOCK                        0x400b8000                // WDOG1
+    #define WDOG2_BLOCK                        0x400d0000                // WDOG2
+    #define WDOG3_BLOCK                        0x400bc000                // WDOG3
     #if defined LPSPI_SPI
         #define LPSPI0_BLOCK                   0x400bc000                // LPSPI0
         #define LPSPI1_BLOCK                   0x400bd000                // LPSPI1
@@ -2643,13 +2639,6 @@ typedef struct st_iMX_ADC
             #if PORTS_AVAILABLE > 5
                 #define PORT5_BLOCK            0x4004e000                // {1}
             #endif
-        #endif
-    #endif
-    #if !defined KINETIS_KL || defined KINETIS_KL82
-        #if defined KINETIS_KM
-            #define WDOG_BLOCK                 0x40053000                // watchdog timer
-        #else
-            #define WDOG_BLOCK                 0x40052000                // watchdog timer
         #endif
     #endif
     #if defined CHIP_HAS_FLEXIO
@@ -11831,121 +11820,73 @@ typedef struct stKINETIS_LPTMR_CTL
     #define PC_3_DEFAULT                 PC_3_ADC0_SE11
 #endif
 
-#if (!defined KINETIS_KL && !defined KINETIS_WITH_WDOG32) || defined KINETIS_KL82 // {42}
-    // Watchdog
-    //
-    #if defined KINETIS_KE
-        #define WDOG_CS1                 *(volatile unsigned char *)(WDOG_BLOCK + 0x00)  // Watchdog Status and Control Register 1
-          #define WDOG_CS1_STOP          0x01                            // watchdog enabled in chip stop mode
-          #define WDOG_CS1_WAIT          0x02                            // watchdog enabled in chip wait mode
-          #define WDOG_CS1_DBG           0x04                            // watchdog enabled in chip debug mode
-          #define WDOG_CS1_TST           0x18                            // watchdog test mask
-          #define WDOG_CS1_UPDATE        0x20                            // allow updates
-          #define WDOG_CS1_INT           0x40                            // watchdog interrupt enable
-          #define WDOG_CS1_EN            0x80                            // watchdog enable
-        #define WDOG_CS2                 *(volatile unsigned char *)(WDOG_BLOCK + 0x01)  // Watchdog Status and Control Register 2
-          #define WDOG_CS2_CLK_BUS       0x00                            // watchdog clocked from bus clock
-          #define WDOG_CS2_CLK_1kHz      0x01                            // watchdog clocked from internal low-power oscillator (LPOCLK)
-          #define WDOG_CS2_CLK_32kHz     0x02                            // watchdog clocked from internal 32kHz ICSIRCLK oscillator
-          #define WDOG_CS2_CLK_EXT       0x03                            // watchdog clocked from external clock source
-          #define WDOG_CS2_PRES_256      0x10                            // prescaler of 256 enabled
-          #define WDOG_CS2_FLG           0x40                            // write '1' to clear
-          #define WDOG_CS2_WIN           0x80                            // window mode enabled
-        #define WDOG_UNLOCK              *(volatile unsigned short *)(WDOG_BLOCK + 0x02) // unlock sequence address
-        #define WDOG_REFRESH             *(volatile unsigned short *)(WDOG_BLOCK + 0x02) // retrigger sequence address
-            #define WDOG_UNLOCK_SEQUENCE_1  0x20c5                       // unlock and retrigger sequences must be performed with two writes within 16 bus clock
-            #define WDOG_UNLOCK_SEQUENCE_2  0x28d9
-            #define WDOG_REFRESH_SEQUENCE_1 0x02a6
-            #define WDOG_REFRESH_SEQUENCE_2 0x80b4
-        #define WDOG_CNTH                *(volatile unsigned char *)(WDOG_BLOCK + 0x02)  // Watchdog Counter Register: High (read-only)
-        #define WDOG_CNTL                *(volatile unsigned char *)(WDOG_BLOCK + 0x03)  // Watchdog Counter Register: Low (read-only)
-        #define WDOG_TOVAL               *(volatile unsigned short *)(WDOG_BLOCK + 0x04) // Watchdog Timeout Value Register (16 bit access)
-        #define WDOG_TOVALH              *(volatile unsigned char *)(WDOG_BLOCK + 0x04)  // Watchdog Timeout Value Register: High
-        #define WDOG_TOVALL              *(volatile unsigned char *)(WDOG_BLOCK + 0x05)  // Watchdog Timeout Value Register: Low
-        #define WDOG_WIN                 *(volatile unsigned short *)(WDOG_BLOCK + 0x06) // Watchdog Timeout Value Register (16  bit access)
-        #define WDOG_WINH                *(volatile unsigned char *)(WDOG_BLOCK + 0x06)  // Watchdog Timeout Value Register: High
-        #define WDOG_WINL                *(volatile unsigned char *)(WDOG_BLOCK + 0x07)  // Watchdog Timeout Value Register: Low
+// Watchdog
+//
+#define WDOG1_WCR                        *(volatile unsigned short *)(WDOG1_BLOCK + 0x0) // watchdog 1 control
+    #define WDOG_WCR_WT                  0xff00                          // watchdog timeout field (0 is 0.5s, each further unit is +0.5s, up to 128s)
+    #define WDOG_WCR_WDW                 0x0080                          // watchdog disable for wait
+    #define WDOG_WCR_SRE                 0x0040                          // software reset extension
+    #define WDOG_WCR_WDA                 0x0020                          // WDOG_B assertion (assert with '0')
+    #define WDOG_WCR_SRS                 0x0010                          // software reset signal (assert system reset signal with '0')
+    #define WDOG_WCR_WDT                 0x0008                          // WDOG_B timeout assertion when set
+    #define WDOG_WCR_WDE                 0x0004                          // watchdog enable
+    #define WDOG_WCR_WDBG                0x0002                          // watchdog debug enable
+    #define WDOG_WCR_WDZST               0x0001                          // watchdog low power
+#define WDOG1_WSR                        *(volatile unsigned short *)(WDOG1_BLOCK + 0x2) // watchdog 1 service
+    #define WDOG_WSR_SERVICE_1           0x5555                          // first service write value (any number of instructions can be executed between the two service writes)
+    #define WDOG_WSR_SERVICE_2           0xaaaa                          // service service write value
+#define WDOG1_WRSR                       *(volatile unsigned short *)(WDOG1_BLOCK + 0x4) // watchdog 1 reset status (read-only)
+    #define WDOG_WRSR_POR                0x0010                          // power on reset
+    #define WDOG_WRSR_TOUT               0x0002                          // reset due to watchdog timeout
+    #define WDOG_WRSR_SFTW               0x0001                          // reset due to software request
+#define WDOG1_WICR                       *(volatile unsigned short *)(WDOG1_BLOCK + 0x6) // watchdog 1 interrupt control
+    #define WDOG_WICR_WIE                0x8000                          // watchdog timer interrupt enable
+    #define WDOG_WICR_WTIS               0x4000                          // watchdog timer interrupt status (write '1' to clear)
+    #define WDOG_WICR_WICT               0x00ff                          // watchdog timer interrupt count timeout (0 is 0.5s, each further unit is +0.5s, up to 128s)
+#define WDOG1_WMCR                       *(volatile unsigned short *)(WDOG1_BLOCK + 0x2) // watchdog 1 miscellaneous control
+    #define WDOG_WMCR_PDE                0x0001                          // watchdog timer power down enable bit
 
-        #if defined _WINDOWS
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_CNTH = 0; WDOG_CNTL = 0 // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
-        #else
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 16 bus cycles (it should be protected against interrupt disturbing this)
-        #endif
+#define WDOG2_WCR                        *(volatile unsigned short *)(WDOG2_BLOCK + 0x0) // watchdog 2 control
+#define WDOG2_WSR                        *(volatile unsigned short *)(WDOG2_BLOCK + 0x2) // watchdog 2 service
+#define WDOG2_WRSR                       *(volatile unsigned short *)(WDOG2_BLOCK + 0x4) // watchdog 2 reset status (read-only)
+#define WDOG2_WICR                       *(volatile unsigned short *)(WDOG2_BLOCK + 0x6) // watchdog 2 interrupt control
+#define WDOG2_WMCR                       *(volatile unsigned short *)(WDOG2_BLOCK + 0x2) // watchdog 2 miscellaneous control
+
+#define KICK_WATCHDOG_1()                WDOG1_WSR = WDOG_WSR_SERVICE_1; WDOG1_WSR = WDOG_WSR_SERVICE_2
+#define KICK_WATCHDOG_2()                WDOG2_WSR = WDOG_WSR_SERVICE_1; WDOG1_WSR = WDOG_WSR_SERVICE_2
+
+
+#define WDOG3_CS                         *(volatile unsigned long *)(WDOG3_BLOCK + 0x00) // watchdog control and status register
+    #define WDOG_CS_STOP                 0x00000001                      // watchdog enabled in chip stop mode
+    #define WDOG_CS_WAIT                 0x00000002                      // watchdog enabled in chip wait mode
+    #define WDOG_CS_DBG                  0x00000004                      // watchdog enabled in chip debug mode
+    #define WDOG_CS_TST                  0x00000018                      // watchdog test mask
+    #define WDOG_CS_UPDATE               0x00000020                      // allow updates
+    #define WDOG_CS_INT                  0x00000040                      // watchdog interrupt enable
+    #define WDOG_CS_EN                   0x00000080                      // watchdog enable
+    #define WDOG_CS_CLK_BUS              0x00000000                      // watchdog clocked from bus clock
+    #define WDOG_CS_CLK_1kHz             0x00000100                      // watchdog clocked from internal low-power oscillator (LPOCLK)
+    #define WDOG_CS_CLK_32kHz            0x00000200                      // watchdog clocked from internal 32kHz ICSIRCLK oscillator
+    #define WDOG_CS_CLK_EXT              0x00000300                      // watchdog clocked from external clock source
+    #define WDOG_CS_RCS                  0x00000400                      // watchdog reconfiguration success (read-only)
+    #define WDOG_CS_ULK                  0x00000800                      // watchdog unlock status (read-only)
+    #define WDOG_CS_PRES_256             0x00001000                      // prescaler of 256 enabled
+    #define WDOG_CS_CMD32EN              0x00002000                      // enable 32 bit unlock/refresh support
+    #define WDOG_CS_FLG                  0x00004000                      // write '1' to clear
+    #define WDOG_CS_WIN                  0x00008000                      // window mode enabled
+#define WDOG3_CNT                        *(volatile unsigned long *)(WDOG3_BLOCK + 0x04) // watchdog counter register
+    #define WDOG_UNLOCK_SEQUENCE         0xd928c520                       // unlock and retrigger sequences must be performed with two writes within 16 bus clock
+    #define WDOG_REFRESH_SEQUENCE        0xb480a602
+#define WDOG3_TOVAL                      *(volatile unsigned long *)(WDOG3_BLOCK + 0x08) // watchdog timeout value register
+#define WDOG3_WIN                        *(volatile unsigned long *)(WDOG3_BLOCK + 0x0c) // watchdog window register
+
+    #define UNLOCK_WDOG3()               WDOG3_CNT = WDOG_UNLOCK_SEQUENCE
+    #if defined _WINDOWS
+        #define KICK_WATCHDOG_3()        WDOG3_CNT = WDOG_REFRESH_SEQUENCE; WDOG3_CNT = 0
     #else
-        #define WDOG_STCTRLH                 *(volatile unsigned short *)(WDOG_BLOCK + 0x00) // watchdog status and control register: high
-          #define WDOG_STCTRLH_WDOGEN        0x0001                      // watchdog enable
-          #define WDOG_STCTRLH_CLKSRC        0x0002                      // watchdog clock source is alternative source (bus clock), rather than LPO
-          #define WDOG_STCTRLH_IRQRSTEN      0x0004
-          #define WDOG_STCTRLH_WINEN         0x0008                      // enable windowing mode
-          #define WDOG_STCTRLH_ALLOWUPDATE   0x0010
-          #define WDOG_STCTRLH_DBGEN         0x0020
-          #define WDOG_STCTRLH_STOPEN        0x0040
-          #define WDOG_STCTRLH_WAITEN        0x0080
-          #define WDOG_STCTRLH_STNDBYEN      0x0100
-          #define WDOG_STCTRLH_TESTWDOG      0x0400
-          #define WDOG_STCTRLH_TESTSEL       0x0800
-          #define WDOG_STCTRLH_BYTESEL_0     0x0000
-          #define WDOG_STCTRLH_BYTESEL_1     0x1000
-          #define WDOG_STCTRLH_BYTESEL_2     0x2000
-          #define WDOG_STCTRLH_BYTESEL_3     0x3000
-          #define WDOG_STCTRLH_DISTESTWDOG   0x4000
-        #define WDOG_STCTRLL                 *(volatile unsigned short *)(WDOG_BLOCK + 0x02)  // watchdog status and control register: low
-           #define WDOG_STCTRLL_INTFLG       0x8000                      // write '1' to clear
-           #define WDOG_STCTRLL_RES1         0x0001                      // (0x0001 is reserved bit that is '1')
-        #define WDOG_TOVALH                  *(unsigned short *)(WDOG_BLOCK + 0x04)           // watchdog time-out value register: high
-        #define WDOG_TOVALL                  *(unsigned short *)(WDOG_BLOCK + 0x06)           // watchdog time-out value register: low
-        #define WDOG_WINH                    *(unsigned short *)(WDOG_BLOCK + 0x08)           // watchdog window register: high
-        #define WDOG_WINL                    *(unsigned short *)(WDOG_BLOCK + 0x0a)           // watchdog window register: low
-        #define WDOG_REFRESH                 *(volatile unsigned short *)(WDOG_BLOCK + 0x0c)  // watchdog refresh register
-          #define WDOG_REFRESH_SEQUENCE_1    0xa602
-          #define WDOG_REFRESH_SEQUENCE_2    0xb480
-        #define WDOG_UNLOCK                  *(volatile unsigned short *)(WDOG_BLOCK + 0x0e)  // watchdog unlock register
-          #define WDOG_UNLOCK_SEQUENCE_1     0xc520
-          #define WDOG_UNLOCK_SEQUENCE_2     0xd928
-        #define WDOG_TMROUTH                 *(volatile unsigned short *)(WDOG_BLOCK + 0x10)  // watchdog timer output register: high
-        #define WDOG_TMROUTL                 *(volatile unsigned short *)(WDOG_BLOCK + 0x12)  // watchdog timer output register: low
-        #define WDOG_RSTCNT                  *(volatile unsigned short *)(WDOG_BLOCK + 0x14)  // watchdog reset count register (write 1 to clear bits)
-        #define WDOG_PRESC                   *(unsigned short *)(WDOG_BLOCK + 0x16)           // watchdog prescaler register
-
-        #if defined _WINDOWS
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2; WDOG_TMROUTH = 0; WDOG_TMROUTL = 0 // this sequence must be performed within 20 bus cycles (it should be protected against interrupts disturbing it)
-        #else
-            #define REFRESH_WDOG()           WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_1; WDOG_REFRESH = WDOG_REFRESH_SEQUENCE_2 // this sequence must be performed within 20 bus cycles (it should be protected against interrupt disturbing this)
-        #endif
+        #define KICK_WATCHDOG_3()        WDOG3_CNT = WDOG_REFRESH_SEQUENCE
     #endif
-    #define UNLOCK_WDOG()                    WDOG_UNLOCK = WDOG_UNLOCK_SEQUENCE_1; WDOG_UNLOCK = WDOG_UNLOCK_SEQUENCE_2 // this sequence must be performed within 20 bus cycles and the writes are possible for the WCT period (16 bus clocks for KE and 128 bus clocks for configuration)
-#endif
 
-#if defined KINETIS_WITH_WDOG32
-    #define WDOG0_CS                     *(volatile unsigned long *)(WDOG32_BLOCK + 0x00) // watchdog control and status register
-        #define WDOG_CS_STOP             0x00000001                      // watchdog enabled in chip stop mode
-        #define WDOG_CS_WAIT             0x00000002                      // watchdog enabled in chip wait mode
-        #define WDOG_CS_DBG              0x00000004                      // watchdog enabled in chip debug mode
-        #define WDOG_CS_TST              0x00000018                      // watchdog test mask
-        #define WDOG_CS_UPDATE           0x00000020                      // allow updates
-        #define WDOG_CS_INT              0x00000040                      // watchdog interrupt enable
-        #define WDOG_CS_EN               0x00000080                      // watchdog enable
-        #define WDOG_CS_CLK_BUS          0x00000000                      // watchdog clocked from bus clock
-        #define WDOG_CS_CLK_1kHz         0x00000100                      // watchdog clocked from internal low-power oscillator (LPOCLK)
-        #define WDOG_CS_CLK_32kHz        0x00000200                      // watchdog clocked from internal 32kHz ICSIRCLK oscillator
-        #define WDOG_CS_CLK_EXT          0x00000300                      // watchdog clocked from external clock source
-        #define WDOG_CS_PRES_256         0x00001000                      // prescaler of 256 enabled
-        #define WDOG_CS_CMD32EN          0x00002000                      // enable 32 bit unlock/refresh support
-        #define WDOG_CS_FLG              0x00004000                      // write '1' to clear
-        #define WDOG_CS_WIN              0x00008000                      // window mode enabled
-    #define WDOG0_CNT                    *(volatile unsigned long *)(WDOG32_BLOCK + 0x04) // watchdog counter register
-        #define WDOG_UNLOCK_SEQUENCE     0xd928c520                       // unlock and retrigger sequences must be performed with two writes within 16 bus clock
-        #define WDOG_REFRESH_SEQUENCE    0xb480a602
-    #define WDOG0_TOVAL                  *(volatile unsigned long *)(WDOG32_BLOCK + 0x08) // watchdog timeout value register
-    #define WDOG0_WIN                    *(volatile unsigned long *)(WDOG32_BLOCK + 0x0c) // watchdog window register
-
-        #define UNLOCK_WDOG()            WDOG0_CNT = WDOG_UNLOCK_SEQUENCE
-        #if defined _WINDOWS
-            #define REFRESH_WDOG()       WDOG0_CNT = WDOG_REFRESH_SEQUENCE; WDOG0_CNT = 0
-        #else
-            #define REFRESH_WDOG()       WDOG0_CNT = WDOG_REFRESH_SEQUENCE
-        #endif
-#endif
 
 
 #if defined CHIP_HAS_FLEXIO
@@ -20790,16 +20731,12 @@ extern void fnMaskInterrupt(int iInterruptID);                           // {105
 extern void fnClearPending(int iInterruptID);                            // {90}
 extern int  fnIsPending(int iInterruptID);                               // {90}
 
-// Cortex M4 private registers
+// Cortex M7 private registers
 //
 // NVIC
 //
 #define INT_CONT_TYPE               *(const unsigned long *)(CORTEX_M4_BLOCK + 0x04)   // NVIC Interrupt Controller Type Register (read only)
-#if defined KINETIS_KL || defined KINETIS_KE
-    #define __NVIC_PRIORITY_SHIFT   6                                    // 4 levels of priority so shifted by (8 - 2 (number of implemented bits))
-#else
     #define __NVIC_PRIORITY_SHIFT   4                                    // 16 levels of priority so shifted by (8 - 4 (number of implemented bits))
-#endif
 #define CORTEX_ACTLR                *(unsigned long *)(CORTEX_M4_BLOCK + 0x008) // auxiliary control register
     #define CORTEX_ACTLR_DISMCYCINT 0x00000001                           // disable interruption of load multiple and store multiple instructions
     #define CORTEX_ACTLR_DISDEFWBUF 0x00000002                           // disable write buffer use during default memory map accesses

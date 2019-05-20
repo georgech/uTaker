@@ -2,36 +2,33 @@
 ;// Mark Butcher    Bsc (Hons) MPhil MIET
 ;//
 ;// M.J.Butcher Consulting
-;// Birchstrasse 20f,    CH-5406, Rütihof
+;// Birchstrasse 20f,    CH-5406, Rï¿½tihof
 ;// Switzerland
 ;//
 ;// www.uTasker.com    Skype: M_J_Butcher
 ;//
 ;// ---------------------------------------------------------------------
-;// File:      kinetis_asm.s [Freescale]
+;// File:      iMX_asm.s [NXP]
 ;// Project:   Single Chip Embedded Internet
 ;// ---------------------------------------------------------------------
-;// Copyright (C) M.J.Butcher Consulting 2004..2017
+;// Copyright (C) M.J.Butcher Consulting 2004..2019
 ;// *********************************************************************
 ;//
 ;// This file contains assembler code needed by Keil since it doesn't support in-line assmembler Thumb mode
 ;//
 ;
 ;  Normally there is no assembler startup code required when using the
-;  Kinetis. However Keil requires stack pointer and heap settings to be
+;  iMX. However Keil requires stack pointer and heap settings to be
 ;  assigned in a routine called	__user_initial_stackheap. This needs
 ;  to put some values into specific registers. The inline assembler
-;  doesn't work in Thumb mode (which the Cortex M4 uses exclusively) and
+;  doesn't work in Thumb mode (which the Cortex M7 uses exclusively) and
 ;  so this has been left here in case someone wishes to use it.
 ;
 ;  Note that the heap is not used in the uTasker project (size 0)
 ;  but can be configured for the Keil library use here.
 ;  The stack values are not initialised since the uTasker
 ;  startup code sets it to the top of RAM and it can be 
-;  left there (see const RESET_VECTOR reset_vect in 
-;  kinetis.c)
-;  12.09.2014 Add KINETIS_M0 start_application code (add define KINETIS_M0 to the assembler define setting to use)
-;  26.02.2015 Add uMask_Interrupt() for K devices
+;  left there (see const RESET_VECTOR reset_vect in iMX.c)
 
 Stack   EQU     0x00000100
 Heap    EQU     0x00000000

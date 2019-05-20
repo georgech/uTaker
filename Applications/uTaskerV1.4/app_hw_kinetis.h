@@ -439,7 +439,7 @@
 #elif defined TWR_K24F120M
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #if !defined RUN_FROM_DEFAULT_CLOCK
-        #define OSC_LOW_GAIN_MODE
+        #define OSC_LOW_GAIN_MODE                                        // use low gain oscillator mode since there is not crystal loading in the circuit
         #define CRYSTAL_FREQUENCY    8000000                             // 8 MHz crystal
         #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
         #define CLOCK_DIV            2                                   // input must be divided to 2MHz..4MHz range (/1 to /24)
@@ -722,7 +722,7 @@
     #define OSC_LOW_GAIN_MODE
     #define CRYSTAL_FREQUENCY    8000000                                 // 8 MHz crystal
     #define _EXTERNAL_CLOCK      CRYSTAL_FREQUENCY
-    #define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
+  //#define RUN_FROM_DEFAULT_CLOCK                                       // default is 2MHz internal reference (requiring no configuration)
   //#define RUN_FROM_EXTERNAL_CLOCK                                      // run directly from 8MHz crystal clock
     #define RUN_FROM_EXTERNAL_CLOCK_FLL                                  // run from FLL locked to 8MHz crystal clock (default is 31.25kHz x 640 = 20MHz)
     #if defined RUN_FROM_EXTERNAL_CLOCK_FLL

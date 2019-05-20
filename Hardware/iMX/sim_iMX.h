@@ -2050,15 +2050,24 @@ unsigned long I2S_MCR;
 } KINETIS_I2S;
 #endif
 
-#if defined KINETIS_WITH_WDOG32
-typedef struct st_KINETIS_WDOG32                                         // {35}
+
+typedef struct st_iMX_WDOG
 {
-    unsigned long WDOG_CS;
-    unsigned long WDOG_CNT;
-    unsigned long WDOG_TOVAL;
-    unsigned long WDOG_WIN;
-} KINETIS_WDOG32;
-#endif
+    unsigned short WDOG_WCR;
+    unsigned short WDOG_WSR;
+    unsigned short WDOG_WRSR;
+    unsigned short WDOG_WICR;
+    unsigned short WDOG_WMCR;
+} iMX_WDOG;
+
+typedef struct st_iMX_WDOG3
+{
+    unsigned long WDOG3_CS;
+    unsigned long WDOG3_CNT;
+    unsigned long WDOG3_TOVAL;
+    unsigned long WDOG3_WIN;
+} iMX_WDOG3;
+
 
 #if defined PWT_AVAILABLE
 typedef struct st_KINETIS_PWT                                            // {31}
@@ -2670,35 +2679,6 @@ typedef struct stKINETIS_SIM
     unsigned long PORT_DFWR;
     unsigned long ulRef2[1024 - 51];
     } KINETIS_PORT;
-#endif
-
-#if !defined KINETIS_KL || defined KINETIS_KL82
-    typedef struct stKINETIS_WDOG
-    {
-    #if defined KINETIS_KE
-    unsigned char WDOG_CS1;
-    unsigned char WDOG_CS2;
-    unsigned char WDOG_CNTH;
-    unsigned char WDOG_CNTL;
-    unsigned char WDOG_TOVALH;
-    unsigned char WDOG_TOVALL;
-    unsigned char WDOG_WINH;
-    unsigned char WDOG_WINL;
-    #else
-    unsigned short WDOG_STCTRLH;
-    unsigned short WDOG_STCTRLL;
-    unsigned short WDOG_TOVALH;
-    unsigned short WDOG_TOVALL;
-    unsigned short WDOG_WINH;
-    unsigned short WDOG_WINL;
-    unsigned short WDOG_REFRESH;
-    unsigned short WDOG_UNLOCK;
-    unsigned short WDOG_TMROUTH;
-    unsigned short WDOG_TMROUTL;
-    unsigned short WDOG_RSTCNT;
-    unsigned short WDOG_PRESC;
-    #endif
-    } KINETIS_WDOG;
 #endif
 
 #if !defined KINETIS_KL && !defined KINETIS_KE
@@ -4254,9 +4234,8 @@ typedef struct stKINETIS_PERIPH
 #if I2S_AVAILABLE > 0
     KINETIS_I2S        I2S_SAI[I2S_AVAILABLE];                           // {28}
 #endif
-#if defined KINETIS_WITH_WDOG32
-    KINETIS_WDOG32  WDOG32;                                              // {35}
-#endif
+    iMX_WDOG          WDOG[2];
+    iMX_WDOG3         WDOG3;
 #if defined PWT_AVAILABLE
     KINETIS_PWT        PWT;                                              // {31}
 #endif
@@ -4299,9 +4278,6 @@ typedef struct stKINETIS_PERIPH
     KINETIS_KE_PORT    PORT;
 #else
     KINETIS_PORT       PORT[PORTS_AVAILABLE];
-#endif
-#if !defined KINETIS_KL || defined KINETIS_KL82
-    KINETIS_WDOG       WDOG;
 #endif
 #if defined CHIP_HAS_FLEXIO                                              // {23}
     KINETIS_FLEXIO     FLEXIO;

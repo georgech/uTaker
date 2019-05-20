@@ -22,14 +22,14 @@
 
 #if defined _WINDOWS
     #include "config.h"
-    extern void fnUpdateOperatingDetails(void);                          // {91}
+    extern void fnUpdateOperatingDetails(void);
     #define INITHW  extern
     extern void fec_txf_isr(void);
     extern void fnSimulateDMA(int channel, unsigned char ucTriggerSource);
     #define __disable_interrupt()
     #define __enable_interrupt()
     #define START_CODE 0
-    #if defined MMDVSQ_AVAILABLE                                         // {132}
+    #if defined MMDVSQ_AVAILABLE
         #include <math.h>
     #endif
 #else
@@ -43,7 +43,7 @@
     #elif defined _COMPILE_IAR
         extern void __iar_program_start(void);                           // IAR library initialisation routine
         #define START_CODE disable_watchdog
-    #elif defined _COMPILE_GHS                                           // {110}
+    #elif defined _COMPILE_GHS
         extern void _start_T(void);                                      // GHS library initialisation routine
         #define START_CODE disable_watchdog
     #else
@@ -65,9 +65,9 @@
     #define __interrupt
 #endif
 
-#if defined _APPLICATION_VALIDATION                                      // {32}
+#if defined _APPLICATION_VALIDATION
     #define _RESET_VECTOR  RESET_VECTOR_VALIDATION
-#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // {111}
+#elif defined INTERRUPT_VECTORS_IN_FLASH
     #define _RESET_VECTOR   VECTOR_TABLE
     const _RESET_VECTOR __vector_table;
 #else
@@ -146,7 +146,7 @@ static void _LowLevelInit(void);
     #undef _SPI_DEFINES
 #endif
 #if (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)
-    #define _SPI_EEPROM_DEFINES                                          // {135}
+    #define _SPI_EEPROM_DEFINES
         #include "spi_eeprom_iMX_25AA160.h"
     #undef _SPI_EEPROM_DEFINES
 #endif
@@ -158,7 +158,7 @@ static void _LowLevelInit(void);
 static int iInterruptLevel = 0;                                          // present level of disable nesting
 
 #if defined SUPPORT_LOW_POWER
-    static unsigned long ulPeripheralNeedsClock = 0;                     // {96} stop mode is blocked if a peripheral is in use that needs a clock that will be stopped
+    static unsigned long ulPeripheralNeedsClock = 0;                     // stop mode is blocked if a peripheral is in use that needs a clock that will be stopped
 #endif
 #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
     unsigned short *ptrSeed;
@@ -235,7 +235,7 @@ static int iInterruptLevel = 0;                                          // pres
     #include "spi_flash_iMX_s25fl1-k.h"
     #include "spi_flash_iMX_MX25L.h"
 #undef _SPI_FLASH_INTERFACE
-#define _SPI_EEPROM_INTERFACE                                            // {135}
+#define _SPI_EEPROM_INTERFACE
     #include "spi_eeprom_iMX_25AA160.h"
 #undef _SPI_EEPROM_INTERFACE
 
@@ -243,6 +243,53 @@ static int iInterruptLevel = 0;                                          // pres
 /* =================================================================== */
 /*                            STARTUP CODE                             */
 /* =================================================================== */
+
+static void fnConfigWdogs(void)
+{
+    // The watchdog power down counter is enabled out of reset and fires after 16s if not stopped here
+    //
+    WDOG1_WMCR = 0;                                                      // stop power down watchdog
+    WDOG2_WMCR = 0;
+
+    // We presently use WDOG3 only
+    //
+    WDOG1_WCR = (WDOG_WCR_WDA | WDOG_WCR_SRS);                           // disable watchdog timer 1
+    WDOG2_WCR = (WDOG_WCR_WDA | WDOG_WCR_SRS);                           // disable watchdog timer 2
+
+    INIT_WATCHDOG_DISABLE();                                             // configure an input used to control watchdog operation
+    if (WATCHDOG_DISABLE() == 0) {                                       // if the watchdog disable input is not active
+        ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watchdog timer
+    }
+    else {                                                               // disable the watchdog
+        UNLOCK_WDOG3();                                                  // open a window to write to watchdog 3
+        WDOG3_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
+        WDOG3_TOVAL = 0xffff;
+        WDOG3_WIN = 0;
+    }
+}
+
+static void fnDisable_iMX_RT_Clocks(void)
+{
+#if defined iMX_RT106X
+    CCM_CCGR0 = (CCM_CCGR0_GPIO2_CLOCK_OFF | CCM_CCGR0_LPUART2_CLOCK_OFF | CCM_CCGR0_LPUART3_CLOCK_OFF | CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF | CCM_CCGR0_GPT2_BUS_CLOCKS_OFF | CCM_CCGR0_TRACE_CLOCK_OFF | CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN2_CLOCK_OFF | CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN1_CLOCK_OFF | CCM_CCGR0_DCP_CLOCK_OFF | CCM_CCGR0_SIM_M_CLK_R_CLK_OFF | CCM_CCGR0_MQS_CLOCK_OFF | CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF | CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF);
+#else
+    CCM_CCGR0 = (CCM_CCGR0_GPIO2_CLOCK_OFF | CCM_CCGR0_LPUART2_CLOCK_OFF | CCM_CCGR0_LPUART3_CLOCK_OFF | CCM_CCGR0_FLEXSPI_EXSC_CLOCK_OFF | CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF | CCM_CCGR0_GPT2_BUS_CLOCKS_OFF | CCM_CCGR0_TRACE_CLOCK_OFF | CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN2_CLOCK_OFF | CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN1_CLOCK_OFF | CCM_CCGR0_DCP_CLOCK_OFF | CCM_CCGR0_SIM_M_CLK_R_CLK_OFF | CCM_CCGR0_MQS_CLOCK_OFF | CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF | CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF);
+#endif
+#if defined iMX_RT106X
+    CCM_CCGR1 = (CCM_CCGR1_AOI2_CLOCKS_OFF | CCM_CCGR1_CSU_CLOCK_OFF | CCM_CCGR1_GPIO1_CLOCK_OFF | CCM_CCGR1_LPUART4_CLOCK_OFF | CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF | CCM_CCGR1_GPT1_BUS_CLOCK_OFF | CCM_CCGR1_SEMC_EXSC_CLOCK_OFF | CCM_CCGR1_ADC1_CLOCK_OFF | CCM_CCGR1_PIT_CLOCKS_OFF | CCM_CCGR1_ENET_CLOCK_OFF | CCM_CCGR1_ADC2_CLOCK_OFF | CCM_CCGR1_LPSPI4_CLOCKS_OFF | CCM_CCGR1_LPSPI3_CLOCKS_OFF | CCM_CCGR1_LPSPI2_CLOCKS_OFF | CCM_CCGR1_LPSPI1_CLOCKS_OFF);
+#else
+    CCM_CCGR1 = (CCM_CCGR1_CSU_CLOCK_OFF | CCM_CCGR1_GPIO1_CLOCK_OFF | CCM_CCGR1_LPUART4_CLOCK_OFF | CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF | CCM_CCGR1_GPT1_BUS_CLOCK_OFF | CCM_CCGR1_SEMC_EXSC_CLOCK_OFF | CCM_CCGR1_ADC1_CLOCK_OFF | CCM_CCGR1_PIT_CLOCKS_OFF | CCM_CCGR1_ENET_CLOCK_OFF | CCM_CCGR1_ADC2_CLOCK_OFF | CCM_CCGR1_LPSPI4_CLOCKS_OFF | CCM_CCGR1_LPSPI3_CLOCKS_OFF | CCM_CCGR1_LPSPI2_CLOCKS_OFF | CCM_CCGR1_LPSPI1_CLOCKS_OFF);
+#endif
+    CCM_CCGR2 = (CCM_CCGR2_GPIO3_CLOCK_OFF | CCM_CCGR2_XBAR2_CLOCK_OFF | CCM_CCGR2_XBAR1_CLOCK_OFF | CCM_CCGR2_OCOTP_CTRL_CLOCK_OFF | CCM_CCGR2_LPI2C3_CLOCK_OFF | CCM_CCGR2_LPI2C2_CLOCK_OFF | CCM_CCGR2_LPI2C1_CLOCK_OFF | CCM_CCGR2_IMUX_SNVS_CLOCK_OFF | CCM_CCGR2_OCRAM_EXSC_CLOCK_OFF);
+#if defined iMX_RT106X
+    CCM_CCGR3 = (CCM_CCGR3_GPIO4_CLOCK_OFF | CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF | CCM_CCGR3_OCRAM_CLOCK_OFF | CCM_CCGR3_ACMP4_CLOCKS_OFF | CCM_CCGR3_ACMP3_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_STOP | CCM_CCGR3_ACMP1_CLOCKS_OFF | CCM_CCGR3_FLEXRAM1_CLOCK_OFF | CCM_CCGR3_WDOG1_CLOCK_OFF | CCM_CCGR3_EWM_CLOCK_OFF | CCM_CCGR3_LPUART6_CLOCK_OFF | CCM_CCGR3_SEMC_CLOCKS_OFF | CCM_CCGR3_LPUART5_CLOCK_OFF);
+#else
+    CCM_CCGR3 = (CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF | CCM_CCGR3_OCRAM_CLOCK_OFF | CCM_CCGR3_ACMP4_CLOCKS_OFF | CCM_CCGR3_ACMP3_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_STOP | CCM_CCGR3_ACMP1_CLOCKS_OFF | CCM_CCGR3_FLEXRAM1_CLOCK_OFF | CCM_CCGR3_WDOG1_CLOCK_OFF | CCM_CCGR3_EWM_CLOCK_OFF | CCM_CCGR3_AOI1_CLOCK_OFF | CCM_CCGR3_LPUART6_CLOCK_OFF | CCM_CCGR3_SEMC_CLOCKS_OFF | CCM_CCGR3_LPUART5_CLOCK_OFF);
+#endif
+    CCM_CCGR4 = (CCM_CCGR4_ENC2_CLOCKS_OFF | CCM_CCGR4_ENC1_CLOCKS_OFF | CCM_CCGR4_PWM2_CLOCKS_OFF | CCM_CCGR4_PWM1_CLOCKS_OFF | CCM_CCGR4_SIM_EMS_CLOCKS_OFF | CCM_CCGR4_SIM_M_CLOCKS_OFF | CCM_CCGR4_SIM_M7_CLOCK_OFF | CCM_CCGR4_BEE_CLOCK_OFF | CCM_CCGR4_IOMUX_GRP_CLOCK_OFF | CCM_CCGR4_IOMUX_CLOCK_OFF | CCM_CCGR4_SIM_M7_CLK_R_OFF);
+    CCM_CCGR5 = (CCM_CCGR5_SNVS_LP_CLOCK_OFF | CCM_CCGR5_SNVS_HP_CLOCK_OFF | CCM_CCGR5_LPUART7_CLOCK_OFF | CCM_CCGR5_LPUART1_CLOCK_OFF | CCM_CCGR5_SAI3_CLOCK_OFF | CCM_CCGR5_SAI2_CLOCK_OFF | CCM_CCGR5_SAI1_CLOCK_OFF | CCM_CCGR5_SPDIF_CLOCK_OFF | CCM_CCGR5_AIPSTZ4_CLOCKS_OFF | CCM_CCGR5_WDOG2_CLOCK_OFF | CCM_CCGR5_KPP_CLOCK_OFF | CCM_CCGR5_DMA_CLOCK_OFF | CCM_CCGR5_WDOG3_CLOCK_OFF | CCM_CCGR5_FLEXIO1_CLOCK_OFF | CCM_CCGR5_ROM_CLOCK_OFF);
+    CCM_CCGR6 = (CCM_CCGR6_TIMER2_CLOCKS_OFF | CCM_CCGR6_TIMER1_CLOCKS_OFF | CCM_CCGR6_LPI2C4_SERIAL_CLOCK_OFF | CCM_CCGR6_ANADIG_CLOCKS_OFF | CCM_CCGR6_SIM_PER_CLOCK_OFF | CCM_CCGR6_AIPS_TZ3_CLOCK_OFF | CCM_CCGR6_LPUART8_CLOCK_OFF | CCM_CCGR6_TRNG_CLOCK_OFF);
+}
 
 
 #if !defined _WINDOWS
@@ -266,7 +313,7 @@ static int iInterruptLevel = 0;                                          // pres
         #elif defined _COMPILE_COSMIC
             #define asm(x) _asm(x)
         #endif
-        #if defined _COMPILE_GHS                                         // {110}
+        #if defined _COMPILE_GHS
             #define __disable_interrupt() asm("cpsid i")                 // __DI() intrinsics are not used because they are asm("cpsid if") which doesn't allow correct low power mode operation
             #define __enable_interrupt()  asm("cpsie i")                 // __EI()
             #define __sleep_mode()        asm("wfi")
@@ -311,44 +358,18 @@ static unsigned char *_keil_ram_size(int iInit)
 }
     #endif
 
-    #if defined _COMPILE_IAR || defined _COMPILE_GHS                     // {110}
+    #if defined _COMPILE_IAR || defined _COMPILE_GHS
 // This is the first function called so that it can immediately disable the watchdog so that it doesn't fire during variable initialisation
 //
 static void disable_watchdog(void)
 {
+    // Configure the watchdogs
+    //
+    fnConfigWdogs();
     // Disable all clocks by default - they will be enabled only when needed
     //
-    CCM_CCGR0 = (CCM_CCGR0_GPIO2_CLOCKS_OFF | CCM_CCGR0_LPUART2_CLOCK_OFF | CCM_CCGR0_LPUART3_CLOCK_OFF | CCM_CCGR0_FLEXSPI_EXSC_CLOCK_OFF | CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF | CCM_CCGR0_GPT2_BUS_CLOCKS_OFF | CCM_CCGR0_TRACE_CLOCK_OFF | CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN2_CLOCK_OFF | CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN1_CLOCK_OFF | CCM_CCGR0_DCP_CLOCK_OFF | CCM_CCGR0_SIM_M_CLK_R_CLK_OFF | CCM_CCGR0_MQS_CLOCK_OFF | CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF | CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF);
-    CCM_CCGR1 = (CCM_CCGR1_CSU_CLOCK_OFF | CCM_CCGR1_GPIO1_CLOCKS_OFF | CCM_CCGR1_LPUART4_CLOCK_OFF | CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF | CCM_CCGR1_GPT1_BUS_CLOCK_OFF | CCM_CCGR1_SEMC_EXSC_CLOCK_OFF | CCM_CCGR1_ADC1_CLOCK_OFF | CCM_CCGR1_PIT_CLOCKS_OFF | CCM_CCGR1_ENET_CLOCK_OFF | CCM_CCGR1_ADC2_CLOCK_OFF | CCM_CCGR1_LPSPI4_CLOCKS_OFF | CCM_CCGR1_LPSPI3_CLOCKS_OFF | CCM_CCGR1_LPSPI2_CLOCKS_OFF | CCM_CCGR1_LPSPI1_CLOCKS_OFF);
-    CCM_CCGR2 = (CCM_CCGR2_GPIO3_CLOCKS_OFF | CCM_CCGR2_XBAR2_CLOCK_OFF | CCM_CCGR2_XBAR1_CLOCK_OFF | CCM_CCGR2_OCOTP_CTRL_CLOCK_OFF | CCM_CCGR2_LPI2C3_CLOCK_OFF | CCM_CCGR2_LPI2C2_CLOCK_OFF | CCM_CCGR2_LPI2C1_CLOCK_OFF | CCM_CCGR2_IMUX_SNVS_CLOCK_OFF | CCM_CCGR2_OCRAM_EXSC_CLOCK_OFF);
-    CCM_CCGR3 = (CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF | CCM_CCGR3_OCRAM_CLOCK_OFF | CCM_CCGR3_ACMP4_CLOCKS_OFF | CCM_CCGR3_ACMP3_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_STOP | CCM_CCGR3_ACMP1_CLOCKS_OFF | CCM_CCGR3_FLEXRAM1_CLOCK_OFF | CCM_CCGR3_WDOG1_CLOCK_OFF | CCM_CCGR3_EWM_CLOCK_OFF | CCM_CCGR3_AOI1_CLOCK_OFF | CCM_CCGR3_LPUART6_CLOCK_OFF | CCM_CCGR3_SEMC_CLOCKS_OFF | CCM_CCGR3_LPUART5_CLOCK_OFF);
-    CCM_CCGR4 = (CCM_CCGR4_ENC2_CLOCKS_OFF | CCM_CCGR4_ENC1_CLOCKS_OFF | CCM_CCGR4_PWM2_CLOCKS_OFF | CCM_CCGR4_PWM1_CLOCKS_OFF | CCM_CCGR4_SIM_EMS_CLOCKS_OFF | CCM_CCGR4_SIM_M_CLOCKS_OFF | CCM_CCGR4_SIM_M7_CLOCK_OFF | CCM_CCGR4_BEE_CLOCK_OFF | CCM_CCGR4_IOMUX_GRP_CLOCK_OFF | CCM_CCGR4_IOMUX_CLOCK_OFF | CCM_CCGR4_SIM_M7_CLK_R_OFF);
-    CCM_CCGR5 = (CCM_CCGR5_SNVS_LP_CLOCK_OFF | CCM_CCGR5_SNVS_HP_CLOCK_OFF | CCM_CCGR5_LPUART7_CLOCK_OFF | CCM_CCGR5_LPUART1_CLOCK_OFF | CCM_CCGR5_SAI3_CLOCK_OFF | CCM_CCGR5_SAI2_CLOCK_OFF | CCM_CCGR5_SAI1_CLOCK_OFF | CCM_CCGR5_SPDIF_CLOCK_OFF | CCM_CCGR5_AIPSTZ4_CLOCKS_OFF | CCM_CCGR5_WDOG2_CLOCK_OFF | CCM_CCGR5_KPP_CLOCK_OFF | CCM_CCGR5_DMA_CLOCK_OFF | CCM_CCGR5_WDOG3_CLOCK_OFF | CCM_CCGR5_FLEXIO1_CLOCK_OFF | CCM_CCGR5_ROM_CLOCK_OFF);
-    CCM_CCGR6 = (CCM_CCGR6_TIMER2_CLOCKS_OFF | CCM_CCGR6_TIMER1_CLOCKS_OFF | CCM_CCGR6_LPI2C4_SERIAL_CLOCK_OFF | CCM_CCGR6_ANADIG_CLOCKS_OFF | CCM_CCGR6_SIM_PER_CLOCK_OFF | CCM_CCGR6_AIPS_TZ3_CLOCK_OFF | CCM_CCGR6_LPUART8_CLOCK_OFF | CCM_CCGR6_TRNG_CLOCK_OFF);
-    INIT_WATCHDOG_DISABLE();                                             // configure the input used to determine the watchdog configuration
-    if (WATCHDOG_DISABLE() == 0) {                                       // if the watchdog disable input is not active
-        ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watch dog timer
-    }
-    else {
-        #if defined KINETIS_WITH_WDOG32
-        UNLOCK_WDOG();                                                   // open a window to write to watchdog
-        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
-        WDOG0_TOVAL = 0xffff;
-        WDOG0_WIN = 0;  
-        #elif defined KINETIS_KL && !defined KINETIS_KL82                // {67}
-        SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
-        #else
-        UNLOCK_WDOG();                                                   // open a window to write to watchdog
-            #if defined KINETIS_KE
-        WDOG_CS2 = 0;                                                    // this is required to disable the watchdog
-        WDOG_TOVAL = 0xffff;
-        WDOG_WIN = 0;
-        WDOG_CS1 = WDOG_CS1_UPDATE;                                      // disable watchdog but allow updates
-            #else
-        WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC); // disable watchdog
-            #endif
-        #endif
-    }
+    fnDisable_iMX_RT_Clocks();
+
         #if defined SUPPORT_LOW_POWER && (defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000))
             #if defined SUPPORT_LPTMR                                    // ensure no interrupts pending after waking from VLLS modes via LPTMR
     POWER_UP_ATOMIC(5, LPTMR0);                                          // power up the low power timer
@@ -360,10 +381,10 @@ static void disable_watchdog(void)
             #endif
         #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
-        #if defined USER_STARTUP_CODE                                    // {40} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
+        #if defined USER_STARTUP_CODE                                    // allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
         #endif
-        #if defined _COMPILE_GHS                                         // {110}
+        #if defined _COMPILE_GHS
     _start_T();                                                          // now call the GHS initialisation code which initialises variables and then calls main() 
         #else
     __iar_program_start();                                               // now call the IAR initialisation code which initialises variables and then calls main() 
@@ -396,7 +417,7 @@ extern int main(void)
 #endif
     fnInitHW();                                                          // perform hardware initialisation (note that we do not have heap yet)
 #if defined RANDOM_NUMBER_GENERATOR && !defined RND_HW_SUPPORT
-    ptrSeed = RANDOM_SEED_LOCATION;                                      // {23}
+    ptrSeed = RANDOM_SEED_LOCATION;
 #endif
     fnInitialiseHeap(ctOurHeap, HEAP_START_ADDRESS);                     // initialise heap
 #if defined RUN_IN_FREE_RTOS
@@ -469,9 +490,9 @@ extern void _init(void)
     #if defined RND_HW_SUPPORT
 extern void fnInitialiseRND(unsigned short *usSeedValue)
 {
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // support revison 1 types
     POWER_UP_ATOMIC(3, RNGB);                                            // power up RNGB
-        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // support revison 2 types too
     if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT) > 0) {// if from revision 2 part is detected (clock enable is compatible)
         RNGA_CR = (RNGA_CR_INTM | RNGA_CR_HA | RNGA_CR_GO);              // start first conversion in RNGA module
         return;
@@ -501,14 +522,14 @@ extern void fnInitialiseRND(unsigned short *usSeedValue)
 //
 extern unsigned short fnGetRndHW(void)
 {
-    #if defined RANDOM_NUMBER_GENERATOR_B                                // {64} support revison 1 types
+    #if defined RANDOM_NUMBER_GENERATOR_B                                // support revison 1 types
     unsigned long ulRandomNumber;
         #if defined _WINDOWS
     if (IS_POWERED_UP(3, RNGB) == 0) {
         _EXCEPTION("Warning: RNG being used before initialised!!!");
     }
         #endif
-        #if defined RANDOM_NUMBER_GENERATOR_A                            // {128} support revison 2 types too
+        #if defined RANDOM_NUMBER_GENERATOR_A                            // support revison 2 types too
     if (((SIM_SDID & SIM_SDID_REVID_MASK) >> SIM_SDID_REVID_SHIFT)== 0) {// if not from revision 2 part
         #endif
         while ((RNG_SR & RNG_SR_BUSY) != 0) {}                           // wait for the RNGB to become ready (it may be seeding)
@@ -626,7 +647,7 @@ extern void fnClearSLCD(void)
 
 extern void fnDelayLoop(unsigned long ulDelay_us)
 {
-#if defined TSTMR_AVAILABLE                                              // {133}
+#if defined TSTMR_AVAILABLE
     // Use the time stamp timer module to count us
     //
     unsigned long ulMatchTimeHigh;
@@ -693,7 +714,7 @@ extern void fnDelayLoop(unsigned long ulDelay_us)
     #endif
     } while (--_ulDelay_us != 0);
 #else
-    volatile register unsigned long _ulDelay_us = ulDelay_us;            // {124} ensure that the compiler puts the variable in a register rather than work with it on the stack
+    volatile register unsigned long _ulDelay_us = ulDelay_us;            // ensure that the compiler puts the variable in a register rather than work with it on the stack
     volatile register unsigned long ul_us;
     while (_ulDelay_us-- != 0) {                                         // for each us required        
         ul_us = (CORE_CLOCK/8000000);                                    // tuned but may be slightly compiler dependent - interrupt processing may increase delay
@@ -733,7 +754,7 @@ INITHW void fnInitHW(void)                                               // perf
     #if PORTS_AVAILABLE > 8
         PORT8_DEFAULT_INPUT,
     #endif
-    #if defined SUPPORT_ADC                                              // {5}
+    #if defined SUPPORT_ADC
         ((ADC0_0_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
         ((ADC0_1_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
         ((ADC0_2_START_VOLTAGE * 0xffff) / ADC_REFERENCE_VOLTAGE),
@@ -869,18 +890,18 @@ INITHW void fnInitHW(void)                                               // perf
 #endif
 #if defined DMA_MEMCPY_SET && !defined DEVICE_WITHOUT_DMA                // set the eDMA registers to a known zero state
     {
-    #if ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA) // {80}
+    #if ((!defined KINETIS_KL && !defined KINETIS_KM) || defined DEVICE_WITH_eDMA)
         unsigned long *ptr_eDMAdes = (unsigned long *)eDMA_DESCRIPTORS;
-        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS; // {9}
+        KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL;                                // the DMA channel used for memory copy DMA
         while (ptr_eDMAdes < eDMA_DESCRIPTORS_END) {
             *ptr_eDMAdes++ = 0;                                          // clear out DMA descriptors after reset
         }
-        ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // {87} source increment one long word for uMemcpy()
+        ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // source increment one long word for uMemcpy()
         ptrDMA_TCD->DMA_TCD_DOFF = 4;                                    // destination increment one long word
         ptrDMA_TCD->DMA_TCD_BITER_ELINK = 1;
-        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // {87} default transfer sizes long words
-        #if defined DMA_MEMCPY_CHANNEL_ALT                               // {127}
+        ptrDMA_TCD->DMA_TCD_ATTR = (DMA_TCD_ATTR_DSIZE_32 | DMA_TCD_ATTR_SSIZE_32); // default transfer sizes long words
+        #if defined DMA_MEMCPY_CHANNEL_ALT
         ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
         ptrDMA_TCD += DMA_MEMCPY_CHANNEL_ALT;                            // move to the alternate channel (may be used by interrupts)
         ptrDMA_TCD->DMA_TCD_SOFF = 4;                                    // source increment one long word for uMemcpy()
@@ -914,7 +935,7 @@ INITHW void fnInitHW(void)                                               // perf
             #if DMA_MEMCPY_CHANNEL != 0
         _SET_DMA_CHANNEL_PRIORITY(0, (DMA_MEMCPY_CHANNEL));              // no two priorities may ever be the same when the controller is used - switch priorities to avoid
             #endif
-            #if defined DMA_MEMCPY_CHANNEL_ALT                           // {127}
+            #if defined DMA_MEMCPY_CHANNEL_ALT
         _SET_DMA_CHANNEL_PRIORITY(DMA_MEMCPY_CHANNEL_ALT, (DMA_DCHPRI_DPA | DMA_DCHPRI_ECP | 1)); // {137} second lowest DMA priority and can be pre-empted by higher priority channel
                 #if DMA_MEMCPY_CHANNEL_ALT != 1
         _SET_DMA_CHANNEL_PRIORITY(1, (DMA_MEMCPY_CHANNEL_ALT));          // no two priorities may ever be the same when the controller is used - switch priorities to avoid
@@ -924,10 +945,8 @@ INITHW void fnInitHW(void)                                               // perf
     #endif
     }
 #endif
-#if !defined KINETIS_KL && !defined KINETIS_KE
-    #if defined CONFIGURE_CROSSBAR_SWITCH
-    CONFIGURE_CROSSBAR_SWITCH();                                         // {85}
-    #endif
+#if defined CONFIGURE_CROSSBAR_SWITCH
+    CONFIGURE_CROSSBAR_SWITCH();
 #endif
 #if defined ACTIVE_FILE_SYSTEM || defined USE_PARAMETER_BLOCK
     uMemset(ulFlashRow, 0xff, FLASH_ROW_SIZE);                           // initialise intermediate phrase memory
@@ -961,7 +980,7 @@ INITHW void fnInitHW(void)                                               // perf
         #include "spi_flash_iMX_s25fl1-k.h"
         #include "spi_flash_iMX_MX25L.h"
     #endif
-    #if defined SPI_EEPROM_FILE_SYSTEM                                   // {135}
+    #if defined SPI_EEPROM_FILE_SYSTEM
         #include "spi_eeprom_iMX_25AA160.h"
     #endif
     #undef _CHECK_SPI_CHIPS
@@ -1026,11 +1045,11 @@ extern void uEnable_Interrupt(void)
     #else
         #define DONT_INLINE
     #endif
-extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel) // {102}
+extern void DONT_INLINE uMask_Interrupt(unsigned char ucMaskLevel)
 {
     #if !defined ARM_MATH_CM0PLUS                                         // mask not supported by Cortex-m0+
         #if defined _WINDOWS
-    kinetis.CORTEX_M4_REGS.ulBASEPRI = ucMaskLevel;                       // value 0 has no effect - non-zero defines the base priority for exception processing (the processor does not process any exception with a priority value greater than or equal to BASEPRI))
+    kinetis.CORTEX_M4_REGS.ulBASEPRI = ucMaskLevel;                       // value 0 has no  - non-zero defines the base priority for exception processing (the processor does not process any exception with a priority value greater than or equal to BASEPRI))
         #else
     asm("msr basepri, r0");                                               // modify the base priority to block interrupts with a lower priority than this level
     asm("bx lr");                                                         // return
@@ -1115,7 +1134,7 @@ extern void fnReenableInterrupts(void)
 }
 #endif
 
-#if defined INTMUX0_AVAILABLE                                            // {130}
+#if defined INTMUX0_AVAILABLE
 
 // Dispatch INTMUX0 source interrupt handler
 //
@@ -1181,16 +1200,16 @@ static void fnINTMUX3(void)
 
 // Function used to enter processor interrupts
 //
-extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void)) // {55}
+extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*InterruptFunc)(void))
 {
-    volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;                 // {73}
+    volatile unsigned long *ptrIntSet = IRQ0_31_SER_ADD;
 #if defined ARM_MATH_CM0PLUS                                             // only long word accesses are possible to the priority registers
     volatile unsigned long *ptrPriority = (unsigned long *)IRQ0_3_PRIORITY_REGISTER_ADD;
     int iShift;
 #else
-    volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;  // {73}
+    volatile unsigned char *ptrPriority = IRQ0_3_PRIORITY_REGISTER_ADD;
 #endif
-#if !defined INTERRUPT_VECTORS_IN_FLASH                                  // {111}
+#if !defined INTERRUPT_VECTORS_IN_FLASH
     VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
     void (**processor_ints)(void);
 #endif
@@ -1200,7 +1219,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     unsigned long ulState2 = IRQ64_95_SER;
     IRQ0_31_SER = IRQ32_63_SER = IRQ64_95_SER = IRQ0_31_CER = IRQ32_63_CER = IRQ64_95_CER = 0; // reset registers
 #endif
-#if defined INTMUX0_AVAILABLE                                            // {130}
+#if defined INTMUX0_AVAILABLE
     if (iInterruptID >= irq_INTMUX0_0_ID) {
         KINETIS_INTMUX *ptrINTMUX = (KINETIS_INTMUX *)INTMUX0_BLOCK;
         int iChannel = (iInterruptID - irq_INTMUX0_0_ID);
@@ -1247,7 +1266,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     }
     #else
     if (ucPriority >= 16) {
-        _EXCEPTION("Invalid Cortex-M4 priority being used!!");
+        _EXCEPTION("Invalid Cortex-M4/M7 priority being used!!");
     }
     #endif
 #endif
@@ -1262,7 +1281,7 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
     *ptrPriority = ((*ptrPriority & ~(0xff << iShift)) | (ucPriority << (iShift + __NVIC_PRIORITY_SHIFT)));
 #else
     ptrPriority += iInterruptID;                                         // move to the priority location used by this interrupt
-    *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // {48} define the interrupt's priority (16 levels for Cortex-m4 and 4 levels for Cortex-m0+)
+    *ptrPriority = (ucPriority << __NVIC_PRIORITY_SHIFT);                // define the interrupt's priority (16 levels for Cortex-m4 and 4 levels for Cortex-m0+)
 #endif
     ptrIntSet += (iInterruptID/32);                                      // move to the interrupt enable register in which this interrupt is controlled
     *ptrIntSet = (0x01 << (iInterruptID % 32));                          // enable the interrupt
@@ -1276,21 +1295,21 @@ extern void fnEnterInterrupt(int iInterruptID, unsigned char ucPriority, void (*
 #endif
 }
 
-extern void fnMaskInterrupt(int iInterruptID)                            // {131}
+extern void fnMaskInterrupt(int iInterruptID)
 {
     volatile unsigned long *ptrIntClr = IRQ0_31_CER_ADD;
     ptrIntClr += (iInterruptID/32);                                      // move to the clear enable register in which this interrupt is controlled
     *ptrIntClr = (0x01 << (iInterruptID % 32));                          // disable the interrupt
 }
 
-extern void fnClearPending(int iInterruptID)                             // {126}
+extern void fnClearPending(int iInterruptID)
 {
     volatile unsigned long *ptrIntClr = IRQ0_31_CPR_ADD;                 // the first clear pending register
     ptrIntClr += (iInterruptID/32);                                      // move to the clear pending interrupt enable register in which this interrupt is controlled
     *ptrIntClr = (0x01 << (iInterruptID % 32));                          // clear the pending interrupt
 }
 
-extern int fnIsPending(int iInterruptID)                                 // {126}
+extern int fnIsPending(int iInterruptID)
 {
     volatile unsigned long *ptrIntActive = IRQ0_31_CPR_ADD;              // the first clear pending register, which also shows pending interrupts
     ptrIntActive += (iInterruptID/32);                                   // move to the clear pending interrupt enable register in which this interrupt is controlled
@@ -1306,9 +1325,9 @@ extern int fnIsPending(int iInterruptID)                                 // {126
 //
 static __interrupt void _RealTimeInterrupt(void)
 {
-#if defined TICK_USES_LPTMR                                              // {94} tick interrupt from low power timer
+#if defined TICK_USES_LPTMR                                              // tick interrupt from low power timer
     LPTMR0_CSR = LPTMR0_CSR;                                             // clear pending interrupt
-#elif defined TICK_USES_RTC                                              // {100} tick interrupt from RTC
+#elif defined TICK_USES_RTC                                              // tick interrupt from RTC
     RTC_SC |= RTC_SC_RTIF;                                               // clear pending interrupt
 #else                                                                    // tick interrupt from systick
     INT_CONT_STATE_REG = PENDSTCLR;                                      // reset interrupt
@@ -1324,7 +1343,7 @@ static __interrupt void _RealTimeInterrupt(void)
     uEnable_Interrupt();
 }
 
-#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {136} enable low voltage detection interrupt warning
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // enable low voltage detection interrupt warning
 // Interrupt to warn that the voltage is close to the reset threshold
 // - the interrupt is disabled since in the case of power loss in progress it will not be possible to clear the interrupt flag
 // - the user callback can request the interrupt to be re-enabled and a clear be attempted by returing a non-zero value if it is prepared to handle multiple interrupts
@@ -1343,7 +1362,7 @@ static __interrupt void _low_voltage_irq(void)
 //
 extern void fnStartTick(void)
 {
-#if defined TICK_USES_LPTMR                                              // {94} use the low power timer to derive the tick interrupt from
+#if defined TICK_USES_LPTMR                                              // use the low power timer to derive the tick interrupt from
     POWER_UP_ATOMIC(5, LPTMR0);                                          // ensure that the timer can be accessed
     LPTMR0_CSR = LPTMR_CSR_TCF;                                          // reset the timer and ensure no pending interrupts
     #if defined LPTMR_CLOCK_LPO                                          // define the low power clock speed for calculations
@@ -1397,7 +1416,7 @@ extern void fnStartTick(void)
     }
     #endif
     LPTMR0_CSR |= LPTMR_CSR_TEN;                                         // enable the low power timer
-#elif defined TICK_USES_RTC                                              // {100} use RTC to derive the tick interrupt from
+#elif defined TICK_USES_RTC                                              // use RTC to derive the tick interrupt from
     POWER_UP_ATOMIC(6, RTC);                                             // ensure the RTC is powered
     fnEnterInterrupt(irq_RTC_OVERFLOW_ID, PRIORITY_RTC, (void (*)(void))_RealTimeInterrupt); // enter interrupt handler
     #if defined RTC_USES_EXT_CLK
@@ -1420,7 +1439,7 @@ extern void fnStartTick(void)
     #if TICK_DIVIDE > 0x00ffffff
         #error "TICK value cannot be achieved with SYSTICK at this core frequency!!"
     #endif
-    #if !defined INTERRUPT_VECTORS_IN_FLASH                              // {111}
+    #if !defined INTERRUPT_VECTORS_IN_FLASH
     VECTOR_TABLE *ptrVect;
         #if defined _WINDOWS
     ptrVect = (VECTOR_TABLE *)((unsigned char *)((unsigned char *)&vector_ram));
@@ -1430,7 +1449,7 @@ extern void fnStartTick(void)
     ptrVect->ptrSysTick = _RealTimeInterrupt;                            // enter interrupt handler
     #endif
     SYSTICK_RELOAD = TICK_DIVIDE;                                        // set reload value to determine the period
-    SYSTICK_CURRENT = TICK_DIVIDE;                                       // {119}
+    SYSTICK_CURRENT = TICK_DIVIDE;
     SYSTEM_HANDLER_12_15_PRIORITY_REGISTER |= (unsigned long)(SYSTICK_PRIORITY << (24 + __NVIC_PRIORITY_SHIFT)); // {116} enter the SYSTICK priority
     SYSTICK_CSR = (SYSTICK_CORE_CLOCK | SYSTICK_ENABLE | SYSTICK_TICKINT); // enable timer and its interrupt
     #if defined _WINDOWS
@@ -1441,7 +1460,7 @@ extern void fnStartTick(void)
 #if defined MONITOR_PERFORMANCE                                          // configure a timer that will be used to measure the duration of task operation
     INITIALISE_MONITOR_TIMER();
 #endif
-#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // {136} enable low voltage detection interrupt warning
+#if defined SUPPORT_LOW_VOLTAGE_DETECTION                                // enable low voltage detection interrupt warning
     #if !defined LOW_VOLTAGE_DETECTION_VOLTAGE_mV                        // if no value is defined we delault to 2.10V warning threshold and 1.6V reset threshold
         #define LOW_VOLTAGE_DETECTION_VOLTAGE_mV   2100
     #endif
@@ -1484,28 +1503,15 @@ extern void fnStartTick(void)
 //
 extern void fnRetriggerWatchdog(void)
 {
-#if defined KINETIS_WITH_WDOG32
-    if ((WDOG0_CS & WDOG_CS_EN) != 0) {
-        REFRESH_WDOG();
+    if ((WDOG1_WCR & WDOG_WCR_WDE) != 0) {                               // if the WDOG1 is enabled retrigger it
+        KICK_WATCHDOG_1();
     }
-#elif defined KINETIS_KL && !defined KINETIS_KL82                        // {67}
-    if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
-        SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequence
-        SIM_SRVCOP = SIM_SRVCOP_2;
+    if ((WDOG2_WCR & WDOG_WCR_WDE) != 0) {                               // if the WDOG2 is enabled retrigger it
+        KICK_WATCHDOG_2();
     }
-#elif defined KINETIS_KE
-    if ((WDOG_CS1 & WDOG_CS1_EN) != 0) {                                 // if watchdog is enabled
-        uDisable_Interrupt();                                            // protect the refresh sequence from interrupts
-            REFRESH_WDOG();
-        uEnable_Interrupt();
+    if ((WDOG3_CS & WDOG_CS_EN) != 0) {                                  // if the WDOG3 is enabled retrigger it
+        KICK_WATCHDOG_3();
     }
-#else
-    if ((WDOG_STCTRLH & WDOG_STCTRLH_WDOGEN) != 0) {                     // if watchdog is enabled
-        uDisable_Interrupt();                                            // protect the refresh sequence from interrupts
-            REFRESH_WDOG();
-        uEnable_Interrupt();
-    }
-#endif
     TOGGLE_WATCHDOG_LED();                                               // optionally flash a watchdog (heart-beat) LED
 }
 
@@ -1622,7 +1628,7 @@ extern void fnRetriggerWatchdog(void)
     #include "iMX_timer_pins.h"
 #endif
 
-#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)                 // {72} basic timer support based on FlexTimer
+#if defined SUPPORT_TIMER && (FLEX_TIMERS_AVAILABLE > 0)                 // basic timer support based on FlexTimer
 /* =================================================================== */
 /*                              FlexTimer                              */
 /* =================================================================== */
@@ -1661,7 +1667,7 @@ extern void fnRetriggerWatchdog(void)
 #endif
 
 
-#if defined SUPPORT_LOW_POWER && defined LLWU_AVAILABLE && defined SUPPORT_LLWU // {112}
+#if defined SUPPORT_LOW_POWER && defined LLWU_AVAILABLE && defined SUPPORT_LLWU
 /* =================================================================== */
 /*                       Low Leakage Wake Up (LLWU)                    */
 /* =================================================================== */
@@ -1892,7 +1898,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
     #undef _PORT_INT_CONFIG_CODE
         break;
 #endif
-#if defined SUPPORT_LOW_POWER && defined LLWU_AVAILABLE && defined SUPPORT_LLWU // {112}
+#if defined SUPPORT_LOW_POWER && defined LLWU_AVAILABLE && defined SUPPORT_LLWU
     case WAKEUP_INTERRUPT:
     #define _LLWU_CONFIG_CODE
         #include "iMX_LLWU.h"                                            // include LLWU configuration code
@@ -1941,7 +1947,7 @@ extern void fnConfigureInterrupt(void *ptrSettings)
     #undef _LPTMR_CONFIG_CODE
         break;
 #endif
-#if defined SUPPORT_DAC && (DAC_CONTROLLERS > 0)                         // {39}
+#if defined SUPPORT_DAC && (DAC_CONTROLLERS > 0)
     case DAC_INTERRUPT:
     #define _DAC_CONFIG_CODE
         #include "iMX_DAC.h"                                             // include DAC configuration code
@@ -1993,7 +1999,7 @@ extern void fnResetBoard(void)
 }
 
 #if defined CLKOUT_AVAILABLE && !defined KINETIS_WITH_PCC
-extern int fnClkout(int iClockSource)                                    // {120}
+extern int fnClkout(int iClockSource)
 {
     unsigned long ulSIM_SOPT2 = (SIM_SOPT2 & ~(SIM_SOPT2_CLKOUTSEL_MASK)); // original control register value with clock source masked
     switch (iClockSource) {                                              // set the required clock source to be output on CLKOUT
@@ -2067,7 +2073,7 @@ extern unsigned char fnSPI_FlashExt_available(int iExtension)
 #endif
 
 
-#if defined USE_SDRAM                                                    // {38}
+#if defined USE_SDRAM
 static void fnConfigureSDRAM(void)
 {
 /*  The following SDRAM devices are supported
@@ -2259,7 +2265,7 @@ static void irq_pend_sv(void)
 }
     #endif
 #endif
-#if !defined _MINIMUM_IRQ_INITIALISATION || defined NMI_IN_FLASH         // {123}
+#if !defined _MINIMUM_IRQ_INITIALISATION || defined NMI_IN_FLASH
 static void irq_NMI(void)
 {
 }
@@ -2274,7 +2280,7 @@ static void irq_default(void)
 }
 
 
-#if defined (_GNU) || defined _CODE_WARRIOR                              // {110}
+#if defined (_GNU)
 extern unsigned char __data_start__, __data_end__;
 extern const unsigned char __data_load_start__;
 extern unsigned char __text_start__, __text_end__;
@@ -2312,7 +2318,7 @@ extern void __init_gnu_data(void)
 }
 #endif
 
-#if defined WDOG_STCTRLL || defined WDOG_CS1                             // {129} watchdog interrupt
+#if defined WDOG_STCTRLL || defined WDOG_CS1                             // watchdog interrupt
 static void wdog_irq(void)
 {
     #if defined WDOG_STCTRLL
@@ -2330,6 +2336,7 @@ static void wdog_irq(void)
 }
 #endif
 
+
 // Perform very low level initialisation - called by the start-up code
 //
 static void _LowLevelInit(void)
@@ -2345,51 +2352,10 @@ static void _LowLevelInit(void)
     int iIRC48M_USB_control = 0;
 #endif
 #if !defined _COMPILE_IAR
+    fnConfigWdogs();
     // Disable all clocks by default - they will be enabled only when needed
     //
-    #if defined iMX_RT106X
-    CCM_CCGR0 = (CCM_CCGR0_GPIO2_CLOCK_OFF | CCM_CCGR0_LPUART2_CLOCK_OFF | CCM_CCGR0_LPUART3_CLOCK_OFF | CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF | CCM_CCGR0_GPT2_BUS_CLOCKS_OFF | CCM_CCGR0_TRACE_CLOCK_OFF | CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN2_CLOCK_OFF | CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN1_CLOCK_OFF | CCM_CCGR0_DCP_CLOCK_OFF | CCM_CCGR0_SIM_M_CLK_R_CLK_OFF | CCM_CCGR0_MQS_CLOCK_OFF | CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF | CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF);
-    #else
-    CCM_CCGR0 = (CCM_CCGR0_GPIO2_CLOCK_OFF | CCM_CCGR0_LPUART2_CLOCK_OFF | CCM_CCGR0_LPUART3_CLOCK_OFF | CCM_CCGR0_FLEXSPI_EXSC_CLOCK_OFF | CCM_CCGR0_GPT2_SERIAL_CLOCKS_OFF | CCM_CCGR0_GPT2_BUS_CLOCKS_OFF | CCM_CCGR0_TRACE_CLOCK_OFF | CCM_CCGR0_CAN2_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN2_CLOCK_OFF | CCM_CCGR0_CAN1_SERIAL_CLOCK_OFF | CCM_CCGR0_CAN1_CLOCK_OFF | CCM_CCGR0_DCP_CLOCK_OFF | CCM_CCGR0_SIM_M_CLK_R_CLK_OFF | CCM_CCGR0_MQS_CLOCK_OFF | CCM_CCGR0_AIPS_TZ2_CLOCK2_OFF | CCM_CCGR0_AIPS_TZ1_CLOCK2_OFF);
-    #endif
-    #if defined iMX_RT106X
-    CCM_CCGR1 = (CCM_CCGR1_AOI2_CLOCKS_OFF | CCM_CCGR1_CSU_CLOCK_OFF | CCM_CCGR1_GPIO1_CLOCK_OFF | CCM_CCGR1_LPUART4_CLOCK_OFF | CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF | CCM_CCGR1_GPT1_BUS_CLOCK_OFF | CCM_CCGR1_SEMC_EXSC_CLOCK_OFF | CCM_CCGR1_ADC1_CLOCK_OFF | CCM_CCGR1_PIT_CLOCKS_OFF | CCM_CCGR1_ENET_CLOCK_OFF | CCM_CCGR1_ADC2_CLOCK_OFF | CCM_CCGR1_LPSPI4_CLOCKS_OFF | CCM_CCGR1_LPSPI3_CLOCKS_OFF | CCM_CCGR1_LPSPI2_CLOCKS_OFF | CCM_CCGR1_LPSPI1_CLOCKS_OFF);
-    #else
-    CCM_CCGR1 = (CCM_CCGR1_CSU_CLOCK_OFF | CCM_CCGR1_GPIO1_CLOCK_OFF | CCM_CCGR1_LPUART4_CLOCK_OFF | CCM_CCGR1_GPT1_SERIAL_CLOCK_OFF | CCM_CCGR1_GPT1_BUS_CLOCK_OFF | CCM_CCGR1_SEMC_EXSC_CLOCK_OFF | CCM_CCGR1_ADC1_CLOCK_OFF | CCM_CCGR1_PIT_CLOCKS_OFF | CCM_CCGR1_ENET_CLOCK_OFF | CCM_CCGR1_ADC2_CLOCK_OFF | CCM_CCGR1_LPSPI4_CLOCKS_OFF | CCM_CCGR1_LPSPI3_CLOCKS_OFF | CCM_CCGR1_LPSPI2_CLOCKS_OFF | CCM_CCGR1_LPSPI1_CLOCKS_OFF);
-    #endif
-    CCM_CCGR2 = (CCM_CCGR2_GPIO3_CLOCK_OFF | CCM_CCGR2_XBAR2_CLOCK_OFF | CCM_CCGR2_XBAR1_CLOCK_OFF | CCM_CCGR2_OCOTP_CTRL_CLOCK_OFF | CCM_CCGR2_LPI2C3_CLOCK_OFF | CCM_CCGR2_LPI2C2_CLOCK_OFF | CCM_CCGR2_LPI2C1_CLOCK_OFF | CCM_CCGR2_IMUX_SNVS_CLOCK_OFF | CCM_CCGR2_OCRAM_EXSC_CLOCK_OFF);
-    #if defined iMX_RT106X
-    CCM_CCGR3 = (CCM_CCGR3_GPIO4_CLOCK_OFF | CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF | CCM_CCGR3_OCRAM_CLOCK_OFF | CCM_CCGR3_ACMP4_CLOCKS_OFF | CCM_CCGR3_ACMP3_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_STOP | CCM_CCGR3_ACMP1_CLOCKS_OFF | CCM_CCGR3_FLEXRAM1_CLOCK_OFF | CCM_CCGR3_WDOG1_CLOCK_OFF | CCM_CCGR3_EWM_CLOCK_OFF | CCM_CCGR3_LPUART6_CLOCK_OFF | CCM_CCGR3_SEMC_CLOCKS_OFF | CCM_CCGR3_LPUART5_CLOCK_OFF);
-    #else
-    CCM_CCGR3 = (CCM_CCGR3_IMUX_SNVS_GRP_CLOCK_OFF | CCM_CCGR3_OCRAM_CLOCK_OFF | CCM_CCGR3_ACMP4_CLOCKS_OFF | CCM_CCGR3_ACMP3_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_OFF | CCM_CCGR3_ACMP2_CLOCKS_STOP | CCM_CCGR3_ACMP1_CLOCKS_OFF | CCM_CCGR3_FLEXRAM1_CLOCK_OFF | CCM_CCGR3_WDOG1_CLOCK_OFF | CCM_CCGR3_EWM_CLOCK_OFF | CCM_CCGR3_AOI1_CLOCK_OFF | CCM_CCGR3_LPUART6_CLOCK_OFF | CCM_CCGR3_SEMC_CLOCKS_OFF | CCM_CCGR3_LPUART5_CLOCK_OFF);
-    #endif
-    CCM_CCGR4 = (CCM_CCGR4_ENC2_CLOCKS_OFF | CCM_CCGR4_ENC1_CLOCKS_OFF | CCM_CCGR4_PWM2_CLOCKS_OFF | CCM_CCGR4_PWM1_CLOCKS_OFF | CCM_CCGR4_SIM_EMS_CLOCKS_OFF | CCM_CCGR4_SIM_M_CLOCKS_OFF | CCM_CCGR4_SIM_M7_CLOCK_OFF | CCM_CCGR4_BEE_CLOCK_OFF | CCM_CCGR4_IOMUX_GRP_CLOCK_OFF | CCM_CCGR4_IOMUX_CLOCK_OFF | CCM_CCGR4_SIM_M7_CLK_R_OFF);
-    CCM_CCGR5 = (CCM_CCGR5_SNVS_LP_CLOCK_OFF | CCM_CCGR5_SNVS_HP_CLOCK_OFF | CCM_CCGR5_LPUART7_CLOCK_OFF | CCM_CCGR5_LPUART1_CLOCK_OFF | CCM_CCGR5_SAI3_CLOCK_OFF | CCM_CCGR5_SAI2_CLOCK_OFF | CCM_CCGR5_SAI1_CLOCK_OFF | CCM_CCGR5_SPDIF_CLOCK_OFF | CCM_CCGR5_AIPSTZ4_CLOCKS_OFF | CCM_CCGR5_WDOG2_CLOCK_OFF | CCM_CCGR5_KPP_CLOCK_OFF | CCM_CCGR5_DMA_CLOCK_OFF | CCM_CCGR5_WDOG3_CLOCK_OFF | CCM_CCGR5_FLEXIO1_CLOCK_OFF | CCM_CCGR5_ROM_CLOCK_OFF);
-    CCM_CCGR6 = (CCM_CCGR6_TIMER2_CLOCKS_OFF | CCM_CCGR6_TIMER1_CLOCKS_OFF | CCM_CCGR6_LPI2C4_SERIAL_CLOCK_OFF | CCM_CCGR6_ANADIG_CLOCKS_OFF | CCM_CCGR6_SIM_PER_CLOCK_OFF | CCM_CCGR6_AIPS_TZ3_CLOCK_OFF | CCM_CCGR6_LPUART8_CLOCK_OFF | CCM_CCGR6_TRNG_CLOCK_OFF);
-    INIT_WATCHDOG_DISABLE();                                             // configure an input used to control watchdog operation
-    if (WATCHDOG_DISABLE() == 0) {                                       // if the watchdog disable input is not active
-        ACTIVATE_WATCHDOG();                                             // allow user configuration of internal watchdog timer
-    }
-    else {                                                               // disable the watchdog
-    #if defined KINETIS_WITH_WDOG32
-        UNLOCK_WDOG();                                                   // open a window to write to watchdog
-        WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
-        WDOG0_TOVAL = 0xffff;
-        WDOG0_WIN = 0;                                  
-    #elif defined KINETIS_KL && !defined KINETIS_KL82                    // {67}
-        SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
-    #else
-        UNLOCK_WDOG();                                                   // open a window to write to watchdog
-        #if defined KINETIS_KE
-        WDOG_CS2 = 0;                                                    // this is required to disable the watchdog
-        WDOG_TOVAL = 0xffff;
-        WDOG_WIN = 0;
-        WDOG_CS1 = WDOG_CS1_UPDATE;                                      // disable watchdog but allow updates
-        #else
-        WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_CLKSRC); // disable watchdog
-        #endif
-    #endif
-    }
+    fnDisable_iMX_RT_Clocks();
     #if defined SUPPORT_LOW_POWER && (defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000))
         #if defined SUPPORT_LPTMR && LPTMR_AVAILABLE > 0                 // ensure no interrupts pending after waking from VLLS modes via LPTMR
     POWER_UP_ATOMIC(5, LPTMR0);                                          // power up the low power timer
@@ -2406,7 +2372,7 @@ static void _LowLevelInit(void)
 #if defined KINETIS_KW2X
     _CONFIG_DRIVE_PORT_OUTPUT_VALUE_FAST_HIGH(B, RST_B, 0, (PORT_SRE_FAST | PORT_DSE_LOW)); // drive the modem reset input low
 #endif
-#if defined USER_STARTUP_CODE                                            // {1} allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
+#if defined USER_STARTUP_CODE                                            // allow user defined start-up code immediately after the watchdog configuration and before clock configuration to be defined
     USER_STARTUP_CODE;
 #endif
 #if defined ERRATA_ID_2644 && !defined KINETIS_FLEX
@@ -2422,7 +2388,7 @@ static void _LowLevelInit(void)
 #endif
 // Configure clock generator
 //
-#if defined HIGH_SPEED_RUN_MODE_AVAILABLE && !defined USE_HIGH_SPEED_RUN_MODE // {134}
+#if defined _KINETIS && defined HIGH_SPEED_RUN_MODE_AVAILABLE && !defined USE_HIGH_SPEED_RUN_MODE
     if (SMC_PMSTAT == SMC_PMSTAT_HSRUN) {                                // if in high speed run mode we switch back to run mode
         SMC_PMCTRL = (SMC_PMCTRL_STOPM_NORMAL | SMC_PMCTRL_RUNM_NORMAL);
     }
@@ -2442,7 +2408,7 @@ static void _LowLevelInit(void)
   //fnClkout(EXTERNAL_OSCILLATOR_CLOCK_OUT);
   //fnClkout(RTC_CLOCK_OUT);
 #endif
-#if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA // {125}
+#if defined KINETIS_KL && defined ROM_BOOTLOADER && defined BOOTLOADER_ERRATA
     if ((RCM_MR & (RCM_MR_BOOTROM_BOOT_FROM_ROM_BOOTCFG0 | RCM_MR_BOOTROM_BOOT_FROM_ROM_FOPT7)) != 0) { // if the reset was via the ROM loader
         // PORT clock gate, pin mux and peripheral registers are not reset to default values on ROM exit
         //
@@ -2482,7 +2448,7 @@ static void _LowLevelInit(void)
         //
     }
 #endif
-#if defined INTERRUPT_VECTORS_IN_FLASH                                   // {111}
+#if defined INTERRUPT_VECTORS_IN_FLASH
     VECTOR_TABLE_OFFSET_REG = ((unsigned long)&__vector_table);
 #else
     #if defined _WINDOWS
@@ -2515,7 +2481,7 @@ static void _LowLevelInit(void)
         processor_ints++;
     } FOREVER_LOOP();
     #else
-        #if defined NMI_IN_FLASH                                         // {123}
+        #if defined NMI_IN_FLASH
     ptrVect->ptrNMI           = irq_NMI;
         #else
     ptrVect->ptrNMI           = irq_default;
@@ -2530,23 +2496,21 @@ static void _LowLevelInit(void)
     #endif
     VECTOR_TABLE_OFFSET_REG   = (unsigned long)ptrVect;                  // position the vector table at the bottom of RAM
 #endif
-#if defined (_GNU) || defined _CODE_WARRIOR                              // {110}
+#if defined (_GNU)
     __init_gnu_data();                                                   // initialise variables
 #endif
-#if defined USE_SDRAM                                                    // {38}
+#if defined USE_SDRAM
     fnConfigureSDRAM();                                                  // configure SDRAM
 #endif
 #if defined _WINDOWS && !defined INTERRUPT_VECTORS_IN_FLASH              // check that the size of the interrupt vectors has not grown beyond that what is expected (increase its space in the script file if necessary!!)
     if (VECTOR_SIZE > CHECK_VECTOR_SIZE) {
         _EXCEPTION("Check the vector table size setting!!");
     }
-    #if defined USE_SECTION_PROGRAMMING                                  // {105}
+    #if defined USE_SECTION_PROGRAMMING
     memset(ucFlexRam, 0xff, sizeof(ucFlexRam));                          // when used as data flash the flex ram is initialised to all 0xff
     #endif
 #endif
-#if defined KINETIS_K_FPU                                                // {17}
     CPACR |= (0xf << 20);                                                // enable access to FPU
-#endif
 #if defined SUPPORT_LOW_POWER
     #if defined KINETIS_K_FPU || defined KINETIS_KL || defined KINETIS_KM || defined KINETIS_REVISION_2 || (KINETIS_MAX_SPEED > 100000000)
         #if !defined SMC_PMPROT_LOW_POWER_LEVEL
@@ -2556,12 +2520,12 @@ static void _LowLevelInit(void)
                 #define SMC_PMPROT_LOW_POWER_LEVEL (SMC_PMPROT_AVLLS | SMC_PMPROT_ALLS | SMC_PMPROT_AVLP) // allow all low power modes if nothing else defined
             #endif
         #endif
-    SMC_PMPROT = SMC_PMPROT_LOW_POWER_LEVEL;                             // {117}
+    SMC_PMPROT = SMC_PMPROT_LOW_POWER_LEVEL;
     #elif !defined KINETIS_KE && !defined KINETIS_KEA
         #if !defined MC_PMPROT_LOW_POWER_LEVEL
             #define MC_PMPROT_LOW_POWER_LEVEL (MC_PMPROT_AVLP | MC_PMPROT_ALLS | MC_PMPROT_AVLLS1 | MC_PMPROT_AVLLS2 | MC_PMPROT_AVLLS3) // allow all low power modes if nothing else defined
         #endif
-    MC_PMPROT = MC_PMPROT_LOW_POWER_LEVEL;                               // {117}
+    MC_PMPROT = MC_PMPROT_LOW_POWER_LEVEL;
     #endif
     #if defined ERRATA_ID_8068 && !defined SUPPORT_RTC                   // if low power mode is to be used but the RTC will not be initialised clear the RTC invalid flag to avoid the low power mode being blocked when e8068 is present
     POWER_UP_ATOMIC(6, RTC);                                             // temporarily enable the RTC module
@@ -2570,12 +2534,12 @@ static void _LowLevelInit(void)
     #endif
 #endif
 #if defined _WINDOWS
-    fnUpdateOperatingDetails();                                          // {91} update operating details to be displayed in the simulator
+    fnUpdateOperatingDetails();                                          // update operating details to be displayed in the simulator
 #endif
 #if defined SET_POWER_MODE
-    SET_POWER_MODE();                                                    // {93}
+    SET_POWER_MODE();
 #endif
- #if defined WDOG_STCTRLL || defined WDOG_CS1                            // {129}
+ #if defined WDOG_STCTRLL || defined WDOG_CS1
     #if !defined irq_WDOG_ID && defined INTMUX0_AVAILABLE
     fnEnterInterrupt((irq_INTMUX0_0_ID + INTMUX_WDOG0), INTMUX0_PERIPHERAL_WDOG0_EWM, wdog_irq);// test WDOG interrupt - based on INTMUX
     #else
@@ -2642,6 +2606,7 @@ extern void prvSetupHardware(void)
 }
 #endif
 
+
 // The initial stack pointer and PC value - this is usually linked at address 0x00000000 (or to application start location when working with a boot loader)
 //
 #if defined _COMPILE_IAR
@@ -2659,13 +2624,13 @@ const _RESET_VECTOR __vector_table
 #endif
     (void *)(RAM_START_ADDRESS + (SIZE_OF_RAM - NON_INITIALISED_RAM_SIZE)), // stack pointer to top of RAM
     (void (*)(void))START_CODE,                                          // start address
-#if defined NMI_IN_FLASH                                                 // {123}
+#if defined NMI_IN_FLASH
     irq_NMI
 #endif
 #if defined INTERRUPT_VECTORS_IN_FLASH
     },
 #endif
-#if defined _APPLICATION_VALIDATION                                      // {32}
+#if defined _APPLICATION_VALIDATION
     {0x87654321, 0xffffffff},                                            // signal that this application supports validation
     {0xffffffff, 0xffffffff},                                            // overwrite first location with 0x55aa33cc to validate the application
     #if defined _GNU && !defined _BM_BUILD
@@ -2710,7 +2675,7 @@ const _RESET_VECTOR __vector_table
         KINETIS_FLASH_CONFIGURATION_DATAFLASH_PROT
     }
     #endif
-#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // {111} presently used only by the KE04, KEA8 and KL03 (vectors in flash to save space when little SRAM resources available)
+#elif defined INTERRUPT_VECTORS_IN_FLASH                                 // presently used only by the KE04, KEA8 and KL03 (vectors in flash to save space when little SRAM resources available)
     #if defined _MINIMUM_IRQ_INITIALISATION
     irq_default,
     irq_default,
@@ -3057,10 +3022,10 @@ const FLEXSPI_NOR_BOOT_CONFIGURATION __boot_config
 
 typedef struct stBOOT_DATA
 {
-    unsigned long start;           /* boot start location */
-    unsigned long size;            /* size */
-    unsigned long plugin;          /* plugin flag - 1 if downloaded application is plugin */
-    unsigned long placeholder;		/* placehoder to make even 0x10 size */
+    unsigned long start;           // boot start location 
+    unsigned long size;            // size 
+    unsigned long plugin;          // plugin flag - 1 if downloaded application is plugin
+    unsigned long placeholder;		// placehoder to make even 0x10 size
 } BOOT_DATA;
 
 #define FLEXSPI_FLASH_BASE          0x60000000
@@ -3068,11 +3033,11 @@ typedef struct stBOOT_DATA
 #define PLUGIN_FLAG           (unsigned long)0
 
 #if defined _COMPILE_IAR
-__root const BOOT_DATA __boot_data @ ".boot_hdr.ivt" // __root forces the function to be linked in IAR project
+__root const BOOT_DATA __boot_data @ ".boot_hdr.boot_data" // __root forces the function to be linked in IAR project
 #elif defined _GNU
-const BOOT_DATA __attribute__((section(".boot_hdr.ivt"))) __boot_data
+const BOOT_DATA __attribute__((section(".boot_hdr.boot_data"))) __boot_data
 #elif defined _COMPILE_KEIL
-__attribute__((section(".boot_hdr.ivt"))) const BOOT_DATA __boot_data
+__attribute__((section(".boot_hdr.boot_data"))) const BOOT_DATA __boot_data
 #else
 const BOOT_DATA __boot_data
 #endif
@@ -3140,14 +3105,14 @@ __attribute__((section(".boot_hdr.ivt"))) const IMAGE_VECTOR_TABLE __image_vecto
 const IMAGE_VECTOR_TABLE __image_vector_table
 #endif
 = {
-    IVT_HEADER,                         /* IVT Header */
-    (unsigned long)&__vector_table,     /* Image Entry Function */
-    0,                           /* Reserved = 0 */
-    (unsigned long)&__dcd_data,           /* Address where DCD information is stored */
-    (unsigned long)&__boot_data,        /* Address where BOOT Data Structure is stored */
-    (unsigned long)&__image_vector_table, /* Pointer to IVT Self (absolute address) */
-    (unsigned long)0,              /* Address where CSF file is stored */
-    0                            /* Reserved = 0 */
+    IVT_HEADER,                         // IVT Header
+    (unsigned long)&__vector_table,     // Image Entry Function
+    0,                           // Reserved = 0
+    (unsigned long)&__dcd_data,           // Address where DCD information is stored
+    (unsigned long)&__boot_data,        // Address where BOOT Data Structure is stored
+    (unsigned long)&__image_vector_table, // Pointer to IVT Self (absolute address)
+    (unsigned long)0,              // Address where CSF file is stored
+    0                            // Reserved = 0
 };
 #endif
 #endif

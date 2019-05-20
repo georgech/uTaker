@@ -64,13 +64,11 @@
     #define PACKAGE_TYPE        PACKAGE_LQFP                             // LQFP
   //#define SIZE_OF_FLASH       (0 * 1024)                               // no on-chip flash FLASH
     #define SIZE_OF_FLASH       (256 * 1024)                             // temporary
-    #define SIZE_OF_RAM         (256 * 1024)                             // 256k SRAM
     #define QSPI_FILE_SYSTEM                                             // user QSPI interface
 #elif defined MIMXRT1064
     #define PIN_COUNT           PIN_COUNT_196_PIN                        // 196 pin MAPBGA package
     #define PACKAGE_TYPE        PACKAGE_MAPBGA                           // MAPBGA
     #define SIZE_OF_FLASH       (4 * 1024 * 1024)                        // 4Meg on-chip flash
-    #define SIZE_OF_RAM         (1024 * 1024)                            // 1Meg SRAM
     #define QSPI_FILE_SYSTEM                                             // user QSPI interface
 #endif
 
@@ -1499,13 +1497,8 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 // Special support for this processor type
 //
-#if defined KINETIS_K_FPU || defined TWR_K20D50M || defined TWR_K21D50M || defined FRDM_K20D50M || defined tinyK20 || (defined KINETIS_KL && !defined KINETIS_KL02)
-    #define DMA_MEMCPY_SET                                               // memcpy and memset functions performed by DMA (if supported by processor - uses DMA channel DMA_MEMCPY_CHANNEL)
-    #define CONFIGURE_CROSSBAR_SWITCH()  AXBS_CRS0 = AXBS_CRS_ARB_ROUND_ROBIN; AXBS_CRS1 = AXBS_CRS_ARB_ROUND_ROBIN // {27} flash and SRAM slaves priority set to rotating so that SW DMA transfers don't block peripheral transfers
-#else                                                                    // avoid using DMA with older devices when certain errata haven't been solved
-    #define DMA_MEMCPY_SET                                               // memcpy and memset functions performed by DMA (if supported by processor - uses DMA channel DMA_MEMCPY_CHANNEL)
-    #define CONFIGURE_CROSSBAR_SWITCH()  
-#endif
+//#define DMA_MEMCPY_SET                                                 // memcpy and memset functions performed by DMA (if supported by processor - uses DMA channel DMA_MEMCPY_CHANNEL)
+//#define CONFIGURE_CROSSBAR_SWITCH()  
 //#define RUN_LOOPS_IN_RAM                                               // allow certain routines with tight loops to run from SRAM where it is generally faster than from FLASH - uses slightly more SRAM
 
 
@@ -1773,7 +1766,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(1, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
 
-    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG(); WDOG_TOVALL = (2000/5); WDOG_TOVALH = 0; WDOG_STCTRLH = (WDOG_STCTRLH_STNDBYEN | WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_WDOGEN) // watchdog enabled to generate reset on 2s timeout (no further updates allowed)
+    #define ACTIVATE_WATCHDOG()     UNLOCK_WDOG3(); WDOG3_TOVAL = 2000; WDOG3_WIN = 0; WDOG3_CS = (WDOG_CS_CLK_1kHz | WDOG_CS_FLG | WDOG_CS_CMD32EN | WDOG_CS_EN); // enable watchdog with 2s timeout
 
     #define SHIFT_DEMO_LED_1        5                                    // since the port bits are spread out shift each to the lowest 4 bits
     #define SHIFT_DEMO_LED_2        7
