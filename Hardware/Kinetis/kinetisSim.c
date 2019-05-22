@@ -329,7 +329,7 @@ static const unsigned long ulDisabled[PORTS_AVAILABLE] = {
     0x00000030,                                                          // port C disabled default pins
     0x0000000d,                                                          // port D disabled default pins
     0x00000010                                                           // port E disabled default pins
-#elif defined KINETIS_KW4X
+#elif defined KINETIS_KW3X || defined KINETIS_KW4X
     (PORTA_BIT16 | PORTA_BIT17 | PORTA_BIT18 | PORTA_BIT19),             // port A disabled default pins
     (PORTB_BIT0 | PORTB_BIT1 | PORTB_BIT2 | PORTB_BIT3),                 // port B disabled default pins
     (PORTC_BIT0 | PORTC_BIT1 | PORTC_BIT2 | PORTC_BIT3 | PORTC_BIT4 | PORTC_BIT5 | PORTC_BIT6 | PORTC_BIT7 | PORTC_BIT16 | PORTC_BIT17 | PORTC_BIT18 | PORTC_BIT19), // port C disabled default pins
@@ -360,7 +360,7 @@ static int iFlagRefresh = 0;
     static int iData1Frame[NUMBER_OF_USB_ENDPOINTS] = {0};
     #endif
 #endif
-#if defined KINETIS_KL || defined KINETIS_KW4X                           // {24}
+#if defined KINETIS_WITH_COP
     static unsigned long ulCOPcounter = 0;
 #endif
 #if defined KINETIS_KM
@@ -436,7 +436,7 @@ static void fnSetDevice(unsigned long *port_inits)
     WDOG0_CS = (0xffff0000 | WDOG_CS_CMD32EN | WDOG_CS_CLK_1kHz | WDOG_CS_EN);
     WDOG0_CNT = 0x00000002;
     WDOG0_TOVAL = 0x00000400;
-#elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW4X
+#elif defined KINETIS_WITH_COP
     SIM_COPC = SIM_COPC_COPT_LONGEST;                                    // COP (computer operating properly) rather than watchdog
 #elif defined KINETIS_KE
     WDOG_CS1 = WDOG_CS1_EN;
@@ -632,7 +632,7 @@ static void fnSetDevice(unsigned long *port_inits)
     #elif defined KINETIS_K_FPU || (KINETIS_MAX_SPEED > 100000000)
     SIM_SOPT2 = (SIM_SOPT2_TRACECLKSEL | 0x04000000 | SIM_SOPT2_NFCSRC_MCGPLL0CLK);
     SIM_CLKDIV4 = 0x00000002;
-    #elif !defined KINETIS_KL
+    #elif !defined KINETIS_KL && !defined KINETIS_KW3X && !defined KINETIS_KW4X
     SIM_SOPT2 = SIM_SOPT2_TRACECLKSEL;
     #endif
 #endif
@@ -6685,10 +6685,15 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_LPUART1_RX(); // call the interrupt handler
                         }
-            #else
+            #elif defined irq_LPUART1_ID
                         if (fnGenInt(irq_LPUART1_ID) != 0) {             // if LPUART1 interrupt is not disabled
                             VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                             ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
+                        }
+            #else                                                        // LPUART0 and LPUART1 share an interrupt vector
+                        if (fnGenInt(irq_LPUART0_ID) != 0) {             // if LPUART1 interrupt is not disabled
+                            VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                            ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
                         }
             #endif
                     }
@@ -6724,10 +6729,15 @@ extern void fnSimulateSerialIn(int iPort, unsigned char *ptrDebugIn, unsigned sh
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART1_RX(); // call the interrupt handler
                             }
-            #else
+            #elif defined irq_LPUART1_ID
                             if (fnGenInt(irq_LPUART1_ID) != 0) {         // if LPUART1 interrupt is not disabled
                                 VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                                 ptrVect->processor_interrupts.irq_LPUART1(); // call the interrupt handler
+                            }
+            #else                                                        // LPUART0 and LPUART1 share an interrupt vector
+                            if (fnGenInt(irq_LPUART0_ID) != 0) {         // if LPUART1 interrupt is not disabled
+                                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                                ptrVect->processor_interrupts.irq_LPUART0(); // call the interrupt handler
                             }
             #endif
             #if !defined DEVICE_WITHOUT_DMA                              // if the device supports DMA
@@ -7224,10 +7234,15 @@ static void fnUART_Tx_int(int iChannel)
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPUART1_TX();  // call the interrupt handler
                     }
-            #else
+            #elif defined irq_LPUART1_ID
                     if (fnGenInt(irq_LPUART1_ID) != 0) {                 // if LPUART1 interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_LPUART1();     // call the interrupt handler
+                    }
+            #else                                                        // LPUART0 and LPUART1 share a common interrupt vector
+                    if (fnGenInt(irq_LPUART0_ID) != 0) {                 // if LPUART0/1 interrupt is not disabled
+                        VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                        ptrVect->processor_interrupts.irq_LPUART0();     // call the interrupt handler
                     }
             #endif
                 }
@@ -8848,8 +8863,10 @@ extern void fnSimulateBreak(int iPort)
     case LPUART1_CH_NUMBER:                                              // LPUART 1
     #if defined irq_LPUART1_RX_ID
         fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, iPort, irq_LPUART1_RX_ID, ptrVect->processor_interrupts.irq_LPUART1_RX, 0, 0, 0);
-    #else
+    #elif defined irq_LPUART1_ID
         fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, iPort, irq_LPUART1_ID, ptrVect->processor_interrupts.irq_LPUART1, 0, 0, 0);
+    #else                                                                // LPUART0 and LPUART1 share an interrupt vector
+        fnGenericLPUARTBreakHandling((KINETIS_LPUART_CONTROL *)LPUART1_BLOCK, iPort, irq_LPUART0_ID, ptrVect->processor_interrupts.irq_LPUART0, 0, 0, 0);
     #endif
         break;
 #endif
@@ -9802,7 +9819,7 @@ extern int fnSimTimers(void)
         }
         WDOG0_CNT = (unsigned short)ulWdogCnt;                           // new watchdog count value
     }
-#elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW4X // {24}
+#elif defined KINETIS_WITH_COP // {24}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != SIM_COPC_COPT_DISABLED) {  // check only when COP is enabled 
         if (SIM_SRVCOP == SIM_SRVCOP_2) {                                // assume retriggered
             ulCOPcounter = 0;
@@ -10105,7 +10122,7 @@ extern int fnSimTimers(void)
                 }
     #endif
                 if ((PIT_TCTRL0 & PIT_TCTRL_TIE) != 0) {                 // if PIT interrupt is enabled
-    #if defined KINETIS_KL || defined KINETIS_KW4X || defined KINETIS_KM // {24}
+    #if defined PIT_SINGLE_INTERRUPT
                     if (fnGenInt(irq_PIT_ID) != 0) {                     // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_PIT();         // call the shared interrupt handler
@@ -10145,7 +10162,7 @@ extern int fnSimTimers(void)
                 }
     #endif
                 if ((PIT_TCTRL1 & PIT_TCTRL_TIE) != 0) {                 // if PIT interrupt is enabled
-    #if defined KINETIS_KL || defined KINETIS_KW4X || defined KINETIS_KM // {24}
+    #if defined PIT_SINGLE_INTERRUPT
                     if (fnGenInt(irq_PIT_ID) != 0) {                     // if general PIT interrupt is not disabled
                         VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
                         ptrVect->processor_interrupts.irq_PIT();         // call the shared interrupt handler
@@ -10162,7 +10179,7 @@ extern int fnSimTimers(void)
                 PIT_CVAL1 -= ulCount;
             }
         }
-    #if !defined KINETIS_KL && !defined KINETIS_KW4X && !defined KINETIS_KE && !defined KINETIS_KM // {24}
+    #if !defined KINETIS_KL && !defined KINETIS_KW3X && !defined KINETIS_KW4X && !defined KINETIS_KE && !defined KINETIS_KM // {24}
         if ((PIT_TCTRL2 & PIT_TCTRL_TEN) != 0) {                         // if PIT2 is enabled
             unsigned long ulCount = (unsigned long)(((unsigned long long)TICK_RESOLUTION * (unsigned long long)BUS_CLOCK)/1000000); // count in a tick period
             if (PIT_CVAL2 <= ulCount) {

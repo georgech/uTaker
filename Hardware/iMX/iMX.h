@@ -1345,6 +1345,7 @@ typedef struct stRESET_VECTOR
 // PIT configuration
 //
 #define PITS_AVAILABLE          4
+#define PIT_SINGLE_INTERRUPT
 
 
 // PWT configuration

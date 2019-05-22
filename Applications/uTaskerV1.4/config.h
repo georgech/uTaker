@@ -131,6 +131,7 @@
 
     //#define TWR_KW21D256                                               // W processors Cortex M0+/M4 (wireless connectivity) - tower board http://www.utasker.com/kinetis/TWR-KW21D256.html
     //#define TWR_KW24D512                                               // tower board http://www.utasker.com/kinetis/TWR-KW24D512.html
+      #define FRDM_KW36                                                  // freedom board http://www.utasker.com/kinetis/FRDM-KW36.html
     //#define HEXIWEAR_KW40Z                                             // hexiwear - wearable development kit for IoT (KW40Z160 support wireless processor) http://www.hexiwear.com/
     //#define FRDM_KW41Z                                                 // freedom board http://www.utasker.com/kinetis/FRDM-KW41Z.html
 
@@ -169,7 +170,7 @@
     //#define EMCRAFT_K61F150M                                           // K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - http://www.utasker.com/kinetis/EMCRAFT_K61F150M.html
     //#define K61FN1_50M                                                 // board with 150MHz K61 and 50MHz clock (HS USB and KSZ8863 ethernet switch)
 
-      #define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
+    //#define FRDM_K64F                                                  // next generation K processors Cortex M4 with Ethernet, USB, encryption, tamper, key storage protection area - freedom board http://www.utasker.com/kinetis/FRDM-K64F.html
     //#define TWR_K64F120M                                               // tower board http://www.utasker.com/kinetis/TWR-K64F120M.html
     //#define HEXIWEAR_K64F                                              // hexiwear - wearable development kit for IoT (K64FN1M0VDC12 main processor) http://www.hexiwear.com/
     //#define TEENSY_3_5                                                 // USB development board with K64FX512 - http://www.utasker.com/kinetis/TEENSY_3.5.html
@@ -187,10 +188,10 @@
     //#define TWR_POS_K81
     //#define TWR_K80F150M                                               // tower board http://www.utasker.com/kinetis/TWR-K80F150M.html
 #elif defined _iMX
-  //#define MIMXRT1020
+    #define MIMXRT1020
   //#define MIMXRT1050
   //#define MIMXRT1060
-    #define MIMXRT1064
+  //#define MIMXRT1064
 #elif defined _M5223X
     //#define M52110BOARD                                                // board for M52110 (basic CAN MCU)
     //#define M5282EVB                                                   // with SDRAM interface and FEC
@@ -670,6 +671,15 @@
     #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KW24 doesn't have USB
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
+#elif defined FRDM_KW36
+    #define KINETIS_KW3X
+    #define KINETIS_KW36
+    #define KINETIS_REVISION_2
+    #define KINETIS_MAX_SPEED    50000000
+    #define TARGET_HW       "FRDM-KW36"
+    #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
+    #define DEVICE_WITHOUT_USB                                           // KW doesn't have USB
+    #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined FRDM_KW41Z
     #define KINETIS_KW4X
     #define KINETIS_KW41
@@ -678,6 +688,7 @@
     #define TARGET_HW       "FRDM-KW41Z"
     #define DEVICE_WITHOUT_ETHERNET                                      // KW doesn't have Ethernet controller
     #define DEVICE_WITHOUT_USB                                           // KW41 doesn't have USB
+    #define DEVICE_WITHOUT_CAN                                           // KW41 doesn't have CAN controller
     #define OUR_HEAP_SIZE   (HEAP_REQUIREMENTS)((16 * 1024) * MEM_FACTOR)
 #elif defined K02F100M
     #define TARGET_HW            "K02F100M"
@@ -2514,16 +2525,16 @@
       //#define OLED_GLCD_MODE                                           // use an OLED in GLCD compatible mode
       //#define NOKIA_GLCD_MODE                                          // use Nokia 6100 LCD in compatible mode
       //#define CGLCD_GLCD_MODE                                          // use colour LCD in GLCD compatible mode
-      //#define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
+        #define KITRONIX_GLCD_MODE                                       // use colour TFT in GLCD compatible mode (IDM_L35_B)
       //#define MB785_GLCD_MODE                                          // use colour TFT in GLCD compatible mode (STM321C-EVAL)
-        #define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
+      //#define TFT2N0369_GLCD_MODE                                      // use colour TFT in GLCD compatible mode (TWR-LCD)
       //#define FT800_GLCD_MODE                                          // FTDI FT800 controller
         #if defined FT800_GLCD_MODE
-            #define FT_800_ENABLE                                        // select the FT800 display type
+          //#define FT_800_ENABLE                                        // select the FT800 display type
           //#define FT_801_ENABLE                                        // select the FT801 display type
           //#define FT_810_ENABLE                                        // select the FT810 display type
           //#define FT_811_ENABLE                                        // select the FT811 display type
-          //#define FT_812_ENABLE                                        // select the FT812 display type
+            #define FT_812_ENABLE                                        // select the FT812 display type
           //#define FT_813_ENABLE                                        // select the FT813 display type
             #if defined FT_810_ENABLE || defined FT_811_ENABLE || defined FT_812_ENABLE || defined FT_813_ENABLE
                 #define FT_81X_ENABLE
@@ -2750,6 +2761,7 @@
     #undef SUPPORT_GLCD
     #undef SUPPORT_OLED
     #undef SUPPORT_GLCD
+    #undef SPECIAL_LCD_DEMO
     #undef CMSIS_DSP_CFFT
     #undef CRYPTOGRAPHY
     #undef SDCARD_SUPPORT

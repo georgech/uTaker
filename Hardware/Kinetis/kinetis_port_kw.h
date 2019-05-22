@@ -17,7 +17,7 @@
 */
 
 
-#if defined KINETIS_KW2X || defined KINETIS_KW4X
+#if defined KINETIS_KW2X || defined KINETIS_KW3X || defined KINETIS_KW4X
 
 #define _PIN_COUNT      0                                                // 63 LGA
 

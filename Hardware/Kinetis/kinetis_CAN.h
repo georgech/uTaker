@@ -239,10 +239,12 @@ static __interrupt void _CAN0_Message_Interrupt(void)
 {
     fnCAN_Message(0);
 }
+#if defined irq_CAN0_BUS_OFF_ID
 static __interrupt void _CAN0_BusOff_Interrupt(void)
 {
     CAN0_ESR1 = BOFFINT;                                                 // clear the interrupt
 }
+#endif
 static __interrupt void _CAN0_Error_Interrupt(void)
 {
     fnCAN_error(0);
@@ -255,9 +257,11 @@ static __interrupt void _CAN0_Rx_Interrupt(void)
 {
 }
 #endif
+#if defined irq_CAN0_WAKE_UP_ID
 static __interrupt void _CAN0_Wakeup_Interrupt(void)
 {
 }
+#endif
     #if defined irq_CAN0_IMEU_ID
 static __interrupt void _CAN0_IMEU_Interrupt(void)
 {
@@ -571,13 +575,17 @@ extern void fnInitCAN(CANTABLE *pars)
     switch (pars->Channel) {
     case 0:
         fnEnterInterrupt(irq_CAN0_MESSAGE_ID, PRIORITY_CAN0_MESSAGE, _CAN0_Message_Interrupt); // enter all CAN interrupts
+    #if defined irq_CAN0_BUS_OFF_ID
         fnEnterInterrupt(irq_CAN0_BUS_OFF_ID, PRIORITY_CAN0_BUS_OFF, _CAN0_BusOff_Interrupt);
+    #endif
         fnEnterInterrupt(irq_CAN0_ERROR_ID, PRIORITY_CAN0_ERROR, _CAN0_Error_Interrupt);
     #if defined irq_CAN0_RX_ID
         fnEnterInterrupt(irq_CAN0_TX_ID, PRIORITY_CAN0_TX, _CAN0_Tx_Interrupt);
         fnEnterInterrupt(irq_CAN0_RX_ID, PRIORITY_CAN0_RX, _CAN0_Rx_Interrupt);
     #endif
+    #if defined irq_CAN0_WAKE_UP_ID
         fnEnterInterrupt(irq_CAN0_WAKE_UP_ID, PRIORITY_CAN0_WAKEUP, _CAN0_Wakeup_Interrupt);
+    #endif
     #if defined irq_CAN0_IMEU_ID
         fnEnterInterrupt(irq_CAN0_IMEU_ID, PRIORITY_CAN0_IMEU, _CAN0_IMEU_Interrupt);
     #endif

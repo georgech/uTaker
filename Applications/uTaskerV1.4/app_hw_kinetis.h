@@ -262,7 +262,7 @@
         #define FLASH_CLOCK_DIVIDE   1                                   // no dividers required since the default speed is low enough
         #define BUS_CLOCK_DIVIDE     1                                   // 
     #endif
-#elif defined TWR_KW24D512 || defined FRDM_KW41Z
+#elif defined TWR_KW24D512 || defined FRDM_KW41Z || defined FRDM_KW36
   //#define RUN_FROM_DEFAULT_CLOCK                                       // default mode is FLL Engaged Internal - the 32kHz IRC is multiplied by FLL factor of 640 to obtain 20.9715MHz nominal frequency (20MHz..25MHz)
     #define RUN_FROM_MODEM_CLK_OUT                                       // use 32MHz modem clock as source (defaults to 32.768kHz or 4MHz)
     #if defined RUN_FROM_MODEM_CLK_OUT
@@ -902,7 +902,7 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
   //#define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KW24D512 || defined FRDM_KW41Z
+#elif defined TWR_KW24D512 || defined FRDM_KW41Z || defined FRDM_KW36
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
   //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
@@ -2688,7 +2688,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M ||defined TWR_K20D50M || defined TWR_K80F150M || defined tinyK20 || defined tinyK22 || defined TWR_K20D72M || defined NET_K60 || defined FRDM_KE02Z || defined FRDM_KE02Z40M || defined FRDM_KE06Z || defined FRDM_K22F || defined TWR_K22F120M || defined TWR_K24F120M || defined TWR_K64F120M || defined TWR_KW21D256 || defined TWR_KW24D512 || defined rcARM_KL26 || defined BLAZE_K22 || defined FRDM_KE15Z // {2}{16}{25}{30}
         #define DEMO_UART    1                                           // use UART 1
         #define RFC2217_UART 0
-    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_K28F // {21}{22}{24}{25}
+    #elif defined K02F100M || defined FRDM_K20D50M || defined FRDM_KL46Z || defined FRDM_KL43Z || defined FRDM_KL25Z || defined FRDM_KL26Z || defined FRDM_KL27Z || defined FRDM_KL28Z || defined FRDM_KL82Z || defined TWR_KL82Z72M ||defined CAPUCCINO_KL27 || defined TEENSY_LC || defined TWR_KL25Z48M || defined FRDM_KL02Z || defined FRDM_KL03Z || defined FRDM_KL05Z || defined TRK_KEA8 || defined TEENSY_3_1 || defined FRDM_KE04Z || defined FRDM_K64F || defined FRDM_K66F || defined TWR_KV10Z32  || defined TWR_KV31F120M || defined FRDM_KV31F || ((defined TWR_K40X256 || defined TWR_K40D100M) && defined DEBUG_ON_VIRT_COM) || defined FreeLON || defined HEXIWEAR_K64F || defined TWR_KE18F || defined KL33Z64 || defined TWR_KV46F150M || defined TWR_KV58F220M || defined FRDM_K28F || defined FRDM_KW36 || defined FRDM_KW41Z // {21}{22}{24}{25}
         #define DEMO_UART    0                                           // use UART 0
         #define RFC2217_UART 1
     #elif defined NET_KBED                                               // {16}
@@ -2711,8 +2711,10 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define RFC2217_UART     0
     #endif
     #if LPUARTS_AVAILABLE > 0
-      //#define LPUART_MCGPLLCLK                                         // clock the LPUARTs from MCGPLLCLK (this is used together with USB when the crystal-less clocking is not possible)
-        #define LPUART_IRC48M                                            // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
+      //#define LPUART_MCGPLLCLK                                         // clock the LPUARTs from MCGPLLCLK [or MCGFFL if no PLL] (this is used together with USB when the crystal-less clocking is not possible)
+        #if defined KINETIS_HAS_IRC48M
+            #define LPUART_IRC48M                                        // if the 48MHz clock is available clock the LPUART from it (warning - don't use when USB is in operation and requires MCGIRCLK)
+        #endif
       //#define LPUART_OSCERCLK                                          // clock the LPUART from the external clock
       //#define LPUART_MCGIRCLK                                          // clock the LPUART from MCGIRCLK (IRC8M/FCRDIV/LIRC_DIV2) - default if others are not defined [32kHz if USE_FAST_INTERNAL_CLOCK is not set]
     #endif
@@ -7101,7 +7103,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SWITCH_2_PORT          _PORTA
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+        #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_LOW(B, (BLINK_LED), PORT_PS_UP_ENABLE)// let the port set up do this (the user can disable blinking)
     #else
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(B, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
@@ -8261,7 +8263,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #else
         #define KEYPAD "KeyPads/TWR_KV31.bmp"
     #endif
-#elif defined FRDM_KW41Z
+#elif defined FRDM_KW41Z || defined FRDM_KW36
     #define DEMO_LED_1             (PORTA_BIT19)                         // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTC_BIT1)                          // (red LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_3             (PORTA_BIT18)                         // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
@@ -8279,7 +8281,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
     #define SWITCH_5_PORT          _PORTC
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+        #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_HIGH(A, (BLINK_LED), PORT_PS_UP_ENABLE) // let the port set up do this (the user can disable blinking)
     #else
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif
@@ -8318,7 +8320,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 141, 203, 151 }, _PORTD, DEMO_LED_3}, \
         {RGB(0, 0, 255), RGB(20,20,20), 1, {197, 112, 203, 122 }, _PORTD, DEMO_LED_4},
 
-    #define KEYPAD "KeyPads/FRDM-KW41Z.bmp"
+    #if defined FRDM_KW36
+        #define KEYPAD "KeyPads/FRDM-KW36.bmp"
+    #else
+        #define KEYPAD "KeyPads/FRDM_KW41Z.bmp"
+    #endif
 #elif defined TWR_KW21D256 || defined TWR_KW24D512
     #define DEMO_LED_1             (PORTD_BIT4)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define DEMO_LED_2             (PORTD_BIT5)                          // (blue LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

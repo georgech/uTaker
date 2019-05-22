@@ -241,8 +241,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
         #if defined irq_LPUART1_TX_ID
             iInterruptID = irq_LPUART1_TX_ID;                            // LPUART1 transmitter has a unique vector
-        #else
+        #elif defined irq_LPUART1_ID
             iInterruptID = irq_LPUART1_ID;                               // LPUART1 transmitter shares interrupt vector with receiver
+        #else
+            iInterruptID = irq_LPUART0_ID;                               // LPUART1 shares interrupt vector with LPUART0
         #endif
             ucPriority = PRIORITY_LPUART1;
             InterruptFunc = _LPSCI1_Interrupt;
@@ -267,8 +269,10 @@ static int fnConfigureUARTpin(QUEUE_HANDLE Channel, int iPinReference)
         #endif
         #if defined irq_LPUART1_RX_ID
             iInterruptID = irq_LPUART1_RX_ID;                            // LPUART1 receiver has unique interrupt vector
-        #else
+        #elif defined irq_LPUART1_ID
             iInterruptID = irq_LPUART1_ID;                               // LPUART1 receiver shares interrupt vector with transmitter
+        #else
+            iInterruptID = irq_LPUART0_ID;                               // LPUART1 shares interrupt vector with LPUART0
         #endif
             ucPriority = PRIORITY_LPUART1;
             InterruptFunc = _LPSCI1_Interrupt;

@@ -76,7 +76,7 @@
     #include "kinetis_port_kv.h"
 #elif defined KINETIS_KM
     #include "kinetis_port_km.h"
-#elif defined KINETIS_KW2X || defined KINETIS_KW4X
+#elif defined KINETIS_KW2X || defined KINETIS_KW3X || defined KINETIS_KW4X
     #include "kinetis_port_kw.h"
 #else
     #include "kinetis_port.h"                                            // K60
@@ -102,7 +102,7 @@ static unsigned char *_ptrPerFunctions;
 
 extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned long *ulPortStates, unsigned long *ulPortFunction, unsigned long *ulPortPeripheral, int iMaxLength)
 {
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW4X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW3X || defined KINETIS_KW4X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
     int i;
 #endif
     char *ptrBuf = cPortDetails;
@@ -192,7 +192,7 @@ extern void fnSetPortDetails(char *cPortDetails, int iPort, int iBit, unsigned l
         return;
     }
 
-#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW4X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
+#if defined KINETIS_K00 || defined KINETIS_K20 || defined KINETIS_K60 || defined KINETIS_K61 || defined KINETIS_K64 || defined KINETIS_K70 || defined KINETIS_K80 || defined KINETIS_KL || defined KINETIS_KE || defined KINETIS_KV || defined KINETIS_KM || defined KINETIS_KW2X || defined KINETIS_KW3X || defined KINETIS_KW4X || (defined KINETIS_K12 && (PIN_COUNT == PIN_COUNT_48_PIN)) // {1}{3}{7}
     SPRINTF(cBuf, " Bit %i Pin: ", iBit);
     STRCAT(cPortDetails, cBuf);
     if (*cPinNumber[iPort][iBit][_PIN_COUNT] == '-') {

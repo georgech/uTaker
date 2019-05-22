@@ -1575,7 +1575,7 @@ extern void fnRetriggerWatchdog(void)
     if ((WDOG0_CS & WDOG_CS_EN) != 0) {
         REFRESH_WDOG();
     }
-#elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW4X // {67}
+#elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW3X || defined KINETIS_KW4X // {67}
     if ((SIM_COPC & SIM_COPC_COPT_LONGEST) != 0) {                       // if the COP is enabled
         SIM_SRVCOP = SIM_SRVCOP_1;                                       // issue COP service sequence
         SIM_SRVCOP = SIM_SRVCOP_2;
@@ -2457,7 +2457,7 @@ static void _LowLevelInit(void)
         WDOG0_CS = WDOG_CS_UPDATE;                                       // disable watchdog but allow updates
         WDOG0_TOVAL = 0xffff;
         WDOG0_WIN = 0;                                  
-    #elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW4X // {67}
+    #elif (defined KINETIS_KL && !defined KINETIS_KL82) || defined KINETIS_KW3X || defined KINETIS_KW4X // {67}
         SIM_COPC = SIM_COPC_COPT_DISABLED;                               // disable the COP
     #else
         UNLOCK_WDOG();                                                   // open a window to write to watchdog

@@ -2908,7 +2908,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         #else
             #if defined _iMX
             POWER_UP_ATOMIC(5, LPUART1_CLOCK);                           // power up the LPUART1 (iMX counts LPUARTs from 1)
-            #elif defined KINETIS_KL
+            #elif defined KINETIS_KL || defined KINETIS_KW3X || defined KINETIS_KW4X
             POWER_UP_ATOMIC(5, LPUART0);                                 // power up LPUART 0
             #elif defined KINETIS_K80 || defined KINETIS_K26 || defined KINETIS_K27 || defined KINETIS_K28 || defined KINETIS_K65 || defined KINETIS_K66
             POWER_UP_ATOMIC(2, LPUART0);                                 // power up LPUART 0
@@ -2930,7 +2930,7 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
             SELECT_PCC_PERIPHERAL_SOURCE(LPUART1, LPUART1_PCC_SOURCE);   // select the PCC clock used by LPUART1
             POWER_UP_ATOMIC(5, LPUART1);
             #else
-                #if defined KINETIS_KL
+                #if defined KINETIS_KL || defined KINETIS_KW3X
             POWER_UP_ATOMIC(5, LPUART1);                                 // power up LPUART 1
                 #else
             POWER_UP_ATOMIC(2, LPUART1);                                 // power up LPUART 1

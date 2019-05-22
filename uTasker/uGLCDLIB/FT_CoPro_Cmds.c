@@ -32,7 +32,7 @@ Revision History:
 
 #include "config.h"                                                      // use uTasker headers
 
-#if defined FT800_GLCD_MODE
+#if defined FT800_GLCD_MODE && !defined BLINKY && !defined HELLO_WORLD
 #define strlen uStrlen                                                   // use uTasker string functions
 #define strcpy uStrcpy
 #define MSVC_FT800EMU
@@ -380,7 +380,6 @@ ft_void_t Ft_Gpu_CoCmd_Calibrate(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t result)
   Ft_Gpu_Copro_SendCmd(phost, result);
   Ft_Gpu_CoCmd_EndFunc(phost,(FT_CMD_SIZE*2));   
   Ft_Gpu_Hal_WaitCmdfifo_empty(phost);
-  
 }
 ft_void_t Ft_Gpu_CoCmd_SetFont(Ft_Gpu_Hal_Context_t *phost,ft_uint32_t font, ft_uint32_t ptr)
 {
