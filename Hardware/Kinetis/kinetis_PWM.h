@@ -608,7 +608,7 @@ static __interrupt void _PWM_Interrupt_5(void)
                     _CONFIG_PERIPHERAL(A, 1,  (PA_1_TPM_CLKIN0 | PORT_PS_UP_ENABLE)); // TPM_CLKIN0 on PA.1 (alt. function 2)
         #elif defined KINETIS_K65 || defined KINETIS_K66
                     _CONFIG_PERIPHERAL(C, 12, (PC_12_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PC.12 (alt. function 4)
-        #elif defined KINETIS_KL26
+        #elif defined KINETIS_KL26 || defined KINETIS_K64
                     _CONFIG_PERIPHERAL(B, 16, (PB_16_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PA.18 (alt. function 4)
         #else
                     _CONFIG_PERIPHERAL(A, 18, (PA_18_FTM_CLKIN0 | PORT_PS_UP_ENABLE)); // FTM_CLKIN0 on PA.18 (alt. function 4)
@@ -674,9 +674,6 @@ static __interrupt void _PWM_Interrupt_5(void)
             else {
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = FTM_CSC_MS_ELS_PWM_HIGH_TRUE_PULSES;
             }
-            //
-            //ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC = (FTM_CSC_ELSA | FTM_CSC_MSA); // test line
-            //
     #if !defined DEVICE_WITHOUT_DMA
             if ((ulMode & PWM_DMA_CHANNEL_ENABLE) != 0) {
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CSC |= (FTM_CSC_DMA | FTM_CSC_CHIE); // enable DMA trigger from this channel (also the interrupt needs to be enabled for the DMA to operate - interrupt is however not generated in this configuration)
@@ -686,7 +683,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             ptrFlexTimer->FTM_CNTIN = 0;
     #endif
             if ((ulMode & FTM_SC_CPWMS) != 0) {                          // if center-aligned
-                ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency/2); // set the PWM period - valid for all channels of a single timer
+                ptrFlexTimer->FTM_MOD = ((ptrPWM_settings->pwm_frequency + 1)/2); // set the PWM period - valid for all channels of a single timer
                 ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = (ptrPWM_settings->pwm_value/2); // set the duty cycle for the particular channel
     #if defined _WINDOWS && defined FTM_MODE_FTMEN
                 if ((ulMode & PWM_COMBINED_PHASE_SHIFT) != 0) {          // {14}
@@ -695,7 +692,7 @@ static __interrupt void _PWM_Interrupt_5(void)
     #endif
             }
             else {                                                       // edge aligned
-                ptrFlexTimer->FTM_MOD = (ptrPWM_settings->pwm_frequency - 1); // set the PWM period - valid for all channels of a single timer
+                ptrFlexTimer->FTM_MOD = ptrPWM_settings->pwm_frequency; // set the PWM period - valid for all channels of a single timer
     #if defined FTM_MODE_FTMEN
                 if ((ulMode & PWM_COMBINED_PHASE_SHIFT) != 0) {          // {14} only possible in edge aligned mode
                     if ((ucChannel & 1) == 0) {                          // the first combined channel pair defines the shift from the start position
@@ -703,8 +700,8 @@ static __interrupt void _PWM_Interrupt_5(void)
                     }
                     else {                                               // the second in the channel pair defines the end of the pulse
                         unsigned short usEnd = (ptrPWM_settings->pwm_phase_shift + ptrPWM_settings->pwm_value);
-                        if (usEnd > (ptrPWM_settings->pwm_frequency - 1)) { // limit the end - the phase shift is effectively limited by the pulse width duration
-                            usEnd = (ptrPWM_settings->pwm_frequency - 1);
+                        if (usEnd > ptrPWM_settings->pwm_frequency) {    // limit the end - the phase shift is effectively limited by the pulse width duration
+                            usEnd = ptrPWM_settings->pwm_frequency;
                         }
                         ptrFlexTimer->FTM_channel[ucChannel].FTM_CV = usEnd; // set the point where the pulse ends
                         if ((ulMode & PWM_POLARITY) != 0) {              // polarity
@@ -756,7 +753,7 @@ static __interrupt void _PWM_Interrupt_5(void)
             }
     #endif
             ulMode &= PWM_MODE_SETTINGS_MASK;                            // keep just the user's mode settings for the hardware
-            if  (ptrPWM_settings->int_handler != 0) {                    // {3} if an interrupt handler is specified it is called at each period
+            if (ptrPWM_settings->int_handler != 0) {                     // {3} if an interrupt handler is specified it is called at each period
                 _PWM_TimerHandler[ucFlexTimer] = ptrPWM_settings->int_handler; // period interrupt handler
                 fnEnterInterrupt(iInterruptID, ptrPWM_settings->int_priority, _PWM_TimerInterrupt[ucFlexTimer]);
     #if defined KINETIS_KL

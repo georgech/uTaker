@@ -45,6 +45,7 @@
     05.10.2018 Add PHASE_SHIFTED_COMBINED_OUTPUTS option for PWM         {29}
     08.10.2018 Add MULTIPLE_CHANNEL_INTERRUPTS option for PWM            {30}
     13.10.2018 Add comparator reference                                  {31}
+    29.05.2019 Add DMA driven PWM sine wave generation                   {32}
 
     The file is otherwise not specifically linked in to the project since it is included by application.c when needed.
     The reason for ADC and timer configurations in a single file is that a HW timer is very often used togther with and ADC.
@@ -120,15 +121,17 @@
                   //#define PHASE_SHIFTED_COMBINED_OUTPUTS               // {29} generate phase shifted outputs
                   //#define MULTIPLE_CHANNEL_INTERRUPTS                  // {30} generate multiple channel interrupts across multiple timers
               //#define TEST_STEPPER                                     // test generating stepper motor frequency patterns (use together with PWM)
+              //#define TEST_SPWM                                        // {32} use together with TEST_STEPPER, TEST_DMA_DAC and GENERATE_SINE to generate a PWM signal using DMA that represents a sine wave 
             #endif
             #if defined SUPPORT_TIMER
               //#define TEST_SINGLE_SHOT_TIMER                           // test single-shot mode
               //#define TEST_PERIODIC_TIMER                              // test periodic interrupt mode
               //#define TEST_ADC_TIMER                                   // test periodic ADC trigger mode (Luminary)
-                #define TEST_CAPTURE                                     // {6} test timer capture mode
+              //#define TEST_CAPTURE                                     // {6} test timer capture mode
             #endif
         #endif
     #endif
+    #define LENGTH_OF_TEST_BUFFER    128
     #if defined SUPPORT_RIT                                              // {7} LPC17XX repetitive interrupt timer
         #define RIT_TEST
     #endif
@@ -157,6 +160,9 @@
         __PACK_OFF
 
         #define FORMAT_PCM 1
+    #endif
+    #if defined TEST_PIT_SINE_TO_USB
+        extern void fnUSB_TimeBase(void);                                // routine in USB application that is called by the PIT interrupt
     #endif
 
 /* =================================================================== */
@@ -258,6 +264,9 @@
     #endif
     #if defined TIMED_UART_TX_TEST
         static QUEUE_HANDLE TimedUART_ID = NO_ID_ALLOCATED;              // UART handle for UART timed transmission demonstration
+    #endif
+    #if defined TEST_SPWM
+        static unsigned short PWMTestBuffer[128];
     #endif
 #endif
 
@@ -1404,13 +1413,11 @@ static __callback_interrupt void test_nmi(void)
 }
     #endif
 
-
 // PIT configuration
 //
 static void fnConfigurePIT(void)
 {
     #if defined TEST_DMA_DAC                                             // {20}
-    #define LENGTH_OF_TEST_BUFFER    128
     static unsigned short *ptrTestBuffer = 0;
     int i;
     DAC_SETUP dac_setup;
@@ -1445,6 +1452,12 @@ static void fnConfigurePIT(void)
         for (i = 0; i < LENGTH_OF_TEST_BUFFER; i++) {                    // prepare a sine wave
         #if defined USE_CMSIS_SIN_COS
             arm_sin_cos_f32(angle, &fSineValue, 0);
+            #if defined TEST_SPWM
+            PWMTestBuffer[i] = (unsigned short)((signed short)(fSineValue * (float)0x7fff) + (0xffff/2)); // 16 bit scaling and half-scale DC offset added
+            if (PWMTestBuffer[i] == 0) {
+                PWMTestBuffer[i] = 1; // avoid 0 since it will not cause a match!!!!
+            }
+            #endif
             fSineValue *= (float)0x7ff;                                  // 12 bit scaling
             ptrTestBuffer[i] = (unsigned short)((signed short)fSineValue + (0xfff/2)); // half-scale DC offset added
         #else
@@ -1475,7 +1488,11 @@ static void fnConfigurePIT(void)
     pit_setup.int_handler = test_nmi;                                    // not NMI when used by kinetis reference
         #endif
     pit_setup.int_priority = PIT0_INTERRUPT_PRIORITY;
+        #if defined TEST_PIT_SINE_TO_USB
+    pit_setup.count_delay = PIT_US_DELAY(43);                            // 43us period (23000 times a second to send 512 bytes - resulting in 11.7MBytes of sample data)
+        #else
     pit_setup.count_delay = PIT_US_DELAY(500);                           // 500us period
+        #endif
     #elif defined TEST_PIT_PERIODIC                                      // coldfire
     PORTTC |= (PORT_TC_BIT1 | PORT_TC_BIT2);
     DDRTC |= (PORT_TC_BIT1 | PORT_TC_BIT2);
@@ -1517,6 +1534,57 @@ static void fnConfigurePIT(void)
     fnConfigureInterrupt((void *)&dac_setup);                            // configure DAC
     #endif
 }
+
+    #if defined TEST_PIT_SINE_TO_USB
+//float buf[1024] = { 0.0 };
+// This routine generates a two sine waves in the USB output buffer
+// Since the byte rate is 11.7MBytes/s and 4 bytes are used per sample the sine waves represent 92kHz
+// The second sine wave is 90° shifted to the first (quadrature) and the ordering of the bytes in the buffer is
+// - sine 1 MSB
+// - sine 1 LSB
+// - sine 2 MSB
+// - sine 2 LSB
+//
+extern void fnPrepareSignal(unsigned char *ptrBuffer, QUEUE_TRANSFER buf_length)
+{
+        #if !defined PI
+            #define PI           (double)3.14159265
+        #endif
+    int i;
+    unsigned short usValue1;
+    unsigned short usValue2;
+        #if defined USE_CMSIS_SIN_COS
+    float fSineValue;
+    #define ANGLE_STEP   (float)((double)(2 * PI)/(double)128);          // one sine wave in each 512 bytes in the buffer [4 bytes - 2 for reference sine and 2 for quadrature sine]
+    float angle = 0;
+        #else
+    #define ANGLE_STEP   (double)((double)(2 * PI)/(double)128);
+    double angle = 0;
+        #endif
+    for (i = 0; i < (buf_length/4); i++) {                               // prepare a sine wave, filling the available buffer
+        #if defined USE_CMSIS_SIN_COS
+        arm_sin_cos_f32(angle, &fSineValue, 0);                          // reference sine wave
+        fSineValue *= (float)0x7fff;                                     // 16 bit scaling
+        usValue1 = (unsigned short)((signed short)fSineValue + (0xffff/2)); // half-scale DC offset added
+        #else
+        usValue1 = (unsigned short)((sin(angle) * 0x7fff) + (0xffff/2));
+        #endif
+        #if defined USE_CMSIS_SIN_COS
+        arm_sin_cos_f32((float)(angle + (PI/2)), &fSineValue, 0);               // quadrature sine wave
+        fSineValue *= (float)0x7fff;                                     // 16 bit scaling
+        usValue2 = (unsigned short)((signed short)fSineValue + (0xffff/2)); // half-scale DC offset added
+        #else
+        usValue2 = (unsigned short)((sin(angle + (PI / 2)) * 0x7fff) + (0xffff/2));
+        #endif
+      //buf[i] = (float)usValue2;
+        *ptrBuffer++ = (unsigned char)(usValue1 >> 8);                   // pack in the two 16 bit quadrature sample to 4 bytes
+        *ptrBuffer++ = (unsigned char)(usValue1);
+        *ptrBuffer++ = (unsigned char)(usValue2 >> 8);
+        *ptrBuffer++ = (unsigned char)(usValue2);
+        angle += ANGLE_STEP;
+    }
+}
+    #endif
 #endif
 
 #if defined _ADC_TIMER_ROUTINES && defined TIMED_UART_TX_TEST            // {23}
@@ -1774,13 +1842,13 @@ extern void fnSetColor(signed char x, signed char y)                     // {19}
 #if defined TEST_STEPPER
 static const unsigned short rampFrequencyValue[] = {
     PWM_FREQUENCY(4800, 16),                                             // 4800Hz
-    (PWM_FREQUENCY(4200, 16) - 1),                                       // 4200Hz
-    (PWM_FREQUENCY(3200, 16) - 1),                                       // 3200Hz
-    (PWM_FREQUENCY(1000, 16) - 1),                                       // 1000Hz
-    (PWM_FREQUENCY(100, 16) - 1),                                        // 100Hz
-    (PWM_FREQUENCY(800, 16) - 1),                                        // 800Hz
-    (PWM_FREQUENCY(1800, 16) - 1),                                       // 1800Hz
-    (PWM_FREQUENCY(20000, 16) - 1),                                      // 20kHz
+    PWM_FREQUENCY(4200, 16),                                             // 4200Hz
+    PWM_FREQUENCY(3200, 16),                                             // 3200Hz
+    PWM_FREQUENCY(1000, 16),                                             // 1000Hz
+    PWM_FREQUENCY(100, 16),                                              // 100Hz
+    PWM_FREQUENCY(800, 16),                                              // 800Hz
+    PWM_FREQUENCY(1800, 16),                                             // 1800Hz
+    PWM_FREQUENCY(20000, 16),                                            // 20kHz
 };
 
 #if defined FLEX_TIMERS_AVAILABLE_
@@ -1952,6 +2020,7 @@ static void fnConfigure_Timer(void)
     #endif
     pwm_setup.ulPWM_buffer_length = (sizeof(rampCountValue) - sizeof(unsigned short));
     pwm_setup.dma_int_handler = fnEndOfRamp;                             // call back on DMA termination
+    #if !defined TEST_SPWM
     fnConfigureInterrupt((void *)&pwm_setup);                            // enter configuration for DMA trigger generation
     #if !defined FLEX_TIMERS_AVAILABLE_
         #if defined FRDM_K66F
@@ -1960,7 +2029,8 @@ static void fnConfigure_Timer(void)
     FTM1_MOD = rampCountValue[1];                                        // prepare second value (buffered)
         #endif
     #endif
-    // Configure PWM output signal (this needs to be fed back to the clock input)
+    #endif
+    // Configure PWM output signal (this needs to be fed back to the clock input for stepper motor control)
     //
     #if defined FLEX_TIMERS_AVAILABLE_
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_FULL_BUFFER_DMA | PWM_DMA_CHANNEL_ENABLE | PWM_DMA_CONTROL_FREQUENCY);
@@ -1968,12 +2038,21 @@ static void fnConfigure_Timer(void)
     pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_16 | PWM_FULL_BUFFER_DMA | PWM_DMA_PERIOD_ENABLE | PWM_DMA_CONTROL_FREQUENCY);
     #endif
     pwm_setup.pwm_reference = (_TIMER_0 | 2);                            // timer module 0, channel 2 (red LED in RGB LED)
+    pwm_setup.ucDmaChannel = 1;                                          // use DMA channel 1
+    #if defined TEST_SPWM
+    pwm_setup.pwm_frequency = 0xffff;                                    // set base frequency
+    pwm_setup.pwm_value = PWMTestBuffer[0];                              // initial PWM value
+    pwm_setup.ptrPWM_Buffer = (unsigned short *)PWMTestBuffer;           // buffer controlling the PWM values
+    pwm_setup.ulPWM_buffer_length = sizeof(PWMTestBuffer);
+    pwm_setup.usDmaTriggerSource = DMAMUX0_CHCFG_SOURCE_FTM0_C2;
+    pwm_setup.pwm_mode = (PWM_SYS_CLK | PWM_PRESCALER_1 | PWM_FULL_BUFFER_DMA | PWM_DMA_CHANNEL_ENABLE | PWM_DMA_CONTROL_PWM | PWM_FULL_BUFFER_DMA_AUTO_REPEAT);
+    #else
     pwm_setup.pwm_frequency = rampFrequencyValue[0];                     // set start frequency
     pwm_setup.pwm_value = _PWM_PERCENT(50, PWM_FREQUENCY(20000, 16));    // 50% PWM (high/low) when the frequency is 20kHz
-    pwm_setup.ucDmaChannel = 1;                                          // use DMA channel 1
     pwm_setup.ptrPWM_Buffer = (unsigned short *)&rampFrequencyValue[1];  // buffer controlling the frequencies
     pwm_setup.ulPWM_buffer_length = (sizeof(rampFrequencyValue) - sizeof(unsigned short));
-    pwm_setup.dma_int_handler = 0;                                       // no callback on DMA termination
+    #endif
+    pwm_setup.dma_int_handler = 0;                                       // no callback on DMA buffer transfer termination
     fnConfigureInterrupt((void *)&pwm_setup);                            // configure and start the PWM output
     return;
     #else
@@ -2050,6 +2129,29 @@ static void fnConfigure_Timer(void)
     #elif defined FRDM_KL26Z || defined CAPUCCINO_KL27
     pwm_setup.pwm_reference = (_TIMER_0 | 5);                            // timer module 0, channel 5 (blue LED in RGB LED)
     fnConfigureInterrupt((void *)&pwm_setup);
+    #elif defined TWR_KE18F
+    pwm_setup.pwm_reference = (_TIMER_0 | 4);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_0 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_0 | 6);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_1 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_1 | 6);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_1 | 7);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_2 | 4);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_2 | 5);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_3 | 4);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_3 | 6);
+    fnConfigureInterrupt((void *)&pwm_setup);
+    pwm_setup.pwm_reference = (_TIMER_3 | 7);
+    fnConfigureInterrupt((void *)&pwm_setup);
     #endif
     #if (defined _KINETIS || defined _iMX) && defined TEST_PERIODIC_TIMER// allow periodic timer together with PWM
     timer_setup.int_type = TIMER_INTERRUPT;
@@ -2065,8 +2167,8 @@ static void fnConfigure_Timer(void)
 #else
     static TIMER_INTERRUPT_SETUP timer_setup = {0};                      // interrupt configuration parameters
     timer_setup.int_type = TIMER_INTERRUPT;
-    timer_setup.int_priority = PRIORITY_TIMERS;
-    timer_setup.int_handler = timer_int;
+    timer_setup.int_priority = PRIORITY_TIMERS;                          // interrupt priority
+    timer_setup.int_handler = timer_int;                                 // user interrupt callback
     timer_setup.timer_reference = 2;                                     // timer 2
     #if defined _LM3SXXXX
         #if defined TEST_SINGLE_SHOT_TIMER
@@ -2168,7 +2270,7 @@ static void fnConfigure_Timer(void)
     timer_setup.timer_us_value += 100;                                   // each subsequent delay increased by 100us
         #endif
     #endif
-    fnConfigureInterrupt((void *)&timer_setup);                          // enter interrupt for timer test
+    fnConfigureInterrupt((void *)&timer_setup);                          // configure timer interrupt for timer test
 #endif
 }
 #endif

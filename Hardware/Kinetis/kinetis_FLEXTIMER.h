@@ -503,7 +503,7 @@ static __interrupt void _flexTimerInterrupt_5(void)
                 iPrescaler++;
                 ulDelay /= 2;
             }
-            iPrescaler &= 0x7f;
+          //iPrescaler &= 0x7f;
             usFlexTimerMode[iTimerReference] = (unsigned short)iPrescaler;
             if ((ptrTimerSetup->timer_mode & TIMER_PERIODIC) != 0) {     // if periodic operation required
                 usFlexTimerMode[iTimerReference] |= FLEX_TIMER_PERIODIC; // mark that periodic mode is being used

@@ -20339,46 +20339,46 @@ typedef struct stPWM_INTERRUPT_SETUP
 #define PWM_MODE_SETTINGS_MASK     (PWM_PRESCALER_128 | FTM_SC_CPWMS | FTM_SC_CLKS_EXT | FTM_SC_CLKS_SYS | PWM_DMA_PERIOD_ENABLE)
 
 #if defined TPMS_AVAILABLE_TOO || defined TPMS_AVAILABLE_TOO
-    #define PWM_TPM_FREQUENCY(frequency, prescaler)     (TPM_PWM_CLOCK/prescaler/frequency)
+    #define PWM_TPM_FREQUENCY(frequency, prescaler)     ((TPM_PWM_CLOCK/prescaler/frequency) - 1)
     #if (((TPM_PWM_CLOCK/1000000) * 1000000) != TPM_PWM_CLOCK)           // if the clock is not an exact MHz value
-        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)TPM_PWM_CLOCK/(double)1000000) * usec)/prescaler)
+        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) (((unsigned long)(((double)TPM_PWM_CLOCK/(double)1000000) * usec)/prescaler) - 1)
     #else
-        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) (((TPM_PWM_CLOCK/1000000) * usec)/prescaler)
+        #define PWM_TPM_CLOCK_US_DELAY(usec, prescaler) ((((TPM_PWM_CLOCK/1000000) * usec)/prescaler) - 1)
     #endif
-    #define PWM_TPM_MS_DELAY(msec, prescaler)            (((TPM_PWM_CLOCK/1000) * msec)/prescaler)
+    #define PWM_TPM_MS_DELAY(msec, prescaler)           ((((TPM_PWM_CLOCK/1000) * msec)/prescaler) - 1)
 #endif
 
 #if defined FTM_FLEXIBLE_CLOCKING
-    #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (MCGFFCLK/prescaler/frequency)
+    #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) ((MCGFFCLK/prescaler/frequency) - 1)
     #if (((MCGFFCLK/1000000) * 1000000) != MCGFFCLK)                     // if the clock is not an exact MHz value
-        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)MCGFFCLK/(double)1000000) * usec)/prescaler)
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((unsigned long)(((double)MCGFFCLK/(double)1000000) * usec)/prescaler) - 1)
     #else
-        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((MCGFFCLK/1000000) * usec)/prescaler)
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((((MCGFFCLK/1000000) * usec)/prescaler) - 1)
     #endif
-    #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  (((MCGFFCLK/1000) * msec)/prescaler)
+    #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  ((((MCGFFCLK/1000) * msec)/prescaler) - 1)
 #elif defined PWM_FIXED_CLOCK
-    #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) (PWM_FIXED_CLOCK/prescaler/frequency)
+    #define PWM_FIXED_CLOCK_FREQUENCY(frequency, prescaler) ((PWM_FIXED_CLOCK/prescaler/frequency) - 1)
     #if (((PWM_FIXED_CLOCK/1000000) * 1000000) != PWM_FIXED_CLOCK)       // if the clock is not an exact MHz value
-        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((unsigned long)(((double)PWM_FIXED_CLOCK/(double)1000000) * usec)/prescaler)
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((unsigned long)(((double)PWM_FIXED_CLOCK/(double)1000000) * usec)/prescaler) - 1)
     #else
-        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) (((PWM_FIXED_CLOCK/1000000) * usec)/prescaler)
+        #define PWM_TIMER_FIXED_CLOCK_US_DELAY(usec, prescaler) ((((PWM_FIXED_CLOCK/1000000) * usec)/prescaler) - 1)
     #endif
-    #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  (((PWM_FIXED_CLOCK/1000) * msec)/prescaler)
+    #define PWM_TIMER_FIXED_CLOCK_MS_DELAY(msec, prescaler)  ((((PWM_FIXED_CLOCK/1000) * msec)/prescaler) - 1)
 #endif
 
-#define PWM_FREQUENCY(frequency, prescaler)             (PWM_CLOCK/prescaler/frequency) // {83}
+#define PWM_FREQUENCY(frequency, prescaler)              ((PWM_CLOCK/prescaler/frequency) - 1) // {83}
 
 
 #if (((PWM_CLOCK/1000000) * 1000000) != PWM_CLOCK)                       // if the clock is not an exact MHz value
-    #define PWM_TIMER_US_DELAY(usec, prescaler)         ((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler)
+    #define PWM_TIMER_US_DELAY(usec, prescaler)          (((unsigned long)(((double)PWM_CLOCK/(double)1000000) * usec)/prescaler) - 1)
 #else
-    #define PWM_TIMER_US_DELAY(usec, prescaler)         (((PWM_CLOCK/1000000) * usec)/prescaler)
+    #define PWM_TIMER_US_DELAY(usec, prescaler)          ((((PWM_CLOCK/1000000) * usec)/prescaler) - 1)
 #endif
 
-#define PWM_TIMER_MS_DELAY(msec, prescaler)              (((PWM_CLOCK/1000) * msec)/prescaler)
+#define PWM_TIMER_MS_DELAY(msec, prescaler)              ((((PWM_CLOCK/1000) * msec)/prescaler) - 1)
 
-#define _PWM_PERCENT(percent_pwm, frequency_value)       (unsigned short)((frequency_value * percent_pwm)/100)
-#define _PWM_TENTH_PERCENT(percent_pwm, frequency_value) (unsigned short)((frequency_value * percent_pwm)/1000)
+#define _PWM_PERCENT(percent_pwm, frequency_value)       (unsigned short)(((frequency_value + 1) * percent_pwm)/100)
+#define _PWM_TENTH_PERCENT(percent_pwm, frequency_value) (unsigned short)(((frequency_value + 1) * percent_pwm)/1000)
 
 
 

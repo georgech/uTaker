@@ -68,6 +68,7 @@
     29.08.2018 Add input capture simulation                              {50}
     03.09.2018 Extend CAN support to 3 CAN controllers
     18.09.2018 Add key input port defaut override and extended port default states {51}
+    29.05.2019 Add FTM channel DMA trigger simulation                    {52}
  
 */  
                           
@@ -2906,6 +2907,437 @@ unsigned long fnGetFlexTimer_clock(int iChannel)
     return ulClockSpeed;
 }
 
+#if !defined DEVICE_WITHOUT_DMA
+static int fnGetChannelFromSource(unsigned char ucTriggerSource)
+{
+    int channel;
+    for (channel = 0; channel < DMA_CHANNEL_COUNT; channel++) {
+        unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+        if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) == ucTriggerSource) {
+            return channel;                                              // this DMA channel is connected to the trigger source
+        }
+    }
+    _EXCEPTION("No DMA trigger source found!!");
+    return -1;
+}
+#endif
+
+extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
+{
+#if !defined DEVICE_WITHOUT_DMA
+#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {32}
+    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
+    if (channel == -1) {
+        channel = fnGetChannelFromSource(ucTriggerSource);
+    }
+    ptrDMA += channel;
+    if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {                          // peripheral trigger
+        if (ucTriggerSource != 0) {
+            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+            // Check that the trigger source is correctly connected to the DMA channel
+            //
+            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
+                _EXCEPTION("DMUX source is not connected!!!");
+            }
+        }
+    }
+    if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore if no count value remaining)
+        ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_BSY;
+        while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0) {      // while bytes to be transferred
+            if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_8) != 0) {              // 8 bit transfers
+                *(unsigned char *)ptrDMA->DMA_DAR = *(unsigned char *)ptrDMA->DMA_SAR; // byte transfer
+                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 1);
+            }
+            else if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_16) != 0) {        // 16 bit transfers
+                *(unsigned short *)ptrDMA->DMA_DAR = *(unsigned short *)ptrDMA->DMA_SAR; // short word transfer
+                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 2);
+            }
+            else {                                                       // 32 bit transfers
+                *(unsigned long *)ptrDMA->DMA_DAR = *(unsigned long *)ptrDMA->DMA_SAR; // long word transfer
+                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 4);
+            }
+            if ((ptrDMA->DMA_DCR & DMA_DCR_DINC) != 0) {                 // destination increment enabled
+                if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_8) != 0) {
+                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 1);
+                }
+                else if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_16) != 0) {
+                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 2);
+                }
+                else {
+                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 4);
+                }
+            }
+            if ((ptrDMA->DMA_DCR & DMA_DCR_SINC) != 0) {                 // source increment enabled
+                if ((ptrDMA->DMA_DCR & DMA_DCR_SSIZE_8) != 0) {
+                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 1);
+                }
+                else if ((ptrDMA->DMA_DCR & DMA_DCR_SSIZE_16) != 0) {
+                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 2);
+                }
+                else {
+                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 4);
+                }
+            }
+            if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {                   // if in cycle-steal mode only one transfer is performed at a time
+                unsigned long ulLength = 0;
+                switch (ptrDMA->DMA_DCR & DMA_DCR_SMOD_256K) {           // handle automatic source modulo buffer operation
+                case DMA_DCR_SMOD_16:
+                    ulLength = 16;
+                    break;
+                case DMA_DCR_SMOD_32:
+                    ulLength = 32;
+                    break;
+                case DMA_DCR_SMOD_64:
+                    ulLength = 64;
+                    break;
+                case DMA_DCR_SMOD_128:
+                    ulLength = 128;
+                    break;
+                case DMA_DCR_SMOD_256:
+                    ulLength = 256;
+                    break;
+                case DMA_DCR_SMOD_512:
+                    ulLength = 512;
+                    break;
+                case DMA_DCR_SMOD_1K:
+                    ulLength = 1024;
+                    break;
+                case DMA_DCR_SMOD_2K:
+                    ulLength = (2 * 1024);
+                    break;
+                case DMA_DCR_SMOD_4K:
+                    ulLength = (4 * 1024);
+                    break;
+                case DMA_DCR_SMOD_8K:
+                    ulLength = (8 * 1024);
+                    break;
+                case DMA_DCR_SMOD_16K:
+                    ulLength = (16 * 1024);
+                    break;
+                case DMA_DCR_SMOD_32K:
+                    ulLength = (32 * 1024);
+                    break;
+                case DMA_DCR_SMOD_64K:
+                    ulLength = (64 * 1024);
+                    break;
+                case DMA_DCR_SMOD_128K:
+                    ulLength = (128 * 1024);
+                    break;
+                case DMA_DCR_SMOD_256K:
+                    ulLength = (256 * 1024);
+                    break;
+                default:
+                    break;
+                }
+                if (ulLength != 0) {
+                    if ((ptrDMA->DMA_SAR % ulLength) == 0) {
+                        ptrDMA->DMA_SAR -= ulLength;
+                    }
+                }
+                switch (ptrDMA->DMA_DCR & DMA_DCR_DMOD_256K) {           // handle automatic destination modulo buffer operation
+                case DMA_DCR_DMOD_16:
+                    ulLength = 16;
+                    break;
+                case DMA_DCR_DMOD_32:
+                    ulLength = 32;
+                    break;
+                case DMA_DCR_DMOD_64:
+                    ulLength = 64;
+                    break;
+                case DMA_DCR_DMOD_128:
+                    ulLength = 128;
+                    break;
+                case DMA_DCR_DMOD_256:
+                    ulLength = 256;
+                    break;
+                case DMA_DCR_DMOD_512:
+                    ulLength = 512;
+                    break;
+                case DMA_DCR_DMOD_1K:
+                    ulLength = 1024;
+                    break;
+                case DMA_DCR_DMOD_2K:
+                    ulLength = (2 * 1024);
+                    break;
+                case DMA_DCR_DMOD_4K:
+                    ulLength = (4 * 1024);
+                    break;
+                case DMA_DCR_DMOD_8K:
+                    ulLength = (8 * 1024);
+                    break;
+                case DMA_DCR_DMOD_16K:
+                    ulLength = (16 * 1024);
+                    break;
+                case DMA_DCR_DMOD_32K:
+                    ulLength = (32 * 1024);
+                    break;
+                case DMA_DCR_DMOD_64K:
+                    ulLength = (64 * 1024);
+                    break;
+                case DMA_DCR_DMOD_128K:
+                    ulLength = (128 * 1024);
+                    break;
+                case DMA_DCR_DMOD_256K:
+                    ulLength = (256 * 1024);
+                    break;
+                default:
+                    ulLength = 0;
+                    break;
+                }
+                if (ulLength != 0) {
+                    if ((ptrDMA->DMA_DAR % ulLength) == 0) {
+                        ptrDMA->DMA_DAR -= ulLength;
+                    }
+                }
+//                break;
+            }
+            if (ptrDMA->DMA_DSR_BCR != 0) {
+                return 1;                                                // still active
+            }
+        }
+        ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_DONE;
+        if ((ptrDMA->DMA_DCR & DMA_DCR_EINT) != 0) {                     // if interrupt is enabled
+            if (fnGenInt(irq_DMA0_ID + channel) != 0) {                  // if DMA channel interrupt is not disabled
+                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                switch (channel) {
+                case 0:
+                    ptrVect->processor_interrupts.irq_DMA0();            // call the interrupt handler for DMA channel 0
+                    break;
+                case 1:
+                    ptrVect->processor_interrupts.irq_DMA1();            // call the interrupt handler for DMA channel 1
+                    break;
+                case 2:
+                    ptrVect->processor_interrupts.irq_DMA2();            // call the interrupt handler for DMA channel 2
+                    break;
+                case 3:
+                    ptrVect->processor_interrupts.irq_DMA3();            // call the interrupt handler for DMA channel 3
+                    break;
+                }
+            }
+        }
+        return 0;
+    }
+#elif !defined KINETIS_KE || defined DEVICE_WITH_eDMA
+    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    if (channel == -1) {
+        channel = fnGetChannelFromSource(ucTriggerSource);
+    }
+    ptrDMA_TCD += channel;
+
+    if (channel >= DMA_CHANNEL_COUNT) {
+        _EXCEPTION("Warning - invalid DMA channel being used!!");
+    }
+    if (ucTriggerSource != 0) {
+        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;
+    }
+    if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
+      //if (ucTriggerSource != 0) {
+            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
+            // Check that the trigger source is correctly connected to the DMA channel
+            //
+            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
+                _EXCEPTION("DMUX source is not connected!!!");
+            }
+      //}
+    }
+    if ((ptrDMA_TCD->DMA_TCD_CSR & (DMA_TCD_CSR_START | DMA_TCD_CSR_ACTIVE)) != 0) { // sw commanded start or active
+        int interrupt = 0;
+        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                   // mark active 
+        ptrDMA_TCD->DMA_TCD_CSR &= ~DMA_TCD_CSR_START;                   // clear the start bit
+        if (ptrDMA_TCD->DMA_TCD_CITER_ELINK != 0) {                      // main loop iterations
+            unsigned long ulMinorLoop = ptrDMA_TCD->DMA_TCD_NBYTES_ML;   // the number of bytes to transfer
+            if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_DSIZE_32) != 0) { // {36} handle long word transfers
+                if ((ptrDMA_TCD->DMA_TCD_DOFF & 0x3) != 0) {
+                    _EXCEPTION("DMA destination offset error!!");
+                }
+                if ((ptrDMA_TCD->DMA_TCD_SOFF & 0x3) != 0) {
+                    _EXCEPTION("DMA source offset error!!");
+                }
+                if ((ulMinorLoop & 0x3) != 0) {
+                    _EXCEPTION("DMA copy size error!!");
+                }
+                while (ulMinorLoop != 0) {
+                    *(unsigned long *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned long *)ptrDMA_TCD->DMA_TCD_SADDR; // long word transfer
+                    ptrDMA_TCD->DMA_TCD_DADDR = ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF;
+                    ptrDMA_TCD->DMA_TCD_SADDR = ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF;
+                    ulMinorLoop -= sizeof(unsigned long);
+                }
+            }
+            else if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_DSIZE_16) != 0) { // {36} handle short word transfers
+                if ((ptrDMA_TCD->DMA_TCD_DOFF & 0x1) != 0) {
+                    _EXCEPTION("DMA destination offset error!!");
+                }
+                if ((ptrDMA_TCD->DMA_TCD_SOFF & 0x1) != 0) {
+                    _EXCEPTION("DMA source offset error!!");
+                }
+                if ((ulMinorLoop & 0x1) != 0) {
+                    _EXCEPTION("DMA copy size error!!");
+                }
+                while (ulMinorLoop != 0) {
+                    *(unsigned short *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned short *)ptrDMA_TCD->DMA_TCD_SADDR; // short word transfer
+                    ptrDMA_TCD->DMA_TCD_DADDR = (ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF);
+                    ptrDMA_TCD->DMA_TCD_SADDR = (ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF);
+                    if (ulMinorLoop <= sizeof(unsigned short)) {
+                        ulMinorLoop = 0;
+                    }
+                    else {
+                        ulMinorLoop -= sizeof(unsigned short);
+                    }
+                }
+            }
+            else {
+                while (ulMinorLoop-- != 0) {                             // minor loop count
+                    *(unsigned char *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned char *)ptrDMA_TCD->DMA_TCD_SADDR; // byte transfer
+                    ptrDMA_TCD->DMA_TCD_DADDR = ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF;
+                    ptrDMA_TCD->DMA_TCD_SADDR = ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF;
+                }
+            }
+            (ptrDMA_TCD->DMA_TCD_CITER_ELINK)--;
+            if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {                  // major loop completed
+                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_INTMAJOR) != 0) { // {18}
+                    interrupt = 1;                                       // possible interrupt
+                }
+                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DREQ) != 0) { // disable on completion of major loop
+                    DMA_ERQ &= ~(DMA_ERQ_ERQ0 << channel);
+                    ptrDMA_TCD->DMA_TCD_CSR &= ~DMA_TCD_CSR_ACTIVE;      // completed
+                }
+                else {                                                   // continuous operation
+                    ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptrDMA_TCD->DMA_TCD_BITER_ELINK; // set back the main loop count value
+                }
+                ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DONE;
+                ptrDMA_TCD->DMA_TCD_DADDR += ptrDMA_TCD->DMA_TCD_DLASTSGA;
+                ptrDMA_TCD->DMA_TCD_SADDR += ptrDMA_TCD->DMA_TCD_SLAST;
+            }
+            else if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == (ptrDMA_TCD->DMA_TCD_BITER_ELINK/2)) { // half complete
+                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_INTHALF) != 0) { // check whether half-buffer interrupt has been configured
+                    interrupt = 1;
+                }
+            }
+
+            if (interrupt != 0) {                                        // if possible interrupt to generate
+                DMA_INT |= (DMA_INT_INT0 << channel);
+    #if defined eDMA_SHARES_INTERRUPTS
+                if (fnGenInt(irq_DMA0_ID + (channel%(DMA_CHANNEL_COUNT/2))) != 0)
+    #else
+                if (fnGenInt(irq_DMA0_ID + channel) != 0)
+    #endif
+                {                                                        // if DMA channel interrupt is not disabled
+                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
+                    switch (channel) {
+                    case 0:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case (0 + (DMA_CHANNEL_COUNT / 2)):
+    #endif
+                        ptrVect->processor_interrupts.irq_DMA0();    // call the interrupt handler for DMA channel 0 (and possibly shared channel)
+                        break;
+                    case 1:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case (1 + (DMA_CHANNEL_COUNT / 2)):
+    #endif
+                        ptrVect->processor_interrupts.irq_DMA1();        // call the interrupt handler for DMA channel 1 (and possibly shared channel)
+                        break;
+                    case 2:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case (2 + (DMA_CHANNEL_COUNT / 2)):
+    #endif
+                        ptrVect->processor_interrupts.irq_DMA2();        // call the interrupt handler for DMA channel 2 (and possibly shared channel)
+                        break;
+                    case 3:
+    #if defined eDMA_SHARES_INTERRUPTS
+                    case (3 + (DMA_CHANNEL_COUNT / 2)):
+    #endif
+                        ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3 (and possibly shared channel)
+                        break;
+    #if (DMA_CHANNEL_COUNT > 4) && defined irq_DMA4_ID
+                    case 4:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (4 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA4();        // call the interrupt handler for DMA channel 4 (and possibly shared channel)
+                        break;
+                    case 5:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (5 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA5();        // call the interrupt handler for DMA channel 5 (and possibly shared channel)
+                        break;
+                    case 6:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (6 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA6();        // call the interrupt handler for DMA channel 6 (and possibly shared channel)
+                        break;
+                    case 7:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (7 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA7();        // call the interrupt handler for DMA channel 7 (and possibly shared channel)
+                        break;
+    #endif
+    #if (DMA_CHANNEL_COUNT > 8) && defined irq_DMA8_ID
+                    case 8:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (8 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA8();        // call the interrupt handler for DMA channel 8 (and possibly shared channel)
+                        break;
+                    case 9:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (9 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA9();        // call the interrupt handler for DMA channel 9 (and possibly shared channel)
+                        break;
+                    case 10:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (10 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA10();       // call the interrupt handler for DMA channel 10 (and possibly shared channel)
+                        break;
+                    case 11:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (11 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA11();       // call the interrupt handler for DMA channel 11 (and possibly shared channel)
+                        break;
+                    case 12:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (12 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA12();       // call the interrupt handler for DMA channel 12 (and possibly shared channel)
+                        break;
+                    case 13:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (13 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA13();       // call the interrupt handler for DMA channel 13 (and possibly shared channel)
+                        break;
+                    case 14:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (14 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA14();       // call the interrupt handler for DMA channel 14 (and possibly shared channel)
+                        break;
+                    case 15:
+        #if defined eDMA_SHARES_INTERRUPTS
+                    case (15 + (DMA_CHANNEL_COUNT / 2)):
+        #endif
+                        ptrVect->processor_interrupts.irq_DMA15();       // call the interrupt handler for DMA channel 15 (and possibly shared channel)
+                        break;
+    #endif
+                    }
+                }
+            }
+            if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {
+                return 0;                                                // completed
+            }
+        }
+        return 1;                                                        // not completed
+    }
+#endif
+#endif
+    return -1;                                                           // no operation
+}
+
 static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFlexTimerChannels, int iTPM_type) // {49}
 {
     static int iChannelFired[FLEX_TIMERS_AVAILABLE][8] = {{0}};
@@ -2923,7 +3355,33 @@ static int fnHandleFlexTimer(int iTimerRef, FLEX_TIMER_MODULE *ptrTimer, int iFl
                 iChannelFired[iTimerRef][iChannel] = 1;                  // block this channel from firing again before a new period starts
                 if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_CHIE) != 0) { // if channel interrupt is enabled
                     if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & FTM_CSC_DMA) != 0) { // if DMA is enabled
-                        _EXCEPTION("TO DO");
+                        unsigned char ucDMA_channel = 0;
+                        switch (iTimerRef) {
+    #if defined DMAMUX0_CHCFG_SOURCE_FTM0_C0
+                        case 0:
+                            ucDMA_channel = DMAMUX0_CHCFG_SOURCE_FTM0_C0;
+                            break;
+    #endif
+    #if defined DMAMUX0_CHCFG_SOURCE_FTM1_C0
+                        case 1:
+                            ucDMA_channel = DMAMUX0_CHCFG_SOURCE_FTM1_C0;
+                            break;
+    #endif
+    #if defined DMAMUX0_CHCFG_SOURCE_FTM2_C0
+                        case 2:
+                            ucDMA_channel = DMAMUX0_CHCFG_SOURCE_FTM2_C0;
+                            break;
+    #endif
+    #if defined DMAMUX0_CHCFG_SOURCE_FTM3_C0
+                        case 3:
+                            ucDMA_channel = DMAMUX0_CHCFG_SOURCE_FTM3_C0;
+                            break;
+    #endif
+                        default:
+                            _EXCEPTION("To do!!");
+                            break;
+                        }
+                        fnSimulateDMA(-1, (ucDMA_channel + iChannel));   // {52} simulate DMA trigger
                     }
                     else {
                         iTimerInterrupt = 1;                             // mark that an interrupt is pending
@@ -5471,415 +5929,6 @@ extern void fnSimPers(void)
     iFlagRefresh = PORT_CHANGE;
 }
 
-extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
-{
-#if !defined DEVICE_WITHOUT_DMA
-#if (defined KINETIS_KL || defined KINETIS_KM) && !defined DEVICE_WITH_eDMA // {32}
-    KINETIS_DMA *ptrDMA = (KINETIS_DMA *)DMA_BLOCK;
-    ptrDMA += channel;
-    if ((ptrDMA->DMA_DCR & DMA_DCR_ERQ) != 0) {                          // peripheral trigger
-        if (ucTriggerSource != 0) {
-            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
-            // Check that the trigger source is correctly connected to the DMA channel
-            //
-            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
-                _EXCEPTION("DMUX source is not connected!!!");
-            }
-        }
-    }
-    if (((ptrDMA->DMA_DCR & (DMA_DCR_START | DMA_DCR_ERQ)) != 0) && ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0)) { // sw commanded start or source request (ignore if no count value remaining)
-        ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_BSY;
-        while ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) != 0) {      // while bytes to be transferred
-            if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_8) != 0) {              // 8 bit transfers
-                *(unsigned char *)ptrDMA->DMA_DAR = *(unsigned char *)ptrDMA->DMA_SAR; // byte transfer
-                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 1);
-            }
-            else if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_16) != 0) {        // 16 bit transfers
-                *(unsigned short *)ptrDMA->DMA_DAR = *(unsigned short *)ptrDMA->DMA_SAR; // short word transfer
-                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 2);
-            }
-            else {                                                       // 32 bit transfers
-                *(unsigned long *)ptrDMA->DMA_DAR = *(unsigned long *)ptrDMA->DMA_SAR; // long word transfer
-                ptrDMA->DMA_DSR_BCR = ((ptrDMA->DMA_DSR_BCR & DMA_DSR_BCR_BCR_MASK) - 4);
-            }
-            if ((ptrDMA->DMA_DCR & DMA_DCR_DINC) != 0) {                 // destination increment enabled
-                if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_8) != 0) {
-                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 1);
-                }
-                else if ((ptrDMA->DMA_DCR & DMA_DCR_DSIZE_16) != 0) {
-                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 2);
-                }
-                else {
-                    ptrDMA->DMA_DAR = (ptrDMA->DMA_DAR + 4);
-                }
-            }
-            if ((ptrDMA->DMA_DCR & DMA_DCR_SINC) != 0) {                 // source increment enabled
-                if ((ptrDMA->DMA_DCR & DMA_DCR_SSIZE_8) != 0) {
-                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 1);
-                }
-                else if ((ptrDMA->DMA_DCR & DMA_DCR_SSIZE_16) != 0) {
-                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 2);
-                }
-                else {
-                    ptrDMA->DMA_SAR  = (ptrDMA->DMA_SAR + 4);
-                }
-            }
-            if ((ptrDMA->DMA_DCR & DMA_DCR_CS) != 0) {                   // if in cycle-steal mode only one transfer is performed at a time
-                unsigned long ulLength = 0;
-                switch (ptrDMA->DMA_DCR & DMA_DCR_SMOD_256K) {           // handle automatic source modulo buffer operation
-                case DMA_DCR_SMOD_16:
-                    ulLength = 16;
-                    break;
-                case DMA_DCR_SMOD_32:
-                    ulLength = 32;
-                    break;
-                case DMA_DCR_SMOD_64:
-                    ulLength = 64;
-                    break;
-                case DMA_DCR_SMOD_128:
-                    ulLength = 128;
-                    break;
-                case DMA_DCR_SMOD_256:
-                    ulLength = 256;
-                    break;
-                case DMA_DCR_SMOD_512:
-                    ulLength = 512;
-                    break;
-                case DMA_DCR_SMOD_1K:
-                    ulLength = 1024;
-                    break;
-                case DMA_DCR_SMOD_2K:
-                    ulLength = (2 * 1024);
-                    break;
-                case DMA_DCR_SMOD_4K:
-                    ulLength = (4 * 1024);
-                    break;
-                case DMA_DCR_SMOD_8K:
-                    ulLength = (8 * 1024);
-                    break;
-                case DMA_DCR_SMOD_16K:
-                    ulLength = (16 * 1024);
-                    break;
-                case DMA_DCR_SMOD_32K:
-                    ulLength = (32 * 1024);
-                    break;
-                case DMA_DCR_SMOD_64K:
-                    ulLength = (64 * 1024);
-                    break;
-                case DMA_DCR_SMOD_128K:
-                    ulLength = (128 * 1024);
-                    break;
-                case DMA_DCR_SMOD_256K:
-                    ulLength = (256 * 1024);
-                    break;
-                default:
-                    break;
-                }
-                if (ulLength != 0) {
-                    if ((ptrDMA->DMA_SAR % ulLength) == 0) {
-                        ptrDMA->DMA_SAR -= ulLength;
-                    }
-                }
-                switch (ptrDMA->DMA_DCR & DMA_DCR_DMOD_256K) {           // handle automatic destination modulo buffer operation
-                case DMA_DCR_DMOD_16:
-                    ulLength = 16;
-                    break;
-                case DMA_DCR_DMOD_32:
-                    ulLength = 32;
-                    break;
-                case DMA_DCR_DMOD_64:
-                    ulLength = 64;
-                    break;
-                case DMA_DCR_DMOD_128:
-                    ulLength = 128;
-                    break;
-                case DMA_DCR_DMOD_256:
-                    ulLength = 256;
-                    break;
-                case DMA_DCR_DMOD_512:
-                    ulLength = 512;
-                    break;
-                case DMA_DCR_DMOD_1K:
-                    ulLength = 1024;
-                    break;
-                case DMA_DCR_DMOD_2K:
-                    ulLength = (2 * 1024);
-                    break;
-                case DMA_DCR_DMOD_4K:
-                    ulLength = (4 * 1024);
-                    break;
-                case DMA_DCR_DMOD_8K:
-                    ulLength = (8 * 1024);
-                    break;
-                case DMA_DCR_DMOD_16K:
-                    ulLength = (16 * 1024);
-                    break;
-                case DMA_DCR_DMOD_32K:
-                    ulLength = (32 * 1024);
-                    break;
-                case DMA_DCR_DMOD_64K:
-                    ulLength = (64 * 1024);
-                    break;
-                case DMA_DCR_DMOD_128K:
-                    ulLength = (128 * 1024);
-                    break;
-                case DMA_DCR_DMOD_256K:
-                    ulLength = (256 * 1024);
-                    break;
-                default:
-                    ulLength = 0;
-                    break;
-                }
-                if (ulLength != 0) {
-                    if ((ptrDMA->DMA_DAR % ulLength) == 0) {
-                        ptrDMA->DMA_DAR -= ulLength;
-                    }
-                }
-//                break;
-            }
-            if (ptrDMA->DMA_DSR_BCR != 0) {
-                return 1;                                                // still active
-            }
-        }
-        ptrDMA->DMA_DSR_BCR |= DMA_DSR_BCR_DONE;
-        if ((ptrDMA->DMA_DCR & DMA_DCR_EINT) != 0) {                     // if interrupt is enabled
-            if (fnGenInt(irq_DMA0_ID + channel) != 0) {                  // if DMA channel interrupt is not disabled
-                VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                switch (channel) {
-                case 0:
-                    ptrVect->processor_interrupts.irq_DMA0();            // call the interrupt handler for DMA channel 0
-                    break;
-                case 1:
-                    ptrVect->processor_interrupts.irq_DMA1();            // call the interrupt handler for DMA channel 1
-                    break;
-                case 2:
-                    ptrVect->processor_interrupts.irq_DMA2();            // call the interrupt handler for DMA channel 2
-                    break;
-                case 3:
-                    ptrVect->processor_interrupts.irq_DMA3();            // call the interrupt handler for DMA channel 3
-                    break;
-                }
-            }
-        }
-        return 0;
-    }
-#elif !defined KINETIS_KE || defined DEVICE_WITH_eDMA
-    KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
-    ptrDMA_TCD += channel;
-
-    if (channel >= DMA_CHANNEL_COUNT) {
-        _EXCEPTION("Warning - invalid DMA channel being used!!");
-    }
-    if (ucTriggerSource != 0) {
-        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;
-    }
-    if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_ACTIVE) != 0) {           // peripheral trigger
-      //if (ucTriggerSource != 0) {
-            unsigned char *ptrDMUX = (DMAMUX0_CHCFG_ADD + channel);
-            // Check that the trigger source is correctly connected to the DMA channel
-            //
-            if ((*ptrDMUX & ~(DMAMUX_CHCFG_TRIG | DMAMUX_CHCFG_ENBL)) != ucTriggerSource) {
-                _EXCEPTION("DMUX source is not connected!!!");
-            }
-      //}
-    }
-    if ((ptrDMA_TCD->DMA_TCD_CSR & (DMA_TCD_CSR_START | DMA_TCD_CSR_ACTIVE)) != 0) { // sw commanded start or active
-        int interrupt = 0;
-        ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_ACTIVE;                   // mark active 
-        ptrDMA_TCD->DMA_TCD_CSR &= ~DMA_TCD_CSR_START;                   // clear the start bit
-        if (ptrDMA_TCD->DMA_TCD_CITER_ELINK != 0) {                      // main loop iterations
-            unsigned long ulMinorLoop = ptrDMA_TCD->DMA_TCD_NBYTES_ML;   // the number of bytes to transfer
-            if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_DSIZE_32) != 0) { // {36} handle long word transfers
-                if ((ptrDMA_TCD->DMA_TCD_DOFF & 0x3) != 0) {
-                    _EXCEPTION("DMA destination offset error!!");
-                }
-                if ((ptrDMA_TCD->DMA_TCD_SOFF & 0x3) != 0) {
-                    _EXCEPTION("DMA source offset error!!");
-                }
-                if ((ulMinorLoop & 0x3) != 0) {
-                    _EXCEPTION("DMA copy size error!!");
-                }
-                while (ulMinorLoop != 0) {
-                    *(unsigned long *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned long *)ptrDMA_TCD->DMA_TCD_SADDR; // long word transfer
-                    ptrDMA_TCD->DMA_TCD_DADDR = ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF;
-                    ptrDMA_TCD->DMA_TCD_SADDR = ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF;
-                    ulMinorLoop -= sizeof(unsigned long);
-                }
-            }
-            else if ((ptrDMA_TCD->DMA_TCD_ATTR & DMA_TCD_ATTR_DSIZE_16) != 0) { // {36} handle short word transfers
-                if ((ptrDMA_TCD->DMA_TCD_DOFF & 0x1) != 0) {
-                    _EXCEPTION("DMA destination offset error!!");
-                }
-                if ((ptrDMA_TCD->DMA_TCD_SOFF & 0x1) != 0) {
-                    _EXCEPTION("DMA source offset error!!");
-                }
-                if ((ulMinorLoop & 0x1) != 0) {
-                    _EXCEPTION("DMA copy size error!!");
-                }
-                while (ulMinorLoop != 0) {
-                    *(unsigned short *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned short *)ptrDMA_TCD->DMA_TCD_SADDR; // short word transfer
-                    ptrDMA_TCD->DMA_TCD_DADDR = (ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF);
-                    ptrDMA_TCD->DMA_TCD_SADDR = (ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF);
-                    if (ulMinorLoop <= sizeof(unsigned short)) {
-                        ulMinorLoop = 0;
-                    }
-                    else {
-                        ulMinorLoop -= sizeof(unsigned short);
-                    }
-                }
-            }
-            else {
-                while (ulMinorLoop-- != 0) {                             // minor loop count
-                    *(unsigned char *)ptrDMA_TCD->DMA_TCD_DADDR = *(unsigned char *)ptrDMA_TCD->DMA_TCD_SADDR; // byte transfer
-                    ptrDMA_TCD->DMA_TCD_DADDR = ptrDMA_TCD->DMA_TCD_DADDR + ptrDMA_TCD->DMA_TCD_DOFF;
-                    ptrDMA_TCD->DMA_TCD_SADDR = ptrDMA_TCD->DMA_TCD_SADDR + ptrDMA_TCD->DMA_TCD_SOFF;
-                }
-            }
-            (ptrDMA_TCD->DMA_TCD_CITER_ELINK)--;
-            if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {                  // major loop completed
-                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_INTMAJOR) != 0) { // {18}
-                    interrupt = 1;                                       // possible interrupt
-                }
-                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_DREQ) != 0) { // disable on completion of major loop
-                    DMA_ERQ &= ~(DMA_ERQ_ERQ0 << channel);
-                    ptrDMA_TCD->DMA_TCD_CSR &= ~DMA_TCD_CSR_ACTIVE;      // completed
-                }
-                else {                                                   // continuous operation
-                    ptrDMA_TCD->DMA_TCD_CITER_ELINK = ptrDMA_TCD->DMA_TCD_BITER_ELINK; // set back the main loop count value
-                }
-                ptrDMA_TCD->DMA_TCD_CSR |= DMA_TCD_CSR_DONE;
-                ptrDMA_TCD->DMA_TCD_DADDR += ptrDMA_TCD->DMA_TCD_DLASTSGA;
-                ptrDMA_TCD->DMA_TCD_SADDR += ptrDMA_TCD->DMA_TCD_SLAST;
-            }
-            else if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == (ptrDMA_TCD->DMA_TCD_BITER_ELINK/2)) { // half complete
-                if ((ptrDMA_TCD->DMA_TCD_CSR & DMA_TCD_CSR_INTHALF) != 0) { // check whether half-buffer interrupt has been configured
-                    interrupt = 1;
-                }
-            }
-
-            if (interrupt != 0) {                                        // if possible interrupt to generate
-                DMA_INT |= (DMA_INT_INT0 << channel);
-    #if defined eDMA_SHARES_INTERRUPTS
-                if (fnGenInt(irq_DMA0_ID + (channel%(DMA_CHANNEL_COUNT/2))) != 0)
-    #else
-                if (fnGenInt(irq_DMA0_ID + channel) != 0)
-    #endif
-                {                                                        // if DMA channel interrupt is not disabled
-                    VECTOR_TABLE *ptrVect = (VECTOR_TABLE *)VECTOR_TABLE_OFFSET_REG;
-                    switch (channel) {
-                    case 0:
-    #if defined eDMA_SHARES_INTERRUPTS
-                    case (0 + (DMA_CHANNEL_COUNT / 2)):
-    #endif
-                        ptrVect->processor_interrupts.irq_DMA0();    // call the interrupt handler for DMA channel 0 (and possibly shared channel)
-                        break;
-                    case 1:
-    #if defined eDMA_SHARES_INTERRUPTS
-                    case (1 + (DMA_CHANNEL_COUNT / 2)):
-    #endif
-                        ptrVect->processor_interrupts.irq_DMA1();        // call the interrupt handler for DMA channel 1 (and possibly shared channel)
-                        break;
-                    case 2:
-    #if defined eDMA_SHARES_INTERRUPTS
-                    case (2 + (DMA_CHANNEL_COUNT / 2)):
-    #endif
-                        ptrVect->processor_interrupts.irq_DMA2();        // call the interrupt handler for DMA channel 2 (and possibly shared channel)
-                        break;
-                    case 3:
-    #if defined eDMA_SHARES_INTERRUPTS
-                    case (3 + (DMA_CHANNEL_COUNT / 2)):
-    #endif
-                        ptrVect->processor_interrupts.irq_DMA3();        // call the interrupt handler for DMA channel 3 (and possibly shared channel)
-                        break;
-    #if (DMA_CHANNEL_COUNT > 4) && defined irq_DMA4_ID
-                    case 4:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (4 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA4();        // call the interrupt handler for DMA channel 4 (and possibly shared channel)
-                        break;
-                    case 5:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (5 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA5();        // call the interrupt handler for DMA channel 5 (and possibly shared channel)
-                        break;
-                    case 6:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (6 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA6();        // call the interrupt handler for DMA channel 6 (and possibly shared channel)
-                        break;
-                    case 7:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (7 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA7();        // call the interrupt handler for DMA channel 7 (and possibly shared channel)
-                        break;
-    #endif
-    #if (DMA_CHANNEL_COUNT > 8) && defined irq_DMA8_ID
-                    case 8:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (8 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA8();        // call the interrupt handler for DMA channel 8 (and possibly shared channel)
-                        break;
-                    case 9:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (9 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA9();        // call the interrupt handler for DMA channel 9 (and possibly shared channel)
-                        break;
-                    case 10:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (10 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA10();       // call the interrupt handler for DMA channel 10 (and possibly shared channel)
-                        break;
-                    case 11:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (11 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA11();       // call the interrupt handler for DMA channel 11 (and possibly shared channel)
-                        break;
-                    case 12:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (12 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA12();       // call the interrupt handler for DMA channel 12 (and possibly shared channel)
-                        break;
-                    case 13:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (13 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA13();       // call the interrupt handler for DMA channel 13 (and possibly shared channel)
-                        break;
-                    case 14:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (14 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA14();       // call the interrupt handler for DMA channel 14 (and possibly shared channel)
-                        break;
-                    case 15:
-        #if defined eDMA_SHARES_INTERRUPTS
-                    case (15 + (DMA_CHANNEL_COUNT / 2)):
-        #endif
-                        ptrVect->processor_interrupts.irq_DMA15();       // call the interrupt handler for DMA channel 15 (and possibly shared channel)
-                        break;
-    #endif
-                    }
-                }
-            }
-            if (ptrDMA_TCD->DMA_TCD_CITER_ELINK == 0) {
-                return 0;                                                // completed
-            }
-        }
-        return 1;                                                        // not completed
-    }
-#endif
-#endif
-    return -1;                                                           // no operation
-}
 
 #if !defined DEVICE_WITHOUT_DMA
 // Handler peripheral DMA triggers
