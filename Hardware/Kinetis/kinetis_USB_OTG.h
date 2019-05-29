@@ -1226,7 +1226,7 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     }
     #if defined _WINDOWS && defined KINETIS_HAS_IRC48M && defined USB_CRYSTAL_LESS
     else {
-        _EXCEPTION("USB Host cannot operate correctly in crystal-less mode!!");
+        _EXCEPTION("USB FS Host cannot operate correctly in crystal-less mode!!");
     }
     #endif
 

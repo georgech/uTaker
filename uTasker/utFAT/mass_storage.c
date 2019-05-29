@@ -11,7 +11,7 @@
     File:      mass_storage.c
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     11.07.2014 utFATV2.00
     05.08.2014 Correct long file rename end of directory save            {1}
@@ -3138,7 +3138,7 @@ extern void fnMassStorage(TTASKTABLE *ptrTaskTable)
     #endif
             break;
 
-    #if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
+    #if (defined SDCARD_SUPPORT && defined SDCARD_DETECT_INPUT_INTERRUPT) && !defined SDCARD_FIXED
         case INTERRUPT_EVENT:                                            // new state of SD card detection
             if (E_SDCARD_DETECTION_CHANGE == ucInputMessage[MSG_INTERRUPT_EVENT]) {
                 if (SDCARD_DETECTION() != 0) {                           // card has been inserted so try to mount it
@@ -7456,7 +7456,7 @@ extern int utServer(UTDIRECTORY *ptr_utDirectory, unsigned long ulServerType)
 }
 #endif
 
-#if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
+#if (defined SDCARD_SUPPORT && defined SDCARD_DETECT_INPUT_INTERRUPT) && !defined SDCARD_FIXED
 // Interrupt call-back on change in SD-card presence
 //
 static void sdcard_detection_change(void)

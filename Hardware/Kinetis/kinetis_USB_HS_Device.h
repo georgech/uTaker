@@ -162,15 +162,22 @@ static void fnUSBHS_init(unsigned char ucEndpoints)
 
     if (__USB_HOST_MODE()) {
     #if defined USB_HOST_SUPPORT
-        USBHS_USBMODE = (USBHS_USBMODE_CM_HOST | USBHS_USBMODE_ES_LITTLE | USBHS_USBMODE_SLOM/* | USBHS_USBMODE_SDIS*/); // note that stream is disabled so that single rx buffering is possible (this may reduce OUT speed but is simpler, especially when using for software uploading where the speed is limited by flash programming anyway)
-        // Host mode
-        //
-        USBHS_PORTSC1 = USBHS_PORTSC1_PP; // ??
-        USBHS_GPTIMER0LD = (100 * 1000 - 1); /* 100ms ?? */
+        USBHS_USBCMD = USBHS_USBCMD_RST;                                 // reset the controller
+        while ((USBHS_USBCMD & USBHS_USBCMD_RST) != 0) {                 // wait for the reset to complete
+        #if defined _WINDOWS
+            USBHS_USBCMD = 0;
+        #endif
+        }
+        USBHS_USBMODE = (USBHS_USBMODE_CM_HOST | USBHS_USBMODE_ES_LITTLE/* | USBHS_USBMODE_SLOM | USBHS_USBMODE_SDIS*/); // set little-endian host mode of operation
+        USBHS_PORTSC1 = USBHS_PORTSC1_PP;                                // turn on power port
+      //USBHS_USBCMD = (USBHS_USBCMD_FS_1024 | USBHS_USBCMD_RS);         // periodic frame list size 1024 and set run mode in order to start the controller
+      //USBHS_GPTIMER0LD = (100 * 1000 - 1);                             // set timer 0 to 100ms
     #endif
     }
     else {                                                               // device mode
+    #if defined USB_DEVICE_SUPPORT
         USBHS_USBMODE = (USBHS_USBMODE_CM_DEVICE | USBHS_USBMODE_ES_LITTLE | USBHS_USBMODE_SLOM/* | USBHS_USBMODE_SDIS*/); // note that stream is disabled so that single rx buffering is possible (this may reduce OUT speed but is simpler, especially when using for software uploading where the speed is limited by flash programming anyway)
+    #endif
     }
     USBHS_EPSETUPSR = 0xffffffff;                                        // clear endpoint setup register (write '1' to clear each flag)
     #if defined _WINDOWS
@@ -207,8 +214,17 @@ static void fnUSBHS_init(unsigned char ucEndpoints)
     }
     USBHS_EPCR0 = (USBHS_EPCR_RXE | USBHS_EPCR_RXR | USBHS_EPCR_TXE | USBHS_EPCR_TXR); // reset data toggle (synchronise) on endpoint 0
     fnEnterInterrupt(irq_USB_HS_ID, PRIORITY_USB_HS_OTG, _usb_hs_otg_isr); //configure and enter the USB handling interrupt routine in the vector table
-    USBHS_USBINTR = (USBHS_USBINTR_UE | USBHS_USBINTR_UEE | USBHS_USBINTR_PCE | USBHS_USBINTR_URE); // enable interrupt sources
-    USBHS_USBCMD = (USBHS_USBCMD_RS);                                    // set to run mode (in device mode this causes the controller to enable a pull-up on D+ and initiate an attach event
+    if (__USB_HOST_MODE()) {
+    #if defined USB_HOST_SUPPORT
+        USBHS_USBINTR = (USBHS_USBINTR_UE | USBHS_USBINTR_UEE | USBHS_USBINTR_PCE | USBHS_USBINTR_AAE | USBHS_USBINTR_SEE | USBHS_USBINTR_TIE0 | USBHS_USBINTR_TIE1); // enable interrupt sources used in host mode
+    #endif
+    }
+    else {
+    #if defined USB_DEVICE_SUPPORT
+        USBHS_USBINTR = (USBHS_USBINTR_UE | USBHS_USBINTR_UEE | USBHS_USBINTR_PCE | USBHS_USBINTR_URE); // enable interrupt sources used in device mode
+    #endif
+    }
+    USBHS_USBCMD = (USBHS_USBCMD_FS_1024 | USBHS_USBCMD_RS);             // set to run mode (in device mode this causes the controller to enable a pull-up on D+ and initiate an attach event
     USBHS_EPPRIME |= (USBHS_EPPRIME_PERB0);                              // prime the reception
     #if defined _WINDOWS
     uMemcpy((void *)ptrEndpointQueueHeader->CurrentdTD_pointer, &ptrEndpointQueueHeader->dTD, (sizeof(ptrEndpointQueueHeader->dTD) - sizeof(unsigned long))); // the USBHS controller automatically copied the dTD content to the transfer buffer
@@ -332,6 +348,44 @@ static int fnProcessHSInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned ch
     return 0;
 }
 
+#if defined USB_HOST_SUPPORT
+// After a short delay after a possible attach, check the state and decide whether we need to continue with the attached device
+//
+static void usb_possible_attach(void)
+{
+    //fnUSB_ResetCycle();
+}
+
+static void (*timeout_handler0)(void) = 0;
+static void (*timeout_handler1)(void) = 0;
+
+// A single-shot HW timer reserved for USB host timing use
+//
+static void fnUSB_HS_HostDelaySingle(void (*timeout_handler)(void), unsigned long ulDelay)
+{
+    timeout_handler0 = timeout_handler;
+    USBHS_GPTIMER0LD = (ulDelay - 1);                                    // set timer 0 delay
+    USBHS_GPTIMER0CTL |= (USBHS_GPTIMERCTL_MODE_SINGLE | USBHS_GPTIMERCTL_RST | USBHS_GPTIMERCTL_RUN); // start operation
+    #if defined _WINDOWS
+    USBHS_GPTIMER0CTL &= ~(USBHS_GPTIMERCTL_RST | USBHS_GPTIMERCTL_GPTCNT_MASK);
+    USBHS_GPTIMER0CTL |= (USBHS_GPTIMER0LD & USBHS_GPTIMERCTL_GPTCNT_MASK); // initial count value (in us) loaded and counts down until zero
+    #endif
+}
+
+// A repetitive HW timer reserved for USB host timing use
+//
+static void fnUSB_HS_HostDelayRepeat(void(*timeout_handler)(void), unsigned long ulDelay)
+{
+    timeout_handler1 = timeout_handler;
+    USBHS_GPTIMER1LD = (ulDelay - 1);                                    // set timer 1 delay
+    USBHS_GPTIMER1CTL |= (USBHS_GPTIMERCTL_MODE_SINGLE | USBHS_GPTIMERCTL_RST | USBHS_GPTIMERCTL_RUN); // start operation
+#if defined _WINDOWS
+    USBHS_GPTIMER1CTL &= ~(USBHS_GPTIMERCTL_RST | USBHS_GPTIMERCTL_GPTCNT_MASK);
+    USBHS_GPTIMER1CTL |= (USBHS_GPTIMER0LD & USBHS_GPTIMERCTL_GPTCNT_MASK); // initial count value (in us) loaded and counts down until zero
+#endif
+}
+#endif
+
 // High-speed USB interrupt handler
 //
 static __interrupt void _usb_hs_otg_isr(void)
@@ -445,19 +499,46 @@ static __interrupt void _usb_hs_otg_isr(void)
                 }
         }
         if ((ulInterrupts & USBHS_USBINTR_PCE) != 0) {                   // handle port change interrupt
-    #if defined _WINDOWS
-            USBHS_PORTSC1 = 0;
-    #endif
-            ucUSBHS_state &= ~USBHS_STATE_RESETTING;                     // a reset must be complete when a port change interrupt is received
-            if ((USBHS_PORTSC1 & USBHS_PORTSC1_SUSP) == 0) {             // not in the suspended state
-                if ((ucUSBHS_state & USBHS_STATE_SUSPENDED) != 0) {      // resume detected - 10ms inverted idle USB bus state (low speed D+ = 1, D- = 0 / high speed D+ = 0, D- = 1)
-                    ucUSBHS_state &= ~USBHS_STATE_SUSPENDED;             // no longer in the suspend state
-                    uDisable_Interrupt();                                // ensure interrupts remain blocked when putting messages to queue
-                        fnUSB_handle_frame(USB_RESUME_DETECTED, 0, 0, 0);// generic handler routine
-                    uEnable_Interrupt();                                 // re-enable interrupts
+            if (__USB_HOST_MODE()) {
+    #if defined USB_HOST_SUPPORT
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_CSC) != 0) {          // connection state change
+                    CLEAR_PORTSC1_FLAGS(USBHS_PORTSC1_CSC);              // clear connection state change flag
+                    // NXP uses a loop with 1ms delay to clear the flag
+                    // - to monitor
                 }
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_CCS) != 0) {          // attach detected
+                    fnUSB_HS_HostDelaySingle(usb_possible_attach, 50000);// wait a short time before checking whether this was a real attach
+                }
+                else {                                                   // detach detected
+                    _EXCEPTION("To do...");
+                }
+    #endif
+            }
+            else {
+    #if defined USB_DEVICE_SUPPORT
+        #if defined _WINDOWS
+                USBHS_PORTSC1 = 0;
+        #endif
+                ucUSBHS_state &= ~USBHS_STATE_RESETTING;                 // a reset must be complete when a port change interrupt is received
+                if ((USBHS_PORTSC1 & USBHS_PORTSC1_SUSP) == 0) {         // not in the suspended state
+                    if ((ucUSBHS_state & USBHS_STATE_SUSPENDED) != 0) {  // resume detected - 10ms inverted idle USB bus state (low speed D+ = 1, D- = 0 / high speed D+ = 0, D- = 1)
+                        ucUSBHS_state &= ~USBHS_STATE_SUSPENDED;         // no longer in the suspend state
+                        uDisable_Interrupt();                            // ensure interrupts remain blocked when putting messages to queue
+                            fnUSB_handle_frame(USB_RESUME_DETECTED, 0, 0, 0); // generic handler routine
+                        uEnable_Interrupt();                             // re-enable interrupts
+                    }
+                }
+    #endif
             }
         }
+    #if defined USB_HOST_SUPPORT
+        if ((ulInterrupts & USBHS_USBINTR_TIE0) != 0) {                  // timer 0 timeout (single shot timer)
+            timeout_handler0();
+        }
+        if ((ulInterrupts & USBHS_USBINTR_TIE1) != 0) {                  // timer 1 timeout (repetitive timer)
+            timeout_handler1();
+        }
+    #endif
         if ((ulInterrupts & USBHS_USBINTR_UEE) != 0) {                   // handle USB error interrupt (these are not expected but such events could be debugged here)
         }
         if ((ulInterrupts & USBHS_USBINTR_SLE) != 0) {                   // suspend state detected - 3ms of idle USB bus detected (low speed D+ = 0, D- = 1 / high speed D+ = 1, D- = 0)
@@ -646,7 +727,9 @@ extern int fnGetUSB_HW(int iEndpoint, USB_HW **ptr_usb_hardware)
     if ((*(USBHS_EPCR0_ADDR + iEndpoint) & USBHS_EPCR_TXE) == 0) {       // if the particular endpoint is not enabled for transmission 
         return ENDPOINT_NOT_ACTIVE;
     }
+    #if defined USB_DEVICE_SUPPORT
     (*ptr_usb_hardware)->ucDeviceType = USB_DEVICE_HS;
+    #endif
     (*ptr_usb_hardware)->ptrEndpoint = &usb_endpoints[iEndpoint];
     (*ptr_usb_hardware)->ptrQueueHeader = (KINETIS_USBHS_ENDPOINT_QUEUE_HEADER *)USBHS_EPLISTADDR;
     (*ptr_usb_hardware)->ptrQueueHeader += (2 * iEndpoint);
@@ -775,10 +858,17 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         #endif
     #endif
     unsigned char ucEndpoints = (pars->ucEndPoints + 1);                 // endpoint count, including endpoint 0
-    usb_hardware.ucDeviceType = USB_DEVICE_HS;                           // mark that the HS controller is being used
+    usb_hardware.ucDeviceType = USB_DEVICE_HS;                           // mark that the HS controller is being used (rather than FS)
+    #if defined USB_HOST_SUPPORT && defined USB_DEVICE_SUPPORT
+    if ((pars->usConfig & USB_HOST_MODE) != 0) {                         // host mode
+        usb_hardware.ucModeType = USB_HOST_MODE;                         // mark that we are in host mode
+    }
+    #elif defined USB_HOST_SUPPORT
+    usb_hardware.ucModeType = USB_HOST_MODE;                             // mark that we are in host mode
+    #endif
 
     #if defined ENABLE_HSUSB_TRANSCEIVER
-    ENABLE_HSUSB_TRANSCEIVER();
+    ENABLE_HSUSB_TRANSCEIVER();                                          // enable the external HS USB transceiver
     #endif
     #if defined MPU_AVAILABLE
     MPU_CESR = 0;                                                        // allow concurrent access to MPU controller
@@ -796,6 +886,8 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
         OSC0_CR |= OSC_CR_ERCLKEN;                                       // external reference clock enable
         SIM_SOPT2 |= SIM_SOPT2_USBREGEN;                                 // enable USB PHY PLL regulator
         POWER_UP_ATOMIC(3, USBHSPHY);                                    // enable clocks to PHY
+        // Note: NXP adds a delay here (in host mode)
+        // - to monitor
         SIM_USBPHYCTL = (SIM_USBPHYCTL_USBVOUTTRG_3_310V | SIM_USBPHYCTL_USBVREGSEL); // 3.310V source VREG_IN1 (in case both are powered)
         USBPHY_TRIM_OVERRIDE_EN = 0x0000001f;                            // override IFR values
         USBPHY_CTRL = (USBPHY_CTRL_ENUTMILEVEL2 | USBPHY_CTRL_ENUTMILEVEL3); // release PHY from reset and enable its clock
@@ -826,13 +918,22 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
       //MCG_C2 &= ~MCG_C2_EREFS;                                         // remove the external reference from oscillator requested flag
         #endif
         USBPHY_PWD = 0;                                                  // for normal operation
-        USBPHY_ANACTRL = ((24 << 4) | 4);                                // frac = 24 and  Clk /4
-        while ((USBPHY_ANACTRL & 0x80000000) == 0) {
-        #if defined _WINDOWS
-            USBPHY_ANACTRL |= 0x80000000;
+        if (__USB_HOST_MODE()) {
+        #if defined USB_HOST_SUPPORT
+            USBPHY_TX = ((USBPHY_TX & ~USBPHY_TX_USBPHY_D_CAL_MASK) | 0x0c); // trim the nominal 17.78mA current source for the high speed drivers (USB_DP and USB_DM) (taken from NXP reference)
         #endif
         }
-        USBPHY_TX |= (1 << 24);                                          // reserved??
+        else {
+        #if defined USB_HOST_SUPPORT
+            USBPHY_ANACTRL = ((24 << 4) | 4);                            // frac = 24 and  Clk /4
+            while ((USBPHY_ANACTRL & 0x80000000) == 0) {
+            #if defined _WINDOWS
+                USBPHY_ANACTRL |= 0x80000000;
+            #endif
+            }
+            USBPHY_TX |= (1 << 24);                                      // reserved (taken from NXP reference)
+        #endif
+        }
     #else
         POWER_UP_ATOMIC(6, USBHS);                                       // power up the USB HS controller module
         _CONFIG_PERIPHERAL(A, 7,  PA_7_ULPI_DIR);                        // ULPI_DIR on PA.7    (alt. function 2)
@@ -852,11 +953,6 @@ extern void fnConfigUSB(QUEUE_HANDLE Channel, USBTABLE *pars)
     if (ucEndpoints > NUMBER_OF_USBHS_ENDPOINTS) {                       // limit endpoint count
         ucEndpoints = NUMBER_OF_USBHS_ENDPOINTS;                         // limit to maximum available in device
     }
-    #if defined USB_HOST_SUPPORT
-    if ((pars->usConfig & USB_HOST_MODE) != 0) {                         // host mode
-        usb_hardware.ucModeType = USB_HOST_MODE;                         // mark that we are in host mode
-    }
-    #endif
 
     usb_endpoints = uMalloc((MAX_MALLOC)(sizeof(USB_END_POINT) * ucEndpoints)); // get endpoint control structures
     fnUSBHS_init(ucEndpoints);

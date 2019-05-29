@@ -17380,6 +17380,8 @@ typedef struct stUSB_HW
     #define USB_AUTO_TX                                                  // enable multiple frame transmission controlled by the high speed controller
     #define USB_DEVICE_FS    0
     #define USB_DEVICE_HS    1
+    #define USB_HOST_FS      2
+    #define USB_HOST_HS      3
 
     // MACRO for setting frame length to buffer descriptor
     //
@@ -17505,8 +17507,13 @@ typedef struct stUSB_HW
 #define USBHS_HWTXBUF        *(unsigned long *)(USBHS_BASE_ADD + 0x010)  // Transmit Buffer Hardware Parameters Register (read-only)
 #define USBHS_HWRXBUF        *(unsigned long *)(USBHS_BASE_ADD + 0x014)  // Receive Buffer Hardware Parameters Register (read-only) - reads zero
 
-#define USBHS_GPTIMER0LD     *(volatile unsigned long *)(USBHS_BASE_ADD + 0x080)  // General Purpose Timer 0 Load Register
+#define USBHS_GPTIMER0LD     *(volatile unsigned long *)(USBHS_BASE_ADD + 0x080)  // General Purpose Timer 0 Load Register (us)
 #define USBHS_GPTIMER0CTL    *(volatile unsigned long *)(USBHS_BASE_ADD + 0x084)  // General Purpose Timer 0 Control Register
+  #define USBHS_GPTIMERCTL_GPTCNT_MASK    0x00ffffff                     // current value of the running timer
+  #define USBHS_GPTIMERCTL_MODE_SINGLE    0x00000000                     // single shot mode (stops after counting down to zero)
+  #define USBHS_GPTIMERCTL_MODE_REPEAT    0x01000000                     // repeat mode (reloads and restarts automatically)
+  #define USBHS_GPTIMERCTL_RST            0x40000000                     // write '1' to load counter value from USBHS_GPTIMERxLD
+  #define USBHS_GPTIMERCTL_RUN            0x80000000                     // timer run enabed
 #define USBHS_GPTIMER1LD     *(volatile unsigned long *)(USBHS_BASE_ADD + 0x088)  // General Purpose Timer 1 Load Register
 #define USBHS_GPTIMER1CTL    *(volatile unsigned long *)(USBHS_BASE_ADD + 0x08c)  // General Purpose Timer 1 Control Register
 #define USBHS_USB_SBUSCFG    *(volatile unsigned long *)(USBHS_BASE_ADD + 0x090)  // System Bus Interface Configuration Register
@@ -17585,9 +17592,9 @@ typedef struct stUSB_HW
 #define USBHS_CONFIGFLAG     *(unsigned long *)(USBHS_BASE_ADD + 0x180)  // Configure Flag Register (read-only)
 #define USBHS_PORTSC1        *(volatile unsigned long *)(USBHS_BASE_ADD + 0x184) // Port Status and Control Register
   #define USBHS_PORTSC1_CCS      0x00000001                              // current connect status
-  #define USBHS_PORTSC1_CSC      0x00000002                              // connect status changed
+  #define USBHS_PORTSC1_CSC      0x00000002                              // connect status changed (write '1' to clear)
   #define USBHS_PORTSC1_PE       0x00000004                              // port enabled
-  #define USBHS_PORTSC1_PEC      0x00000008                              // port disabled
+  #define USBHS_PORTSC1_PEC      0x00000008                              // port disabled (write '1' to clear)
   #define USBHS_PORTSC1_OCA      0x00000010                              // over current active
   #define USBHS_PORTSC1_OCC      0x00000020                              // over current change detected (write '1' to clear)
   #define USBHS_PORTSC1_FPR      0x00000040                              // force port resume
@@ -17617,6 +17624,12 @@ typedef struct stUSB_HW
   #define USBHS_PORTSC1_PSPD_LS  0x08000000                              // port speed - low speed (read-only)
   #define USBHS_PORTSC1_PSPD_HS  0x0c000000                              // port speed - high speed (read-only)
   #define USBHS_PORTSC1_PTS_ULPI 0x80000000                              // port transceiver select ULPI
+  #define USBHS_PORTSC1_WRITE_ONE_TO_CLEAR_MASK (USBHS_PORTSC1_CSC | USBHS_PORTSC1_PEC | USBHS_PORTSC1_OCC)
+  #if defined _WINDOWS
+    #define CLEAR_PORTSC1_FLAGS(flags)      USBHS_PORTSC1 &= ~(flags & USBHS_PORTSC1_WRITE_ONE_TO_CLEAR_MASK)
+  #else
+    #define CLEAR_PORTSC1_FLAGS(flags)      USBHS_PORTSC1 = ((USBHS_PORTSC1 & ~USBHS_PORTSC1_WRITE_ONE_TO_CLEAR_MASK) | flags) // write '1 to clear only specified flags
+  #endif
 #define USBHS_OTGSC          *(volatile unsigned long *)(USBHS_BASE_ADD + 0x1a4) // On-the-Go Status and Control Register
 #define USBHS_USBMODE        *(volatile unsigned long *)(USBHS_BASE_ADD + 0x1a8) // USB Mode Register
   #define USBHS_USBMODE_CM_IDLE    0x00000000                            // idle mode
@@ -17796,6 +17809,10 @@ typedef struct stUSB_HW
     #define USBPHY_PWD_CLR   *(volatile unsigned long *)(USBHS_PHY_ADD + 0x008) // USB PHY power down clear register
     #define USBPHY_PWD_TOG   *(volatile unsigned long *)(USBHS_PHY_ADD + 0x00c) // USB PHY power down toggle register
     #define USBPHY_TX        *(volatile unsigned long *)(USBHS_PHY_ADD + 0x010) // USB PHY transmit control register
+        #define USBPHY_TX_USBPHY_D_CAL_MASK           0x0000000f
+        #define USBPHY_TX_USBPHY_TXCAL45DM_MASK       0x00000f00
+        #define USBPHY_TX_USBPHY_TXCAL45DP_MASK       0x000f0000
+        #define USBPHY_TX_USBPHY_TX_EDGECTRL_MASK     0x1c000000
     #define USBPHY_TX_SET    *(volatile unsigned long *)(USBHS_PHY_ADD + 0x014) // USB PHY transmit control set register
     #define USBPHY_TX_CLR    *(volatile unsigned long *)(USBHS_PHY_ADD + 0x018) // USB PHY transmit control clear register
     #define USBPHY_TX_TOG    *(volatile unsigned long *)(USBHS_PHY_ADD + 0x01c) // USB PHY transmit control toggle register

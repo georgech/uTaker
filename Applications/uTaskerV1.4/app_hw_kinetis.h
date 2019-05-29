@@ -902,11 +902,15 @@
     #define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
   //#define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
     #define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
-#elif defined TWR_KW24D512 || defined FRDM_KW41Z || defined FRDM_KW36
+#elif defined TWR_KW24D512 || defined FRDM_KW41Z
     #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
   //#define SIZE_OF_FLASH       (256 * 1024)                             // 256k program Flash
     #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
   //#define SIZE_OF_RAM         (32 * 1024)                              // 32k SRAM
+#elif defined FRDM_KW36
+    #define SIZE_OF_FLASH       (512 * 1024)                             // 512k program Flash
+    #define SIZE_OF_RAM         (64 * 1024)                              // 64k SRAM
+    #define PIN_COUNT           PIN_COUNT_48_PIN
 #elif defined K02F100M
     #define MASK_0N36M                                                   // enable errata workarounds for this mask
   //#define PIN_COUNT           PIN_COUNT_32_PIN                         // 32 pin QFN package
@@ -4184,7 +4188,11 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
             #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(E, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #endif
     #else
-        #define INIT_WATCHDOG_LED()                                      // configured according to user parameters
+        #if defined K66FX1M0
+            #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_LOW(C, (PORTC_BIT5), PORT_PS_UP_ENABLE) // configured according to user parameters (just enable clocks for watchdog access)
+        #else
+            #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_LOW(E, (BLINK_LED), PORT_PS_UP_ENABLE) // configured according to user parameters (just enable clocks for watchdog access)
+        #endif
     #endif
     #define INIT_WATCHDOG_DISABLE() _CONFIG_PORT_INPUT_FAST_LOW(D, (SWITCH_2), PORT_PS_UP_ENABLE); _CONFIG_PORT_INPUT_FAST_LOW(A, (SWITCH_3), PORT_PS_UP_ENABLE) // configure as input
     #define WATCHDOG_DISABLE()     (_READ_PORT_MASK(A, SWITCH_3) == 0)   // pull this input down to disable watchdog (hold SW3 at reset)
@@ -10033,8 +10041,8 @@ typedef unsigned long LCD_CONTROL_PORT_SIZE;
     #define SET_CONTROL_LINES_OUTPUT(x) _CONFIG_PORT_OUTPUT(C, x, PORT_SRE_SLOW)
     #define SET_BUS_DATA(x)         _WRITE_PORT_MASK(D, x,  LCD_BUS_MASK)
     #define SET_CONTROL_LINES(x)    _WRITE_PORT_MASK(C, x, O_CONTROL_LINES)
-    #define O_SET_CONTROL_LOW(x)    _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _SIM_PORTS;
-    #define O_SET_CONTROL_HIGH(x)   _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SIM_PORTS;
+    #define O_SET_CONTROL_LOW(x)    _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _CLEARBITS(C, x); _SIM_PORTS
+    #define O_SET_CONTROL_HIGH(x)   _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SETBITS(C, x); _SIM_PORTS
 
     #define LCD_CONTRAST_CONTROL                                         // contrast controlled by PWM signal
     #define _LCD_CONTRAST_TIMER                    (_TIMER_0 | 3)        // timer module 0, channel 3
