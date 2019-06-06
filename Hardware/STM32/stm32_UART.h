@@ -19,6 +19,7 @@
     19.03.2019 Add test of manual control of RTS output (RS485 mode) on UART5 (in development)
     19.03.2019 Add test of TX DMA mode on USART 3 (in development)
     02.04.2019 TX DMA mode on UART/USARTs operational
+    06.06.2019 Add manual RTS control option to USART1 (USART1_MANUAL_RTS_CONTROL)
 
 */
 
@@ -252,6 +253,13 @@ static __interrupt void SCI1_Interrupt(void)
     while (((USART1_CR1 & USART_CR1_TXEIE) != 0) && ((USART1_ISR & USART_ISR_TXE) != 0)) { // if an enabled transmission interrupt
         fnSciTxByte(0);                                                  // transmit data empty interrupt
     }
+    #if defined SUPPORT_HW_FLOW && defined USART1_MANUAL_RTS_CONTROL
+    if (((USART1_CR1 & USART_CR1_TCIE) != 0) && ((USART1_ISR & USART_SR_TC) != 0)) { // transmit complete interrupt enabled and fired
+        USART1_CR1 &= ~USART_CR1_TCIE;                                   // disable further interrupts
+        USART1_ISR &= ~(USART_SR_TC);                                    // clear the interrupt flag
+        _SET_RTS_1_LOW();                                                // negate the RTS line in manual mode when a transmission has completed
+    }
+    #endif
 }
 #endif
 
@@ -1163,6 +1171,14 @@ extern void fnClearTxInt(QUEUE_HANDLE channel)
     switch (channel) {
     case 0:
         USART1_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
+#if defined SUPPORT_HW_FLOW && defined USART1_MANUAL_RTS_CONTROL
+        if ((ucRS485Mode & (1 << 0)) != 0) {
+            USART1_CR1 |= USART_CR1_TCIE;                                 // interrupt on completion of the final byte so that the RTS line can be negated
+        #if defined _WINDOWS
+            USART1_ISR |= USART_SR_TC;
+        #endif
+        }
+#endif
         break;
     case 1:
         USART2_CR1 &= ~(USART_CR1_TXEIE);                                // disable transmit interrupts
@@ -1235,6 +1251,13 @@ extern int fnTxByte(QUEUE_HANDLE channel, unsigned char ucTxByte)
         if ((USART1_ISR & USART_ISR_TXE) == 0) {
             return 1;                                                    // busy, wait
         }
+    #if defined SUPPORT_HW_FLOW && defined UART5_MANUAL_RTS_CONTROL
+        if ((ucRS485Mode & (1 << 0)) != 0) {
+            USART1_CR1 &= ~USART_CR1_TCIE;                               // ensure transmit complete interrupt is disabled
+            USART1_ISR &= ~(USART_SR_TC);                                // clear the transmit complete interrupt flag
+            _SET_RTS_1_HIGH();                                           // assert the RTS line in manual mode when a new transmission is started
+        }
+    #endif
         USART1_CR1 |= (USART_CR1_TXEIE);                                 // ensure Tx interrupt is enabled
     #if defined UART_EXTENDED_MODE && defined SERIAL_MULTIDROP_TX        // {18a}
         USART1_TDR = ((ucExtendedWithTx[channel] << 8) | ucTxByte);      // send the byte with extended bits
@@ -1423,14 +1446,22 @@ static void fnSetRTS(QUEUE_HANDLE channel, int iState)
     case 0:
         if (iState != 0) {
             if ((ucChannelMode & ucRS485Mode) != 0) {
+    #if defined USART1_MANUAL_RTS_CONTROL
+                _SET_RTS_1_LOW();                                        // assert RTS
+    #else
                 _CLEARBITS(A, PORTA_BIT12);                              // assert RTS
+    #endif
             }
             else {
             }
         }
         else {
             if ((ucChannelMode & ucRS485Mode) != 0) {
+    #if defined USART1_MANUAL_RTS_CONTROL
+                _SET_RTS_1_HIGH();                                       // assert RTS
+    #else
                 _SETBITS(A, PORTA_BIT12);                                // negate RTS
+    #endif
             }
             else {
             }
@@ -1570,12 +1601,18 @@ extern void fnControlLine(QUEUE_HANDLE channel, unsigned short usModifications, 
             }
             switch (channel) {
             case 0:                                                      // USART 1
+    #if defined USART1_MANUAL_RTS_CONTROL
+                if ((usModifications & SET_RS485_MODE) != 0) {
+                    _CONFIGURE_RTS_1_LOW();                              // configure the output to be ued as RTS line
+                }
+    #else
                 if ((usModifications & SET_RS485_MODE) != 0) {
                     _CONFIG_PORT_OUTPUT(A, PORTA_BIT12, (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // control as port instead of using automatic RTS line
                 }
                 else {
                     _CONFIG_PERIPHERAL_OUTPUT(A, (PERIPHERAL_USART1_2_3), (PORTA_BIT12), (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // USART1 RTS
                 }
+    #endif
                 break;
             case 1:                                                      // USART 2
     #if defined USART2_REMAP
