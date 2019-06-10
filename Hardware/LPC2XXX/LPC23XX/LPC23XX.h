@@ -11,7 +11,7 @@
     File:   	    LPC23XX.h
     Project: 	Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2013
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     22.04.2008 Add RTC
     03.12.2008 Support IAR5                                              {1}
@@ -63,7 +63,7 @@
 */
 
 #ifdef _WINDOWS
-    #define _SIM_PORT_CHANGE   fnSimPorts();                             // {6}
+    #define _SIM_PORT_CHANGE   fnSimPorts(-1);                           // {6}
     #define _EXCEPTION(x)            *(unsigned char *)0 = 0             // generate exception when simulating {39}
 #else
     #define _EXCEPTION(x)                                                // ignore on target

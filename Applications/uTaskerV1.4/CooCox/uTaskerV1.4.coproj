@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Project version="2G - 2.0.2" name="uTaskerV1.4">
   <Target name="uTaskerV1.4" isCurrent="1">
-    <Device manufacturerId="1" manufacturerName="ARM" chipId="400" chipName="M4" boardId="" boardName="" coreId="" coreName=""/>
+    <Device manufacturerId="1" manufacturerName="ARM" chipId="400" chipName="M4" boardId="" boardName="" boardUrl="" coreId="" coreName=""/>
     <BuildOption>
       <Compile>
         <Option name="OptimizationLevel" value="4"/>
@@ -70,7 +70,7 @@
     <ExcludeFile/>
   </Target>
   <Target name="uTaskerV1.4_BM" isCurrent="0">
-    <Device manufacturerId="1" manufacturerName="ARM" chipId="4" chipName="M4" boardId="" boardName="" coreId="" coreName=""/>
+    <Device manufacturerId="1" manufacturerName="ARM" chipId="4" chipName="M4" boardId="" boardName="" boardUrl="" coreId="" coreName=""/>
     <BuildOption>
       <Compile>
         <Option name="OptimizationLevel" value="4"/>
@@ -140,22 +140,22 @@
   <Components path="./"/>
   <LocalComponents/>
   <Files>
-    <File name="uTasker/uGLCDLIB/glcd_tft.h" path="../../../uTasker/uGLCDLIB/glcd_tft.h" type="1"/>
     <File name="Applications/uTaskerV1_4/webInterface.c" path="../webInterface.c" type="1"/>
+    <File name="uTasker/uGLCDLIB/glcd_tft.h" path="../../../uTasker/uGLCDLIB/glcd_tft.h" type="1"/>
     <File name="stack/zero_config.c" path="../../../stack/zero_config.c" type="1"/>
     <File name="Applications/uTaskerV1_4/ADC_Timers.h" path="../ADC_Timers.h" type="1"/>
     <File name="Applications/uTaskerV1_4/usb_application.c" path="../usb_application.c" type="1"/>
     <File name="stack/smtp.c" path="../../../stack/smtp.c" type="1"/>
     <File name="uTasker/uGLCDLIB/LCD.c" path="../../../uTasker/uGLCDLIB/LCD.c" type="1"/>
-    <File name="uTasker/USB_drv.c" path="../../../uTasker/USB_drv.c" type="1"/>
     <File name="stack/telnet.c" path="../../../stack/telnet.c" type="1"/>
+    <File name="uTasker/USB_drv.c" path="../../../uTasker/USB_drv.c" type="1"/>
     <File name="uTasker/time_keeper.c" path="../../../uTasker/time_keeper.c" type="1"/>
     <File name="uTasker/MODBUS/MODBUS.c" path="../../../uTasker/MODBUS/MODBUS.c" type="1"/>
     <File name="uTasker/utFAT/mass_storage.h" path="../../../uTasker/utFAT/mass_storage.h" type="1"/>
-    <File name="Hardware/hardware.h" path="../../../Hardware/hardware.h" type="1"/>
-    <File name="Applications/uTaskerV1_4/app_hw_kinetis.h" path="../app_hw_kinetis.h" type="1"/>
-    <File name="stack" path="" type="2"/>
     <File name="Applications/uTaskerV1_4/snmp_mib_handlers.c" path="../snmp_mib_handlers.c" type="1"/>
+    <File name="Hardware/hardware.h" path="../../../Hardware/hardware.h" type="1"/>
+    <File name="stack" path="" type="2"/>
+    <File name="Applications/uTaskerV1_4/app_hw_kinetis.h" path="../app_hw_kinetis.h" type="1"/>
     <File name="Applications/uTaskerV1_4/NetworkIndicator.c" path="../NetworkIndicator.c" type="1"/>
     <File name="Applications/uTaskerV1_4/KeyScan.c" path="../KeyScan.c" type="1"/>
     <File name="uTasker/SSC_drv.c" path="../../../uTasker/SSC_drv.c" type="1"/>
@@ -167,8 +167,8 @@
     <File name="Applications/uTaskerV1_4/can_tests.h" path="../can_tests.h" type="1"/>
     <File name="uTasker/uGLCDLIB/glcd_fonts.h" path="../../../uTasker/uGLCDLIB/glcd_fonts.h" type="1"/>
     <File name="stack/Ethernet.c" path="../../../stack/Ethernet.c" type="1"/>
-    <File name="stack/udp.c" path="../../../stack/udp.c" type="1"/>
     <File name="Applications/uTaskerV1_4/application_lcd.h" path="../application_lcd.h" type="1"/>
+    <File name="stack/udp.c" path="../../../stack/udp.c" type="1"/>
     <File name="stack/dns.c" path="../../../stack/dns.c" type="1"/>
     <File name="uTasker/uGLCDLIB/glcd.h" path="../../../uTasker/uGLCDLIB/glcd.h" type="1"/>
     <File name="Hardware/spi_flash_kinetis_sst25.h" path="../../../Hardware/Kinetis/spi_flash_kinetis_sst25.h" type="1"/>
@@ -198,25 +198,24 @@
     <File name="stack/tcpip.h" path="../../../stack/tcpip.h" type="1"/>
     <File name="uTasker/uFile.c" path="../../../uTasker/uFile.c" type="1"/>
     <File name="stack/snmp.c" path="../../../stack/snmp.c" type="1"/>
+    <File name="uTasker/i2c_drv.c" path="../../../uTasker/i2c_drv.c" type="1"/>
     <File name="stack/http.c" path="../../../stack/http.c" type="1"/>
     <File name="stack/igmp.c" path="../../../stack/igmp.c" type="1"/>
-    <File name="stack/ip_utils.c" path="../../../stack/ip_utils.c" type="1"/>
     <File name="uTasker/utFAT/mass_storage.c" path="../../../uTasker/utFAT/mass_storage.c" type="1"/>
-    <File name="Applications/uTaskerV1_4/debug_hal.h" path="../debug_hal.h" type="1"/>
+    <File name="stack/ip_utils.c" path="../../../stack/ip_utils.c" type="1"/>
     <File name="Applications/uTaskerV1_4/app_user_files.h" path="../app_user_files.h" type="1"/>
-    <File name="Hardware/spi_flash_kinetis_atmel.h" path="../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h" type="1"/>
+    <File name="Applications/uTaskerV1_4/debug_hal.h" path="../debug_hal.h" type="1"/>
     <File name="Applications/uTaskerV1_4/config.h" path="../config.h" type="1"/>
+    <File name="Hardware/spi_flash_kinetis_atmel.h" path="../../../Hardware/Kinetis/spi_flash_kinetis_atmel.h" type="1"/>
     <File name="stack/ftp_client.c" path="../../../stack/ftp_client.c" type="1"/>
     <File name="Hardware/spi_flash_kinetis_stmicro.h" path="../../../Hardware/Kinetis/spi_flash_kinetis_stmicro.h" type="1"/>
     <File name="uTasker/utFAT" path="" type="2"/>
     <File name="uTasker/uGLCDLIB/glcd_oled.h" path="../../../uTasker/uGLCDLIB/glcd_oled.h" type="1"/>
-    <File name="uTasker/iic_drv.c" path="../../../uTasker/iic_drv.c" type="1"/>
     <File name="uTasker/uGLCDLIB/glcd_nokia.h" path="../../../uTasker/uGLCDLIB/glcd_nokia.h" type="1"/>
     <File name="stack/webutils.c" path="../../../stack/webutils.c" type="1"/>
     <File name="uTasker" path="" type="2"/>
-    <File name="uTasker/uTasker.c" path="../../../uTasker/uTasker.c" type="1"/>
     <File name="uTasker/usb.h" path="../../../uTasker/usb.h" type="1"/>
-    <File name="Applications/uTaskerV1_4/iic_tests.h" path="../iic_tests.h" type="1"/>
+    <File name="uTasker/uTasker.c" path="../../../uTasker/uTasker.c" type="1"/>
     <File name="uTasker/uNetwork.c" path="../../../uTasker/uNetwork.c" type="1"/>
     <File name="uTasker/uGLCDLIB/glcd_toshiba.h" path="../../../uTasker/uGLCDLIB/glcd_toshiba.h" type="1"/>
     <File name="Applications/uTaskerV1_4/application.c" path="../application.c" type="1"/>
@@ -231,6 +230,7 @@
     <File name="uTasker/uGLCDLIB/glcd_st7565s.h" path="../../../uTasker/uGLCDLIB/glcd_st7565s.h" type="1"/>
     <File name="Hardware/spi_flash_kinetis_s25fl1-k.h" path="../../../Hardware/Kinetis/spi_flash_kinetis_s25fl1-k.h" type="1"/>
     <File name="uTasker/MODBUS/modbus.h" path="../../../uTasker/MODBUS/modbus.h" type="1"/>
+    <File name="Applications/uTaskerV1_4/i2c_tests.h" path="../i2c_tests.h" type="1"/>
     <File name="Hardware/kinetis.h" path="../../../Hardware/Kinetis/kinetis.h" type="1"/>
     <File name="stack/dhcp.c" path="../../../stack/dhcp.c" type="1"/>
     <File name="uTasker/low_power.c" path="../../../uTasker/low_power.c" type="1"/>

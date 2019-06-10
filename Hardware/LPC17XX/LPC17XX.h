@@ -11,7 +11,7 @@
     File:   	    LPC17XX.h
     Project: 	Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2013
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     25.10.2011 Add LPC1788
     17.11.2011 Modify RTC_SETUP                                          {1}
@@ -27,7 +27,7 @@
 
 #ifdef _WINDOWS
     #include "simLPC17XX.h"
-    #define _SIM_PORT_CHANGE   fnSimPorts();
+    #define _SIM_PORT_CHANGE   fnSimPorts(-1);
     #define _EXCEPTION(x)      *(unsigned char *)0 = 0                   // generate exception when simulating {2}
 #else
     #define _EXCEPTION(x)                                                // ignore on target

@@ -11,7 +11,7 @@
     File:      AVR32Sim.c
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     18.11.2009 Add _AT32UC3B support                                     {1}
     21.11.2009 Modification in the way that oscillator pin mapping is controlled - and extend to support all clock sources {2}
@@ -700,7 +700,7 @@ extern void fnSimulateLinkUp(void)
 
 // We can update port state displays if we want
 //
-extern void fnSimPorts(void)
+extern void fnSimPorts(int iThisPort)
 {
     fnSimPortsAVR(0);
 #if !defined _AT32UC3B || !defined CHIP_48_PIN

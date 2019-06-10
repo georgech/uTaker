@@ -11,7 +11,7 @@
     File:      app_hw_avr32.h
     Project:   uTasker Demonstration project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     09.09.2009 Add EVK1100 configuration                                 {1}
     03.10.2009 Move "../../Hardware/AVR32/AVR32.h" include from types.h to this file, after detailed chip defines {2}
@@ -38,7 +38,7 @@
 #define __APP_HW_AVR32__
 
 #if defined _WINDOWS
-    #define _SIM_PORTS fnSimPorts()
+    #define _SIM_PORTS fnSimPorts(-1)
 #else
     #define _SIM_PORTS
 #endif

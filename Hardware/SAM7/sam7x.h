@@ -11,7 +11,7 @@
     File:   	SAM7X.h
     Project: 	Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2015
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     22.03.2007 Removed IAR uEnableInterrupt() and uDisableInterrupt() mapping to intrinsics
     28.09.2007 Add INTERRUPT_SETUP struct                                {1}
@@ -85,7 +85,7 @@
 
 #ifdef _WINDOWS
     #include "SimSAM7X.h"
-    #define _SIM_PORTS fnSimPorts()
+    #define _SIM_PORTS fnSimPorts(-1)
     #define _EXCEPTION(x)            *(unsigned char *)0 = 0             // generate exception when simulating {52}
 #else
     #define _EXCEPTION(x)                                                // ignore on target

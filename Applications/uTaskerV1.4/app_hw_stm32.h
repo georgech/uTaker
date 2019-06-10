@@ -34,7 +34,7 @@
 #define __APP_HW_STM32__
 
 #if defined _WINDOWS
-    #define _SIM_PORTS fnSimPorts()
+    #define _SIM_PORTS fnSimPorts(-1)
 #else
     #define _SIM_PORTS
 #endif
@@ -882,8 +882,6 @@
     #define SERIAL_PORT_6  16                                            // if we open UART channel 6 we simulate using this com port on the PC
     #define SERIAL_PORT_7  18                                            // if we open UART channel 7 we simulate using this com port on the PC
 
-  //#define SUPPORT_HW_FLOW                                              // enable hardware flow control support
-
     #if defined ST_MB913C_DISCOVERY || defined NUCLEO_F429ZI || defined ARDUINO_BLUE_PILL || defined NUCLEO_H743ZI
         #define DEMO_UART    2                                           // use UART channel 2 (USART 3 since ST USARTs count from 1)
     #elif defined NUCLEO_L496RG
@@ -1699,7 +1697,10 @@
 
     #define INIT_WATCHDOG_DISABLE()
     #define WATCHDOG_DISABLE()  1
-
+    #define USART1_MANUAL_RTS_CONTROL
+        #define _CONFIGURE_RTS_1_LOW() _CONFIG_PORT_OUTPUT(B, PORTB_BIT9, (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // control as port instead of using automatic RTS line
+        #define _SET_RTS_1_HIGH()      _SETBITS(B, PORTB_BIT9)
+        #define _SET_RTS_1_LOW()       _CLEARBITS(B, PORTB_BIT9)
     #define UART5_MANUAL_RTS_CONTROL
         #define _CONFIGURE_RTS_5_LOW() _CONFIG_PORT_OUTPUT(B, PORTB_BIT9, (OUTPUT_MEDIUM | OUTPUT_PUSH_PULL)); // control as port instead of using automatic RTS line
         #define _SET_RTS_5_HIGH()      _SETBITS(B, PORTB_BIT9)

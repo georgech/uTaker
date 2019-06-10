@@ -203,7 +203,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
     #if defined KEYPAD_KEY_DEFINITIONS                                   // {2}
     for (i = 0; i < KEY_COLUMNS; i++) {                                  // for each column
         for (j = 0; j < KEY_ROWS; j++) {                                 // for each row    
-            if (iKeyStates[i][j]) {                                      // if key is presently pressed
+            if (iKeyStates[i][j] != 0) {                                 // if key is presently pressed
                 int iKey = 0;
                 while (iKey < (sizeof(user_keys)/sizeof(USER_KEY))) {    // for each possible key
                     if ((user_keys[iKey].iColumn == i) && (user_keys[iKey].iRow == j)) {
@@ -228,7 +228,7 @@ extern void DisplayKeyPad(HWND hwnd, RECT rt, RECT refresh_rect)
         x = kb_rect.left + iKeyWidth/2 + i*iKeyWidth;                    // mid point of each key
         y = kb_rect.top + iKeyHeight/2;
         for (j = 0; j < KEY_ROWS; j++) {
-            if (iKeyStates[i][j]) {                                      // if key presently pressed
+            if (iKeyStates[i][j] != 0) {                                 // if key presently pressed
                 MoveToEx (hdc, x - iKeySizeX, y - iKeySizeY, NULL);
                 LineTo(hdc, x + iKeySizeX, y - iKeySizeY);
                 LineTo(hdc, x + iKeySizeX, y + iKeySizeY);

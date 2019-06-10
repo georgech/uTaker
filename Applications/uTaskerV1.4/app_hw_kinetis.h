@@ -5361,7 +5361,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
         #define LED_BLUE               DEMO_LED_3
 
         #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-            #define INIT_WATCHDOG_LED()                                  // let the port set up do this (the user can disable blinking)
+            #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_LOW(A, (BLINK_LED), PORT_PS_UP_ENABLE) // let the port set up do this (the user can disable blinking)
         #else
             #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(A, (BLINK_LED), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
         #endif
@@ -5529,7 +5529,7 @@ static inline void QSPI_HAL_ClearSeqId(QuadSPI_Type * base, qspi_command_seq_t s
 
 
     #if defined USE_MAINTENANCE && !defined REMOVE_PORT_INITIALISATIONS
-        #define INIT_WATCHDOG_LED()                                      // let the port set up do this (the user can disable blinking)
+        #define INIT_WATCHDOG_LED() _CONFIG_PORT_INPUT_FAST_LOW(D, (BLINK_LED), PORT_PS_UP_ENABLE) // let the port set up do this (the user can disable blinking)
     #else
         #define INIT_WATCHDOG_LED() _CONFIG_DRIVE_PORT_OUTPUT_VALUE(D, (BLINK_LED | DEMO_LED_2), (BLINK_LED), (PORT_SRE_SLOW | PORT_DSE_HIGH))
     #endif

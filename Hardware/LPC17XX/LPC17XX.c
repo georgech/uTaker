@@ -407,7 +407,7 @@ INITHW void fnInitHW(void)                                               //perfo
 #endif
     _LowLevelInit();
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
 #ifndef _DEBUG_CODE_
@@ -434,7 +434,7 @@ INITHW void fnInitHW(void)                                               //perfo
 #endif
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 }
 

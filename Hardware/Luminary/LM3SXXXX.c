@@ -68,7 +68,7 @@
     #define INITHW  extern
     extern void fnOpenDefaultHostAdapter(void);
     extern void fnUpdateOperatingDetails(void);                          // {36}
-    #define _SIM_PORT_CHANGE   fnSimPorts();                             // make sure simulator knows of change
+    #define _SIM_PORT_CHANGE   fnSimPorts(-1);                           // make sure simulator knows of change
     #define START_CODE 0
     #define _fnRAM_code fnCommandFlash
 #else

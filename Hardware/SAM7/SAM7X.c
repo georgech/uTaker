@@ -11,7 +11,7 @@
     File:        SAM7X.c [ATMEL AT91SAM7X128 / 256 / 512]
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2015
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     22.02.2007 Add UART break transmission support                       {1}
     01.03.2007 Correct possible Ethernet error                           {2}
@@ -141,7 +141,7 @@
     extern void fnOpenDefaultHostAdapter(void);
     extern void fnUpdateOperatingDetails(void);                          // {105}
     extern unsigned char fnMapPortBit(unsigned long ulRealBit);
-    #define _SIM_PORT_CHANGE   fnSimPorts();                             // make sure simulator knows of change
+    #define _SIM_PORT_CHANGE   fnSimPorts(-1);                           // make sure simulator knows of change
 #else
     #define OPSYS_CONFIG                                                 // this module owns the operating system configuration
     #define INITHW  static
@@ -502,12 +502,12 @@ static void fnEnterInterrupt(unsigned long ulInterruptSource, unsigned char ucPr
     *ptrIntReg = (unsigned long)InterruptFunc;                           // enter the handling interrupt routine in the vector table
     AIC_IDCR = ulInterruptSource;                                        // disable the interrupt
 #if defined _WINDOWS
-    fnSimPorts();                                                        // {14}
+    fnSimPorts(-1);                                                      // {14}
 #endif
     AIC_ICCR = ulInterruptSource;                                        // clear the interrupt
     AIC_IECR = ulInterruptSource;                                        // enable interrupt to core
 #if defined _WINDOWS
-    fnSimPorts();                                                        // {14}
+    fnSimPorts(-1);                                                      // {14}
 #endif
 }
 
@@ -567,13 +567,13 @@ INITHW void fnInitHW(void)                                               // perf
     }
 
 #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 
 #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 
 

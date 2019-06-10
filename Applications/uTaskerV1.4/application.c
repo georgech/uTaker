@@ -276,6 +276,10 @@
 /*                             constants                               */
 /* =================================================================== */
 
+#if defined USE_MAINTENANCE || defined USE_HTTP
+    const CHAR  cSoftwareVersion[] = SOFTWARE_VERSION;                   // software version for general purpose display use
+#endif
+
 // The application is responsible for defining the IP configuration - here are the default settings
 //
 #if defined ETH_INTERFACE || defined USB_CDC_RNDIS || defined USE_PPP
@@ -1605,8 +1609,8 @@ extern void fnMagicFrame(unsigned char ucType, unsigned char usOptionalDate[32])
 extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigned char ucDriverMode) // {108}
 {
     QUEUE_HANDLE newSerialID;
-    TTYTABLE tInterfaceParameters;                                       // table for passing information to driver
     if (0 == ptrInterfaceParameters) {                                   // if no interface parameters are passed we use the paraeter settings and the debug interface
+        TTYTABLE tInterfaceParameters;                                   // table for passing information to driver
         tInterfaceParameters.Channel = DEMO_UART;                        // set UART channel for serial use
     #if defined HELLO_WORLD
         tInterfaceParameters.ucSpeed = SERIAL_BAUD_115200;               // baud rate
@@ -1649,8 +1653,8 @@ extern QUEUE_HANDLE fnSetNewSerialMode(TTYTABLE *ptrInterfaceParameters, unsigne
         uTaskerStateChange(OWN_TASK, UTASKER_POLLING);                   // set the task to polling mode to regularly check the receive buffer
             #endif
         #else
-      //tInterfaceParameters.ucDMAConfig = 0;                            // disable DMA in favour of interrupt driven operation
-        tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                  // activate DMA on transmission
+        tInterfaceParameters.ucDMAConfig = 0;                            // disable DMA in favour of interrupt driven operation
+      //tInterfaceParameters.ucDMAConfig = UART_TX_DMA;                  // activate DMA on transmission
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_FULL_BUFFER);
       //tInterfaceParameters.ucDMAConfig = (UART_RX_DMA | UART_RX_DMA_HALF_BUFFER | UART_RX_DMA_FULL_BUFFER | UART_RX_DMA_BREAK);
         #endif

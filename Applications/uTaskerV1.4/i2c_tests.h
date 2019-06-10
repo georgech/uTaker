@@ -32,24 +32,19 @@
         #define TEST_I2C_SLAVE                                           // test behaving as I2C slave
         #define OUR_SLAVE_ADDRESS   0xd0
     #endif
-    #define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
-        #define EEPROM_M24256                                            // EEPROM with two byte addressing
+   //define TEST_I2C_EEPROM                                              // test simple I2C EEPROM (one byte addressing)
+      //#define EEPROM_M24256                                            // EEPROM with two byte addressing
   //#define TEST_FM24CL16B                                               // test 2k FRAM (add #define FM24CL16B_PRESENT to app_hw_xxx.h for simulation support)
   //#define TEST_I2C_INTENSIVE                                           // intensive transmitter test
   //#define TEST_DS1307                                                  // test DS1307 RTC via I2C bus
   //#define TEST_SENSIRION                                               // test reading temperature and humidity 
-  //#define TEST_MMA8451Q                                                // test monitoring the 3-axis accelerometer
+    #define TEST_MMA8451Q                                                // test monitoring the 3-axis accelerometer
   //#define TEST_DS1621                                                  // temperature sensor
     #if defined TEST_MMA8451Q
         #define MMA8451Q_14BIT_RES
       //#define INTERRUPT_ON_READY                                       // enable tap detection and interrupt
     #endif
   //#define TEST_MMA7660F                                                // test monitoring the 3-axis accelerometer
-
-    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 || defined TEST_DS1621
-        #define I2C_TEST_CODE_ENABLED                                    // enable general I2C test code
-    #endif
-
     #if RX_BUFFER_SIZE >= 112                                            // avoid using FXOS870 if the application task's input buffer is not adequately large
       //#define TEST_FXOS8700                                            // test monitoring the 6-axis sensor
         #if defined TEST_FXOS8700
@@ -58,6 +53,10 @@
         #endif
     #endif
   //#define DISPLAY_ACCELEROMETER_VALUES                                 // print values to debug output irrespective of debug setting
+
+    #if defined TEST_I2C_EEPROM || defined TEST_FM24CL16B || defined I2C_SLAVE_MODE || defined TEST_DS1307 || defined TEST_SENSIRION || defined TEST_MMA8451Q || defined TEST_MMA7660F || defined TEST_FXOS8700 || defined TEST_DS1621
+        #define I2C_TEST_CODE_ENABLED                                    // enable general I2C test code
+    #endif
 
     #if defined TEST_I2C_EEPROM
         #if defined EEPROM_M24256                                        // pin E0, E1 and E2 at '1'
@@ -887,7 +886,7 @@ static void acc_data_ready(void)
                 fnWrite(I2CPortID, (unsigned char *)ucSetMagnetometerRead, sizeof(ucSetMagnetometerRead)); // write the register address to read
                 fnRead(I2CPortID, (unsigned char *)ucReadMagnetometerState, 0); // start the read process of the next status
                 iAccelerometerState = ACC_MAGNETOMETER;
-                break;;
+                break;
     #endif
             }
     #if defined TEST_MMA8451Q && defined INTERRUPT_ON_READY

@@ -11,7 +11,7 @@
     File:        AVR32.c [ATMEL AT32UC3A/B/C]
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
     15.09.2009 Add fnGetMultiDropByte()                                  {1}
@@ -60,7 +60,7 @@
     #define INITHW  extern
     extern void fnOpenDefaultHostAdapter(void);
     extern void AVR32_LowLevelInit(void);
-    #define _SIM_PORT_CHANGE   fnSimPorts();                             // make sure simulator knows of change
+    #define _SIM_PORT_CHANGE   fnSimPorts(-1);                           // make sure simulator knows of change
 #else
     #define OPSYS_CONFIG                                                 // this module owns the operating system configuration
     #define INITHW  static
@@ -460,11 +460,11 @@ INITHW void fnInitHW(void)                                               // perf
         WDT_CTRL = (WATCHDOG_KEY_2);                                     // disable watchdog
     }
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 #if !defined SPI_INTERFACE && (defined SPI_FILE_SYSTEM || defined SPI_SW_UPLOAD)
     #if defined SPI_SW_UPLOAD || (defined SPI_FILE_SYSTEM && defined FLASH_FILE_SYSTEM)

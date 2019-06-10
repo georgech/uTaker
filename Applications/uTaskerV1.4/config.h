@@ -2771,6 +2771,7 @@
     #undef UTFAT_WRITE
     #undef UTFAT_EXPERT_FUNCTIONS
     #undef FLASH_FAT
+    #undef SPI_INTERFACE
     #undef SPI_FLASH_FAT
     #undef FLASH_FILE_SYSTEM
     #undef SPI_FILE_SYSTEM

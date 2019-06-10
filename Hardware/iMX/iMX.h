@@ -20,7 +20,7 @@
     #define _SIM_PORT_CHANGE(port) fnSimPorts(port)
     #define _SIM_PER_CHANGE      fnSimPers()
     #define _EXCEPTION(x)        *(unsigned char *)0 = 0                 // generate exception when simulating
-    #define _SIM_PORTS           fnSimPorts()
+    #define _SIM_PORTS           fnSimPorts(-1)
 
     extern void fnSetBitBandPeripheralValue(unsigned long *bit_band_address); // simulation routines allowing big-banded addresses to be checked
     extern void fnClearBitBandPeripheralValue(unsigned long *bit_band_address);

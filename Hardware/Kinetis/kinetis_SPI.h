@@ -519,10 +519,10 @@ extern void fnConfigSPI(SPITABLE *pars, int iAddChipSelect)
     switch (pars->ucSpeed) {
     case 0:
     #if defined DSPI_SPI
-        ptrDSPI->LPSPI_CR = LPSPI_CR_MEN;
-        ptrDSPI->LPSPI_CFGR1 = 0;                                        // slave mode of operation
-        ptrDSPI->LPSPI_TCR = ulWordWidth;
-        ptrDSPI->SPI_RSER |= SPI_SRER_RFDF_RE;
+      //ptrDSPI->LPSPI_CR = LPSPI_CR_MEN;
+      //ptrDSPI->LPSPI_CFGR1 = 0;                                        // slave mode of operation
+      //ptrDSPI->LPSPI_TCR = ulWordWidth;
+      //ptrDSPI->SPI_RSER |= SPI_SRER_RFDF_RE;
     #elif defined LPSPI_SPI
         ptrLPSPI->SPI_MCR = (SPI_MCR_SLAVE | SPI_MCR_DCONF_SPI | SPI_MCR_CLR_RXF | SPI_MCR_CLR_TXF); // slave mode of operation
         ptrLPSPI->SPI_CTAR0 = ulWordWidth;

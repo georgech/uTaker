@@ -150,10 +150,11 @@ static void fnError(int iErrorNumber)
 /* =================================================================== */
 /*                             constants                               */
 /* =================================================================== */
-
-static const unsigned short usInterfaceStatus = 0x0000;                  // the interface status is presently reserved in the USB specification so a fixed value of zeros can be used
-static const unsigned short usEndpointStalled = LITTLE_SHORT_WORD(ENDPOINT_STATUS_STALLED);
-#define usEndpointOK usInterfaceStatus                                   // use the same zero status
+#if defined USB_DEVICE_SUPPORT
+    static const unsigned short usInterfaceStatus = 0x0000;              // the interface status is presently reserved in the USB specification so a fixed value of zeros can be used
+    static const unsigned short usEndpointStalled = LITTLE_SHORT_WORD(ENDPOINT_STATUS_STALLED);
+    #define usEndpointOK usInterfaceStatus                               // use the same zero status
+#endif
 
 
 /* =================================================================== */

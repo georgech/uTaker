@@ -20,7 +20,11 @@
 <expanded>
 <element path="/uTaskerV1.4"/>
 <element path="/uTaskerV1.4/Applications"/>
+<element path="/uTaskerV1.4/uTasker"/>
 </expanded>
+<selection>
+<element path="/uTaskerV1.4"/>
+</selection>
 </viewState>
 </view>
 <view id="org.coocox.codebugger.trace.ui.traceview" partName="Semihosting">
@@ -57,14 +61,15 @@
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryBrowserAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showVariablesAction"/>
 <hide_menu_item_id id="org.coocox.builder.ui.openProjectExplorerAction"/>
-<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
+<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showRegistersAction"/>
 <hide_toolbar_item_id id="org.eclipse.cdt.debug.internal.ui.actions.ToggleInstructionStepModeAction"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
 <hide_toolbar_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <view id="org.coocox.builder.ui.views.ProjectView"/>
 <view id="org.coocox.component.ui.view.ComponentView"/>
+<view id="org.eclipse.ui.console.ConsoleView"/>
 <fastViewBars/>
 <layout>
 <mainWindow>
@@ -84,13 +89,15 @@
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@473cae" ratio="0.69952303" ratioLeft="440" ratioRight="189" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1b45f44">
-<folder appearance="2" expanded="2">
-<page content="org.eclipse.ui.console.ConsoleView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@473cae" ratio="0.6848419" ratioLeft="628" ratioRight="289" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1b45f44">
+<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
+<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+</presentation>
 </folder>
 </info>
-<info part="org.eclipse.ui.editorss" ratio="0.21944036" ratioLeft="298" ratioRight="1060" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1b45f44"/>
+<info part="org.eclipse.ui.editorss" ratio="0.24096386" ratioLeft="460" ratioRight="1449" relationship="2" relative="org.eclipse.ui.internal.ViewStack@1b45f44"/>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@daa4b4" ratio="0.7198113" ratioLeft="763" ratioRight="297" relationship="2" relative="org.eclipse.ui.editorss">
 <folder appearance="2" expanded="2">
 <page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
@@ -199,6 +206,17 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="time_keeper.c" tooltip="uTaskerV1.4/uTasker/time_keeper.c">
+<persistable path="/uTaskerV1.4/uTasker/time_keeper.c"/>
+</file>
+<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.welcome.ui.WelcomePage" name="" tooltip="">
+<persistable>
+<org.coocox.welcome.ui.WelcomePage/>
+</persistable>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" tooltip="uTaskerV1.4/Applications/uTaskerV1_4/config.h">
+<persistable path="/uTaskerV1.4/Applications/uTaskerV1_4/config.h"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="config.h" tooltip="uTaskerV1.4/Applications/uTaskerV1_4/config.h">
 <persistable path="/uTaskerV1.4/Applications/uTaskerV1_4/config.h"/>
 </file>
@@ -213,18 +231,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="application.c" tooltip="uTaskerV1.4/Applications/uTaskerV1_4/application.c">
 <persistable path="/uTaskerV1.4/Applications/uTaskerV1_4/application.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="STM32.c" tooltip="uTaskerV1.4/Hardware/STM32.c">
-<persistable path="/uTaskerV1.4/Hardware/STM32.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="STM32.c" tooltip="uTaskerV1.4/Hardware/STM32.c">
-<persistable path="/uTaskerV1.4/Hardware/STM32.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="STM32.c" tooltip="uTaskerV1.4/Hardware/STM32.c">
-<persistable path="/uTaskerV1.4/Hardware/STM32.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="STM32.c" tooltip="uTaskerV1.4/Hardware/STM32.c">
-<persistable path="/uTaskerV1.4/Hardware/STM32.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="STM32.c" tooltip="uTaskerV1.4/Hardware/STM32.c">
 <persistable path="/uTaskerV1.4/Hardware/STM32.c"/>

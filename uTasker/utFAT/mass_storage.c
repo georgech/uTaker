@@ -354,7 +354,7 @@ typedef struct stFAT12_FAT
     #if defined UTMANAGED_FILE_COUNT && UTMANAGED_FILE_COUNT > 0
         static int fnFileLocked(UTFILE *ptr_utFile);
     #endif
-    #if defined SDCARD_DETECT_INPUT_INTERRUPT && !defined SDCARD_FIXED
+    #if (defined SDCARD_DETECT_INPUT_INTERRUPT && defined SDCARD_SUPPORT) && !defined SDCARD_FIXED
         static void fnPrepareDetectInterrupt(void);
     #endif
     #if defined UTFAT_FILE_CACHE_POOL && (UTFAT_FILE_CACHE_POOL > 0) && (UTMANAGED_FILE_COUNT > 0)

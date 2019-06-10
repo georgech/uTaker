@@ -11,7 +11,7 @@
    File:        app_hw_lm3sxxxx.h
    Project:     uTasker Demonstration project
    ---------------------------------------------------------------------
-   Copyright (C) M.J.Butcher Consulting 2004..2018
+   Copyright (C) M.J.Butcher Consulting 2004..2019
    *********************************************************************
    Application specific hardware configuration
 
@@ -53,7 +53,7 @@
 #define __APP_HW_LM3SXXXX__
 
 #ifdef _WINDOWS
-    #define _SIM_PORTS fnSimPorts()
+    #define _SIM_PORTS fnSimPorts(-1)
 #else
     #define _SIM_PORTS
 #endif

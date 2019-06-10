@@ -11,7 +11,7 @@
     File:        LPC23XX.c
     Project:     Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2013
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
 
     29.02.2008 Add DISABLE_PLL support to allow running at oscillator speed
@@ -387,7 +387,7 @@ INITHW void fnInitHW(void)                                               //perfo
     _LowLevelInit();
 #endif
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
     INIT_WATCHDOG_LED();                                                 // allow user configuration of a blink LED
 #ifndef _DEBUG_CODE_
@@ -413,7 +413,7 @@ INITHW void fnInitHW(void)                                               //perfo
 #endif
     fnUserHWInit();                                                      // allow the user to initialise hardware specific things
 #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure port states are recognised
+    fnSimPorts(-1);                                                      // ensure port states are recognised
 #endif
 }
 

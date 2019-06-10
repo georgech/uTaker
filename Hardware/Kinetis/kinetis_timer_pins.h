@@ -11,7 +11,7 @@
     File:      kinetis_timer_pins.h
     Project:   Single Chip Embedded Internet
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     27.08.2018 Added entry of pin usage as timer for simulation purposes
 
@@ -165,7 +165,7 @@ static void fnConfigTimerPin(int iTimer, int iChannel, unsigned long ulCharacter
         #elif (defined KINETIS_KL25 || defined KINETIS_KL26 || defined KINETIS_KL27 || defined KINETIS_KL28 || defined KINETIS_KL43) && defined TPM0_3_ON_E
             _CONFIG_PERIPHERAL(E, 30, (PE_30_TPM0_CH3 | ulCharacteristics)); // TPM0_CH3 on PE.30 (alt. function 3)
             fnEnterTimer(_PORTE, 30, iTimer, iChannel, 1);
-        #elif (defined FTM0_3_ON_C && (defined KINETIS_K64  || defined KINETIS_KL43 || defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KL28))
+        #elif (defined FTM0_3_ON_C && (defined KINETIS_K22 || defined KINETIS_K64  || defined KINETIS_KL43 || defined KINETIS_K80 || defined KINETIS_KL82 || defined KINETIS_KL28))
             _CONFIG_PERIPHERAL(C, 4, (PC_4_FTM0_CH3 | ulCharacteristics)); // FTM0_CH3 on PC.4 (alt. function 4)
             fnEnterTimer(_PORTC, 4, iTimer, iChannel, 1);
         #else

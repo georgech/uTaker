@@ -349,10 +349,20 @@ static int fnProcessHSInput(int iEndpoint_ref, USB_HW *usb_hardware, unsigned ch
 }
 
 #if defined USB_HOST_SUPPORT
+unsigned long ulPortChangeCount = 0;
+unsigned long ulConnectionChangeCount = 0;
+unsigned long ulAttachCount = 0;
+unsigned long ulDetachCount = 0;
+
 // After a short delay after a possible attach, check the state and decide whether we need to continue with the attached device
 //
 static void usb_possible_attach(void)
 {
+    fnDebugMsg("USB device detected :");
+    fnDebugDec(ulPortChangeCount, (WITH_SPACE));
+    fnDebugDec(ulConnectionChangeCount, (WITH_SPACE));
+    fnDebugDec(ulAttachCount, (WITH_SPACE));
+    fnDebugDec(ulDetachCount, (WITH_SPACE | WITH_CR_LF));
     //fnUSB_ResetCycle();
 }
 
@@ -501,15 +511,19 @@ static __interrupt void _usb_hs_otg_isr(void)
         if ((ulInterrupts & USBHS_USBINTR_PCE) != 0) {                   // handle port change interrupt
             if (__USB_HOST_MODE()) {
     #if defined USB_HOST_SUPPORT
+                ulPortChangeCount++;
                 if ((USBHS_PORTSC1 & USBHS_PORTSC1_CSC) != 0) {          // connection state change
                     CLEAR_PORTSC1_FLAGS(USBHS_PORTSC1_CSC);              // clear connection state change flag
                     // NXP uses a loop with 1ms delay to clear the flag
                     // - to monitor
+                    ulConnectionChangeCount++;
                 }
                 if ((USBHS_PORTSC1 & USBHS_PORTSC1_CCS) != 0) {          // attach detected
                     fnUSB_HS_HostDelaySingle(usb_possible_attach, 50000);// wait a short time before checking whether this was a real attach
+                    ulAttachCount++;
                 }
                 else {                                                   // detach detected
+                    ulDetachCount++;
                     _EXCEPTION("To do...");
                 }
     #endif

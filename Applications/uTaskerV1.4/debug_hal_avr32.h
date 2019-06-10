@@ -12,7 +12,7 @@
     Project:     uTasker Demonstration project
                  - hardware application layer for AVR32
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     This file includes a number of hardware specific routines that are
     included in debug.c. This include file allows the main content of debug.c
@@ -111,7 +111,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 #if defined AVR32_EVK1105
         ODERC_1 = (FIRST_USER_PORT << cPortBit);                         // port bits are assumed to be next to another on port B
     #ifdef _WINDOWS
-        fnSimPorts();                                                    // ensure the simulator updates its port states
+        fnSimPorts(-1);                                                  // ensure the simulator updates its port states
     #endif
         temp_pars->temp_parameters.ucUserOutputs = (unsigned char)((ODER_1 & DEMO_USER_PORTS) >> SHIFT_PORT_TO_BYTE);
 #elif defined AVR32_AT32UC3C_EK
@@ -147,7 +147,7 @@ extern int fnConfigPort(CHAR cPortBit, CHAR cType)
 #if defined AVR32_EVK1105
         ODERS_1 = (FIRST_USER_PORT << cPortBit);                         // port bits are assumed to be next to another on port B
     #ifdef _WINDOWS
-        fnSimPorts();                                                    // ensure the simulator updates its port states
+        fnSimPorts(-1);                                                  // ensure the simulator updates its port states
     #endif
         temp_pars->temp_parameters.ucUserOutputs = (unsigned char)((ODER_1 & DEMO_USER_PORTS) >> SHIFT_PORT_TO_BYTE);
 #elif defined AVR32_AT32UC3C_EK
@@ -299,8 +299,8 @@ static void fnSetPortBit(unsigned short usBit, int iSetClr)
             break;
         }
     }
-    #ifdef _WINDOWS
-    fnSimPorts();                                                        // ensure the simulator updates its port states
+    #if defined _WINDOWS
+    fnSimPorts(-1);                                                      // ensure the simulator updates its port states
     #endif
 }
 
@@ -468,7 +468,7 @@ extern void fnSetPortOut(unsigned char ucPortOutputs, int iInitialisation)
     OVRS_1 = (ulChange & DEMO_USER_PORTS);
     OVRC_1 = (~ulChange & DEMO_USER_PORTS);
         #if defined _WINDOWS
-    fnSimPorts();                                                        // ensure the simulator updates its port states
+    fnSimPorts(-1);                                                      // ensure the simulator updates its port states
         #endif
     #endif
 }

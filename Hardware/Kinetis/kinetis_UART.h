@@ -3189,12 +3189,6 @@ extern void fnConfigSCI(QUEUE_HANDLE Channel, TTYTABLE *pars)
         case SERIAL_BAUD_115200:
         #if defined KINETIS_KL || defined NO_UART_FRACTION_CONTROL || defined KINETIS_KE15 || defined KINETIS_KE18
             usDivider = (((SPECIAL_UART_CLOCK/8/115200) + 1)/2);         // {201} set 115200
-            {
-                unsigned long ulTest1 = SPECIAL_UART_CLOCK;
-                unsigned long ulTest2 = SYSTEM_CLOCK;
-                unsigned long ultest3 = MCGPLLCLK;
-                ulTest2 = ulTest2;
-            }
         #else
             ucFraction = (unsigned char)(((float)((((float)SPECIAL_UART_CLOCK/(float)16/(float)115200) - (int)(SPECIAL_UART_CLOCK/16/115200)) * 32)) + (float)0.5); // calculate fraction
             usDivider = (SPECIAL_UART_CLOCK/16/115200);                  // set 115200

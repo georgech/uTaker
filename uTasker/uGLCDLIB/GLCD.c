@@ -11,7 +11,7 @@
     File:      GLCD.c [Graphic LCD - mono-color with parallel interface]
     Project:   uTasker project
     ---------------------------------------------------------------------
-    Copyright (C) M.J.Butcher Consulting 2004..2018
+    Copyright (C) M.J.Butcher Consulting 2004..2019
     *********************************************************************
     10.08.2009 Rework fnWriteTextBuffer() to handle larger fonts         {1}
     09.08.2009 Add extra graphic functions                               {2}
@@ -454,7 +454,7 @@ extern void fnLCD(TTASKTABLE *ptrTaskTable)                              // LCD 
         }
     }
 #endif
-    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH)) {      // check task input queue - this only occurs when all previous operation has completed
+    while (fnRead(PortIDInternal, ucInputMessage, HEADER_LENGTH) != 0) { // check task input queue - this only occurs when all previous operation has completed
         switch (ucInputMessage[MSG_SOURCE_TASK]) {
         case TIMER_EVENT:
 #if defined MAX_BLINKING_OBJECTS
@@ -1125,7 +1125,7 @@ static int fnWriteRect(GLCD_RECT_BLINK *rect)                            // {1}
         usX_Start = rect->rect_corners.usX_end;
         usX_End   = rect->rect_corners.usX_start;
     }
-#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
+#if (defined _GLCD_SAMSUNG || defined ST7565S_GLCD_MODE) && !defined OLED_GLCD_MODE && !defined TFT_GLCD_MODE && !defined NOKIA_GLCD_MODE && !defined CGLCD_GLCD_MODE && !defined KITRONIX_GLCD_MODE && !defined TFT2N0369_GLCD_MODE && !defined FT800_GLCD_MODE && !defined MB785_GLCD_MODE && !defined ST7789S_GLCD_MODE // {19}
     if (usX_Start <= usX_End) {
         iHorizontalDirection = 1;                                        // draw from left to right
     }
@@ -2111,7 +2111,7 @@ static void fnClearScreen(void)
     fnGLCDGotoXY(0, 0);
         #else                                                            // Toshiba controller
     fnCommandGlcd_2(SET_ADDRESS_POINTER, 0x0000);                        // set the address pointer to the start of graphic memory
-    while (iWrites--) {
+    while (iWrites-- != 0) {
         fnCommandGlcd_1(WRITE_DATA_INC, 0x00);                           // clear the GLDC memory location
     }
         #endif

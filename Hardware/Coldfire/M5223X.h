@@ -145,7 +145,7 @@ typedef struct stCOLDFIRE_CAN_BUF
 #if defined _WINDOWS
     #include "SimM5223X.h"
     #define _EXCEPTION(x)            *(unsigned char *)0 = 0             // generate exception when simulating {63}
-    #define _SIM_PORTS fnSimPorts()
+    #define _SIM_PORTS fnSimPorts(-1)
 #else
     #define _EXCEPTION(x)                                                // ignore on target
     #define _SIM_PORTS

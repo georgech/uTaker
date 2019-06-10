@@ -1299,8 +1299,8 @@ extern unsigned char fnMapPortBit(unsigned long ulRealBit)
     unsigned long ulBit = 0x80000000;
     unsigned char ucRef = 0;
 
-    while (ulBit) {
-        if (ulRealBit & ulBit) {
+    while (ulBit != 0) {
+        if ((ulRealBit & ulBit) != 0) {
             break;
         }
         ulBit >>= 1;
@@ -2890,6 +2890,9 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
     }
 #elif !defined KINETIS_KE || defined DEVICE_WITH_eDMA
     KINETIS_DMA_TDC *ptrDMA_TCD = (KINETIS_DMA_TDC *)eDMA_DESCRIPTORS;
+    if ((ucTriggerSource != 0) &&  (IS_POWERED_UP(6, DMAMUX0) == 0)) {
+        return -1;                                                       // DMA MUX not powered - no operation
+    }
     if (channel == -1) {
         channel = fnGetChannelFromSource(ucTriggerSource);
     }
@@ -3114,6 +3117,35 @@ extern int fnSimulateDMA(int channel, unsigned char ucTriggerSource)     // {3}
 extern int fnGetADC_sim_channel(int iPort, int iBit);
 static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
 {
+#if 1
+    int iADC = 0;
+    unsigned short usStepSize;
+    signed int iAdcChannel = fnGetADC_sim_channel(iPort, (/*31 - */ucPortBit)); // {9}
+    if (iAdcChannel < 0) {                                               // {9} ignore if not valid ADC port
+        return -1;                                                       // not analoge input so ignore
+    }
+    while (iAdcChannel >= 32) {
+        iADC++;
+        iAdcChannel -= 32;
+    }
+    if ((TOGGLE_INPUT_ANALOG & iChange) != 0) {
+        usStepSize = (0xffff/3);
+    }
+    else {
+        usStepSize = ((ADC_SIM_STEP_SIZE * 0xffff)/ADC_REFERENCE_VOLTAGE);
+    }
+    if ((TOGGLE_INPUT_NEG & iChange) != 0) {                             // force a smaller voltage
+        if (usADC_values[iADC][iAdcChannel] >= usStepSize) {
+            usADC_values[iADC][iAdcChannel] -= usStepSize;               // decrease the voltage on the pin
+        }
+    }
+    else {                                                               // increase the voltage
+        if ((usADC_values[iADC][iAdcChannel] + usStepSize) <= 0xffff) {
+            usADC_values[iADC][iAdcChannel] += usStepSize;               // increase the voltage on the pin
+        }
+    }
+    return 0;                                                            // analog input handled
+#else
     if ((iChange & (TOGGLE_INPUT | TOGGLE_INPUT_NEG | TOGGLE_INPUT_POS | SET_INPUT)) != 0) {
         int iADC = 0;
         unsigned short usStepSize;
@@ -3136,13 +3168,14 @@ static int fnHandleADCchange(int iChange, int iPort, unsigned char ucPortBit)
                 usADC_values[iADC][iAdcChannel] -= usStepSize;           // decrease the voltage on the pin
             }
         }
-        else {
+        else {                                                           // increase the voltage
             if ((usADC_values[iADC][iAdcChannel] + usStepSize) <= 0xffff) {
                 usADC_values[iADC][iAdcChannel] += usStepSize;           // increase the voltage on the pin
             }
         }
     }
     return 0;
+#endif
 }
 #endif
 
@@ -3523,14 +3556,14 @@ extern int fnGetPWM_sim_channel(int iPort, int iPin, unsigned long *ptr_ulFreque
                 ulMOD_value = (ptrTimer->FTM_MOD + 1);
                 ulMatchValue = ptrTimer->FTM_channel[iChannel].FTM_CV;
             }
-            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_ELSA | FTM_CSC_ELSB | FTM_CSC_MSA | FTM_CSC_MSB)) == FTM_CSC_MS_ELS_PWM_LOW_TRUE_PULSES) { // polarity inverted
-                ulMatchValue = (*ptr_ulFrequency - *ptr_ucMSR);
-            }
             if (ulMOD_value == 0) {
                 ulMOD_value = 1;
             }
-            *ptr_ucMSR = (unsigned char)((float)((float)(ulMatchValue * 100) / (float)ulMOD_value) + (float)0.5); // MSR in percent
             *ptr_ulFrequency = (fnGetFlexTimer_clock(iTimer)/ulMOD_value);
+            *ptr_ucMSR = (unsigned char)((float)((float)(ulMatchValue * 100) / (float)ulMOD_value) + (float)0.5); // MSR in percent
+            if ((ptrTimer->FTM_channel[iChannel].FTM_CSC & (FTM_CSC_ELSA | FTM_CSC_ELSB | FTM_CSC_MSA | FTM_CSC_MSB)) == FTM_CSC_MS_ELS_PWM_LOW_TRUE_PULSES) { // polarity inverted
+                *ptr_ucMSR = (100 - *ptr_ucMSR);
+            }
             return 0;
         }
     }
@@ -3602,9 +3635,23 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
     ptrPCR += (ucPort * sizeof(KINETIS_PORT)/sizeof(unsigned long));
 #endif
     iFlagRefresh = PORT_CHANGE;
+#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
+    if (ucPort < _GPIO_ADC) {
+        ptrPCR += (31 - ucPortBit);
+    }
+#endif
 #if defined SUPPORT_ADC
-    if (fnHandleADCchange(iChange, ucPort, ucPortBit) == 0) {            // handle possible ADC function on pin
-        return;                                                          // if ADC we do not handle digital functions
+    if (ucPort < _GPIO_ADC) {
+        if ((*ptrPCR & PORT_MUX_MASK) == 0) {                        // if the port has been changed from its analogue function
+            if (fnHandleADCchange(iChange, ucPort, ucPortBit) == 0) {// handle possible ADC function on pin
+                return;                                              // if ADC we do not handle digital functions
+            }
+        }
+    }
+    else {
+        if (fnHandleADCchange(iChange, ucPort, ucPortBit) == 0) {    // handle possible ADC function on pin
+            return;                                                  // if ADC we do not handle digital functions
+        }
     }
 #endif
 #if defined PORTS_AVAILABLE_8_BIT                                        // KE uses byte terminology but physically have long word ports
@@ -3626,9 +3673,6 @@ extern void fnSimulateInputChange(unsigned char ucPort, unsigned char ucPortBit,
 #endif
             if (iChange == TOGGLE_INPUT) {
                 ulPort_in_A ^= ulBit;                                    // set new pin state
-#if !(defined KINETIS_KE && !defined KINETIS_KE15 && !defined KINETIS_KE18)
-                ptrPCR += (31 - ucPortBit);
-#endif
               //if ((*ptrPCR & PORT_MUX_ALT7) != PORT_MUX_GPIO) {        // {19} ignore register state if not connected
               //    return;
               //}
@@ -4248,12 +4292,12 @@ static void fnSetPinCharacteristics(int iPortRef, unsigned long ulHigh, unsigned
 
 // Update ports based on present register settings
 //
-extern void fnSimPorts(int iPort)
+extern void fnSimPorts(int iThisPort)
 {
 #if !defined KINETIS_KM
     unsigned long ulNewState;
 #endif
-    switch (iPort) {
+    switch (iThisPort) {
     case PORTA:
     #if defined KINETIS_WITH_PCC
         if ((PCC_PORTA & PCC_CGC) != 0)                                  // if port is clocked
@@ -11125,7 +11169,7 @@ extern void fnSimulateKeyChange(int *intTable)
             iKeyPadInputs[iCol][iRow] = *intTable++;                     // new value
             if (iChange != iKeyPadInputs[iCol][iRow]) {
     #if defined KEY_POLARITY_POSITIVE
-                if (iChange)
+                if (iChange == 0)
     #else
                 if (iChange != 0)                                        // generally a key press is a '0' 
     #endif

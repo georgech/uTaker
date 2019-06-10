@@ -2081,7 +2081,7 @@
         {RGB(0, 0, 0),   RGB(255, 255, 0), 0, {168, 295, 0, 4 }, _PORTE, EXT_IO10}, \
         {RGB(0, 0, 0),   RGB(255, 255, 0), 0, {168, 315, 0, 4 }, _PORTE, EXT_IO11},
 
-    #define KEYPAD "KeyPads/blaze.bmp"
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/blaze.bmp"
     #define LCD_ON_KEYPAD                                                // simulator positions the LCD on top of the key pad/panel
         #define LCD_X_OFFSET       252
         #define LCD_Y_OFFSET       50
@@ -2295,7 +2295,7 @@
     #define BUTTON_KEY_DEFINITIONS  {_PORTA, SWITCH_2,   {303,  15, 320,  28 }}, \
                                     {_PORTD, SWITCH_3,   {303, 191, 320, 204 }},
 
-    #define KEYPAD "KeyPads/FRDM_K28F.bmp"
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/FRDM_K28F.bmp"
 
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
 
@@ -2380,7 +2380,7 @@
     #define BUTTON_KEY_DEFINITIONS  {_PORTD, SWITCH_2,   {286,   6, 299,  14 }}, \
                                     {_PORTA, SWITCH_3,   {286, 183, 299, 190 }},
 
-    #define KEYPAD "KeyPads/FRDM_K66F.bmp"
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/FRDM_K66F.bmp"
 
     #define MULTICOLOUR_LEDS        {0, 2}                               // single LED made up of entries 0, 1 and 2
 
@@ -2702,7 +2702,7 @@
         {RGB(40,40,40), RGB(255,0,0),        0,  {37, 162, 57, 171 }, _PORTC, BLINK_LED}, \
         {RGB(255,255,255), RGB(100,100,100), 0,  {17, 186, 0,  6   }, _PORTC, BLINK_LED}
 
-    #define KEYPAD "KeyPads/teensy3_1.bmp"
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/teensy3_1.bmp"
 
     #if defined SDCARD_SUPPORT
         #if defined SPECIAL_VERSION_SDCARD
@@ -3340,7 +3340,7 @@
                                     {_PORTE,  PORTE_BIT21,  {155, 33,   173, 51  }}, \
                                     {_PORTE,  PORTE_BIT30,  {373, 37,   388, 52  }},
 
-    #define KEYPAD "KeyPads/TEENSY_LC.bmp"
+    #define KEYPAD "../../uTaskerV1.4/Simulator/KeyPads/TEENSY_LC.bmp"
 #elif defined TWR_KM34Z50M || defined TWR_KM34Z75M
     #define BLINK_LED              (PORTE_BIT5)                          // (green LED) if the port is changed (eg. A to B) the port macros will require appropriate adjustment too
     #define SWITCH_2               (PORTE_BIT4)                          // if the port is changed (eg. A to B) the port macros will require appropriate adjustment too

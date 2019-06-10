@@ -333,7 +333,7 @@ extern "C" int fnGetADC_sim_channel(int iPort, int iBit)
         if (ADC_DEDICATED_MODULE[iBit] == 0) {                           // not assigned
             return -1;                                                   // not ADC function
         }
-        return (((ADC_DEDICATED_MODULE[iBit] - 1) * 32) + ADC_DEDICATED_CHANNEL[iBit]);
+        return (((ADC_DEDICATED_MODULE[iBit] - 1) * 32) + ADC_DEDICATED_CHANNEL[iBit]); // the dedicated analogue input
     }
     else if (iPort > _GPIO_ADC) {                                        // extended port - not expected to have ADC
         return -1;

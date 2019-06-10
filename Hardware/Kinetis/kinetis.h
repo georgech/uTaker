@@ -7312,7 +7312,12 @@ extern int fnBackdoorUnlock(unsigned long Key[2]);
           #define DMAMUX0_CHCFG_SOURCE_PORTC         51                  // 0x33 port C
           #define DMAMUX0_CHCFG_SOURCE_PORTD         52                  // 0x34 port D
           #define DMAMUX0_CHCFG_SOURCE_PORTE         53                  // 0x35 port E
-        #if defined KINETIS_K64 || defined KINETIS_K65 || defined KINETIS_K66
+        #if defined KINETIS_K64
+          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   54                  // 0x36 IEEE 1588 timer 0
+          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   55                  // 0x37 IEEE 1588 timer 1
+          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T2   56                  // 0x38 IEEE 1588 timer 2
+          #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T3   57                  // 0x39 IEEE 1588 timer 3
+        #elif defined KINETIS_K65 || defined KINETIS_K66
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T0   54                  // 0x36 IEEE 1588 timer 0
           #define DMAMUX0_CHCFG_SOURCE_IEEE1588_T1   55                  // 0x37 IEEE 1588 timer 1 (or)
           #define DMAMUX0_CHCFG_SOURCE_TPM1_OVERFLOW 55                  // 0x37 TPM1 overflow
@@ -20506,7 +20511,7 @@ typedef struct stPIT_SETUP
     #endif
     unsigned short   mode;                                               // periodic or single shot
     unsigned char    ucPIT;                                              // PIT reference
-    #if !defined DEVICE_WITHOUT_DMA
+    #if !defined DEVICE_WITHOUT_DMA && defined SUPPORT_PIT_DMA_PORT_TOGGLE
     unsigned char    ucPortRef;                                          // optional port toggled by PIT DMA trigger
     #endif
 } PIT_SETUP;
