@@ -1191,7 +1191,7 @@ static __interrupt void _uart_tx_dma_Interrupt(KINETIS_UART_CONTROL *ptrUART, in
 {
         #if defined UART_EXTENDED_MODE && defined UART_TIMED_TRANSMISSION// {208}
     if (ulInterCharTxDelay[iUART_reference] != 0) {
-        fnStopTxTimer(iUART_reference0);                                 // stop the periodic timer that controlled byte transmissions
+        fnStopTxTimer(iUART_reference);                                  // stop the periodic timer that controlled byte transmissions
     }
         #endif
         #if defined SUPPORT_LOW_POWER                                    // {96}
